@@ -1,0 +1,151 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+* {
+  box-sizing: border-box;
+  font-family: 'Inter', sans-serif;
+}
+
+body {
+  margin: 0;
+  background: #0c1424;
+  color: #111;
+}
+
+/* Layout */
+.auth-container {
+  min-height: 100vh;
+  display: flex;
+}
+
+.auth-left {
+  width: 38%;
+  background: #ffffff;
+  padding: 64px 56px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.auth-right {
+  width: 62%;
+  background: linear-gradient(180deg, #0d1b2a, #0c1424);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+}
+
+/* Logo */
+.logo-placeholder {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  font-size: 20px;
+  color: #4cc9f0;
+}
+
+/* Headings */
+h2 {
+  margin: 0 0 8px;
+  font-size: 26px;
+}
+
+.subtext {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 24px;
+}
+
+/* Inputs */
+label {
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 6px;
+  display: block;
+}
+
+input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  outline: none;
+  margin-bottom: 16px;
+  font-size: 14px;
+}
+
+input:focus {
+  border-color: #4cc9f0;
+}
+
+/* Buttons */
+.primary-btn {
+  width: 100%;
+  padding: 11px;
+  border-radius: 8px;
+  border: none;
+  background: linear-gradient(90deg, #4cc9f0, #4361ee);
+  color: white;
+  font-size: 14px;
+  cursor: pointer;
+  margin-top: 6px;
+}
+
+.divider {
+  text-align: center;
+  font-size: 12px;
+  color: #aaa;
+  margin: 16px 0;
+}
+
+.social-btn {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  background: #fff;
+  font-size: 13px;
+  margin-bottom: 10px;
+  cursor: pointer;
+}
+
+.bottom-text {
+  margin-top: 14px;
+  font-size: 13px;
+  text-align: center;
+}
+
+.bottom-text a {
+  color: #4361ee;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.forgot {
+  font-size: 12px;
+  color: #4361ee;
+  text-decoration: none;
+  float: right;
+}
+/* Social Buttons with icons */
+.social-btn {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  background: #fff;
+  font-size: 13px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;            /* spacing between icon & text */
+}
+
+.social-btn img {
+  width: 16px;
+  height: 16px;
+  display: inline-block;
+}
