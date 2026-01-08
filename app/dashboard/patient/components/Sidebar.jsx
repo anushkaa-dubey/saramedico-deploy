@@ -45,7 +45,11 @@ export default function Sidebar() {
         </Link>
       </div>
 
-      <button className={styles.joinBtn}>＋ Join Session</button>
+      {/* <button className={styles.joinBtn}>＋ Join Session</button> */}
+     <Link href="/dashboard/patient/audio-check" className={styles.joinBtn}>
+      + Join Session
+     </Link>
+
     </aside>
   );
 }
