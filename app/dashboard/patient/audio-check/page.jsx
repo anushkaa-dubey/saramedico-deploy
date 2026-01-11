@@ -2,6 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import styles from "./AudioCheck.module.css";
+import micIcon from "@/public/icons/mic.svg";
+import logo from "@/public/logo.png";
 
 export default function AudioCheck() {
    const router = useRouter();
@@ -9,7 +11,7 @@ export default function AudioCheck() {
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <div className={styles.logo}>Saramedico</div>
+        <img src={logo.src} alt="SaraMedico" className={styles.logo} />
       </div>
       <div className={styles.content}>
         <h1 className={styles.title}>Check your Audio</h1>
@@ -24,7 +26,7 @@ export default function AudioCheck() {
 
             <label className={styles.label}>INPUT SOURCE</label>
             <div className={styles.inputBox}>
-              <span className={styles.iconPlaceholder}>🎙</span>
+              <img src={micIcon.src} alt="Microphone" width="20" height="20" className={styles.iconPlaceholder} />
               <span className={styles.inputText}>Macbook Pro Microphone</span>
             </div>
 

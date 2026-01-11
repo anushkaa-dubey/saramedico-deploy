@@ -8,17 +8,23 @@ export default function LoginForm() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  const handleLogin = (e) => {
-    e.preventDefault();
+const handleLogin = (e) => {
+  e.preventDefault();
 
-    // FRONTEND DEMO CHECK
-    if (email === "test@saramedico.com" && password === "123456") {
-      // ✅ Redirect to 2FA instead of alert
-      router.push("/auth/2fa/login");
-    } else {
-      setError("Invalid email or password");
-    }
-  };
+  // ADMIN LOGIN
+  if (email === "admin@saramedico.com" && password === "admin123") {
+    router.push("/auth/2fa/login?role=admin");
+    return;
+  }
+
+  // PATIENT LOGIN
+  if (email === "test@saramedico.com" && password === "123456") {
+    router.push("/auth/2fa/login?role=patient");
+    return;
+  }
+
+  setError("Invalid email or password");
+};
 
   return (
     <>

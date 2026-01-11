@@ -1,9 +1,11 @@
 "use client";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+
 
 export default function Login2FAPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -21,35 +23,42 @@ export default function Login2FAPage() {
   };
 
   const handleVerify = async (e) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
+  e.preventDefault();
+  setError("");
+  setLoading(true);
 
-    const code = otp.join("");
+  const code = otp.join("");
 
-    if (code.length !== 6) {
-      setLoading(false);
-      setError("Please enter the 6-digit code.");
-      return;
+  if (code.length !== 6) {
+    setLoading(false);
+    setError("Please enter the 6-digit code.");
+    return;
+  }
+
+  try {
+    // BACKEND HOOK (to be implemented later)
+    // await fetch("/api/auth/verify-otp", {...})
+
+    // temparary 
+    if (code !== "123456") {
+      throw new Error("Invalid verification code");
     }
 
-    try {
-      // 🔒 BACKEND HOOK (to be implemented later)
-      // await fetch("/api/auth/verify-otp", {...})
+    const role = searchParams.get("role");
 
-      // Demo check
-      if (code !== "123456") {
-        throw new Error("Invalid verification code");
-      }
-
-      // ✅ Redirect to PATIENT dashboard after 2FA
+    if (role === "admin") {
+      router.push("/dashboard/admin");
+    } else {
       router.push("/dashboard/patient");
-    } catch (err) {
-      setError(err.message || "Verification failed");
-    } finally {
-      setLoading(false);
     }
-  };
+
+  } catch (err) {
+    setError(err.message || "Verification failed");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <div

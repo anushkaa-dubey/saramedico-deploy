@@ -14,8 +14,9 @@
 }
 
 .logo {
-  font-weight: 600;
-  color: #2563eb;
+  width: 120px;
+  height: auto;
+  object-fit: contain;
 }
 
 .content {

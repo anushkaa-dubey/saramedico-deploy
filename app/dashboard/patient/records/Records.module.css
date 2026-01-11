@@ -1,13 +1,13 @@
 .container {
   display: flex;
   min-height: 100vh;
-  background: #f1f5f9;
+  background: #ffffff;
   padding: 16px;
 }
 
 .main {
   flex: 1;
-  background: #f8fafc;
+  background: #F5F7FA;
   border-radius: 16px;
   overflow: hidden;
   display: flex;

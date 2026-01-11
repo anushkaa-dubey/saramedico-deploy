@@ -3,10 +3,13 @@
 Patient-side frontend built with Next.js (App Router) for the SaraMedico healthcare platform.
 
 ## Demo Login (For Testing)
-
+Patient:
 Email: test@saramedico.com  
 Password: 123456  
 2FA Code: 123456  
+
+Admin Email: admin@saramedico.com
+Password: admin123
 
 (These are dummy credentials for UI testing only.)
 

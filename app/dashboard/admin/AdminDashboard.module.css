@@ -1,0 +1,594 @@
+.container {
+  display: flex;
+  min-height: 100vh;
+  background: #f8fafc;
+}
+.iconPlaceholder img {
+  width: 120px;
+  height: auto;
+  object-fit: contain;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 220px;
+  background: #ffffff;
+  padding: 16px;
+  border-right: 1px solid #eef2f7;
+}
+
+.logoRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 70px;
+}
+
+.logoText {
+  font-weight: 600;
+  color: #2563eb;
+}
+
+/* Nav spacing */
+.navGroup {
+  margin-top: 20px;
+}
+
+.navItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 14px;
+  color: #0f172a;
+  cursor: pointer;
+  text-decoration: none;
+  margin-bottom: 6px;
+  transition: all 0.2s ease;
+}
+
+.navItem:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+.active {
+  background: linear-gradient(90deg, #359AFF, #9CCDFF);
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.iconPlaceholder {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  background: #e5e7eb;
+}
+
+/* Main */
+.main {
+  flex: 1;
+  padding: 20px 24px;
+}
+
+/* Topbar */
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.search {
+  width: 320px;
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  font-size: 13px;
+}
+
+.topActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.iconBtn {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+}
+
+.profile {
+  display: flex;
+  flex-direction: column;
+  font-size: 13px;
+}
+
+.avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #e5e7eb;
+}
+
+/* Title */
+.titleRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 14px;
+}
+
+.heading {
+  font-size: 18px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.subtext {
+  font-size: 13px;
+  color: #64748b;
+}
+
+.inviteBtn {
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 8px;
+  border: none;
+  background: linear-gradient(90deg, #359AFF, #9CCDFF);
+  color: #ffffff;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+/* Grid */
+.grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.leftCol,
+.rightCol {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Card */
+.card {
+  background: #ffffff;
+  border: 1px solid #eef2f7;
+  border-radius: 14px;
+  padding: 16px;
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.link {
+  font-size: 12px;
+  color: #359AFF;
+  cursor: pointer;
+}
+
+/* Table */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.table th {
+  text-align: left;
+  color: #94a3b8;
+  font-weight: 500;
+  padding: 10px 6px;
+  border-bottom: 1px solid #eef2f7;
+}
+
+.table td {
+  padding: 10px 6px;
+  border-bottom: 1px solid #f1f5f9;
+  color: #0f172a;
+}
+
+.userCell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.avatarSmall {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #e5e7eb;
+}
+
+/* Status */
+.success {
+  background: #ecfdf5;
+  color: #16a34a;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+}
+
+.warning {
+  background: #fff7ed;
+  color: #ea580c;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+}
+
+/* Alerts */
+.alertCard {
+  height: 260px;
+  display: flex;
+  flex-direction: column;
+}
+
+.alertList {
+  margin-top: 8px;
+  overflow-y: auto;
+}
+
+.alert {
+  border-bottom: 1px solid #eef2f7;
+  padding: 10px 0;
+}
+
+.alert strong {
+  font-size: 13px;
+}
+
+.alert p {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.alert span {
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+/* Security */
+.securityRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12px;
+}
+
+.securityRow p {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.changeBtn {
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  cursor: pointer;
+}
+
+/* Quick Actions */
+.quickEmpty {
+  height: 120px;
+}
+/* ==================== TABLET (769px - 1024px) ==================== */
+@media (max-width: 1024px) and (min-width: 769px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .main {
+    padding: 16px 20px;
+  }
+
+  .card {
+    padding: 14px;
+  }
+
+  .heading {
+    font-size: 17px;
+  }
+
+  .search {
+    width: 280px;
+  }
+
+  .table th,
+  .table td {
+    padding: 12px 10px;
+    font-size: 12px;
+  }
+}
+
+/* ==================== MOBILE (up to 768px) ==================== */
+@media (max-width: 768px) {
+  :global(*) {
+    box-sizing: border-box;
+  }
+
+  /* Container */
+  .container {
+    flex-direction: column;
+    overflow-x: hidden;
+  }
+
+  /* Main wrapper */
+  .main {
+    flex: 1;
+    padding: 12px;
+    padding-bottom: 80px;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  /* Sidebar → Bottom Navigation */
+  .sidebar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: 70px;
+    padding: 0 8px;
+    border-right: none;
+    border-top: 1px solid #eef2f7;
+    border-bottom: none;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    background: #ffffff;
+    z-index: 999;
+  }
+
+  .logoRow {
+    display: none;
+  }
+
+  .navGroup {
+    display: flex;
+    width: 100%;
+    justify-content: space-around;
+    margin-top: 0;
+  }
+
+  .navItem {
+    flex-direction: column;
+    gap: 4px;
+    padding: 8px 6px;
+    margin-bottom: 0;
+    font-size: 11px;
+    border-radius: 8px;
+    min-width: 50px;
+    text-align: center;
+  }
+
+  .navItem:hover {
+    background: transparent;
+  }
+
+  .active {
+    background: transparent;
+    color: #359AFF;
+  }
+
+  .iconPlaceholder {
+    width: 20px;
+    height: 20px;
+  }
+
+  /* Topbar */
+  .topbar {
+    flex-direction: column-reverse;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .search {
+    width: 100%;
+    font-size: 13px;
+  }
+
+  .topActions {
+    width: 100%;
+  }
+
+  .iconBtn,
+  .avatar {
+    width: 32px;
+    height: 32px;
+  }
+
+  .profile {
+    display: none;
+  }
+
+  /* Title */
+  .titleRow {
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 16px;
+    align-items: flex-start;
+  }
+
+  .heading {
+    font-size: 16px;
+    margin: 0;
+  }
+
+  .subtext {
+    font-size: 12px;
+  }
+
+  .inviteBtn {
+    width: 100%;
+    height: 40px;
+    font-size: 13px;
+  }
+
+  /* Grid → single column */
+  .grid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .leftCol,
+  .rightCol {
+    width: 100%;
+  }
+
+  /* Card */
+  .card {
+    padding: 12px;
+    border-radius: 12px;
+  }
+
+  .cardHeader {
+    margin-bottom: 10px;
+  }
+
+  /* Table */
+  .table {
+    font-size: 12px;
+    overflow-x: auto;
+    display: block;
+    width: 100%;
+  }
+
+  .table thead {
+    display: table;
+    width: 100%;
+    table-layout: auto;
+  }
+
+  .table tbody {
+    display: block;
+    width: 100%;
+  }
+
+  .table tr {
+    display: table;
+    width: 100%;
+    table-layout: auto;
+    margin-bottom: 8px;
+  }
+
+  .table th {
+    padding: 10px 8px;
+    font-size: 11px;
+    text-transform: uppercase;
+  }
+
+  .table td {
+    padding: 10px 8px;
+    font-size: 12px;
+  }
+
+  .userCell {
+    gap: 6px;
+  }
+
+  .avatarSmall {
+    width: 24px;
+    height: 24px;
+  }
+
+  /* Status badges */
+  .success,
+  .warning {
+    font-size: 11px;
+    padding: 3px 8px;
+  }
+
+  /* Alerts */
+  .alertCard {
+    height: auto;
+    max-height: 300px;
+  }
+
+  .alert {
+    padding: 8px 0;
+    font-size: 12px;
+  }
+
+  .alert strong {
+    font-size: 12px;
+  }
+
+  .alert p {
+    font-size: 11px;
+  }
+
+  .alert span {
+    font-size: 10px;
+  }
+
+  /* Security & Quick Actions */
+  .securityRow {
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-start;
+  }
+
+  .securityRow p {
+    font-size: 12px;
+  }
+
+  .changeBtn {
+    width: 100%;
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+
+  .quickEmpty {
+    height: auto;
+    min-height: 60px;
+  }
+}
+
+/* ==================== SMALL MOBILE (up to 480px) ==================== */
+@media (max-width: 480px) {
+  .heading {
+    font-size: 14px;
+  }
+
+  .search {
+    font-size: 12px;
+  }
+
+  .inviteBtn {
+    font-size: 12px;
+    padding: 0 12px;
+  }
+
+  .navItem {
+    font-size: 10px;
+    padding: 6px 4px;
+  }
+
+  .table th {
+    font-size: 10px;
+  }
+
+  .table td {
+    padding: 8px 6px;
+    font-size: 11px;
+  }
+}

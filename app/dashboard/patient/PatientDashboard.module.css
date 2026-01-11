@@ -3,7 +3,7 @@
 .container {
   display: flex;
   min-height: 100vh;
-  background: #f1f5f9;
+  background: #ffffff;
   padding: 16px;
   font-family: "Inter", sans-serif;
 }
@@ -11,7 +11,7 @@
 /* ---------- MAIN CONTENT ---------- */
 .main {
   flex: 1;
-  background: #f8fafc;
+  background: #F5F7FA;
   border-radius: 16px;
   overflow: hidden;
   display: flex;
@@ -59,7 +59,7 @@
   border-radius: 10px;
   border: 1px solid #e5e7eb;
   background: #ffffff;
-  color: #2563eb;
+  color: #359AFF;
   cursor: pointer;
 }
 
@@ -68,7 +68,7 @@
   padding: 0 16px;
   border-radius: 10px;
   border: none;
-  background: linear-gradient(90deg, #3b82f6, #60a5fa);
+  background: linear-gradient(90deg, #359AFF, #9CCDFF);
   color: #ffffff;
   cursor: pointer;
 }
@@ -98,7 +98,8 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  border: 1px solid #eef2f7;
+  gap: 80px;
+  /* border: 1px solid #eef2f7; */
 }
 
 .navItem {
@@ -110,11 +111,12 @@
   color: #111827;
   font-size: 14px;
   cursor: pointer;
+  text-decoration: none;
 }
 
 .navItem.active {
-  background: #eaf2ff;
-  color: #2563eb;
+  background: linear-gradient(90deg, #359AFF, #9CCDFF);
+  color: #ffffff;
   font-weight: 600;
 }
 
@@ -123,12 +125,13 @@
   height: 40px;
   border-radius: 12px;
   border: none;
-  background: linear-gradient(90deg, #3b82f6, #60a5fa);
+  background: linear-gradient(90deg, #359AFF, #9CCDFF);
   color: #ffffff;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
+  text-decoration: none;
 }
 
 /* ---------- TOP BAR ---------- */
@@ -140,13 +143,24 @@
   justify-content: space-between;
   background: #ffffff;
 }
+/* .iconPlaceholder {
+  margin-bottom: 150px;
+} */
+
+.iconPlaceholder img {
+  width: 120px;
+  height: auto;
+  object-fit: contain;
+  margin-bottom: 20px
+}
 
 .search {
   width: 420px;
   height: 36px;
   border-radius: 10px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #DFF2FF;
   padding: 0 12px;
+  background: #ffffff;
 }
 
 .profile {
@@ -229,7 +243,7 @@
 .activityTable {
   width: 100%;
   border-collapse: separate;
-  border-spacing: 0 10px; /* space between rows like Figma */
+  border-spacing: 0 10px; 
   font-size: 13px;
 }
 
@@ -315,7 +329,7 @@
   top: 12px;
   bottom: 12px;
   width: 4px;
-  background: #3b82f6;
+  background: linear-gradient(180deg, #359AFF, #9CCDFF);
   border-radius: 4px;
 }
 
@@ -362,8 +376,8 @@
 }
 
 .visitTag {
-  background: #eaf2ff;
-  color: #2563eb;
+  background: #DFF2FF;
+  color: #437BFD;
   padding: 3px 8px;
   border-radius: 6px;
   font-size: 11px;
@@ -399,7 +413,7 @@
   padding: 0 18px;
   border-radius: 10px;
   border: none;
-  background: linear-gradient(90deg, #3b82f6, #60a5fa);
+  background: linear-gradient(90deg, #359AFF, #9CCDFF);
   color: #ffffff;
   font-size: 13px;
   cursor: pointer;
@@ -428,7 +442,7 @@
   }
 
   .grid {
-    grid-template-columns: 1fr; /* stack columns */
+    grid-template-columns: 1fr; 
   }
 
   .rightCol {

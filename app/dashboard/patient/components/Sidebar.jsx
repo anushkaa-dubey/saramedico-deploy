@@ -3,6 +3,11 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import styles from "../PatientDashboard.module.css";
+import logo from "@/public/logo.png";
+import dashboardIcon from "@/public/icons/dashboard.svg";
+import micIcon from "@/public/icons/mic.svg";
+import manageIcon from "@/public/icons/manage.svg";
+import messagesIcon from "@/public/icons/messages.svg";
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -11,15 +16,14 @@ export default function Sidebar() {
   return (
     <aside className={styles.sidebar}>
       <div>
-        {/* LOGO PLACEHOLDER */}
-        <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px" }}>
-          <div style={{ width: 28, height: 28, borderRadius: 6, background: "#e5e7eb" }} />
-          <strong>Saramedico</strong>
-        </div>
+            <div className={styles.iconPlaceholder}>
+            <img src={logo.src}></img>
+         </div>
         <Link
           href="/dashboard/patient"
           className={`${styles.navItem} ${isActive("/dashboard/patient") ? styles.active : ""}`}
         >
+          <img src={dashboardIcon.src} alt="Dashboard" width="18" height="18" />
           Dashboard
         </Link>
 
@@ -27,6 +31,7 @@ export default function Sidebar() {
           href="/dashboard/patient/records"
           className={`${styles.navItem} ${isActive("/dashboard/patient/records") ? styles.active : ""}`}
         >
+          <img src={micIcon.src} alt="Records" width="18" height="18" />
           My Records
         </Link>
 
@@ -34,6 +39,7 @@ export default function Sidebar() {
           href="/dashboard/patient/appointments"
           className={`${styles.navItem} ${isActive("/dashboard/patient/appointments") ? styles.active : ""}`}
         >
+          <img src={manageIcon.src} alt="Appointments" width="18" height="18" />
           Appointments
         </Link>
 
@@ -41,6 +47,7 @@ export default function Sidebar() {
           href="/dashboard/patient/messages"
           className={`${styles.navItem} ${isActive("/dashboard/patient/messages") ? styles.active : ""}`}
         >
+          <img src={messagesIcon.src} alt="Messages" width="18" height="18" />
           Messages
         </Link>
       </div>
