@@ -127,7 +127,7 @@ export default function ManageAccountsPage() {
             href="/dashboard/admin/manage-accounts/invite"
             className={styles.inviteBtn}
           >
-            ↓ Invite User
+             Invite User
           </Link>
         </div>
 
