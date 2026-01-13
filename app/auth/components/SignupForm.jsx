@@ -1,9 +1,12 @@
 "use client";
 import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 
 export default function SignupForm() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -17,8 +20,11 @@ export default function SignupForm() {
       return;
     }
 
+    // Get role from URL or sessionStorage
+    const role = searchParams.get("role") || (typeof window !== "undefined" ? sessionStorage.getItem("selectedRole") : null) || "patient";
+    
     alert("Account created (dummy). You can now login.");
-    router.push("/auth/2fa/signup");
+    router.push(`/auth/2fa/signup?role=${role}`);
 
   };
 
@@ -125,7 +131,7 @@ export default function SignupForm() {
         </button>
 
         <div className="bottom-text">
-          Already have an account? <a href="/auth/login">Login</a>
+          Already have an account? <a href={`/auth/login?role=${searchParams.get("role") || (typeof window !== "undefined" ? sessionStorage.getItem("selectedRole") : null) || "patient"}`}>Login</a>
         </div>
       </form>
     </>

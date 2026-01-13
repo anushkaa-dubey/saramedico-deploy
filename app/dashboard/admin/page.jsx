@@ -1,37 +1,11 @@
 import styles from "./AdminDashboard.module.css";
-import logo from "@/public/logo.png";
-import dashboardIcon from "@/public/icons/dashboard.svg";
-import manageIcon from "@/public/icons/manage.svg";
-import settingsIcon from "@/public/icons/settings.svg";
-import Link from "next/link";
-
+import AdminSidebar from "./components/Sidebar";
 
 export default function AdminDashboard() {
   return (
     <div className={styles.container}>
       {/* Sidebar */}
-      <aside className={styles.sidebar}>
-        <div className={styles.logoRow}>
-          <div className={styles.iconPlaceholder}>
-            <img src={logo.src}></img>
-          </div>
-        </div>
-
-        <div className={styles.navGroup}>
-          <Link href="/dashboard/admin" className={`${styles.navItem} ${styles.active}`}>
-            <img src={dashboardIcon.src} alt="Dashboard" width="18" height="18" />
-            Dashboard
-          </Link>
-          <Link href="/dashboard/admin/manage-accounts" className={styles.navItem}>
-            <img src={manageIcon.src} alt="Manage" width="18" height="18" />
-            Manage Accounts
-          </Link>
-          <Link href="/dashboard/admin/settings" className={styles.navItem}>
-            <img src={settingsIcon.src} alt="Settings" width="18" height="18" />
-            Settings
-          </Link>
-        </div>
-      </aside>
+      <AdminSidebar />
 
       {/* Main */}
       <main className={styles.main}>

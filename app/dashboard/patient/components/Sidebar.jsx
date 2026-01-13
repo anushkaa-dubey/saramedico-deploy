@@ -16,47 +16,50 @@ export default function Sidebar() {
   return (
     <aside className={styles.sidebar}>
       <div>
-            <div className={styles.iconPlaceholder}>
-            <img src={logo.src}></img>
-         </div>
-        <Link
-          href="/dashboard/patient"
-          className={`${styles.navItem} ${isActive("/dashboard/patient") ? styles.active : ""}`}
-        >
-          <img src={dashboardIcon.src} alt="Dashboard" width="18" height="18" />
-          Dashboard
-        </Link>
+        <div className={styles.logoRow}>
+          <div className={styles.iconPlaceholder}>
+            <img src={logo.src} alt="Logo" />
+          </div>
+        </div>
 
-        <Link
-          href="/dashboard/patient/records"
-          className={`${styles.navItem} ${isActive("/dashboard/patient/records") ? styles.active : ""}`}
-        >
-          <img src={micIcon.src} alt="Records" width="18" height="18" />
-          My Records
-        </Link>
+        <div className={styles.navGroup}>
+          <Link
+            href="/dashboard/patient"
+            className={`${styles.navItem} ${isActive("/dashboard/patient") ? styles.active : ""}`}
+          >
+            <img src={dashboardIcon.src} alt="Dashboard" width="18" height="18" />
+            Dashboard
+          </Link>
 
-        <Link
-          href="/dashboard/patient/appointments"
-          className={`${styles.navItem} ${isActive("/dashboard/patient/appointments") ? styles.active : ""}`}
-        >
-          <img src={manageIcon.src} alt="Appointments" width="18" height="18" />
-          Appointments
-        </Link>
+          <Link
+            href="/dashboard/patient/records"
+            className={`${styles.navItem} ${isActive("/dashboard/patient/records") ? styles.active : ""}`}
+          >
+            <img src={micIcon.src} alt="Records" width="18" height="18" />
+            My Records
+          </Link>
 
-        <Link
-          href="/dashboard/patient/messages"
-          className={`${styles.navItem} ${isActive("/dashboard/patient/messages") ? styles.active : ""}`}
-        >
-          <img src={messagesIcon.src} alt="Messages" width="18" height="18" />
-          Messages
-        </Link>
+          <Link
+            href="/dashboard/patient/appointments"
+            className={`${styles.navItem} ${isActive("/dashboard/patient/appointments") ? styles.active : ""}`}
+          >
+            <img src={manageIcon.src} alt="Appointments" width="18" height="18" />
+            Appointments
+          </Link>
+
+          <Link
+            href="/dashboard/patient/messages"
+            className={`${styles.navItem} ${isActive("/dashboard/patient/messages") ? styles.active : ""}`}
+          >
+            <img src={messagesIcon.src} alt="Messages" width="18" height="18" />
+            Messages
+          </Link>
+        </div>
       </div>
 
-      {/* <button className={styles.joinBtn}>＋ Join Session</button> */}
-     <Link href="/dashboard/patient/audio-check" className={styles.joinBtn}>
-      + Join Session
-     </Link>
-
+      <Link href="/dashboard/patient/audio-check" className={styles.joinBtn}>
+        + Join Session
+      </Link>
     </aside>
   );
 }

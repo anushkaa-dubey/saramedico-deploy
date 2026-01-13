@@ -19,51 +19,53 @@ export default function RecentActivity() {
       </div>
 
       {/* Table */}
-      <table className={styles.activityTable}>
-        <tbody>
-          <tr className={styles.activityRow}>
-            <td>
-              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                <div className={styles.avatarSmall}></div>
-                <span>John Von</span>
-              </div>
-            </td>
-            <td>Lab Results Reviewed</td>
-            <td style={{ color: "#64748b" }}>Today, 9:15 AM</td>
-            <td>
-              <span className={styles.statusCompleted}>Completed</span>
-            </td>
-          </tr>
+      <div className={styles.activityTableContainer}>
+        <table className={styles.activityTable}>
+          <tbody>
+            <tr className={styles.activityRow}>
+              <td>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  <div className={styles.avatarSmall}></div>
+                  <span>John Von</span>
+                </div>
+              </td>
+              <td>Lab Results Reviewed</td>
+              <td style={{ color: "#64748b" }}>Today, 9:15 AM</td>
+              <td>
+                <span className={styles.statusCompleted}>Completed</span>
+              </td>
+            </tr>
 
-          <tr className={styles.activityRow}>
-            <td>
-              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                <div className={styles.avatarSmall}></div>
-                <span>John Von</span>
-              </div>
-            </td>
-            <td>Operation</td>
-            <td style={{ color: "#64748b" }}>Yesterday, 4:30 PM</td>
-            <td>
-              <span className={styles.statusReview}>In Review</span>
-            </td>
-          </tr>
+            <tr className={styles.activityRow}>
+              <td>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  <div className={styles.avatarSmall}></div>
+                  <span>John Von</span>
+                </div>
+              </td>
+              <td>Operation</td>
+              <td style={{ color: "#64748b" }}>Yesterday, 4:30 PM</td>
+              <td>
+                <span className={styles.statusReview}>In Review</span>
+              </td>
+            </tr>
 
-          <tr className={styles.activityRow}>
-            <td>
-              <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                <div className={styles.avatarSmall}></div>
-                <span>John Von</span>
-              </div>
-            </td>
-            <td>Check-up</td>
-            <td style={{ color: "#64748b" }}>Sept 12, 2:10 PM</td>
-            <td>
-              <span className={styles.statusCompleted}>Completed</span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+            <tr className={styles.activityRow}>
+              <td>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  <div className={styles.avatarSmall}></div>
+                  <span>John Von</span>
+                </div>
+              </td>
+              <td>Check-up</td>
+              <td style={{ color: "#64748b" }}>Sept 12, 2:10 PM</td>
+              <td>
+                <span className={styles.statusCompleted}>Completed</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div >
   );
 }

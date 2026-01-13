@@ -1,8 +1,11 @@
 "use client";
 import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import AuthLayout from "../../components/AuthLayout";
 
 export default function Signup2FAPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [error, setError] = useState("");
 
@@ -25,9 +28,21 @@ export default function Signup2FAPage() {
     // fetch("/api/auth/verify-otp", ...)
 
     if (code === "123456") {
-      alert("Signup 2FA Verified (demo)");
-      router.push("/dashboard/patient");
+      const role = searchParams.get("role") || "patient";
 
+      if (role === "doctor") {
+        // Doctor signup: Redirect to onboarding steps
+        router.push("/auth/signup/onboarding/doctor/step-1");
+      } else if (role === "admin") {
+        // Admin signup: Direct to dashboard
+        router.push("/dashboard/admin");
+      } else if (role === "hospital") {
+        // Hospital signup: Direct to dashboard (or create hospital dashboard later)
+        router.push("/dashboard/admin"); // Temporary: redirect to admin
+      } else {
+        // Patient signup: Direct to dashboard
+        router.push("/dashboard/patient");
+      }
     } else {
       setError("Invalid code");
     }
@@ -69,6 +84,7 @@ export default function Signup2FAPage() {
         <button className="primary-btn">Verify</button>
 
         <div style={{ marginTop: "12px", fontSize: "12px", color: "#6b7280" }}>
+          {/* add timer */}
           ⟳ Resend code in 00:50
         </div>
       </form>

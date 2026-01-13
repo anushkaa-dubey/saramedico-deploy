@@ -44,11 +44,19 @@ export default function Login2FAPage() {
       throw new Error("Invalid verification code");
     }
 
-    const role = searchParams.get("role");
+    const role = searchParams.get("role") || "patient";
 
+    // Route based on role
     if (role === "admin") {
       router.push("/dashboard/admin");
+    } else if (role === "doctor") {
+      // Doctor login goes directly to dashboard (no onboarding)
+      router.push("/dashboard/doctor");
+    } else if (role === "hospital") {
+      // Hospital dashboard (can be created later)
+      router.push("/dashboard/admin"); // Temporary: redirect to admin
     } else {
+      // Patient
       router.push("/dashboard/patient");
     }
 

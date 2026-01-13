@@ -4,57 +4,6 @@
   background: #f8fafc;
 }
 
-/* Sidebar */
-.sidebar {
-  width: 220px;
-  background: #ffffff;
-  padding: 16px;
-  border-right: 1px solid #eef2f7;
-}
-
-.logoRow {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 70px;
-}
-
-.logoRow img {
-  width: 120px;
-  height: auto;
-  object-fit: contain;
-}
-
-/* Nav spacing */
-.navGroup {
-  margin-top: 20px;
-}
-
-.navItem {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 14px;
-  border-radius: 10px;
-  font-size: 14px;
-  color: #0f172a;
-  cursor: pointer;
-  text-decoration: none;
-  margin-bottom: 6px;
-  transition: all 0.2s ease;
-}
-
-.navItem:hover {
-  background: #f1f5f9;
-  color: #0f172a;
-}
-
-.navItem.active {
-  background: linear-gradient(90deg, #359aff, #9ccdff);
-  color: #ffffff;
-  font-weight: 600;
-}
-
 /* Main */
 .main {
   flex: 1;

@@ -47,18 +47,11 @@ export default function Sidebar() {
             Patients
           </Link>
           <Link
-            href="/dashboard/doctor/appointments"
-            className={`${styles.navItem} ${isActive("/dashboard/doctor/appointments") ? styles.active : ""}`}
+            href="/dashboard/doctor/team"
+            className={`${styles.navItem} ${isActive("/dashboard/doctor/team") ? styles.active : ""}`}
           >
-            <img src={appointmentsIcon.src} alt="Appointments" width="18" height="18" />
-            Appointments
-          </Link>
-          <Link
-            href="/dashboard/doctor/messages"
-            className={`${styles.navItem} ${isActive("/dashboard/doctor/messages") ? styles.active : ""}`}
-          >
-            <img src={messagesIcon.src} alt="Messages" width="18" height="18" />
-            Messages
+            <img src={appointmentsIcon.src} alt="Team" width="18" height="18" />
+            Team
           </Link>
           <Link
             href="/dashboard/doctor/settings"

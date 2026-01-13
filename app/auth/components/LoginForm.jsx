@@ -1,29 +1,47 @@
 "use client";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
+  // Get role from URL or sessionStorage
+  const role = searchParams.get("role") || (typeof window !== "undefined" ? sessionStorage.getItem("selectedRole") : null) || "patient";
+
 const handleLogin = (e) => {
   e.preventDefault();
 
+  // Demo credentials for testing
   // ADMIN LOGIN
   if (email === "admin@saramedico.com" && password === "admin123") {
-    router.push("/auth/2fa/login?role=admin");
+    router.push(`/auth/2fa/login?role=admin`);
+    return;
+  }
+
+  // DOCTOR LOGIN
+  if (email === "doctor@saramedico.com" && password === "doctor123") {
+    router.push(`/auth/2fa/login?role=doctor`);
     return;
   }
 
   // PATIENT LOGIN
   if (email === "test@saramedico.com" && password === "123456") {
-    router.push("/auth/2fa/login?role=patient");
+    router.push(`/auth/2fa/login?role=patient`);
     return;
   }
 
-  setError("Invalid email or password");
+  // HOSPITAL LOGIN
+  if (email === "hospital@saramedico.com" && password === "hospital123") {
+    router.push(`/auth/2fa/login?role=hospital`);
+    return;
+  }
+
+  // If no specific match, use role from URL
+  router.push(`/auth/2fa/login?role=${role}`);
 };
 
   return (
@@ -70,7 +88,7 @@ const handleLogin = (e) => {
         </button>
 
         <div className="bottom-text">
-          Don’t have an account? <a href="/auth/signup">Sign Up</a>
+          Don't have an account? <a href={`/auth/signup?role=${role}`}>Sign Up</a>
         </div>
       </form>
     </>
