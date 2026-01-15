@@ -1,5 +1,7 @@
 import styles from "../PatientDashboard.module.css";
 
+import doctorImage from "@/public/icons/images/doctor_image.png";
+
 export default function UpNextCard() {
   return (
     <div className={styles.upNextCard}>
@@ -7,7 +9,7 @@ export default function UpNextCard() {
       <div className={styles.upNextAccent}></div>
 
       {/* Left Image */}
-      <div className={styles.upNextImage}></div>
+      <img src={doctorImage.src} alt="Dr. Emily" className={styles.upNextImage} style={{ objectFit: "cover" }} />
 
       {/* Right Content */}
       <div className={styles.upNextContent}>

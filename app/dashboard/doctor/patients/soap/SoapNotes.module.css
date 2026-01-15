@@ -1,0 +1,261 @@
+.container {
+    display: flex;
+    min-height: 100vh;
+    background: #f8fafc;
+}
+
+.main {
+    flex: 1;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Patient Header Card */
+.patientHeader {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 20px 24px;
+    border: 1px solid #eef2f7;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 32px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+.pName {
+    font-size: 18px;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.pMeta {
+    font-size: 14px;
+    color: #94a3b8;
+    font-weight: 500;
+}
+
+.pDetailGroup {
+    display: flex;
+    flex-direction: column;
+    border-left: 1px solid #eef2f7;
+    padding-left: 24px;
+}
+
+.pLabel {
+    font-size: 11px;
+    color: #94a3b8;
+    text-transform: uppercase;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.pValue {
+    font-size: 14px;
+    color: #0f172a;
+    font-weight: 600;
+}
+
+/* Grid Layout */
+.contentGrid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 24px;
+}
+
+.leftCol {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.rightCol {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* SOAP Section */
+.card {
+    background: #ffffff;
+    border-radius: 12px;
+    border: 1px solid #eef2f7;
+    padding: 24px;
+}
+
+.cardHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.headerTitle {
+    font-size: 16px;
+    font-weight: 700;
+    color: #0f172a;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.editBtn {
+    height: 32px;
+    padding: 0 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #64748b;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.editBtn:hover {
+    border-color: #cbd5e1;
+    color: #0f172a;
+}
+
+.soapSection {
+    margin-bottom: 24px;
+}
+
+.sectionLabel {
+    font-size: 12px;
+    font-weight: 600;
+    color: #94a3b8;
+    /* or nice blue like the image usually implies headings */
+    color: #6366f1;
+    /* Using a subtle purple-blue from image hint, or stick to slate */
+    color: #94a3b8;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    display: block;
+}
+
+/* The text blocks in the image have a light gray background */
+.textBlock {
+    background: #f1f5f9;
+    border-radius: 10px;
+    padding: 16px;
+    font-size: 14px;
+    color: #334155;
+    line-height: 1.6;
+}
+
+.listBlock {
+    background: #f1f5f9;
+    border-radius: 10px;
+    padding: 16px 16px 16px 32px;
+    /* Extra left padding for bullets */
+    font-size: 14px;
+    color: #334155;
+    line-height: 1.6;
+}
+
+.listBlock li {
+    margin-bottom: 4px;
+}
+
+/* Sidebar Sections */
+.summaryHeader {
+    font-size: 16px;
+    font-weight: 700;
+    color: #0f172a;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.subHeader {
+    font-size: 11px;
+    font-weight: 600;
+    color: #94a3b8;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+}
+
+.tagsRow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.tag {
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.tagRed {
+    background: #fee2e2;
+    color: #ef4444;
+}
+
+.tagYellow {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+/* Search */
+.searchBox {
+    width: 100%;
+    height: 40px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 0 12px;
+    font-size: 13px;
+    background: #ffffff;
+    margin-bottom: 20px;
+}
+
+/* Info Cards */
+.infoCard {
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 16px;
+    margin-bottom: 16px;
+    background: #ffffff;
+}
+
+.infoCardHeader {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.infoTitle {
+    font-size: 14px;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.infoIcon {
+    color: #94a3b8;
+    font-size: 14px;
+}
+
+.infoText {
+    font-size: 13px;
+    color: #64748b;
+    line-height: 1.5;
+}
+
+.addIcon {
+    color: #cbd5e1;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .contentGrid {
+        grid-template-columns: 1fr;
+    }
+}

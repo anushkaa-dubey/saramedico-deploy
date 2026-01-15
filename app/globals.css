@@ -79,7 +79,6 @@ input:focus {
   border-color: #4cc9f0;
 }
 
-/* Buttons */
 .primary-btn {
   width: 100%;
   padding: 11px;
@@ -128,7 +127,7 @@ input:focus {
   text-decoration: none;
   float: right;
 }
-/* Social Buttons with icons */
+
 .social-btn {
   width: 100%;
   padding: 10px 12px;
@@ -141,7 +140,7 @@ input:focus {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;            /* spacing between icon & text */
+  gap: 10px;
 }
 
 .social-btn img {

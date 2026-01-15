@@ -12,12 +12,11 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  padding: 20px 24px;
-  /* Added padding for Topbar alignment */
+  /* padding removed to match Dashboard */
 }
 
 .wrapper {
-  /* padding: 20px 24px;  Removed to avoid double padding */
+  padding: 24px;
   display: flex;
   flex-direction: column;
   gap: 20px;

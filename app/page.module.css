@@ -1,6 +1,6 @@
 .container {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #ffffff;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -21,77 +21,62 @@
 }
 
 .title {
-  font-size: 42px;
+  font-size: 36px;
   font-weight: 700;
-  color: #ffffff;
+  color: #000000;
   margin: 0 0 8px 0;
 }
 
 .subtitle {
-  font-size: 18px;
-  color: rgba(255, 255, 255, 0.9);
+  font-size: 16px;
+  color: #666666;
   margin: 0;
 }
 
 .content {
   width: 100%;
-  max-width: 1200px;
-}
-
-.heading {
-  font-size: 32px;
-  font-weight: 700;
-  color: #ffffff;
-  text-align: center;
-  margin: 0 0 8px 0;
-}
-
-.description {
-  font-size: 16px;
-  color: rgba(255, 255, 255, 0.9);
-  text-align: center;
-  margin: 0 0 40px 0;
+  max-width: 800px;
 }
 
 .roleGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  grid-template-columns: repeat(2, 1fr);
   gap: 24px;
   margin-top: 32px;
+  width: 100%;
 }
 
 .roleCard {
   background: #ffffff;
-  border-radius: 16px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
   padding: 32px 24px;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-  transition: all 0.3s ease;
+  transition: border-color 0.2s ease;
 }
 
 .roleCard:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+  border-color: #000000;
 }
 
 .roleIcon {
-  font-size: 48px;
-  margin-bottom: 16px;
+  display: none;
+  /* User requested no emojis */
 }
 
 .roleTitle {
-  font-size: 22px;
-  font-weight: 700;
-  color: #0f172a;
+  font-size: 20px;
+  font-weight: 600;
+  color: #000000;
   margin: 0 0 8px 0;
 }
 
 .roleDescription {
   font-size: 14px;
-  color: #64748b;
+  color: #666666;
   margin: 0 0 24px 0;
   line-height: 1.5;
 }
@@ -105,37 +90,35 @@
 .primaryBtn {
   flex: 1;
   height: 40px;
-  border-radius: 10px;
-  border: none;
-  background: linear-gradient(90deg, #359AFF, #9CCDFF);
+  border-radius: 6px;
+  border: 1px solid #000000;
+  background: #000000;
   color: #ffffff;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .primaryBtn:hover {
-  opacity: 0.9;
-  transform: scale(1.02);
+  opacity: 0.8;
 }
 
 .secondaryBtn {
   flex: 1;
   height: 40px;
-  border-radius: 10px;
-  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  border: 1px solid #e0e0e0;
   background: #ffffff;
-  color: #359AFF;
+  color: #000000;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .secondaryBtn:hover {
-  background: #f8fafc;
-  border-color: #359AFF;
+  border-color: #000000;
 }
 
 /* Responsive */

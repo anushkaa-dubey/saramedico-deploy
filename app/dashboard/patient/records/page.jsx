@@ -2,7 +2,8 @@ import Sidebar from "../components/Sidebar";
 import Topbar from "../components/Topbar";
 import RecordsTable from "./components/RecordsTable";
 import styles from "./Records.module.css";
-
+import Link from "next/link";
+import benjaminImage from "@/public/icons/images/benjamin frank.png";
 
 export default function RecordsPage() {
   return (
@@ -24,8 +25,7 @@ export default function RecordsPage() {
           <div className={styles.detailsCard}>
             {/* Left Avatar */}
             <div className={styles.avatarSection}>
-              {/* Using a div placeholder if image not available, or img tag */}
-              <div className={styles.bigAvatar}></div>
+              <img src={benjaminImage.src} alt="Benjamin Frank" className={styles.bigAvatar} style={{ objectFit: "cover" }} />
               <h3 className={styles.profileName}>Benjamin Frank</h3>
               <span className={styles.mrn}>MRN: 849-221-009</span>
             </div>
