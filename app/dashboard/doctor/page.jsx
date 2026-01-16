@@ -1,3 +1,4 @@
+"use client";
 import Sidebar from "./components/Sidebar";
 import Topbar from "./components/Topbar";
 import TasksSection from "./components/TasksSection";
@@ -6,8 +7,11 @@ import uploadIcon from "@/public/icons/upload.svg";
 import personIcon from "@/public/icons/person.svg";
 import scheduleIcon from "@/public/icons/schedule.svg";
 import micWhiteIcon from "@/public/icons/mic_white.svg";
+import Daniel from "@/public/icons/images/Daniel.png";
+import { useRouter } from "next/navigation";
 
 export default function DoctorDashboard() {
+  const router = useRouter();
   return (
     <div className={styles.container}>
       <Sidebar />
@@ -32,7 +36,7 @@ export default function DoctorDashboard() {
               <img src={scheduleIcon.src} alt="Schedule" width="16" height="16" />
               Schedule
             </button>
-            <button className={styles.primaryBtn}>
+            <button className={styles.primaryBtn} onClick={() => router.push("/dashboard/doctor/video-call")}>
               <img src={micWhiteIcon.src} alt="Start Session" width="16" height="16" />
               Start Session
             </button>
@@ -44,7 +48,9 @@ export default function DoctorDashboard() {
           <div className={styles.leftCol}>
             {/* Patient Profile Card */}
             <div className={styles.profileCard}>
-              <div className={styles.profileImage}></div>
+              <div className={styles.profileImage}>
+                <img src={Daniel.src} alt="Daniel" />
+              </div>
               <div className={styles.profileContent}>
                 <div className={styles.profileName}>Daniel Benjamin</div>
                 <div className={styles.profileType}>Follow-Up · Post-op check</div>
@@ -63,7 +69,7 @@ export default function DoctorDashboard() {
                 <div className={styles.appointmentTime}>10:30 AM</div>
 
                 <div className={styles.profileActions}>
-                  <button className={styles.startMeetBtn}>Start Meet</button>
+                  <button className={styles.startMeetBtn} onClick={() => router.push("/dashboard/doctor/video-call")}>Start Meet</button>
                   <button className={styles.detailsBtn}>Details</button>
                 </div>
               </div>

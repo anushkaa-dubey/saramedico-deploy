@@ -8,6 +8,7 @@ import logo from "@/public/logo.png";
 import dashboardIcon from "@/public/icons/dashboard.svg";
 import manageIcon from "@/public/icons/manage.svg";
 import settingsIcon from "@/public/icons/settings.svg";
+import notificationIcon from "@/public/icons/notification.svg";
 
 export default function AdminSidebar() {
   const pathname = usePathname();
@@ -16,13 +17,15 @@ export default function AdminSidebar() {
 
   return (
     <>
-      <button
-        className={styles.mobileToggleBtn}
-        onClick={() => setIsOpen(!isOpen)}
-        aria-label="Toggle Menu"
-      >
-        {isOpen ? "✖" : "☰"}
-      </button>
+      {!isOpen && (
+        <button
+          className={styles.mobileToggleBtn}
+          onClick={() => setIsOpen(true)}
+          aria-label="Toggle Menu"
+        >
+          ☰
+        </button>
+      )}
 
       {isOpen && (
         <div

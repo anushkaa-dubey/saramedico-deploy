@@ -17,7 +17,7 @@
   object-fit: contain;
 }
 
-/* Sidebar */
+
 .mobileToggleBtn,
 .mobileOverlay,
 .closeBtnHidden {
@@ -25,20 +25,25 @@
 }
 
 .sidebar {
-  width: 220px;
+  width: 260px;
   background: #ffffff;
-  padding: 16px;
+  padding: 20px 16px;
   border-right: 1px solid #eef2f7;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  transition: all 0.3s ease;
+  height: calc(100vh - 40px);
+  position: sticky;
+  top: 20px;
 }
 
 .logoRow {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 70px;
+  margin-bottom: 24px;
+  padding-left: 12px;
 }
 
 .logoText {
@@ -46,7 +51,7 @@
   color: #2563eb;
 }
 
-/* Nav spacing */
+
 .navGroup {
   margin-top: 20px;
 }
@@ -55,25 +60,30 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 12px 14px;
+  padding: 10px 12px;
   border-radius: 10px;
   font-size: 14px;
   color: #0f172a;
   cursor: pointer;
   text-decoration: none;
   margin-bottom: 6px;
-  transition: all 0.2s ease;
+  transition: all 0.2s ease-in-out;
 }
 
 .navItem:hover {
   background: #f1f5f9;
-  color: #0f172a;
+  color: #359AFF;
 }
 
 .active {
   background: linear-gradient(90deg, #359AFF, #9CCDFF);
   color: #ffffff;
   font-weight: 600;
+}
+
+.active:hover {
+  opacity: 0.9;
+  color: #ffffff;
 }
 
 .startBtn {
@@ -91,16 +101,31 @@
 }
 
 .startBtn:hover {
-  opacity: 0.9;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(53, 154, 255, 0.3);
+  filter: brightness(1.05);
 }
 
-/* Main */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .main {
   flex: 1;
   padding: 20px 24px;
+  animation: fadeIn 0.4s ease-out;
 }
 
-/* Topbar */
+
 .topbar {
   display: flex;
   justify-content: space-between;
@@ -129,7 +154,7 @@
   font-size: 13px;
 }
 
-/* Header Section */
+
 .header {
   display: flex;
   justify-content: space-between;
@@ -159,13 +184,48 @@
   width: 36px;
   height: 36px;
   border-radius: 8px;
-  border: 1px solid #e5e7eb;
-  background: #ffffff;
+  border: none;
+  background: transparent;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 16px;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.iconBtn:hover {
+  background: #f1f5f9;
+  transform: scale(1.05);
+}
+
+.notificationBtn {
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: transform 0.2s ease;
+  padding: 0;
+}
+
+.notificationBtn:hover {
+  transform: scale(1.05);
+}
+
+.notificationBadge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 8px;
+  height: 8px;
+  background: #ef4444;
+  border-radius: 50%;
+  border: 1.5px solid #ffffff;
 }
 
 .outlineBtn {
@@ -181,6 +241,12 @@
   gap: 8px;
   font-size: 13px;
   font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.outlineBtn:hover {
+  background: #f8fafc;
+  transform: scale(1.05);
 }
 
 .primaryBtn {
@@ -200,10 +266,11 @@
 }
 
 .primaryBtn:hover {
-  opacity: 0.9;
+  opacity: 0.95;
+  transform: scale(1.05);
 }
 
-/* Grid Layout */
+
 .grid {
   display: grid;
   grid-template-columns: 2fr 1fr;
@@ -222,7 +289,7 @@
   gap: 16px;
 }
 
-/* Card */
+
 .card {
   background: #ffffff;
   border: 1px solid #eef2f7;
@@ -250,7 +317,7 @@
   text-decoration: none;
 }
 
-/* Upcoming Appointment Card */
+
 .appointmentCard {
   background: #ffffff;
   border: 1px solid #eef2f7;
@@ -320,10 +387,11 @@
 }
 
 .startMeetBtn:hover {
-  opacity: 0.9;
+  opacity: 0.95;
+  transform: scale(1.05);
 }
 
-/* Profile Card */
+
 .profileCard {
   background: #ffffff;
   border: 1px solid #eef2f7;
@@ -341,6 +409,13 @@
   border-radius: 10px;
   background: #e5e7eb;
   flex-shrink: 0;
+  overflow: hidden;
+}
+
+.profileImage img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .profileContent {
@@ -418,9 +493,10 @@
 .detailsBtn:hover {
   background: #f1f5f9;
   border-color: #cbd5e1;
+  transform: scale(1.05);
 }
 
-/* Tasks Section */
+
 .tasksHeader {
   display: flex;
   justify-content: space-between;
@@ -533,7 +609,7 @@
   background: #f1f5f9;
 }
 
-/* Table */
+
 .table {
   width: 100%;
   border-collapse: collapse;
@@ -570,7 +646,7 @@
   flex-shrink: 0;
 }
 
-/* Status Badges */
+
 .success {
   background: #ecfdf5;
   color: #16a34a;
@@ -603,7 +679,7 @@
   font-size: 12px;
 }
 
-/* Responsive */
+
 @media (max-width: 1024px) {
   .grid {
     grid-template-columns: 1fr;

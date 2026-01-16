@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import styles from "./Step3.module.css";
 import logo from "@/public/logo.png";
-// import micIcon from "@/public/icons/mic.svg"; // Assuming this might not exist or path is wrong, using emoji for now
+import mic from "@/public/icons/mic.svg";
 
 export default function DoctorOnboardingStep3() {
   const router = useRouter();
@@ -12,7 +12,7 @@ export default function DoctorOnboardingStep3() {
 
   const handleStartRecording = () => {
     setIsRecording(true);
-    // Demo: Auto stop after 5 seconds
+
     setTimeout(() => {
       setIsRecording(false);
     }, 5000);
@@ -24,7 +24,6 @@ export default function DoctorOnboardingStep3() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Complete onboarding and redirect to doctor dashboard
     router.push("/dashboard/doctor");
   };
 
@@ -62,7 +61,7 @@ export default function DoctorOnboardingStep3() {
                 {/* Left Card: Audio Config */}
                 <div className={styles.innerCard}>
                   <div className={styles.cardHeader}>
-                    <h3 className={styles.cardTitle}>Audio Configuration</h3>
+                    <h3 className={styles.cardTitle}><img src={mic.src} alt="Mic" className={styles.micIcon} /> Audio Configuration</h3>
                   </div>
 
                   <div className={styles.cardBody}>
@@ -101,7 +100,6 @@ export default function DoctorOnboardingStep3() {
                 {/* Right Card: Sample Text */}
                 <div className={`${styles.innerCard} ${styles.textCard}`}>
                   <div className={styles.cardHeader}>
-                    {/* No title in design, but maybe handy? Or just empty */}
                   </div>
                   <div className={styles.cardBody}>
                     <div className={styles.sampleText}>

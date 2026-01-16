@@ -1,6 +1,8 @@
 import styles from "./ManageAccounts.module.css";
 import AdminSidebar from "../components/Sidebar";
 import Link from "next/link";
+import notificationIcon from "@/public/icons/notification.svg";
+import searchIcon from "@/public/icons/search.svg";
 
 export default function ManageAccountsPage() {
 
@@ -71,14 +73,17 @@ export default function ManageAccountsPage() {
       <main className={styles.main}>
         {/* Topbar */}
         <div className={styles.topbar}>
-          <input
-            className={styles.search}
-            placeholder="Search settings, reports, notes..."
-          />
+          <div className={styles.searchWrapper}>
+            <img src={searchIcon.src} alt="Search" className={styles.searchIcon} />
+            <input
+              className={styles.search}
+              placeholder="Search settings, reports, notes..."
+            />
+          </div>
 
           <div className={styles.topActions}>
             <button className={styles.iconBtn}>
-              <div className={styles.iconPlaceholder}></div>
+              <img src={notificationIcon.src} alt="Notifications" width="20" height="20" />
             </button>
 
             <div className={styles.profile}>
@@ -102,7 +107,7 @@ export default function ManageAccountsPage() {
             href="/dashboard/admin/manage-accounts/invite"
             className={styles.inviteBtn}
           >
-             Invite User
+            Invite User
           </Link>
         </div>
 

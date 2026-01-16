@@ -5,6 +5,18 @@
   padding: 16px;
 }
 
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .main {
   flex: 1;
   background: #F5F7FA;
@@ -12,7 +24,8 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  /* padding removed to match Dashboard */
+  animation: fadeIn 0.4s ease-out;
+  width: 100%;
 }
 
 .wrapper {
@@ -22,7 +35,7 @@
   gap: 20px;
 }
 
-/* ===== PAGE HEADER ===== */
+
 .pageHeader {
   margin-bottom: 24px;
 }
@@ -40,7 +53,7 @@
   margin-top: 4px;
 }
 
-/* ===== DETAILS CARD ===== */
+
 .detailsCard {
   background: #ffffff;
   border-radius: 12px;
@@ -202,9 +215,15 @@
   color: #ffffff;
   font-size: 13px;
   cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-/* ===== TABS ===== */
+.newVisitBtn:hover {
+  opacity: 0.95;
+  transform: scale(1.05);
+}
+
+
 .tabs {
   display: flex;
   gap: 20px;
@@ -224,7 +243,7 @@
   font-weight: 600;
 }
 
-/* ===== CARD ===== */
+
 .card {
   margin-top: 12px;
   background: #ffffff;
@@ -233,7 +252,7 @@
   padding: 16px;
 }
 
-/* ===== CARD HEADER ===== */
+
 .cardHeader {
   display: flex;
   justify-content: space-between;
@@ -262,13 +281,11 @@
   background: #ffffff;
 }
 
-/* ===== TABLE ===== */
+
 .tableContainer {
   overflow-x: auto;
-  /* Enable horizontal scroll */
   -webkit-overflow-scrolling: touch;
   margin: 0 -16px;
-  /* Negate padding for full width on mobile if needed */
   padding: 0 16px;
 }
 
@@ -277,7 +294,6 @@
   border-collapse: collapse;
   font-size: 13px;
   min-width: 600px;
-  /* Force min width to trigger scroll */
 }
 
 .table th {
@@ -300,9 +316,16 @@
   font-weight: 500;
   cursor: pointer;
   white-space: nowrap;
+  transition: transform 0.2s ease;
+  display: inline-block;
 }
 
-/* ===== STATUS PILLS ===== */
+.action:hover {
+  transform: scale(1.05);
+  text-decoration: underline;
+}
+
+
 .status {
   font-size: 12px;
   padding: 4px 12px;
@@ -318,7 +341,7 @@
   color: #16a34a;
 }
 
-/* ===== FOOTER / PAGINATION ===== */
+
 .footer {
   margin-top: 10px;
   font-size: 12px;
@@ -341,6 +364,12 @@
   background: #ffffff;
   font-size: 12px;
   cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pageBtn:hover {
+  background: #f8fafc;
+  transform: scale(1.1);
 }
 
 .pageBtn.active {
@@ -349,7 +378,33 @@
   font-weight: 600;
 }
 
-/* ================= RESPONSIVE ================= */
+.input:read-only {
+  background-color: #f5f6f8;
+  color: #9aa0a6;
+  border: 1px solid #e0e0e0;
+  cursor: default;
+}
+
+.input::placeholder {
+  color: #9aa0a6;
+}
+
+.editBtn {
+  background: none;
+  border: none;
+  color: #2563eb;
+  font-size: 14px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: transform 0.2s ease;
+}
+
+.editBtn:hover {
+  text-decoration: underline;
+  transform: scale(1.05);
+}
+
+
 
 /* Tablet */
 @media (max-width: 1024px) {
@@ -369,12 +424,12 @@
 /* Mobile */
 @media (max-width: 768px) {
   .container {
-    flex-direction: column;
+    padding: 8px;
+    display: block;
   }
 
   .main {
     padding: 16px;
-    /* Adjust padding for mobile */
   }
 
   .profileHeader {
@@ -447,9 +502,10 @@
   }
 
   .detailsCard {
-    padding: 16px;
+    padding: 20px;
     flex-direction: column;
     gap: 24px;
+    margin-bottom: 24px;
   }
 
   .avatarSection {

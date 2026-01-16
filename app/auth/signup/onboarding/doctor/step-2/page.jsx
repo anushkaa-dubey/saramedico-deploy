@@ -22,7 +22,6 @@ export default function DoctorOnboardingStep2() {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!file) {
-      // In a real app, maybe enforce file upload. For demo, we can allow skip or just warn.
       // alert("Please upload a file");
       // return; 
     }
@@ -91,8 +90,7 @@ export default function DoctorOnboardingStep2() {
                     )}
                   </div>
                 </div>
-
-                {/* Right Side: Requirements & Best Practices */}
+                {/* right side */}
                 <div className={styles.infoSide}>
                   <div className={styles.infoBlock}>
                     <h4 className={styles.infoTitle}>FILE REQUIREMENTS</h4>

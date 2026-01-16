@@ -4,12 +4,25 @@
   background: #f8fafc;
 }
 
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* Main */
 .main {
   flex: 1;
   padding: 20px 24px;
   background: #F5F7FA;
   overflow-y: auto;
+  animation: fadeIn 0.4s ease-out;
 }
 
 /* Topbar */
@@ -20,10 +33,24 @@
   margin-bottom: 20px;
 }
 
+.searchWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 12px;
+  width: 16px;
+  height: 16px;
+  opacity: 0.5;
+}
+
 .search {
   width: 320px;
   height: 36px;
-  padding: 0 12px;
+  padding: 0 12px 0 36px;
   border-radius: 8px;
   border: 1px solid #DFF2FF;
   background: #ffffff;
@@ -44,9 +71,18 @@
   width: 36px;
   height: 36px;
   border-radius: 8px;
-  border: 1px solid #e5e7eb;
-  background: #ffffff;
+  border: none;
+  background: transparent;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.iconBtn:hover {
+  background: #f1f5f9;
+  transform: scale(1.05);
 }
 
 .profile {

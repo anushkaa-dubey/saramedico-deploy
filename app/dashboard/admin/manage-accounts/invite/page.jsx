@@ -1,6 +1,11 @@
 import styles from "./InvitePage.module.css";
 import AdminSidebar from "../../components/Sidebar";
 import Link from "next/link";
+import notificationIcon from "@/public/icons/notification.svg";
+import searchIcon from "@/public/icons/search.svg";
+import lockIcon from "@/public/icons/lock.svg";
+import manageIcon from "@/public/icons/manage.svg";
+import personIcon from "@/public/icons/person.svg";
 
 export default function InviteTeamPage() {
   return (
@@ -12,14 +17,17 @@ export default function InviteTeamPage() {
       <main className={styles.main}>
         {/* Topbar */}
         <div className={styles.topbar}>
-          <input
-            className={styles.search}
-            placeholder="Search settings, reports, notes..."
-          />
+          <div className={styles.searchWrapper}>
+            <img src={searchIcon.src} alt="Search" className={styles.searchIcon} />
+            <input
+              className={styles.search}
+              placeholder="Search settings, reports, notes..."
+            />
+          </div>
 
           <div className={styles.topActions}>
             <button className={styles.iconBtn}>
-              <div className={styles.iconPlaceholder}></div>
+              <img src={notificationIcon.src} alt="Notifications" width="20" height="20" />
             </button>
 
             <div className={styles.profile}>
@@ -67,7 +75,9 @@ export default function InviteTeamPage() {
                   {/* Administrator */}
                   <div className={styles.roleCard}>
                     <div className={styles.roleCardHeader}>
-                      <div className={styles.roleIcon}>🔐</div>
+                      <div className={styles.roleIcon}>
+                        <img src={lockIcon.src} alt="Admin" width="20" height="20" />
+                      </div>
                       <div>
                         <h4 className={styles.roleName}>Administrator</h4>
                         <p className={styles.roleAccess}>Full Platform Access</p>
@@ -92,7 +102,9 @@ export default function InviteTeamPage() {
                   {/* Member */}
                   <div className={`${styles.roleCard} ${styles.roleCardActive}`}>
                     <div className={styles.roleCardHeader}>
-                      <div className={styles.roleIcon}>👥</div>
+                      <div className={styles.roleIcon}>
+                        <img src={manageIcon.src} alt="Member" width="20" height="20" />
+                      </div>
                       <div>
                         <h4 className={styles.roleName}>Member</h4>
                         <p className={styles.roleAccess}>Clinician & Staff</p>
@@ -117,7 +129,9 @@ export default function InviteTeamPage() {
                   {/* Patient */}
                   <div className={styles.roleCard}>
                     <div className={styles.roleCardHeader}>
-                      <div className={styles.roleIcon}>👤</div>
+                      <div className={styles.roleIcon}>
+                        <img src={personIcon.src} alt="Patient" width="20" height="20" />
+                      </div>
                       <div>
                         <h4 className={styles.roleName}>Patient</h4>
                         <p className={styles.roleAccess}>Read Only Access</p>

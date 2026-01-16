@@ -3,6 +3,9 @@
 import styles from "./Settings.module.css";
 import AdminSidebar from "../components/Sidebar";
 import { useState } from "react";
+import notificationIcon from "@/public/icons/notification.svg";
+import searchIcon from "@/public/icons/search.svg";
+import lockIcon from "@/public/icons/lock.svg";
 
 export default function SettingsPage() {
   const [formData, setFormData] = useState({
@@ -40,14 +43,17 @@ export default function SettingsPage() {
       <main className={styles.main}>
         {/* Topbar */}
         <div className={styles.topbar}>
-          <input
-            className={styles.search}
-            placeholder="Search settings, reports, notes..."
-          />
+          <div className={styles.searchWrapper}>
+            <img src={searchIcon.src} alt="Search" className={styles.searchIcon} />
+            <input
+              className={styles.search}
+              placeholder="Search settings, reports, notes..."
+            />
+          </div>
 
           <div className={styles.topActions}>
             <button className={styles.iconBtn}>
-              <div className={styles.iconPlaceholder}></div>
+              <img src={notificationIcon.src} alt="Notifications" width="20" height="20" />
             </button>
 
             <div className={styles.profile}>
@@ -133,7 +139,9 @@ export default function SettingsPage() {
             <p className={styles.cardDescription}>Manage active data pipelines with external medical records systems</p>
 
             <div className={styles.connectionBox}>
-              <div className={styles.connectionLock}>🔒</div>
+              <div className={styles.connectionLock}>
+                <img src={lockIcon.src} alt="Secure" width="16" height="16" />
+              </div>
               <div className={styles.connectionInfo}>
                 <h4>EPIC Systems</h4>
                 <p>Last Sync - 2 mins ago · FHIR R4</p>
@@ -141,7 +149,9 @@ export default function SettingsPage() {
             </div>
 
             <div className={styles.connectionBox}>
-              <div className={styles.connectionLock}>🔒</div>
+              <div className={styles.connectionLock}>
+                <img src={lockIcon.src} alt="Secure" width="16" height="16" />
+              </div>
               <div className={styles.connectionInfo}>
                 <h4>Oracle Cerner</h4>
                 <p>HL7 v2.x Interface</p>

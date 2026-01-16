@@ -1,10 +1,14 @@
 "use client";
-
+import Image from "next/image";
 import Sidebar from "../components/Sidebar";
 import Topbar from "../components/Topbar";
 import styles from "./LiveConsult.module.css";
+import search from "@/public/icons/search.svg"
+import mic from "@/public/icons/mic.svg";
+import { useRouter } from "next/navigation";
 
 export default function LiveConsultPage() {
+    const router = useRouter();
     return (
         <div className={styles.container}>
             <Sidebar />
@@ -30,7 +34,7 @@ export default function LiveConsultPage() {
                             <div className={styles.cardContent}>
                                 <label className={styles.label}>LINK TO PATIENT RECORD</label>
                                 <div className={styles.searchBox}>
-                                    <span className={styles.searchIcon}>🔍</span>
+                                    <Image src={search} alt="Search" className={styles.searchIcon} />
                                     <input
                                         type="text"
                                         placeholder="Search patients, reports, notes..."
@@ -103,7 +107,7 @@ export default function LiveConsultPage() {
 
                         {/* Audio Config Card */}
                         <div className={styles.card}>
-                            <h3 className={styles.cardTitle}>🎤 Audio Configuration</h3>
+                            <h3 className={styles.cardTitle}><Image src={mic} alt="Microphone" /> Audio Configuration</h3>
 
                             <div className={styles.cardContent}>
                                 <label className={styles.label}>INPUT SOURCE</label>
@@ -125,20 +129,19 @@ export default function LiveConsultPage() {
                                 </div>
                             </div>
 
-                            <button className={styles.startSessionBtn}>
-                                🎤 Start Session
+                            <button
+                                className={styles.startSessionBtn}
+                                onClick={() => router.push("/dashboard/doctor/video-call")}
+                            >
+                                <Image src={mic} alt="Microphone" /> Start Session
                             </button>
                         </div>
 
-                        {/* Top right 'Start Session' button was in the image, but maybe duplicates the card button or sidebar button?
-                 In the image, there is a 'Start Session' button in the top right too. 
-              */}
 
                     </div>
                 </section>
             </main>
 
-            {/* Floating or fixed bottom bar if mobile? Not in desktop image */}
         </div>
     );
 }

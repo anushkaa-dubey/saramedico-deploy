@@ -2,7 +2,7 @@
 import { useState } from "react";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import styles from "../DoctorDashboard.module.css";
 import logo from "@/public/logo.png";
 import dashboardIcon from "@/public/icons/dashboard.svg";
@@ -14,6 +14,7 @@ import settingsIcon from "@/public/icons/settings.svg";
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const isActive = (path) => pathname === path || pathname.startsWith(path);
 
   // State for mobile sidebar toggle
@@ -21,16 +22,16 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* Mobile Toggle Button - Visible only on mobile */}
-      <button
-        className={styles.mobileToggleBtn}
-        onClick={() => setIsOpen(!isOpen)}
-        aria-label="Toggle Menu"
-      >
-        {isOpen ? "✖" : "☰"}
-      </button>
+      {!isOpen && (
+        <button
+          className={styles.mobileToggleBtn}
+          onClick={() => setIsOpen(true)}
+          aria-label="Toggle Menu"
+        >
+          ☰
+        </button>
+      )}
 
-      {/* Overlay to close on click outside (optional but good UX) */}
       {isOpen && (
         <div
           className={styles.mobileOverlay}
@@ -97,7 +98,12 @@ export default function Sidebar() {
           </div>
         </div>
 
-        <button className={styles.startBtn}>+ Start Session</button>
+        <button
+          className={styles.startBtn}
+          onClick={() => router.push("/dashboard/doctor/video-call")}
+        >
+          + Start Session
+        </button>
       </aside>
     </>
   );

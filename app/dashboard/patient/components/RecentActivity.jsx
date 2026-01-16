@@ -10,16 +10,15 @@ export default function RecentActivity() {
         </span>
       </div>
 
-      {/* Header Row */}
-      <div className={styles.tableHeaderRow}>
-        <div>DOCTOR</div>
-        <div>ACTIVITY</div>
-        <div>DATE/TIME</div>
-        <div>STATUS</div>
-      </div>
-
-      {/* Table */}
       <div className={styles.activityTableContainer}>
+        {/* Header Row */}
+        <div className={styles.tableHeaderRow}>
+          <div>DOCTOR</div>
+          <div>ACTIVITY</div>
+          <div>DATE/TIME</div>
+          <div>STATUS</div>
+        </div>
+
         <table className={styles.activityTable}>
           <tbody>
             <tr className={styles.activityRow}>

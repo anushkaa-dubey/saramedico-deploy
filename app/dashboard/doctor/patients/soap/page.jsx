@@ -2,8 +2,8 @@
 import Sidebar from "../../components/Sidebar";
 import Topbar from "../../components/Topbar";
 import styles from "./SoapNotes.module.css";
-// Optional: import icons if needed, using emojis/text for layout speed as per prior patterns, or svgs if available.
-// User requested "no fancy css" previously but this is a specific design. I will match the look cleanly.
+import messages from "@/public/icons/messages.svg";
+import docs from "@/public/icons/docs.svg";
 
 export default function SoapNotesPage() {
     return (
@@ -40,7 +40,8 @@ export default function SoapNotesPage() {
                         <div className={styles.card}>
                             <div className={styles.cardHeader}>
                                 <div className={styles.headerTitle}>
-                                    📝 SOAP Notes
+                                    <img src={docs.src} alt="Summary" />
+                                    SOAP Notes
                                 </div>
                                 <button className={styles.editBtn}>+ Edit</button>
                             </div>
@@ -90,7 +91,8 @@ export default function SoapNotesPage() {
 
                         {/* Summary Section */}
                         <div className={styles.summaryHeader}>
-                            💬 Summary
+                            <img src={messages.src} alt="Summary" />
+                            <span>Summary</span>
                         </div>
 
                         <div className={styles.subHeader}>DETECTED SIGNALS</div>

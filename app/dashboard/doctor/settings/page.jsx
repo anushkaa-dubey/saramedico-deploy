@@ -2,11 +2,15 @@
 
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import styles from "./Settings.module.css";
 import profileIcon from "@/public/icons/profile.svg";
 import billIcon from "@/public/icons/bill.svg";
 import manageIcon from "@/public/icons/manage.svg";
 import notificationIcon from "@/public/icons/notification.svg";
+import lock from "@/public/icons/lock.svg";
+import notification from "@/public/icons/notification.svg";
+import mfa from "@/public/icons/MFA.svg";
 
 export default function DoctorSettings() {
   const pathname = usePathname();
@@ -15,23 +19,23 @@ export default function DoctorSettings() {
   const isActive = (path) => pathname === path || pathname.startsWith(path);
 
   const menuItems = [
-    { 
-      label: "My profile", 
+    {
+      label: "My profile",
       path: "/dashboard/doctor/settings/profile",
       icon: profileIcon
     },
-    { 
-      label: "Billings & Plans", 
+    {
+      label: "Billings & Plans",
       path: "/dashboard/doctor/settings/billing",
       icon: billIcon
     },
-    { 
-      label: "Team Members", 
+    {
+      label: "Team Members",
       path: "/dashboard/doctor/settings/team",
       icon: manageIcon
     },
-    { 
-      label: "Notifications", 
+    {
+      label: "Notifications",
       path: "/dashboard/doctor/settings/notifications",
       icon: notificationIcon
     },
@@ -42,21 +46,20 @@ export default function DoctorSettings() {
       {/* Sidebar */}
       <aside className={styles.sidebar}>
         <div>
-          <button 
-            className={styles.backBtn} 
+          <button
+            className={styles.backBtn}
             onClick={() => router.push("/dashboard/doctor")}
           >
             ←
           </button>
-          
+
           <div className={styles.navGroup}>
             {menuItems.map((item) => (
               <Link
                 key={item.path}
                 href={item.path}
-                className={`${styles.navItem} ${
-                  isActive(item.path) ? styles.active : ""
-                }`}
+                className={`${styles.navItem} ${isActive(item.path) ? styles.active : ""
+                  }`}
               >
                 <img src={item.icon.src} alt={item.label} width="18" height="18" />
                 {item.label}
@@ -80,7 +83,7 @@ export default function DoctorSettings() {
             placeholder="Search settings, reports, notes..."
           />
           <div className={styles.topActions}>
-            <button className={styles.iconBtn}>🔔</button>
+            <button className={styles.iconBtn}><Image src={notification.src} alt="Notification" width="18" height="18" /> </button>
             <div className={styles.profile}>
               <div className={styles.avatar}></div>
               <div>
@@ -141,7 +144,7 @@ export default function DoctorSettings() {
           <div className={styles.cardsGrid}>
             <div className={styles.card}>
               <div className={styles.cardTitleRow}>
-                <span className={styles.cardIcon}>🔒</span>
+                <span className={styles.cardIcon}><Image src={lock.src} alt="Lock" width="18" height="18" /></span>
                 <h3>Password</h3>
               </div>
               <p>Last changed 3 months ago. We recommend changing every 90 days.</p>
@@ -150,7 +153,7 @@ export default function DoctorSettings() {
 
             <div className={styles.card}>
               <div className={styles.cardTitleRow}>
-                <span className={styles.cardIcon}>🔒</span>
+                <span className={styles.cardIcon}><Image src={mfa.src} alt="MFA" width="18" height="18" /></span>
                 <h3>MFA Setup</h3>
                 <span className={styles.badge}>Enabled</span>
               </div>

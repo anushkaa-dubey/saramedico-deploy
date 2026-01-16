@@ -20,67 +20,47 @@ Healthcare platform frontend built with Next.js (App Router) supporting both Pat
 ```
 app/
 ├── layout.jsx                          # Root layout
-├── page.tsx                            # Home page
+├── page.tsx                            # Home page (Landing)
 ├── globals.css                         # Global styles
 │
-├── auth/                               # Authentication pages
-│   ├── login/
-│   │   └── page.jsx                   # Patient login
-│   ├── signup/
-│   │   └── page.tsx                   # Patient signup
-│   ├── 2fa/                           # Two-factor authentication
-│   │   ├── login/
-│   │   │   └── page.jsx               # 2FA login verification
-│   │   └── signup/
-│   │       └── page.jsx               # 2FA signup setup
-│   └── components/
-│       ├── AuthLayout.jsx             # Shared auth layout
-│       ├── LoginForm.jsx              # Login form component
-│       └── SignupForm.jsx             # Signup form component
+├── auth/                               # Authentication & Onboarding
+│   ├── login/                          # Login pages
+│   ├── signup/                         # Signup flow
+│   │   └── onboarding/                 # Post-signup onboarding
+│   │       └── doctor/                 # 3-Step clinician setup
+│   ├── 2fa/                            # Multi-factor authentication
+│   └── components/                     # Auth-specific UI
 │
 ├── dashboard/
-│   ├── admin/                         # Admin dashboard
-│   │   ├── page.jsx                   # Admin home
-│   │   ├── AdminDashboard.module.css  # Admin styles
-│   │   │
-│   │   └── manage-accounts/           # Account management
-│   │       ├── page.jsx               # Manage accounts page
-│   │       ├── ManageAccounts.module.css
-│   │       │
-│   │       └── invite/                # Invite team members
-│   │           ├── page.jsx           # Invite form page
-│   │           └── InvitePage.module.css
+│   ├── admin/                         # Admin Portal
+│   │   ├── page.jsx                   # Admin overview
+│   │   ├── AdminDashboard.module.css
+│   │   ├── manage-accounts/           # User management & Invites
+│   │   └── settings/                  # System configurations (Lock secured)
 │   │
-│   └── patient/                       # Patient dashboard
-│       ├── page.jsx                   # Patient home
-│       ├── PatientDashboard.module.css # Patient styles
-│       │
-│       ├── audio-check/               # Audio calibration
-│       │   ├── page.jsx               # Audio check page
-│       │   └── AudioCheck.module.css
-│       │
-│       ├── records/                   # Medical records
-│       │   ├── page.jsx               # Records listing
-│       │   ├── Records.module.css
-│       │   └── components/
-│       │       └── RecordsTable.jsx
-│       │
-│       └── components/                # Patient dashboard components
-│           ├── Sidebar.jsx            # Navigation sidebar
-│           ├── Topbar.jsx             # Top navigation
-│           ├── UpNextCard.jsx         # Upcoming appointments
-│           ├── Vitals.jsx             # Vital signs display
-│           ├── RecentActivity.jsx     # Activity log
-│           └── QuickActions.jsx       # Action shortcuts
+│   ├── doctor/                        # Doctor Portal
+│   │   ├── page.jsx                   # Clinical overview
+│   │   ├── DoctorDashboard.module.css
+│   │   ├── live-consult/              # Session preparation
+│   │   ├── patients/                  # Patient roster
+│   │   │   └── soap/                  # Clinical SOAP documentation
+│   │   ├── team/                      # Staff & colleague invites
+│   │   └── video-call/                # Real-time consultation room
+│   │
+│   └── patient/                       # Patient Portal
+│       ├── page.jsx                   # Health summary
+│       ├── PatientDashboard.module.css
+│       ├── audio-check/               # Equipment testing
+│       ├── records/                   # Medical history & Labs
+│       └── video-call/                # Virtual waiting & Session room
 │
 public/
-├── logo.png                           # SaraMedico logo
-└── icons/                             # SVG icons
-    ├── dashboard.svg                  # Dashboard icon
-    ├── mic.svg                        # Microphone icon
-    ├── manage.svg                     # Manage icon
-    ├── messages.svg                   # Messages icon
-    └── settings.svg                   # Settings icon
+├── logo.png                           # Main branding
+└── icons/                             # Comprehensive medical icon system
+    ├── speciality/                    # Department-specific icons (Cardiology, etc.)
+    ├── lock.svg                       # Security symbol
+    ├── notification.svg               # Alert system icon
+    └── ...                            # 30+ specialized SVG assets
 
 eslint.config.mjs
 next.config.ts

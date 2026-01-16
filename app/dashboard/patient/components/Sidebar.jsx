@@ -20,13 +20,15 @@ export default function Sidebar() {
   return (
     <>
       {/* Mobile Toggle Button - Visible only on mobile */}
-      <button
-        className={styles.mobileToggleBtn}
-        onClick={() => setIsOpen(!isOpen)}
-        aria-label="Toggle Menu"
-      >
-        {isOpen ? "✖" : "☰"}
-      </button>
+      {!isOpen && (
+        <button
+          className={styles.mobileToggleBtn}
+          onClick={() => setIsOpen(true)}
+          aria-label="Toggle Menu"
+        >
+          ☰
+        </button>
+      )}
 
       {/* Overlay to close on click outside (optional but good UX) */}
       {isOpen && (

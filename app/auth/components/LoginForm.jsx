@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 export default function LoginForm() {
@@ -9,40 +9,46 @@ export default function LoginForm() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  // Get role from URL or sessionStorage
-  const role = searchParams.get("role") || (typeof window !== "undefined" ? sessionStorage.getItem("selectedRole") : null) || "patient";
+  const [computedRole, setComputedRole] = useState("patient");
 
-const handleLogin = (e) => {
-  e.preventDefault();
+  // Get role from URL or sessionStorage safely
+  useEffect(() => {
+    const urlRole = searchParams.get("role");
+    const sessionRole = typeof window !== "undefined" ? sessionStorage.getItem("selectedRole") : null;
+    setComputedRole(urlRole || sessionRole || "patient");
+  }, [searchParams]);
 
-  // Demo credentials for testing
-  // ADMIN LOGIN
-  if (email === "admin@saramedico.com" && password === "admin123") {
-    router.push(`/auth/2fa/login?role=admin`);
-    return;
-  }
+  const handleLogin = (e) => {
+    e.preventDefault();
 
-  // DOCTOR LOGIN
-  if (email === "doctor@saramedico.com" && password === "doctor123") {
-    router.push(`/auth/2fa/login?role=doctor`);
-    return;
-  }
+    // Demo credentials for testing
+    // ADMIN LOGIN
+    if (email === "admin@saramedico.com" && password === "admin123") {
+      router.push(`/auth/2fa/login?role=admin`);
+      return;
+    }
 
-  // PATIENT LOGIN
-  if (email === "test@saramedico.com" && password === "123456") {
-    router.push(`/auth/2fa/login?role=patient`);
-    return;
-  }
+    // DOCTOR LOGIN
+    if (email === "doctor@saramedico.com" && password === "doctor123") {
+      router.push(`/auth/2fa/login?role=doctor`);
+      return;
+    }
 
-  // HOSPITAL LOGIN
-  if (email === "hospital@saramedico.com" && password === "hospital123") {
-    router.push(`/auth/2fa/login?role=hospital`);
-    return;
-  }
+    // PATIENT LOGIN
+    if (email === "test@saramedico.com" && password === "123456") {
+      router.push(`/auth/2fa/login?role=patient`);
+      return;
+    }
 
-  // If no specific match, use role from URL
-  router.push(`/auth/2fa/login?role=${role}`);
-};
+    // HOSPITAL LOGIN
+    if (email === "hospital@saramedico.com" && password === "hospital123") {
+      router.push(`/auth/2fa/login?role=hospital`);
+      return;
+    }
+
+    // If no specific match, use role from URL
+    router.push(`/auth/2fa/login?role=${computedRole}`);
+  };
 
   return (
     <>
@@ -88,7 +94,7 @@ const handleLogin = (e) => {
         </button>
 
         <div className="bottom-text">
-          Don't have an account? <a href={`/auth/signup?role=${role}`}>Sign Up</a>
+          Don't have an account? <a href={`/auth/signup?role=${computedRole}`}>Sign Up</a>
         </div>
       </form>
     </>

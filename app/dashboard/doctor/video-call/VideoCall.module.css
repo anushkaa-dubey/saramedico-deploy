@@ -1,0 +1,448 @@
+.screen {
+    width: 100vw;
+    height: 100vh;
+    background-color: #9ccdff;
+    background-image:
+        radial-gradient(at 15% 25%, #d9ecff 0px, transparent 50%),
+        radial-gradient(at 85% 40%, #359aff 0px, transparent 50%),
+        radial-gradient(at 50% 80%, #7cadf0 0px, transparent 50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    transition: all 0.5s ease;
+}
+
+/* Glass Container for Transition */
+.transitionContainer {
+    width: 100%;
+    max-width: 1000px;
+    aspect-ratio: 16 / 9;
+    border-radius: 12px;
+    position: relative;
+    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.callSymbol {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    color: #ffffff;
+}
+
+.callIcon {
+    width: 32px;
+    height: 32px;
+    opacity: 0.8;
+    filter: brightness(0) invert(1);
+    animation: pulse 2s infinite ease-in-out;
+}
+
+.statusText {
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+    opacity: 0.8;
+}
+
+/* Main Session Layout (Image 2) */
+.sessionWrapper {
+    display: flex;
+    width: 100vw;
+    height: 100vh;
+    background: #f8fafc;
+    overflow: hidden;
+    animation: fadeIn 0.5s ease-out;
+}
+
+.mainContent {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 20px 24px;
+    overflow-y: auto;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: 1.2fr 0.8fr;
+    gap: 20px;
+    margin-top: 20px;
+    height: calc(100vh - 120px);
+}
+
+.leftCol {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.rightCol {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    height: 100%;
+}
+
+/* Patient Header Card */
+.patientInfoBar {
+    background: #ffffff;
+    border: 1px solid #eef2f7;
+    border-radius: 12px;
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    gap: 40px;
+}
+
+.patientMain {
+    display: flex;
+    flex-direction: column;
+}
+
+.patientName {
+    font-size: 16px;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.patientMeta {
+    display: flex;
+    gap: 30px;
+}
+
+.metaItem {
+    display: flex;
+    flex-direction: column;
+}
+
+.metaLabel {
+    font-size: 10px;
+    color: #94a3b8;
+    text-transform: uppercase;
+    font-weight: 600;
+    margin-bottom: 2px;
+}
+
+.metaValue {
+    font-size: 13px;
+    font-weight: 600;
+    color: #0f172a;
+}
+
+/* Video Card */
+.videoCard {
+    background: linear-gradient(to bottom, #359AFF 0%, #9CCDFF 100%);
+    border-radius: 12px;
+    aspect-ratio: 16 / 9;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.expandBtn {
+    position: absolute;
+    bottom: 16px;
+    right: 16px;
+    background: transparent;
+    border: none;
+    color: #ffffff;
+    cursor: pointer;
+}
+
+/* Recording Controls */
+.controlsCard {
+    background: #ffffff;
+    border: 1px solid #eef2f7;
+    border-radius: 12px;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.recordingBadge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    background: #fef2f2;
+    color: #ef4444;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.dot {
+    width: 6px;
+    height: 6px;
+    background: #ef4444;
+    border-radius: 50%;
+    animation: blink 1s infinite;
+}
+
+.timer {
+    font-size: 28px;
+    font-weight: 600;
+    color: #0f172a;
+    font-family: monospace;
+}
+
+.waveform {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    height: 24px;
+}
+
+.waveBar {
+    width: 3px;
+    height: 100%;
+    background: #0f172a;
+    border-radius: 2px;
+    animation: wave 1.2s infinite ease-in-out;
+}
+
+.stopBtn {
+    background: #ef4444;
+    color: #ffffff;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.endCallBtn {
+    background: #ef4444;
+    color: #ffffff;
+    border: none;
+    padding: 10px 24px;
+    border-radius: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+    transition: all 0.2s ease;
+}
+
+.endCallBtn:hover {
+    background: #dc2626;
+    transform: scale(1.02);
+}
+
+/* Entities Card */
+.entitiesCard {
+    background: #ffffff;
+    border: 1px solid #eef2f7;
+    border-radius: 12px;
+    padding: 16px;
+}
+
+.entitiesHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.addTagBtn {
+    font-size: 11px;
+    color: #94a3b8;
+    background: #f8fafc;
+    border: 1px solid #eef2f7;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+.tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.tag {
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.tagDanger {
+    background: #fef2f2;
+    color: #ef4444;
+}
+
+.tagWarning {
+    background: #fff7ed;
+    color: #f97316;
+}
+
+.tagInfo {
+    background: #f0f9ff;
+    color: #0085ff;
+}
+
+/* Transcript Card */
+.transcriptCard {
+    flex: 1;
+    background: #ffffff;
+    border: 1px solid #eef2f7;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.transcriptHeader {
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid #f8fafc;
+}
+
+.transcriptTitle {
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.transcriptContent {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.bubble {
+    padding: 14px 18px;
+    border-radius: 16px;
+    max-width: 85%;
+    font-size: 13px;
+    line-height: 1.5;
+    position: relative;
+    animation: slideUp 1s ease-out;
+}
+
+.bubbleDoctor {
+    align-self: flex-end;
+    background: #359aff;
+    color: #ffffff;
+    border-bottom-right-radius: 4px;
+}
+
+.bubblePatient {
+    align-self: flex-start;
+    background: #f8fafc;
+    color: #0f172a;
+    border: 1px solid #eef2f7;
+    border-bottom-left-radius: 4px;
+}
+
+/* Notes Footer */
+.notesFooter {
+    padding: 16px;
+    display: flex;
+    gap: 12px;
+    border-top: 1px solid #f8fafc;
+}
+
+.noteInput {
+    flex: 1;
+    border: 1px solid #eef2f7;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 13px;
+    background: #f8fafc;
+}
+
+.addNoteBtn {
+    background: #359aff;
+    color: #ffffff;
+    border: none;
+    padding: 0 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+/* Animations */
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        opacity: 0.9;
+    }
+
+    50% {
+        transform: scale(1.05);
+        opacity: 1;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 0.9;
+    }
+}
+
+@keyframes blink {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.3;
+    }
+}
+
+@keyframes wave {
+
+    0%,
+    100% {
+        transform: scaleY(0.4);
+    }
+
+    50% {
+        transform: scaleY(1);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

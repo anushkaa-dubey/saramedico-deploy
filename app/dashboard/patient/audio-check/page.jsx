@@ -6,7 +6,7 @@ import micIcon from "@/public/icons/mic.svg";
 import logo from "@/public/logo.png";
 
 export default function AudioCheck() {
-   const router = useRouter();
+  const router = useRouter();
 
   return (
     <div className={styles.container}>
@@ -31,14 +31,14 @@ export default function AudioCheck() {
             </div>
 
             <div className={styles.waveBox}>
-  <div className={styles.wavePlaceholder}>
-    <div className={styles.bar}></div>
-    <div className={styles.bar}></div>
-    <div className={styles.bar}></div>
-    <div className={styles.bar}></div>
-    <div className={styles.bar}></div>
-  </div>
-</div>
+              <div className={styles.wavePlaceholder}>
+                <div className={styles.bar}></div>
+                <div className={styles.bar}></div>
+                <div className={styles.bar}></div>
+                <div className={styles.bar}></div>
+                <div className={styles.bar}></div>
+              </div>
+            </div>
 
           </div>
           <div className={styles.card}>
@@ -52,13 +52,13 @@ export default function AudioCheck() {
           </div>
         </div>
         <div className={styles.footer}>
-        <button className={styles.backBtn} onClick={() => router.push("/dashboard/patient")}>
-         Back
-        </button>
+          <button className={styles.backBtn} onClick={() => router.push("/dashboard/patient")}>
+            Back
+          </button>
 
           <div className={styles.actions}>
             <button className={styles.skipBtn}>Skip this step</button>
-            <button className={styles.continueBtn}>Continue →</button>
+            <button className={styles.continueBtn} onClick={() => router.push("/dashboard/patient/video-call")}>Continue →</button>
           </div>
         </div>
       </div>
