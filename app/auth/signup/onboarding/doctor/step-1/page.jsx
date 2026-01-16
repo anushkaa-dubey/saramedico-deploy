@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import styles from "./Step1.module.css";
 import Image from "next/image";
-import logo from "@/public/logo.png";
+import logo from "@/public/logo2.svg";
 import search from "@/public/icons/search.svg";
 
 import genMedIcon from "@/public/icons/speciality/general_medicine.svg";

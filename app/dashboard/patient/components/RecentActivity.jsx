@@ -65,6 +65,42 @@ export default function RecentActivity() {
           </tbody>
         </table>
       </div>
+
+      {/* Mobile-only list view */}
+      <div className={styles.activityList}>
+        <div className={styles.activityListItem}>
+          <div className={styles.doctorInfo}>
+            <div className={styles.avatarCircle}></div>
+            <div>
+              <span className={styles.docName}>Dr. Arvind Shukla</span>
+              <span className={styles.visitMeta}>20m ago • MRI Analysis</span>
+            </div>
+          </div>
+          <span className={`${styles.statusBadge} ${styles.ready}`}>Ready</span>
+        </div>
+
+        <div className={styles.activityListItem}>
+          <div className={styles.doctorInfo}>
+            <div className={styles.avatarCircle}></div>
+            <div>
+              <span className={styles.docName}>Dr. Govind Sharma</span>
+              <span className={styles.visitMeta}>2h ago • Lab Results</span>
+            </div>
+          </div>
+          <span className={`${styles.statusBadge} ${styles.pending}`}>Pending</span>
+        </div>
+
+        <div className={styles.activityListItem}>
+          <div className={styles.doctorInfo}>
+            <div className={styles.avatarCircle}></div>
+            <div>
+              <span className={styles.docName}>Dr. Avantika Gupta</span>
+              <span className={styles.visitMeta}>6h ago • Check-Up</span>
+            </div>
+          </div>
+          <span className={`${styles.statusBadge} ${styles.closed}`}>Closed</span>
+        </div>
+      </div>
     </div >
   );
 }

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import styles from "./Step3.module.css";
-import logo from "@/public/logo.png";
+import logo from "@/public/logo2.svg";
 import mic from "@/public/icons/mic.svg";
 
 export default function DoctorOnboardingStep3() {

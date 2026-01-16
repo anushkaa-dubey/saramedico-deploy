@@ -609,6 +609,15 @@
   background: #f1f5f9;
 }
 
+.mobileActivityHeader,
+.mobileActivityList {
+  display: none;
+}
+
+.closeBtnHidden {
+  display: none;
+}
+
 
 .table {
   width: 100%;
@@ -680,27 +689,11 @@
 }
 
 
-@media (max-width: 1024px) {
-  .grid {
-    grid-template-columns: 1fr;
-  }
-
-  .main {
-    padding: 16px 20px;
-  }
-
-  .card {
-    padding: 14px;
-  }
-
-  .greeting {
-    font-size: 22px;
-  }
-}
-
+/* ==================== MOBILE ==================== */
 @media (max-width: 768px) {
   .container {
     flex-direction: column;
+    background: #f8fafc;
   }
 
   /* Sidebar → Off-canvas Navigation */
@@ -708,18 +701,24 @@
     position: fixed;
     top: 0;
     left: 0;
-    width: 250px;
+    width: 280px;
     height: 100vh;
     background: #ffffff;
-    padding: 16px;
-    z-index: 1000;
-    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+    padding: 24px 16px;
+    z-index: 2000;
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.12);
     transform: translateX(-100%);
-    transition: transform 0.3s ease;
-    display: flex;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex !important;
     flex-direction: column;
     justify-content: space-between;
     border-right: none;
+  }
+
+  .logoRow {
+    justify-content: space-between !important;
+    padding-left: 0 !important;
+    margin-bottom: 32px !important;
   }
 
   .sidebar.open {
@@ -728,101 +727,353 @@
 
   .mobileToggleBtn {
     position: fixed;
-    top: 20px;
-    left: 12px;
-    z-index: 1100;
+    top: 16px;
+    left: 16px;
+    z-index: 1000;
     background: #ffffff;
     border: 1px solid #eef2f7;
-    border-radius: 8px;
-    width: 40px;
-    height: 40px;
-    display: flex;
+    border-radius: 12px;
+    width: 44px;
+    height: 44px;
+    display: flex !important;
     align-items: center;
     justify-content: center;
-    font-size: 20px;
+    font-size: 24px;
     cursor: pointer;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    color: #0f172a;
   }
 
   .mobileOverlay {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.3);
-    z-index: 999;
+    background: rgba(15, 23, 42, 0.5);
+    backdrop-filter: blur(4px);
+    z-index: 1500;
+    display: block !important;
   }
 
   .closeBtnHidden {
-    display: block;
-    background: none;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    background: #f1f5f9;
     border: none;
-    font-size: 20px;
-    margin-left: auto;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    font-size: 14px;
     cursor: pointer;
     color: #64748b;
   }
 
   .main {
     flex: 1;
-    padding: 12px;
-    padding-bottom: 80px;
+    padding: 0;
+    background: #f8fafc;
+    min-height: 100vh;
+    width: 100%;
   }
 
+  /* Topbar Alignment - Inspired by Patient Dashboard */
+  .topbar {
+    padding: 16px 20px;
+    position: relative;
+    border-bottom: none;
+    background: transparent;
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 0;
+    z-index: 10;
+  }
+
+  .search {
+    display: none;
+  }
+
+  .topActions {
+    gap: 12px;
+  }
+
+  .topActions .primaryBtn {
+    display: none;
+  }
+
+  .profileInfo {
+    display: none;
+  }
+
+  .profile {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .avatar {
+    margin: 0;
+    width: 36px;
+    height: 36px;
+  }
+
+  /* Header */
   .header {
     flex-direction: column;
-    gap: 12px;
-    margin-bottom: 16px;
+    gap: 16px;
+    margin-bottom: 20px;
+    align-items: flex-start;
+    padding: 0 20px;
   }
 
   .greeting {
-    font-size: 18px;
+    font-size: 24px;
+    font-weight: 800;
+  }
+
+  .sub {
+    font-size: 14px;
   }
 
   .headerActions {
     width: 100%;
-    justify-content: flex-end;
-  }
-
-  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     gap: 12px;
   }
 
-  .card {
-    padding: 12px;
+  .headerActions .iconBtn {
+    display: none;
   }
 
-  .appointmentCard {
+  .headerActions .outlineBtn,
+  .headerActions .primaryBtn {
+    width: 100%;
+    justify-content: center;
+    font-size: 14px;
+    height: 52px;
+    border-radius: 12px;
+    font-weight: 600;
+  }
+
+  /* Grid Layout */
+  .grid {
+    padding: 0 20px 20px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .leftCol,
+  .rightCol {
+    width: 100%;
+    gap: 20px;
+  }
+
+  .profileCard {
+    flex-direction: row;
+    padding: 0;
+    gap: 0;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    align-items: stretch;
+  }
+
+  .profileImage {
+    width: 140px;
+    height: auto;
+    min-height: 100%;
+    border-radius: 0;
+    margin: 0;
+    flex-shrink: 0;
+  }
+
+  .profileImage img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .profileContent {
+    flex: 1;
+    padding: 20px;
+    background: #ffffff;
+    display: flex;
     flex-direction: column;
   }
 
-  .appointmentImage {
-    width: 100%;
-    height: 120px;
+  .profileName {
+    font-size: 18px;
+    margin-bottom: 4px;
+    font-weight: 700;
+    color: #0f172a;
   }
 
-  .table {
-    font-size: 12px;
+  .profileType {
+    font-size: 13px;
+    margin-bottom: 12px;
+    font-weight: 600;
+    color: #359aff;
   }
 
-  .table th,
-  .table td {
-    padding: 8px 6px;
-  }
-}
-
-@media (max-width: 480px) {
-  .greeting {
+  .appointmentTime {
+    position: static;
     font-size: 16px;
+    margin-bottom: 12px;
+    color: #359aff;
+    font-weight: 700;
+    padding: 8px 12px;
+    background: #f0f8ff;
+    border-radius: 8px;
+    display: inline-block;
+    align-self: flex-start;
+  }
+
+  .profileDetails {
+    flex-direction: row;
+    gap: 12px;
+    background: transparent;
+    padding: 0;
+    border-radius: 0;
+    margin-bottom: 12px;
+    border: none;
+    flex-wrap: wrap;
+  }
+
+  .detailItem {
+    flex: 1;
+    min-width: 80px;
+    padding-bottom: 0;
+    border-bottom: none;
+  }
+
+  .detailItem:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  .detailLabel {
+    font-size: 10px;
+    margin-bottom: 4px;
+    color: #94a3b8;
+  }
+
+  .detailValue {
+    font-size: 13px;
+    font-weight: 600;
+    color: #0f172a;
+  }
+
+  .profileActions {
+    flex-direction: row;
+    width: 100%;
+    gap: 8px;
+    margin-top: auto;
+  }
+
+  .startMeetBtn,
+  .detailsBtn {
+    flex: 1;
+    height: 44px;
+    font-size: 14px;
+    border-radius: 10px;
+    font-weight: 600;
   }
 
   .card {
-    padding: 10px;
+    border-radius: 16px;
+    padding: 20px;
   }
 
-  .table th {
-    font-size: 11px;
+  .cardTitle {
+    font-size: 16px;
+    margin-bottom: 16px;
   }
 
-  .table td {
+  /* Table Hidden on Mobile */
+  .table {
+    display: none;
+  }
+
+  /* Mobile Activity List */
+  .mobileActivityHeader {
+    display: flex !important;
+    justify-content: space-between;
+    padding: 0 24px 12px 24px;
     font-size: 11px;
+    font-weight: 700;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  .mobileActivityList {
+    display: flex !important;
+    flex-direction: column;
+    gap: 12px;
+    padding: 0 20px;
+  }
+
+  .activityCard {
+    background: #ffffff;
+    border: 1px solid #eef2f7;
+    border-radius: 14px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  }
+
+  .activityUser {
+    flex: 1;
+    font-weight: 700;
+    color: #0f172a;
+    font-size: 15px;
+  }
+
+  .activityAction {
+    flex: 1.5;
+    font-size: 13px;
+    color: #64748b;
+    text-align: center;
+  }
+
+  .activityStatus {
+    flex: 1;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  /* Tasks Section */
+  .tasksList {
+    gap: 12px;
+  }
+
+  .taskItem {
+    padding: 14px;
+    border-radius: 12px;
+  }
+}
+
+/* ==================== SMALL MOBILE ==================== */
+@media (max-width: 480px) {
+  .greeting {
+    font-size: 22px;
+  }
+
+  .mobileActivityHeader {
+    font-size: 10px;
+  }
+
+  .activityUser {
+    font-size: 14px;
+  }
+
+  .activityAction {
+    font-size: 12px;
+  }
+
+  .profileImage {
+    height: 240px;
   }
 }

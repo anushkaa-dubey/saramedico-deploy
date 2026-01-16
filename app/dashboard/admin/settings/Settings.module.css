@@ -92,12 +92,18 @@
   align-items: flex-end;
 }
 
+.profileInfo {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  margin-bottom: 4px;
+}
+
 .avatar {
   width: 28px;
   height: 28px;
   border-radius: 50%;
   background: #e5e7eb;
-  margin-bottom: 4px;
 }
 
 /* Title */
@@ -394,27 +400,28 @@
 
   /* Topbar */
   .topbar {
-    flex-direction: column-reverse;
-    gap: 12px;
+    display: flex;
+    justify-content: flex-end;
     margin-bottom: 12px;
+    padding: 16px 0;
   }
 
-  .search {
-    width: 100%;
-    font-size: 13px;
+  .topbar .searchWrapper,
+  .profileInfo {
+    display: none;
   }
 
   .topActions {
-    width: 100%;
-  }
-
-  .iconBtn {
-    width: 36px;
-    height: 36px;
+    width: auto;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
   }
 
   .profile {
-    display: none;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
   }
 
   /* Title */

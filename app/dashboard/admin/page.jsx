@@ -3,6 +3,7 @@ import AdminSidebar from "./components/Sidebar";
 import notificationIcon from "@/public/icons/notification.svg";
 import searchIcon from "@/public/icons/search.svg";
 import micIcon from "@/public/icons/mic_white.svg";
+import Link from "next/link";
 
 export default function AdminDashboard() {
   return (
@@ -25,9 +26,11 @@ export default function AdminDashboard() {
             </button>
 
             <div className={styles.profile}>
+              <div className={styles.profileInfo}>
+                <span>Dr. Sarah Smith</span>
+                <small>Admin</small>
+              </div>
               <div className={styles.avatar}></div>
-              <span>Dr. Sarah Smith</span>
-              <small>Admin</small>
             </div>
           </div>
         </div>
@@ -36,14 +39,14 @@ export default function AdminDashboard() {
           <div>
             <h2 className={styles.heading}>Dashboard Overview</h2>
             <p className={styles.subtext}>
-              Access to your clinic’s workspace securely
+              Access to your clinic's workspace securely
             </p>
           </div>
 
-          <button className={styles.inviteBtn}>
+          <Link href="/dashboard/admin/manage-accounts/invite" className={styles.inviteBtn}>
             <img src={micIcon.src} alt="Mic" width="16" height="16" />
             Invite User
-          </button>
+          </Link>
         </div>
 
         <div className={styles.grid}>

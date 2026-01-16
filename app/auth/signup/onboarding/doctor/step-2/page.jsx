@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import styles from "./Step2.module.css";
-import logo from "@/public/logo.png";
+import logo from "@/public/logo2.svg";
 
 export default function DoctorOnboardingStep2() {
   const router = useRouter();

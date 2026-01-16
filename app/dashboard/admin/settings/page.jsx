@@ -57,9 +57,11 @@ export default function SettingsPage() {
             </button>
 
             <div className={styles.profile}>
+              <div className={styles.profileInfo}>
+                <span>Dr. Sarah Smith</span>
+                <small>Admin</small>
+              </div>
               <div className={styles.avatar}></div>
-              <span>Dr. Sarah Smith</span>
-              <small>Admin</small>
             </div>
           </div>
         </div>
@@ -171,8 +173,6 @@ export default function SettingsPage() {
               <input
                 type="text"
                 name="apiKey"
-                value={formData.apiKey}
-                onChange={handleChange}
                 className={styles.input}
                 placeholder="Production Server 01"
               />
@@ -180,17 +180,12 @@ export default function SettingsPage() {
 
             <div className={styles.formGroup}>
               <label>Scope</label>
-              <select
+              <input
+                type="text"
                 name="apiScope"
-                value={formData.apiScope}
-                onChange={handleChange}
                 className={styles.input}
-              >
-                <option>Read/Write (Full Access)</option>
-                <option>Read Only</option>
-                <option>Write Only</option>
-                <option>Custom Scope</option>
-              </select>
+                placeholder="Read/Write (Full Access)"
+              />
             </div>
 
             <div className={styles.formGroup}>
@@ -198,8 +193,6 @@ export default function SettingsPage() {
               <input
                 type="url"
                 name="webhookUrl"
-                value={formData.webhookUrl}
-                onChange={handleChange}
                 className={styles.input}
                 placeholder="https://api.saramedico.com/webhooks"
               />

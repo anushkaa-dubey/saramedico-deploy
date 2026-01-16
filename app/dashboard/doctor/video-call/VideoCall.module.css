@@ -446,3 +446,159 @@
         transform: translateY(0);
     }
 }
+
+@media (max-width: 768px) {
+    .sessionWrapper {
+        flex-direction: column;
+    }
+
+    .mainContent {
+        padding: 0;
+        background: #f8fafc;
+        min-height: 100vh;
+    }
+
+    .topbar {
+        padding: 16px 20px;
+        position: relative;
+        border-bottom: none;
+        background: transparent;
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 0;
+        z-index: 10;
+    }
+
+    .search {
+        display: none;
+    }
+
+    .topActions {
+        gap: 12px;
+    }
+
+    .topActions .primaryBtn {
+        display: none;
+    }
+
+    .profileInfo {
+        display: none;
+    }
+
+    .profile {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+    }
+
+    .avatar {
+        margin: 0;
+        width: 36px;
+        height: 36px;
+        background: #e5e7eb;
+        border-radius: 50%;
+    }
+
+    .patientInfoBar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+        padding: 16px 20px;
+        margin: 0 20px 20px 20px;
+        border-radius: 16px;
+    }
+
+    .patientMeta {
+        flex-wrap: wrap;
+        gap: 16px;
+        width: 100%;
+    }
+
+    .metaItem {
+        flex: 1;
+        min-width: 120px;
+    }
+
+    .grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+        height: auto;
+        margin-top: 0;
+        padding: 0 20px 20px 20px;
+    }
+
+    .leftCol {
+        gap: 20px;
+    }
+
+    .rightCol {
+        gap: 20px;
+        height: auto;
+    }
+
+    .videoCard {
+        aspect-ratio: 4 / 3;
+        border-radius: 20px;
+    }
+
+    .controlsCard {
+        flex-wrap: wrap;
+        gap: 12px;
+        padding: 20px;
+        border-radius: 16px;
+    }
+
+    .timer {
+        font-size: 24px;
+        width: 100%;
+        text-align: center;
+    }
+
+    .waveform {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .entitiesCard {
+        padding: 20px;
+        border-radius: 16px;
+    }
+
+    .transcriptCard {
+        min-height: 500px;
+        margin-bottom: 20px;
+        border-radius: 20px;
+    }
+
+    .transcriptContent {
+        padding: 20px;
+        gap: 16px;
+    }
+
+    .bubble {
+        max-width: 90%;
+        font-size: 15px;
+        padding: 14px 18px;
+    }
+
+    .notesFooter {
+        flex-direction: column;
+        padding: 20px;
+        gap: 12px;
+    }
+
+    .noteInput {
+        width: 100%;
+        height: 52px;
+        font-size: 15px;
+        border-radius: 12px;
+    }
+
+    .addNoteBtn {
+        width: 100%;
+        height: 52px;
+        font-size: 16px;
+        border-radius: 12px;
+        font-weight: 700;
+    }
+}

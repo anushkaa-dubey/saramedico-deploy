@@ -133,6 +133,36 @@ export default function DoctorDashboard() {
                   </tr>
                 </tbody>
               </table>
+
+              {/* Mobile Activity List */}
+              <div className={styles.mobileActivityHeader}>
+                <div>PATIENT</div>
+                <div>ACTIVITY</div>
+                <div>STATUS</div>
+              </div>
+              <div className={styles.mobileActivityList}>
+                <div className={styles.activityCard}>
+                  <div className={styles.activityUser}>John Von</div>
+                  <div className={styles.activityAction}>Lab Results Reviewed</div>
+                  <div className={styles.activityStatus}>
+                    <span className={styles.completed}>Completed</span>
+                  </div>
+                </div>
+                <div className={styles.activityCard}>
+                  <div className={styles.activityUser}>John Von</div>
+                  <div className={styles.activityAction}>Operation</div>
+                  <div className={styles.activityStatus}>
+                    <span className={styles.inReview}>In Review</span>
+                  </div>
+                </div>
+                <div className={styles.activityCard}>
+                  <div className={styles.activityUser}>John Von</div>
+                  <div className={styles.activityAction}>Check-up</div>
+                  <div className={styles.activityStatus}>
+                    <span className={styles.completed}>Completed</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 

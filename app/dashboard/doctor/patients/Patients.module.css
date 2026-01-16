@@ -339,5 +339,57 @@
     .patientListCard,
     .detailsPanel {
         flex: none;
+        width: 100%;
+    }
+}
+
+@media (max-width: 768px) {
+    .main {
+        padding: 16px;
+    }
+
+    .title {
+        font-size: 20px;
+        margin-bottom: 16px;
+    }
+
+    .listHeader {
+        display: none;
+    }
+
+    .patientItem {
+        padding: 12px;
+    }
+
+    .itemText {
+        display: none;
+    }
+
+    .nameGroup {
+        flex: 1;
+    }
+
+    .avatarLarge {
+        width: 48px;
+        height: 48px;
+    }
+
+    .profileCard {
+        padding: 16px;
+        gap: 12px;
+    }
+
+    .statsRow {
+        flex-direction: column;
+        gap: 12px;
+        margin-top: 16px;
+    }
+
+    .tabs {
+        gap: 16px;
+    }
+
+    .tab {
+        font-size: 13px;
     }
 }

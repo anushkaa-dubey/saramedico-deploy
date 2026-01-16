@@ -92,12 +92,18 @@
   align-items: flex-end;
 }
 
+.profileInfo {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  margin-bottom: 4px;
+}
+
 .avatar {
   width: 28px;
   height: 28px;
   border-radius: 50%;
   background: #e5e7eb;
-  margin-bottom: 4px;
 }
 
 /* Title */
@@ -106,6 +112,10 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 24px;
+}
+
+.titleRow .searchWrapper {
+  display: none;
 }
 
 .heading {
@@ -134,6 +144,12 @@
   text-decoration: none;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.inviteIconWrapper {
+  display: none;
 }
 
 .inviteBtn:hover {
@@ -347,157 +363,202 @@
 
   /* Topbar */
   .topbar {
-    flex-direction: column-reverse;
+    padding: 16px 20px;
+    display: flex;
+    justify-content: flex-end;
+    background: transparent;
+    border: none;
+    margin-bottom: 0;
+  }
+
+  .topbar .searchWrapper,
+  .profileInfo {
+    display: none;
+  }
+
+  .profile {
+    flex-direction: row !important;
+    align-items: center !important;
+  }
+
+  .topActions {
     gap: 12px;
-    margin-bottom: 12px;
+  }
+
+  .main {
+    padding: 0 20px 80px 20px !important;
+    background: #ffffff !important;
+  }
+
+  .heading {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 20px;
+  }
+
+  .subtext {
+    display: none;
+  }
+
+  /* Search row */
+  .titleRow {
+    flex-direction: row;
+    display: flex;
+    gap: 12px;
+    margin-bottom: 24px;
+    width: 100%;
+  }
+
+  .titleRow .searchWrapper {
+    display: flex;
+    flex: 1;
   }
 
   .search {
     width: 100%;
-    font-size: 13px;
+    height: 48px;
+    border-radius: 10px;
+    border: 1px solid #eef2f7;
+    background: #ffffff;
+    padding: 0 16px 0 44px;
+    font-size: 14px;
   }
 
-  .topActions {
-    width: 100%;
-  }
-
-  .iconBtn {
-    width: 36px;
-    height: 36px;
-  }
-
-  .profile {
-    display: none;
-  }
-
-  /* Title & Buttons */
-  .titleRow {
-    flex-direction: column;
-    gap: 12px;
-    margin-bottom: 16px;
-    align-items: flex-start;
-  }
-
-  .heading {
-    font-size: 16px;
-    margin: 0;
-  }
-
-  .subtext {
-    font-size: 12px;
+  .searchIcon {
+    left: 16px;
+    width: 20px;
+    height: 20px;
   }
 
   .inviteBtn {
-    width: 100%;
-    height: 40px;
-    font-size: 13px;
+    width: 48px;
+    height: 48px;
+    padding: 0;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    background: #3b82f6 !important;
+    /* Solid blue for mobile as per screenshot */
   }
 
-  /* Card */
+  .inviteIconWrapper {
+    display: flex !important;
+  }
+
+  .inviteBtnText {
+    display: none;
+  }
+
+  .mobileListHeader {
+    display: flex;
+    justify-content: space-between;
+    padding: 0 16px 12px 16px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #475569;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .headerUser {
+    flex: 2;
+  }
+
+  .headerRole {
+    flex: 1.5;
+    text-align: center;
+  }
+
+  .headerStatus {
+    flex: 1.5;
+    text-align: right;
+    padding-right: 24px;
+  }
+
   .card {
-    padding: 12px;
-    border-radius: 12px;
+    background: transparent;
+    border: none;
+    padding: 0;
   }
 
   .tableHeader {
+    display: none;
+  }
+
+  .table {
+    display: none;
+  }
+
+  .mobileList {
+    display: flex;
     flex-direction: column;
     gap: 10px;
   }
 
-  .filterGroup {
-    flex-direction: column;
-    width: 100%;
-  }
-
-  .filterSelect {
-    width: 100%;
-  }
-
-  /* Table */
-  .table {
-    font-size: 12px;
-    overflow-x: auto;
-    display: block;
-    width: 100%;
-  }
-
-  .table thead {
-    display: none;
-  }
-
-  .table tbody {
-    display: block;
-    width: 100%;
-  }
-
-  .table tr {
-    display: block;
+  .userCard {
+    background: #ffffff;
     border: 1px solid #eef2f7;
-    border-radius: 8px;
-    margin-bottom: 12px;
-    padding: 12px;
-  }
-
-  .table td {
-    display: block;
-    padding: 8px 0;
-    border: none;
-    text-align: left;
-  }
-
-  .table td::before {
-    content: attr(data-label);
-    font-weight: 600;
-    color: #94a3b8;
-    display: block;
-    font-size: 11px;
-    margin-bottom: 4px;
-  }
-
-  .userCell {
-    gap: 8px;
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
     align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
   }
 
-  .avatarSmall {
-    width: 28px;
-    height: 28px;
-    flex-shrink: 0;
+  .userInfo {
+    flex: 2;
+    font-weight: 700;
+    color: #0f172a;
+    font-size: 15px;
   }
 
-  /* Status badges */
-  .statusActive,
-  .statusInactive,
-  .statusPending {
-    font-size: 11px;
-    padding: 3px 10px;
-    display: inline-block;
-  }
-
-  /* Action buttons */
-  .actionBtn {
-    width: 28px;
-    height: 28px;
+  .userRole {
+    flex: 1.5;
+    text-align: center;
+    color: #94a3b8;
     font-size: 14px;
+    font-weight: 500;
   }
 
-  /* Pagination */
+  .userStatus {
+    flex: 1.5;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .chevronIcon {
+    color: #cbd5e1;
+    font-size: 18px;
+  }
+
+  .statusActive {
+    background: #ecfdf5;
+    color: #16a34a;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .statusActive::before {
+    content: "✓";
+    font-size: 12px;
+  }
+
   .pagination {
     flex-direction: column;
-    gap: 12px;
-    align-items: flex-start;
-    font-size: 12px;
-  }
-
-  .paginationButtons {
-    width: 100%;
-    justify-content: flex-start;
-  }
-
-  .paginationBtn {
-    width: 32px;
-    height: 32px;
-    font-size: 11px;
+    align-items: center;
+    gap: 16px;
+    padding: 24px 0;
+    border: none;
   }
 }
 

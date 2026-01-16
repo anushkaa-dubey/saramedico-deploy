@@ -164,17 +164,13 @@
   display: flex;
   flex-direction: column;
   font-size: 13px;
+  align-items: flex-end;
 }
 
-.profile span {
-  font-size: 13px;
-  font-weight: 600;
-  color: #0f172a;
-}
-
-.profile small {
-  font-size: 12px;
-  color: #94a3b8;
+.profileInfo {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
 }
 
 .avatar {
@@ -217,6 +213,7 @@
   justify-content: center;
   gap: 8px;
   transition: all 0.2s ease;
+  text-decoration: none;
 }
 
 .inviteBtn:hover {
@@ -524,28 +521,31 @@
 
   /* Topbar */
   .topbar {
-    flex-direction: column-reverse;
-    gap: 12px;
+    display: flex;
+    justify-content: flex-end;
     margin-bottom: 12px;
+    padding: 16px 0;
   }
 
-  .search {
-    width: 100%;
-    font-size: 13px;
+  .searchWrapper {
+    display: none;
   }
 
   .topActions {
-    width: 100%;
+    width: auto;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
   }
 
-  .iconBtn,
-  .avatar {
-    width: 32px;
-    height: 32px;
+  .profileInfo {
+    display: none;
   }
 
   .profile {
-    display: none;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
   }
 
   /* Title */

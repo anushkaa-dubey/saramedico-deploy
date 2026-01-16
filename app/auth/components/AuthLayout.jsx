@@ -1,4 +1,4 @@
-import logo from "@/public/logo.png";
+import logo from "@/public/logo2.svg";
 
 export default function AuthLayout({ children }) {
   return (

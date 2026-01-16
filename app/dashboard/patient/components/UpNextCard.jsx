@@ -16,7 +16,10 @@ export default function UpNextCard() {
         {/* Title + Time */}
         <div className={styles.upNextTop}>
           <div className={styles.upNextTitle}>Annual Physical Examination</div>
-          <div className={styles.upNextTime}>10:30 AM</div>
+          <div className={styles.upNextTime}>
+            <div>10:30</div>
+            <div style={{ fontSize: '11px', fontWeight: '400', color: '#94a3b8' }}>AM</div>
+          </div>
         </div>
 
         {/* Tag + Doctor */}
@@ -25,7 +28,7 @@ export default function UpNextCard() {
           <span>with Dr. Emily Chen</span>
         </div>
 
-        {/* Reason / Last Visit */}
+        {/* Reason / Last Visit - Hidden on mobile via CSS */}
         <div className={styles.upNextInfo}>
           <div>
             <div className={styles.infoLabel}>REASON FOR VISIT</div>
@@ -39,7 +42,7 @@ export default function UpNextCard() {
 
         {/* Actions */}
         <div className={styles.upNextActions}>
-          <button className={styles.checkinBtn}>Check-in Now</button>
+          <button className={styles.checkinBtn}>Check-in</button>
           <button className={styles.detailsBtn}>Details</button>
         </div>
       </div>

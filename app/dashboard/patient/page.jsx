@@ -21,7 +21,7 @@ export default function PatientDashboard() {
         <section className={styles.header}>
           <div>
             <h2 className={styles.greeting}>Good Morning, Daniel</h2>
-            <p className={styles.sub}>Today is Thursday, January 16, 2026</p>
+            <p className={styles.sub}>Today's Thursday, January 16, 2026</p>
           </div>
 
           <div className={styles.headerActions}>
@@ -40,11 +40,28 @@ export default function PatientDashboard() {
               Start Session
             </button>
           </div>
+
+          {/* Mobile Search Bar  */}
+          <div className={styles.mobileSearch}>
+            <img src="/icons/search.svg" alt="Search" width="18" height="18" />
+            <input type="text" placeholder="Search visits, reports, notes..." />
+          </div>
         </section>
 
         <section className={styles.grid}>
           <div className={styles.leftCol}>
+            {/* Mobile  Title */}
+            <div className={styles.mobileOnly} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <span style={{ fontWeight: '700', fontSize: '16px', color: '#1e293b' }}>Up Next</span>
+              <a href="#" style={{ color: '#2563eb', fontSize: '13px', fontWeight: '600', textDecoration: 'none' }}>View Calendar</a>
+            </div>
             <UpNextCard />
+
+            {/* Mobile  Title */}
+            <div className={styles.mobileOnly} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '24px', marginBottom: '8px' }}>
+              <span style={{ fontWeight: '700', fontSize: '16px', color: '#1e293b' }}>Recent Visits</span>
+              <a href="#" style={{ color: '#2563eb', fontSize: '13px', fontWeight: '600', textDecoration: 'none' }}>View All</a>
+            </div>
             <RecentActivity />
           </div>
 

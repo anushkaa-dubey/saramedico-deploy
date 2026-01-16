@@ -108,6 +108,10 @@
 }
 
 /* Modal Container */
+.mobileHeader {
+  display: none;
+}
+
 .modalContainer {
   display: flex;
   justify-content: center;
@@ -369,47 +373,125 @@
 
 /* Responsive */
 @media (max-width: 768px) {
-  .container {
-    flex-direction: column;
-  }
-
-  .sidebar {
-    width: 100%;
-    border-right: none;
-    border-bottom: 1px solid #eef2f7;
-  }
-
   .main {
-    padding: 12px;
+    padding: 0;
+    background: #f8fafc;
   }
 
   .topbar {
-    flex-direction: column;
-    gap: 12px;
-    margin-bottom: 12px;
+    display: none;
   }
 
-  .search {
-    width: 100%;
+  /* Custom Mobile Header */
+  .mobileHeader {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    background: #ffffff;
+    position: sticky;
+    top: 0;
+    z-index: 100;
   }
 
-  .roleGrid {
-    grid-template-columns: 1fr;
+  .backArrow {
+    font-size: 24px;
+    color: #0f172a;
+    cursor: pointer;
+    text-decoration: none;
+    width: 32px;
   }
 
-  .modalContent {
-    border-radius: 12px;
+  .mobileTitle {
+    font-size: 18px;
+    font-weight: 700;
+    color: #0f172a;
+    flex: 1;
+    text-align: center;
+  }
+
+  .headerPlaceholder {
+    width: 32px;
+  }
+
+  .modalContainer {
+    padding: 20px;
   }
 
   .modalHeader {
-    padding: 20px 24px;
+    display: none;
   }
 
   .formContent {
-    padding: 20px 24px;
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: none;
+    border: 1px solid #eef2f7;
+    margin-bottom: 24px;
+  }
+
+  .roleGrid {
+    display: flex;
+    overflow-x: auto;
+    gap: 16px;
+    padding: 4px 0 16px 0;
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE/Edge */
+    scroll-snap-type: x mandatory;
+    margin: 0 -20px;
+    padding: 0 20px 16px 20px;
+  }
+
+  .roleGrid::-webkit-scrollbar {
+    display: none;
+    /* Chrome/Safari/Webkit */
+  }
+
+  .roleCard {
+    min-width: 280px;
+    flex-shrink: 0;
+    border-width: 1px;
+    padding: 16px;
+    scroll-snap-align: center;
+  }
+
+  .roleTitle {
+    font-size: 16px;
+    font-weight: 700;
+    margin-top: 0;
+  }
+
+  .securityNotice {
+    background: #eff6ff;
+    border: none;
+    padding: 16px;
   }
 
   .modalFooter {
-    padding: 16px 24px;
+    background: transparent;
+    box-shadow: none;
+    flex-direction: column-reverse;
+    gap: 24px;
+    padding: 20px;
+    border: none;
+  }
+
+  .cancelBtn {
+    border: none;
+    background: transparent;
+    font-weight: 600;
+    color: #64748b;
+    justify-content: center;
+    width: 100%;
+  }
+
+  .submitBtn {
+    width: 100%;
+    height: 48px;
+    border-radius: 10px;
+    font-size: 15px;
   }
 }

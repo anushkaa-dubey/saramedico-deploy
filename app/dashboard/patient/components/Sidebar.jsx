@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import styles from "../PatientDashboard.module.css";
-import logo from "@/public/logo.png";
+import logo from "@/public/logo2.svg";
 import dashboardIcon from "@/public/icons/dashboard.svg";
 import micIcon from "@/public/icons/mic.svg";
 import manageIcon from "@/public/icons/manage.svg";

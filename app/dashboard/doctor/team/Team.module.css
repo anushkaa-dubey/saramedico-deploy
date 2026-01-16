@@ -239,3 +239,47 @@
 .saveBtn:hover {
     background: #3b82f6;
 }
+
+@media (max-width: 1024px) {
+    .roleCards {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .main {
+        padding: 16px;
+    }
+
+    .title {
+        font-size: 20px;
+    }
+
+    .card {
+        padding: 20px;
+    }
+
+    .formGrid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .securityNotice {
+        flex-direction: column;
+        padding: 16px;
+    }
+
+    .actions {
+        flex-direction: column-reverse;
+        gap: 16px;
+        align-items: stretch;
+    }
+
+    .saveBtn {
+        width: 100%;
+    }
+
+    .cancelBtn {
+        text-align: center;
+    }
+}
