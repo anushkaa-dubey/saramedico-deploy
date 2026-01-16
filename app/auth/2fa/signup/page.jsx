@@ -1,9 +1,9 @@
 "use client";
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import AuthLayout from "../../components/AuthLayout";
 
-export default function Signup2FAPage() {
+function Signup2FAContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
@@ -89,5 +89,13 @@ export default function Signup2FAPage() {
         </div>
       </form>
     </AuthLayout>
+  );
+}
+
+export default function Signup2FAPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <Signup2FAContent />
+    </Suspense>
   );
 }

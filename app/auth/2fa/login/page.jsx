@@ -1,9 +1,8 @@
 "use client";
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
-
-export default function Login2FAPage() {
+function Login2FAContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
@@ -23,88 +22,56 @@ export default function Login2FAPage() {
   };
 
   const handleVerify = async (e) => {
-  e.preventDefault();
-  setError("");
-  setLoading(true);
+    e.preventDefault();
+    setError("");
+    setLoading(true);
 
-  const code = otp.join("");
+    const code = otp.join("");
 
-  if (code.length !== 6) {
-    setLoading(false);
-    setError("Please enter the 6-digit code.");
-    return;
-  }
-
-  try {
-    // BACKEND HOOK (to be implemented later)
-    // await fetch("/api/auth/verify-otp", {...})
-
-    // temparary 
-    if (code !== "123456") {
-      throw new Error("Invalid verification code");
+    if (code.length !== 6) {
+      setLoading(false);
+      setError("Please enter the 6-digit code.");
+      return;
     }
 
-    const role = searchParams.get("role") || "patient";
+    try {
+      // BACKEND HOOK (to be implemented later)
+      // await fetch("/api/auth/verify-otp", {...})
 
-    // Route based on role
-    if (role === "admin") {
-      router.push("/dashboard/admin");
-    } else if (role === "doctor") {
-      // Doctor login goes directly to dashboard (no onboarding)
-      router.push("/dashboard/doctor");
-    } else if (role === "hospital") {
-      // Hospital dashboard (can be created later)
-      router.push("/dashboard/admin"); // Temporary: redirect to admin
-    } else {
-      // Patient
-      router.push("/dashboard/patient");
+      // temparary 
+      if (code !== "123456") {
+        throw new Error("Invalid verification code");
+      }
+
+      const role = searchParams.get("role") || "patient";
+
+      // Route based on role
+      if (role === "admin") {
+        router.push("/dashboard/admin");
+      } else if (role === "doctor") {
+        // Doctor login goes directly to dashboard (no onboarding)
+        router.push("/dashboard/doctor");
+      } else if (role === "hospital") {
+        // Hospital dashboard (can be created later)
+        router.push("/dashboard/admin"); // Temporary: redirect to admin
+      } else {
+        // Patient
+        router.push("/dashboard/patient");
+      }
+
+    } catch (err) {
+      setError(err.message || "Verification failed");
+    } finally {
+      setLoading(false);
     }
-
-  } catch (err) {
-    setError(err.message || "Verification failed");
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "#f1f5f9",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "24px",
-      }}
-    >
-      <div
-        style={{
-          width: "100%",
-          maxWidth: "420px",
-          background: "#fff",
-          borderRadius: "14px",
-          padding: "32px 28px",
-          boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
-          textAlign: "center",
-        }}
-      >
+    <div className="auth-2fa-container">
+      <div className="auth-2fa-card">
         {/* 🔒 LOCK ICON PLACEHOLDER */}
-        <div
-          style={{
-            width: "56px",
-            height: "56px",
-            borderRadius: "50%",
-            background: "#e5e7eb",
-            margin: "0 auto 12px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: "20px",
-            color: "#6b7280",
-          }}
-        >
+        <div className="lock-icon-container">
           {/* Replace with your SVG later */}
           LOCK
         </div>
@@ -122,14 +89,7 @@ export default function Login2FAPage() {
 
         <form onSubmit={handleVerify}>
           {/* OTP INPUTS */}
-          <div
-            style={{
-              display: "flex",
-              gap: "10px",
-              justifyContent: "center",
-              marginBottom: "14px",
-            }}
-          >
+          <div className="otp-input-container">
             {otp.map((digit, idx) => (
               <input
                 key={idx}
@@ -139,15 +99,7 @@ export default function Login2FAPage() {
                 maxLength={1}
                 value={digit}
                 onChange={(e) => handleChange(e.target.value, idx)}
-                style={{
-                  width: "44px",
-                  height: "44px",
-                  textAlign: "center",
-                  fontSize: "18px",
-                  borderRadius: "10px",
-                  border: "1px solid #e5e7eb",
-                  outline: "none",
-                }}
+                className="otp-input"
                 required
               />
             ))}
@@ -162,16 +114,7 @@ export default function Login2FAPage() {
           <button
             type="submit"
             disabled={loading}
-            style={{
-              width: "100%",
-              height: "42px",
-              borderRadius: "999px",
-              border: "none",
-              background: "linear-gradient(90deg, #3b82f6, #60a5fa)",
-              color: "#fff",
-              fontSize: "14px",
-              cursor: "pointer",
-            }}
+            className="verify-btn"
           >
             {loading ? "Verifying..." : "Verify"}
           </button>
@@ -182,5 +125,13 @@ export default function Login2FAPage() {
         </form>
       </div>
     </div>
+  );
+}
+
+export default function Login2FAPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <Login2FAContent />
+    </Suspense>
   );
 }
