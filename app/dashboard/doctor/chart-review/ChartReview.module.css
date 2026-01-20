@@ -1,0 +1,355 @@
+.pageHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 24px;
+    margin-bottom: 24px;
+}
+
+.pageTitle {
+    font-size: 24px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0 0 4px 0;
+}
+
+.pageSubtitle {
+    font-size: 14px;
+    color: #64748b;
+    margin: 0;
+}
+
+.uploadBtn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    background: linear-gradient(90deg, #359aff, #9ccdff);
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.uploadBtn:hover {
+    box-shadow: 0 4px 12px rgba(53, 154, 255, 0.3);
+    transform: translateY(-1px);
+}
+
+/* Library View */
+.libraryView {
+    padding: 0 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.documentsGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 16px;
+}
+
+.documentCard {
+    background: #ffffff;
+    border: 1px solid #eef2f7;
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.documentCard:hover {
+    border-color: #359aff;
+    box-shadow: 0 4px 12px rgba(53, 154, 255, 0.1);
+    transform: translateY(-2px);
+}
+
+.docIcon {
+    width: 56px;
+    height: 56px;
+    background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.docIcon svg {
+    color: #2563eb;
+}
+
+.docInfo {
+    flex: 1;
+    min-width: 0;
+}
+
+.docName {
+    font-size: 15px;
+    font-weight: 600;
+    color: #0f172a;
+    margin: 0 0 6px 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.docMeta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: #94a3b8;
+}
+
+.statusBadge {
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.statusBadge.analyzed {
+    background: #ecfdf5;
+    color: #10b981;
+}
+
+.statusBadge.pending {
+    background: #fef3c7;
+    color: #f59e0b;
+}
+
+/* Upload Zone */
+.uploadZone {
+    background: #ffffff;
+    border: 2px dashed #cbd5e1;
+    border-radius: 16px;
+    padding: 48px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.uploadZone:hover {
+    border-color: #359aff;
+    background: #f8fafc;
+}
+
+.uploadZone svg {
+    color: #94a3b8;
+    margin-bottom: 16px;
+}
+
+.uploadZone h3 {
+    font-size: 18px;
+    font-weight: 600;
+    color: #0f172a;
+    margin: 0 0 8px 0;
+}
+
+.uploadZone p {
+    font-size: 14px;
+    color: #64748b;
+    margin: 0 0 20px 0;
+}
+
+.uploadOptions {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #64748b;
+    cursor: pointer;
+}
+
+.checkbox input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
+/* Split View */
+.splitView {
+    display: grid;
+    grid-template-columns: 1.5fr 1fr;
+    gap: 16px;
+    height: calc(100vh - 200px);
+    padding: 0 24px;
+}
+
+.viewerPanel {
+    background: #ffffff;
+    border: 1px solid #eef2f7;
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.viewerHeader {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 20px;
+    border-bottom: 1px solid #eef2f7;
+    background: #f8fafc;
+}
+
+.backBtn {
+    background: transparent;
+    border: 1px solid #e5e7eb;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.backBtn:hover {
+    background: #f9fafb;
+    border-color: #cbd5e1;
+}
+
+.viewerHeader h3 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #0f172a;
+    margin: 0;
+}
+
+.pdfPlaceholder {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f8fafc;
+    color: #94a3b8;
+}
+
+.chatPanel {
+    background: #ffffff;
+    border: 1px solid #eef2f7;
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #94a3b8;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .pageHeader {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+
+    .uploadBtn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .documentsGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .splitView {
+        grid-template-columns: 1fr;
+        height: auto;
+    }
+
+    .viewerPanel {
+        min-height: 400px;
+    }
+
+    .chatPanel {
+        min-height: 300px;
+    }
+}
+/* Split View Container */
+.splitViewContainer {
+  padding: 0 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.viewerControls {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 16px 20px;
+  background: #ffffff;
+  border: 1px solid #eef2f7;
+  border-radius: 12px;
+}
+
+.documentTitle {
+  flex: 1;
+  font-size: 16px;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0;
+}
+
+.viewToggle {
+  display: flex;
+  gap: 8px;
+  background: #f8fafc;
+  padding: 4px;
+  border-radius: 8px;
+}
+
+.toggleBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.toggleBtn:hover {
+  color: #0f172a;
+}
+
+.toggleBtn.active {
+  background: #ffffff;
+  color: #359aff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.toggleBtn svg {
+  flex-shrink: 0;
+}
+
+.sidePanel {
+  background: #ffffff;
+  border: 1px solid #eef2f7;
+  border-radius: 12px;
+  overflow: hidden;
+}

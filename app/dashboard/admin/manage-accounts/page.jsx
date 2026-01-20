@@ -1,5 +1,5 @@
 import styles from "./ManageAccounts.module.css";
-import AdminSidebar from "../components/Sidebar";
+
 import Link from "next/link";
 import notificationIcon from "@/public/icons/notification.svg";
 import searchIcon from "@/public/icons/search.svg";
@@ -67,7 +67,7 @@ export default function ManageAccountsPage() {
   return (
     <div className={styles.container}>
       {/* Sidebar */}
-      <AdminSidebar />
+      
 
       {/* Main */}
       <main className={styles.main}>

@@ -1,11 +1,12 @@
 "use client";
 
 import styles from "./Settings.module.css";
-import AdminSidebar from "../components/Sidebar";
+
 import { useState } from "react";
 import notificationIcon from "@/public/icons/notification.svg";
 import searchIcon from "@/public/icons/search.svg";
 import lockIcon from "@/public/icons/lock.svg";
+import { motion } from "framer-motion";
 
 export default function SettingsPage() {
   const [formData, setFormData] = useState({
@@ -35,9 +36,14 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className={styles.container}>
+    <motion.div
+      className={styles.container}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+    >
       {/* Sidebar */}
-      <AdminSidebar />
+
 
       {/* Main */}
       <main className={styles.main}>
@@ -236,6 +242,6 @@ export default function SettingsPage() {
           </button>
         </div>
       </main>
-    </div>
+    </motion.div>
   );
 }

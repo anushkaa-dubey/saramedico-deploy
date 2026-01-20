@@ -1,7 +1,7 @@
 "use client";
 
 import styles from "./InvitePage.module.css";
-import AdminSidebar from "../../components/Sidebar";
+
 import Link from "next/link";
 import notificationIcon from "@/public/icons/notification.svg";
 import searchIcon from "@/public/icons/search.svg";
@@ -15,7 +15,7 @@ export default function InviteTeamPage() {
   return (
     <div className={styles.container}>
       {/* Sidebar */}
-      <AdminSidebar />
+      
 
       {/* Main */}
       <main className={styles.main}>

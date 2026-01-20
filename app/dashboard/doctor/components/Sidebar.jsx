@@ -72,6 +72,14 @@ export default function Sidebar() {
               Live Consult
             </Link>
             <Link
+              href="/dashboard/doctor/chart-review"
+              className={`${styles.navItem} ${isActive("/dashboard/doctor/chart-review") ? styles.active : ""}`}
+              onClick={() => setIsOpen(false)}
+            >
+              <img src={messagesIcon.src} alt="Chart Review" width="18" height="18" />
+              Chart Review
+            </Link>
+            <Link
               href="/dashboard/doctor/patients"
               className={`${styles.navItem} ${isActive("/dashboard/doctor/patients") ? styles.active : ""}`}
               onClick={() => setIsOpen(false)}

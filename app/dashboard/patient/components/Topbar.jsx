@@ -1,4 +1,5 @@
 import styles from "../PatientDashboard.module.css";
+import Link from "next/link";
 import notificationIcon from "@/public/icons/notification.svg";
 import profileIcon from "@/public/icons/profile.svg";
 
@@ -15,7 +16,7 @@ export default function Topbar() {
           <img src={notificationIcon.src} alt="Notifications" width="20" height="20" />
           <span className={styles.notificationBadge}></span>
         </button>
-        <div className={styles.profile}>
+        <Link href="/dashboard/patient/profile" className={styles.profile} style={{ textDecoration: "none", cursor: "pointer" }}>
           <div className={styles.profileInfo}>
             <span style={{ fontSize: "13px", fontWeight: "600", color: "#0f172a" }}>
               Benjamin Frank
@@ -24,7 +25,7 @@ export default function Topbar() {
           </div>
           {/* Placeholder or image if available, user didn't specify one for Topbar but I'll add a div/img placeholder structure */}
           <div className={styles.avatar} style={{ backgroundColor: '#e0e7ff' }}></div>
-        </div>
+        </Link>
       </div>
     </div>
   );

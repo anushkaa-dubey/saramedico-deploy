@@ -1,8 +1,7 @@
 "use client";
-
-import Sidebar from "../components/Sidebar";
 import Topbar from "../components/Topbar";
 import styles from "../PatientDashboard.module.css";
+import { motion } from "framer-motion";
 
 export default function Messages() {
     const notifications = [
@@ -32,44 +31,60 @@ export default function Messages() {
         }
     ];
 
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.1
+            }
+        }
+    };
+
+    const itemVariants = {
+        hidden: { opacity: 0, x: -20 },
+        visible: { opacity: 1, x: 0, transition: { duration: 0.3 } }
+    };
+
     return (
-        <div className={styles.container}>
-            <Sidebar />
+        <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={containerVariants}
+        >
+            <Topbar />
 
-            <main className={styles.main}>
-                <Topbar />
+            <section className={styles.header}>
+                <div>
+                    <h2 className={styles.greeting}>Messages</h2>
+                    <p className={styles.sub}>You have {notifications.length} new notifications</p>
+                </div>
+            </section>
 
-                <section className={styles.header}>
-                    <div>
-                        <h2 className={styles.greeting}>Messages</h2>
-                        <p className={styles.sub}>You have {notifications.length} new notifications</p>
-                    </div>
-                </section>
-
-                <section className={styles.grid}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', gridColumn: '1 / -1' }}>
-                        {notifications.map((item) => (
-                            <div
-                                key={item.id}
-                                className={styles.card}
-                                style={{
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    gap: '8px'
-                                }}
-                            >
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <h3 style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a' }}>{item.title}</h3>
-                                    <span style={{ fontSize: '12px', color: '#94a3b8' }}>{item.time}</span>
-                                </div>
-                                <p style={{ fontSize: '14px', color: '#64748b', lineHeight: '1.5' }}>
-                                    {item.content}
-                                </p>
+            <section className={styles.grid}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', gridColumn: '1 / -1' }}>
+                    {notifications.map((item) => (
+                        <motion.div
+                            key={item.id}
+                            variants={itemVariants}
+                            className={styles.card}
+                            style={{
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '8px'
+                            }}
+                        >
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <h3 style={{ fontSize: '15px', fontWeight: 600, color: '#0f172a' }}>{item.title}</h3>
+                                <span style={{ fontSize: '12px', color: '#94a3b8' }}>{item.time}</span>
                             </div>
-                        ))}
-                    </div>
-                </section>
-            </main>
-        </div>
+                            <p style={{ fontSize: '14px', color: '#64748b', lineHeight: '1.5' }}>
+                                {item.content}
+                            </p>
+                        </motion.div>
+                    ))}
+                </div>
+            </section>
+        </motion.div>
     );
 }
