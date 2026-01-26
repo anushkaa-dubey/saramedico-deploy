@@ -1,78 +1,81 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Topbar from "../components/Topbar";
 import DocumentsList from "./components/DocumentsList";
 import styles from "./Patients.module.css";
 import { motion } from "framer-motion";
-
-const patients = [
-    {
-        id: 1,
-        name: "Rohit Sharma",
-        status: "Analysis Ready",
-        statusClass: "ready",
-        dob: "01/12/80",
-        mrn: "882-921",
-        lastVisit: "01/12/80",
-        age: 38,
-        gender: "Male",
-        phone: "(555) 123-4567"
-    },
-    {
-        id: 2,
-        name: "Sara Shetty",
-        status: "Check-up pending",
-        statusClass: "pending",
-        dob: "08/08/80",
-        mrn: "882-921",
-        lastVisit: "08/08/80",
-        age: 32,
-        gender: "Female",
-        phone: "(555) 987-6543"
-    },
-    {
-        id: 3,
-        name: "John Peak",
-        status: "Post-op",
-        statusClass: "pending",
-        dob: "12/10/80",
-        mrn: "882-921",
-        lastVisit: "12/10/80",
-        age: 45,
-        gender: "Male",
-        phone: "(555) 456-7890"
-    },
-    {
-        id: 4,
-        name: "Hamilton",
-        status: "Operation",
-        statusClass: "pending",
-        dob: "12/10/80",
-        mrn: "882-921",
-        lastVisit: "12/10/80",
-        age: 50,
-        gender: "Male",
-        phone: "(555) 222-3333"
-    },
-    {
-        id: 5,
-        name: "Vama Rev",
-        status: "Cardiology",
-        statusClass: "pending",
-        dob: "12/10/80",
-        mrn: "882-921",
-        lastVisit: "12/10/80",
-        age: 29,
-        gender: "Female",
-        phone: "(555) 111-2222"
-    },
-];
+// import { fetchPatients } from "@/services/doctor";
 
 export default function Patients() {
-    const [selectedId, setSelectedId] = useState(1);
+    const [patientsList, setPatientsList] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [selectedId, setSelectedId] = useState(null);
     const [activeTab, setActiveTab] = useState('visits');
-    const selectedPatient = patients.find(p => p.id === selectedId);
+
+    useEffect(() => {
+        loadPatients();
+    }, []);
+
+    const loadPatients = async () => {
+        setLoading(true);
+        try {
+            // TODO: Replace with actual API call
+            // const data = await fetchPatients();
+            // setPatientsList(data);
+
+            // Dummy data for now
+            const dummyPatients = [
+                {
+                    id: 1,
+                    name: "Rohit Sharma",
+                    status: "Analysis Ready",
+                    statusClass: "ready",
+                    dob: "01/12/80",
+                    mrn: "882-921",
+                    lastVisit: "15/01/26",
+                    age: 38,
+                    gender: "Male",
+                    phone: "(555) 123-4567",
+                    email: "rohit@example.com"
+                },
+                {
+                    id: 2,
+                    name: "Sara Shetty",
+                    status: "Check-up pending",
+                    statusClass: "pending",
+                    dob: "08/08/80",
+                    mrn: "882-922",
+                    lastVisit: "08/08/80",
+                    age: 32,
+                    gender: "Female",
+                    phone: "(555) 987-6543",
+                    email: "sara@example.com"
+                },
+                {
+                    id: 3,
+                    name: "John Peak",
+                    status: "Post-op",
+                    statusClass: "pending",
+                    dob: "12/10/80",
+                    mrn: "882-923",
+                    lastVisit: "12/10/80",
+                    age: 45,
+                    gender: "Male",
+                    phone: "(555) 456-7890",
+                    email: "john@example.com"
+                }
+            ];
+            setPatientsList(dummyPatients);
+            if (dummyPatients.length > 0) setSelectedId(dummyPatients[0].id);
+        } catch (error) {
+            console.error("Failed to fetch patients:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const selectedPatient = patientsList.find(p => p.id === selectedId);
 
     return (
         <motion.div
@@ -95,7 +98,9 @@ export default function Patients() {
                         <div className={styles.colProblem}>PROBLEM</div>
                     </div>
 
-                    {patients.map((patient) => (
+                    {loading ? (
+                        <div style={{ padding: '20px', textAlign: 'center' }}>Loading patients...</div>
+                    ) : patientsList.map((patient) => (
                         <div
                             key={patient.id}
                             className={`${styles.patientItem} ${selectedId === patient.id ? styles.active : ''}`}
@@ -138,6 +143,10 @@ export default function Patients() {
                                     <div className={styles.statItem}>
                                         <span className={styles.statLabel}>PHONE</span>
                                         <span className={styles.statValue}>{selectedPatient.phone}</span>
+                                    </div>
+                                    <div className={styles.statItem}>
+                                        <span className={styles.statLabel}>EMAIL</span>
+                                        <span className={styles.statValue}>{selectedPatient.email}</span>
                                     </div>
                                 </div>
 

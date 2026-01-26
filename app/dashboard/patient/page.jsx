@@ -11,6 +11,8 @@ import personIcon from "@/public/icons/person.svg";
 import scheduleIcon from "@/public/icons/schedule.svg";
 import micWhiteIcon from "@/public/icons/mic_white.svg";
 
+import { useRouter } from "next/navigation";
+
 const containerVariants = {
   hidden: { opacity: 0 },
   show: {
@@ -36,6 +38,7 @@ const itemVariants = {
 };
 
 export default function PatientDashboard() {
+  const router = useRouter();
   return (
     <motion.div
       initial="hidden"
@@ -60,7 +63,12 @@ export default function PatientDashboard() {
           <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className={styles.iconBtn}>
             <img src={personIcon.src} alt="Add Person" width="20" height="20" />
           </motion.button>
-          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className={styles.outlineBtn}>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className={styles.outlineBtn}
+            onClick={() => router.push("/dashboard/patient/appointments/request")}
+          >
             <img src={scheduleIcon.src} alt="Schedule" width="16" height="16" />
             Schedule
           </motion.button>

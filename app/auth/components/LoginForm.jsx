@@ -21,33 +21,56 @@ export default function LoginForm() {
   const handleLogin = (e) => {
     e.preventDefault();
 
-    // Demo credentials for testing
+    // Prepare payload for API integration
+    const payload = {
+      email,
+      password
+    };
+
+    // TODO: Replace with actual API call
+    // const response = await loginUser(payload);
+    // Expected response shape:
+    // {
+    //   token: "jwt_token_here",
+    //   user: {
+    //     role: "patient" | "doctor" | "admin" | "hospital",
+    //     email: "...",
+    //     first_name: "...",
+    //     last_name: "..."
+    //   }
+    // }
+
+    console.log("Login payload ready:", payload);
+
+    // TEMPORARY: Demo credentials for testing (remove when API is connected)
+    let userRole = computedRole; // default to URL/session role
+
     // ADMIN LOGIN
     if (email === "admin@saramedico.com" && password === "admin123") {
-      router.push(`/auth/2fa/login?role=admin`);
-      return;
+      userRole = "admin";
     }
-
     // DOCTOR LOGIN
-    if (email === "doctor@saramedico.com" && password === "doctor123") {
-      router.push(`/auth/2fa/login?role=doctor`);
-      return;
+    else if (email === "doctor@saramedico.com" && password === "doctor123") {
+      userRole = "doctor";
     }
-
     // PATIENT LOGIN
-    if (email === "test@saramedico.com" && password === "123456") {
-      router.push(`/auth/2fa/login?role=patient`);
-      return;
+    else if (email === "test@saramedico.com" && password === "123456") {
+      userRole = "patient";
     }
-
     // HOSPITAL LOGIN
-    if (email === "hospital@saramedico.com" && password === "hospital123") {
-      router.push(`/auth/2fa/login?role=hospital`);
-      return;
+    else if (email === "hospital@saramedico.com" && password === "hospital123") {
+      userRole = "hospital";
     }
 
-    // If no specific match, use role from URL
-    router.push(`/auth/2fa/login?role=${computedRole}`);
+    // TODO: When API is connected, use response.user.role instead
+    // const userRole = response.user.role;
+
+    // TODO: Store token in localStorage/sessionStorage
+    // localStorage.setItem("authToken", response.token);
+    // localStorage.setItem("user", JSON.stringify(response.user));
+
+    // Role-aware redirect (Bypassing 2FA as per "Skip OTP" requirement prep)
+    router.push(`/dashboard/${userRole}`);
   };
 
   return (
@@ -67,7 +90,7 @@ export default function LoginForm() {
 
         <label>
           Password
-          <a className="forgot" href="#">Forgot Password?</a>
+          <a className="forgot" href="/auth/forgot-password">Forgot Password?</a>
         </label>
         <input
           type="password"

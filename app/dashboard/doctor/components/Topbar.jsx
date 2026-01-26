@@ -5,9 +5,25 @@ import notificationIcon from "@/public/icons/notification.svg";
 import profileIcon from "@/public/icons/profile.svg";
 
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+// import { getCurrentUser } from "@/services/auth";
 
 export default function Topbar() {
   const router = useRouter();
+
+  useEffect(() => {
+    // Section 4: Get Current User (Session Persistence)
+    const checkSession = async () => {
+      try {
+        // TODO: Replace with actual API call
+        // const user = await getCurrentUser();
+        console.log("Session Check: Requesting /api/v1/auth/me");
+      } catch (err) {
+        console.error("Session check failed", err);
+      }
+    };
+    checkSession();
+  }, []);
   return (
     <div className={styles.topbar}>
       <input

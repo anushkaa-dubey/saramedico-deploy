@@ -24,7 +24,7 @@ function Signup2FAContent() {
     const code = otp.join("");
     if (code.length !== 6) return setError("Enter the 6-digit code");
 
-    // 🔒 BACKEND HOOK
+    // BACKEND HOOK
     // fetch("/api/auth/verify-otp", ...)
 
     if (code === "123456") {

@@ -1,16 +1,54 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Topbar from "../components/Topbar";
-import RecordsTable from "../records/components/RecordsTable";
 import styles from "../records/Records.module.css";
-// We are reusing Records styles, but we need some specific layout for the Jane Header.
-// Since we don't have a separate CSS, we will use inline styles or reuse .detailsCard structure.
-
-import Link from "next/link";
-import janeImage from "@/public/icons/images/Jane.png";
 import { motion } from "framer-motion";
+import Link from "next/link";
+// import { fetchAppointments } from "@/services/patient";
 
 export default function AppointmentsPage() {
+    const [appointments, setAppointments] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        loadAppointments();
+    }, []);
+
+    const loadAppointments = async () => {
+        setLoading(true);
+        try {
+            // TODO: Replace with actual API call
+            // const data = await fetchAppointments();
+            // setAppointments(data);
+
+            // Dummy data for Section 6 Part 3
+            const dummyAppointments = [
+                {
+                    id: "uuid-1",
+                    doctor_id: "doc-1",
+                    doctor_name: "Dr. Emily Chen",
+                    requested_date: "2026-02-01T10:00:00Z",
+                    status: "accepted",
+                    doctor_notes: "Scheduled for next week"
+                },
+                {
+                    id: "uuid-2",
+                    doctor_id: "doc-2",
+                    doctor_name: "Dr. Sarah Wilson",
+                    requested_date: "2026-02-15T14:30:00Z",
+                    status: "pending",
+                    doctor_notes: ""
+                }
+            ];
+            setAppointments(dummyAppointments);
+        } catch (error) {
+            console.error("Failed to load appointments:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -20,94 +58,67 @@ export default function AppointmentsPage() {
             <Topbar />
 
             <section className={styles.wrapper}>
-
-                {/* Back Button */}
-                <div style={{ marginBottom: '20px' }}>
-                    <Link href="/dashboard/patient" style={{ textDecoration: 'none', color: '#0f172a', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span>←</span> Back
-                    </Link>
-                </div>
-
-                {/* Jane Smith Header Card */}
-                <div className={styles.detailsCard} style={{ display: 'flex', alignItems: 'center', gap: '20px', padding: '24px' }}>
-                    <img
-                        src={janeImage.src}
-                        alt="Jane Smith"
-                        style={{ width: '80px', height: '80px', borderRadius: '50%', objectFit: 'cover' }}
-                    />
-
-                    <div style={{ flex: 1, display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px' }}>
-                        <div>
-                            <h2 style={{ fontSize: '20px', fontWeight: '700', color: '#0f172a', marginBottom: '4px' }}>Jane Smith</h2>
-                            <div style={{ fontSize: '13px', color: '#64748b' }}>
-                                <div>DOB</div>
-                                <div style={{ fontWeight: '600', color: '#334155' }}>Jan 12, 1980</div>
-                            </div>
-                        </div>
-
-                        <div>
-                            <div style={{ fontSize: '13px', color: '#64748b', marginTop: '30px' }}>
-                                <div>GENDER</div>
-                                <div style={{ fontWeight: '600', color: '#334155' }}>Female</div>
-                            </div>
-                        </div>
-
-                        <div>
-                            <div style={{ fontSize: '13px', color: '#64748b', marginTop: '30px' }}>
-                                <div>MRN</div>
-                                <div style={{ fontWeight: '600', color: '#334155' }}>#8823-99</div>
-                            </div>
-                        </div>
-
-                        <div>
-                            <div style={{ fontSize: '13px', color: '#64748b', marginTop: '30px' }}>
-                                <div>DIAGNOSED BY</div>
-                                <div style={{ fontWeight: '600', color: '#334155' }}>Arrhythmias</div>
-                            </div>
-                        </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                    <div>
+                        <h2 style={{ fontSize: '24px', fontWeight: '700', color: '#0f172a' }}>My Appointments</h2>
+                        <p style={{ color: '#64748b' }}>Check your appointment status and history.</p>
                     </div>
-
-                    <button style={{
-                        backgroundColor: '#3b82f6',
-                        color: 'white',
-                        border: 'none',
-                        padding: '10px 20px',
-                        borderRadius: '8px',
-                        fontWeight: '600',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '6px'
-                    }}>
-                        + New Visit
-                    </button>
-                </div>
-
-                {/* Tabs logic is usually needed here but for now just showing table */}
-                <div style={{ display: 'flex', gap: '30px', margin: '30px 0', borderBottom: '1px solid #e2e8f0', paddingBottom: '0' }}>
-                    <div style={{ paddingBottom: '12px', borderBottom: '2px solid #3b82f6', color: '#3b82f6', fontWeight: '600', cursor: 'pointer' }}>Visits</div>
-                    <div style={{ paddingBottom: '12px', color: '#64748b', fontWeight: '500', cursor: 'pointer' }}>Documents</div>
+                    <Link href="/dashboard/patient/appointments/request">
+                        <button className={styles.editBtn} style={{ background: '#3b82f6', color: 'white', border: 'none' }}>
+                            + Request New Appointment
+                        </button>
+                    </Link>
                 </div>
 
                 <div className={styles.card}>
                     <div className={styles.cardHeader}>
-                        <h3>Visit History</h3>
-
-                        <div className={styles.filters}>
-                            <select>
-                                <option>All Types</option>
-                            </select>
-
-                            <select>
-                                <option>Last 6 Months</option>
-                            </select>
-                        </div>
+                        <h3>Appointment Status</h3>
                     </div>
 
-                    <RecordsTable />
+                    {loading ? (
+                        <div style={{ padding: '40px', textAlign: 'center' }}>Loading appointments...</div>
+                    ) : (
+                        <div style={{ padding: '0 24px 24px' }}>
+                            <table className={styles.table}>
+                                <thead>
+                                    <tr>
+                                        <th>DOCTOR</th>
+                                        <th>DATE & TIME</th>
+                                        <th>STATUS</th>
+                                        <th>NOTES</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {appointments.map((apt) => (
+                                        <tr key={apt.id}>
+                                            <td>{apt.doctor_name}</td>
+                                            <td>{new Date(apt.requested_date).toLocaleString()}</td>
+                                            <td>
+                                                <span
+                                                    style={{
+                                                        padding: '4px 8px',
+                                                        borderRadius: '4px',
+                                                        fontSize: '12px',
+                                                        fontWeight: '600',
+                                                        background: apt.status === 'accepted' ? '#dcfce7' : '#fef9c3',
+                                                        color: apt.status === 'accepted' ? '#166534' : '#854d0e'
+                                                    }}
+                                                >
+                                                    {apt.status.toUpperCase()}
+                                                </span>
+                                            </td>
+                                            <td style={{ fontSize: '14px', color: '#64748b' }}>
+                                                {apt.doctor_notes || "No notes yet"}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
                 </div>
-
             </section>
         </motion.div>
     );
 }
+

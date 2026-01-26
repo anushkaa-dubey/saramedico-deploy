@@ -70,7 +70,7 @@ function Login2FAContent() {
   return (
     <div className="auth-2fa-container">
       <div className="auth-2fa-card">
-        {/* 🔒 LOCK ICON PLACEHOLDER */}
+        {/*  LOCK ICON PLACEHOLDER */}
         <div className="lock-icon-container">
           {/* Replace with your SVG later */}
           LOCK
@@ -82,7 +82,7 @@ function Login2FAContent() {
           We sent a code to <b>+1 (222) xxx-xx89</b>
         </p>
 
-        {/* 👇 Text on NEW LINE as in UI */}
+        {/* Text on NEW LINE as in UI */}
         <p style={{ fontSize: "13px", color: "#6b7280", marginBottom: "18px" }}>
           Enter the code below to access the portal.
         </p>

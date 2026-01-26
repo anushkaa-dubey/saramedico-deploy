@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
@@ -7,32 +7,130 @@ import "react-phone-input-2/lib/style.css";
 export default function SignupForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirm, setConfirm] = useState("");
-  const [phone, setPhone] = useState("");
 
-  const handleSignup = (e) => {
+  // Form state matching backend payload
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+    confirm_password: "",
+    first_name: "",
+    last_name: "",
+    phone: "",
+    role: "patient",
+    organization_name: ""
+  });
+
+  const [errors, setErrors] = useState({});
+
+  // Get role from URL or sessionStorage
+  useEffect(() => {
+    const urlRole = searchParams.get("role");
+    const sessionRole = typeof window !== "undefined" ? sessionStorage.getItem("selectedRole") : null;
+    const role = urlRole || sessionRole || "patient";
+    setFormData(prev => ({ ...prev, role }));
+  }, [searchParams]);
+
+  // Frontend validation
+  const validateForm = () => {
+    const newErrors = {};
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!formData.email) {
+      newErrors.email = "Email is required";
+    } else if (!emailRegex.test(formData.email)) {
+      newErrors.email = "Invalid email format";
+    }
+
+    // Name validation
+    if (!formData.first_name.trim()) {
+      newErrors.first_name = "First name is required";
+    }
+    if (!formData.last_name.trim()) {
+      newErrors.last_name = "Last name is required";
+    }
+
+    // Phone validation
+    if (!formData.phone || formData.phone.length < 10) {
+      newErrors.phone = "Valid phone number is required";
+    }
+
+    // Password validation
+    if (!formData.password) {
+      newErrors.password = "Password is required";
+    } else if (formData.password.length < 8) {
+      newErrors.password = "Password must be at least 8 characters";
+    }
+
+    // Confirm password validation
+    if (formData.password !== formData.confirm_password) {
+      newErrors.confirm_password = "Passwords do not match";
+    }
+
+    // Organization name validation (required for non-patient roles)
+    if (formData.role !== "patient" && !formData.organization_name.trim()) {
+      newErrors.organization_name = "Organization name is required";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleInputChange = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    // Clear error for this field when user starts typing
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: "" }));
+    }
+  };
+
+  const handleSignup = async (e) => {
     e.preventDefault();
 
-    if (password !== confirm) {
-      alert("Passwords do not match!");
+    if (!validateForm()) {
       return;
     }
 
-    // Get role from URL or sessionStorage
-    const role = searchParams.get("role") || (typeof window !== "undefined" ? sessionStorage.getItem("selectedRole") : null) || "patient";
-    
-    alert("Account created (dummy). You can now login.");
-    router.push(`/auth/2fa/signup?role=${role}`);
+    // Prepare payload for future API integration
+    const payload = {
+      email: formData.email,
+      password: formData.password,
+      confirm_password: formData.confirm_password,
+      first_name: formData.first_name,
+      last_name: formData.last_name,
+      phone: formData.phone,
+      role: formData.role,
+      organization_name: formData.organization_name
+    };
 
+    // TODO: Connect to backend. Requirement says:
+    // 1. Call POST /register
+    // 2. If success, Call POST /login (using same password)
+    // 3. Store token
+    // 4. Redirect to /dashboard/{role}
+
+    /*
+    try {
+      await registerUser(payload);
+      const loginResponse = await loginUser({ email: payload.email, password: payload.password });
+      localStorage.setItem("authToken", loginResponse.token);
+      router.push(`/dashboard/${payload.role}`);
+    } catch (err) {
+      console.error(err);
+    }
+    */
+
+    console.log("Signup payload ready (will auto-login after register):", payload);
+    alert("Account created (dummy). You are being logged in.");
+    // Mocking the auto-login redirect
+    router.push(`/dashboard/${formData.role}`);
   };
 
   // Password Rules
-  const hasMinLength = password.length >= 8;
-  const hasUppercase = /[A-Z]/.test(password);
-  const hasNumber = /[0-9]/.test(password);
-  const hasSpecial = /[^A-Za-z0-9]/.test(password);
+  const hasMinLength = formData.password.length >= 8;
+  const hasUppercase = /[A-Z]/.test(formData.password);
+  const hasNumber = /[0-9]/.test(formData.password);
+  const hasSpecial = /[^A-Za-z0-9]/.test(formData.password);
 
   const strengthCount = [hasMinLength, hasUppercase, hasNumber, hasSpecial].filter(Boolean).length;
 
@@ -49,21 +147,45 @@ export default function SignupForm() {
       <p className="subtext">Create an account to get started.</p>
 
       <form onSubmit={handleSignup}>
+        {/* First Name */}
+        <label>First Name</label>
+        <input
+          type="text"
+          placeholder="John"
+          value={formData.first_name}
+          onChange={(e) => handleInputChange("first_name", e.target.value)}
+          required
+        />
+        {errors.first_name && <p style={{ color: "red", fontSize: "12px", marginTop: "-8px" }}>{errors.first_name}</p>}
+
+        {/* Last Name */}
+        <label>Last Name</label>
+        <input
+          type="text"
+          placeholder="Doe"
+          value={formData.last_name}
+          onChange={(e) => handleInputChange("last_name", e.target.value)}
+          required
+        />
+        {errors.last_name && <p style={{ color: "red", fontSize: "12px", marginTop: "-8px" }}>{errors.last_name}</p>}
+
+        {/* Email */}
         <label>Email Address</label>
         <input
           type="email"
           placeholder="dr.hops@gmail.org"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          value={formData.email}
+          onChange={(e) => handleInputChange("email", e.target.value)}
           required
         />
+        {errors.email && <p style={{ color: "red", fontSize: "12px", marginTop: "-8px" }}>{errors.email}</p>}
 
         {/* Phone Input with Country Flags */}
         <label>Phone</label>
         <PhoneInput
           country={"in"}
-          value={phone}
-          onChange={(phone) => setPhone(phone)}
+          value={formData.phone}
+          onChange={(phone) => handleInputChange("phone", phone)}
           inputStyle={{
             width: "100%",
             height: "40px",
@@ -78,13 +200,30 @@ export default function SignupForm() {
           containerStyle={{ marginBottom: "16px" }}
           enableSearch={true}
         />
+        {errors.phone && <p style={{ color: "red", fontSize: "12px", marginTop: "-16px", marginBottom: "12px" }}>{errors.phone}</p>}
 
+        {/* Organization Name - Only for non-patient roles */}
+        {formData.role !== "patient" && (
+          <>
+            <label>Organization Name</label>
+            <input
+              type="text"
+              placeholder="Saramedico Clinic"
+              value={formData.organization_name}
+              onChange={(e) => handleInputChange("organization_name", e.target.value)}
+              required
+            />
+            {errors.organization_name && <p style={{ color: "red", fontSize: "12px", marginTop: "-8px" }}>{errors.organization_name}</p>}
+          </>
+        )}
+
+        {/* Password */}
         <label>Password</label>
         <input
           type="password"
           placeholder="Create a strong password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          value={formData.password}
+          onChange={(e) => handleInputChange("password", e.target.value)}
           required
         />
 
@@ -111,10 +250,11 @@ export default function SignupForm() {
         <input
           type="password"
           placeholder="Confirm your password"
-          value={confirm}
-          onChange={(e) => setConfirm(e.target.value)}
+          value={formData.confirm_password}
+          onChange={(e) => handleInputChange("confirm_password", e.target.value)}
           required
         />
+        {errors.confirm_password && <p style={{ color: "red", fontSize: "12px", marginTop: "-8px" }}>{errors.confirm_password}</p>}
 
         <button className="primary-btn">Sign Up</button>
 
@@ -131,7 +271,7 @@ export default function SignupForm() {
         </button>
 
         <div className="bottom-text">
-          Already have an account? <a href={`/auth/login?role=${searchParams.get("role") || (typeof window !== "undefined" ? sessionStorage.getItem("selectedRole") : null) || "patient"}`}>Login</a>
+          Already have an account? <a href={`/auth/login?role=${formData.role}`}>Login</a>
         </div>
       </form>
     </>

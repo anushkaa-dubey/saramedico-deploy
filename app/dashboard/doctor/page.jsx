@@ -60,7 +60,12 @@ export default function DoctorDashboard() {
           <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className={styles.iconBtn}>
             <img src={personIcon.src} alt="Add Person" width="20" height="20" />
           </motion.button>
-          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className={styles.outlineBtn}>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className={styles.outlineBtn}
+            onClick={() => router.push("/dashboard/doctor/appointments")}
+          >
             <img src={scheduleIcon.src} alt="Schedule" width="16" height="16" />
             Schedule
           </motion.button>
