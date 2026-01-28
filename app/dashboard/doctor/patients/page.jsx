@@ -5,7 +5,7 @@ import Topbar from "../components/Topbar";
 import DocumentsList from "./components/DocumentsList";
 import styles from "./Patients.module.css";
 import { motion } from "framer-motion";
-// import { fetchPatients } from "@/services/doctor";
+import { fetchAppointments, fetchPatients } from "@/services/doctor";
 
 export default function Patients() {
     const [patientsList, setPatientsList] = useState([]);
@@ -20,54 +20,53 @@ export default function Patients() {
     const loadPatients = async () => {
         setLoading(true);
         try {
-            // TODO: Replace with actual API call
-            // const data = await fetchPatients();
-            // setPatientsList(data);
+            // 1. Try dedicated patient directory endpoint first
+            const patientsData = await fetchPatients();
 
-            // Dummy data for now
-            const dummyPatients = [
-                {
-                    id: 1,
-                    name: "Rohit Sharma",
-                    status: "Analysis Ready",
+            if (patientsData && patientsData.length > 0) {
+                const mappedPatients = patientsData.map(p => ({
+                    id: p.id,
+                    name: p.name || p.full_name || "Unknown Patient",
+                    status: p.statusTag || "Analysis Ready",
                     statusClass: "ready",
-                    dob: "01/12/80",
-                    mrn: "882-921",
-                    lastVisit: "15/01/26",
-                    age: 38,
-                    gender: "Male",
-                    phone: "(555) 123-4567",
-                    email: "rohit@example.com"
-                },
-                {
-                    id: 2,
-                    name: "Sara Shetty",
-                    status: "Check-up pending",
-                    statusClass: "pending",
-                    dob: "08/08/80",
-                    mrn: "882-922",
-                    lastVisit: "08/08/80",
-                    age: 32,
-                    gender: "Female",
-                    phone: "(555) 987-6543",
-                    email: "sara@example.com"
-                },
-                {
-                    id: 3,
-                    name: "John Peak",
-                    status: "Post-op",
-                    statusClass: "pending",
-                    dob: "12/10/80",
-                    mrn: "882-923",
-                    lastVisit: "12/10/80",
-                    age: 45,
-                    gender: "Male",
-                    phone: "(555) 456-7890",
-                    email: "john@example.com"
-                }
-            ];
-            setPatientsList(dummyPatients);
-            if (dummyPatients.length > 0) setSelectedId(dummyPatients[0].id);
+                    dob: p.dob || "N/A",
+                    mrn: p.mrn || "N/A",
+                    lastVisit: p.lastVisit || "N/A",
+                    age: p.age || "N/A",
+                    gender: p.gender || "N/A",
+                    phone: p.phone || p.phoneNumber || "N/A",
+                    email: p.email || "N/A"
+                }));
+                setPatientsList(mappedPatients);
+                if (mappedPatients.length > 0) setSelectedId(mappedPatients[0].id);
+            } else {
+                // 2. Fallback: derive from appointments
+                const appointments = await fetchAppointments();
+                const uniquePatients = [];
+                const patientIds = new Set();
+
+                appointments.forEach(apt => {
+                    const pId = apt.patient_id || (apt.user && apt.user.id);
+                    if (pId && !patientIds.has(pId)) {
+                        patientIds.add(pId);
+                        uniquePatients.push({
+                            id: pId,
+                            name: apt.patient_name || (apt.user && apt.user.full_name) || "Unknown Patient",
+                            status: apt.status === 'accepted' ? "Analysis Ready" : "Pending",
+                            statusClass: apt.status === 'accepted' ? "ready" : "pending",
+                            dob: apt.user?.dob || "N/A",
+                            mrn: apt.user?.mrn || `MRN-${pId.substring(0, 6)}`,
+                            lastVisit: new Date(apt.requested_date || apt.date).toLocaleDateString(),
+                            age: apt.user?.age || "N/A",
+                            gender: apt.user?.gender || "N/A",
+                            phone: apt.user?.phone || "N/A",
+                            email: apt.user?.email || "N/A"
+                        });
+                    }
+                });
+                setPatientsList(uniquePatients);
+                if (uniquePatients.length > 0) setSelectedId(uniquePatients[0].id);
+            }
         } catch (error) {
             console.error("Failed to fetch patients:", error);
         } finally {
@@ -75,7 +74,14 @@ export default function Patients() {
         }
     };
 
-    const selectedPatient = patientsList.find(p => p.id === selectedId);
+    const [searchTerm, setSearchTerm] = useState("");
+
+    const filteredPatients = patientsList.filter(p =>
+        p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        p.mrn.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    const selectedPatient = filteredPatients.find(p => p.id === selectedId) || filteredPatients[0];
 
     return (
         <motion.div
@@ -85,7 +91,18 @@ export default function Patients() {
         >
             <Topbar />
 
-            <h2 className={styles.title}>Patient Directory</h2>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingRight: "24px" }}>
+                <h2 className={styles.title}>Patient Directory</h2>
+                <div style={{ position: "relative" }}>
+                    <input
+                        type="text"
+                        placeholder="Search by name or MRN..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        style={{ padding: "8px 12px", borderRadius: "8px", border: "1px solid #e2e8f0", width: "300px" }}
+                    />
+                </div>
+            </div>
 
             <div className={styles.contentRow}>
                 {/* Patient List */}
@@ -100,26 +117,29 @@ export default function Patients() {
 
                     {loading ? (
                         <div style={{ padding: '20px', textAlign: 'center' }}>Loading patients...</div>
-                    ) : patientsList.map((patient) => (
-                        <div
-                            key={patient.id}
-                            className={`${styles.patientItem} ${selectedId === patient.id ? styles.active : ''}`}
-                            onClick={() => setSelectedId(patient.id)}
-                        >
-                            <div className={styles.nameGroup}>
-                                <span className={styles.pName}>{patient.name}</span>
-                                <span className={`${styles.pStatus} ${styles[patient.statusClass]}`}>
-                                    {patient.status}
-                                </span>
+                    ) : filteredPatients.length === 0 ? (
+                        <div style={{ padding: '20px', textAlign: 'center' }}>No patients found matching "{searchTerm}"</div>
+                    ) : (
+                        filteredPatients.map((patient) => (
+                            <div
+                                key={patient.id}
+                                className={`${styles.patientItem} ${selectedId === patient.id ? styles.active : ''}`}
+                                onClick={() => setSelectedId(patient.id)}
+                            >
+                                <div className={styles.nameGroup}>
+                                    <span className={styles.pName}>{patient.name}</span>
+                                    <span className={`${styles.pStatus} ${styles[patient.statusClass]}`}>
+                                        {patient.status}
+                                    </span>
+                                </div>
+                                <div className={styles.itemText}>{patient.dob}</div>
+                                <div className={styles.itemText}>{patient.mrn}</div>
+                                <div className={styles.itemText}>{patient.lastVisit}</div>
+                                <div className={styles.colProblem}>
+                                    <span className={styles.arrow}>›</span>
+                                </div>
                             </div>
-                            <div className={styles.itemText}>{patient.dob}</div>
-                            <div className={styles.itemText}>{patient.mrn}</div>
-                            <div className={styles.itemText}>{patient.lastVisit}</div>
-                            <div className={styles.colProblem}>
-                                <span className={styles.arrow}>›</span>
-                            </div>
-                        </div>
-                    ))}
+                        )))}
                 </div>
 
                 {/* Patient Details */}

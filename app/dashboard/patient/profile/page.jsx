@@ -8,8 +8,7 @@ import benjaminImage from "@/public/icons/images/benjamin frank.png";
 import basic_information from "@/public/icons/basic_information.svg";
 import contact from "@/public/icons/contact.svg";
 import { motion } from "framer-motion";
-// TODO: Uncomment when connecting backend
-// import { fetchProfile, updateProfile } from "@/services/patient";
+import { fetchProfile, updateProfile } from "@/services/patient";
 
 const containerVariants = {
     hidden: { opacity: 0 },
@@ -34,13 +33,13 @@ export default function ProfilePage() {
 
     // Profile data state
     const [profileData, setProfileData] = useState({
-        firstName: "Benjamin",
-        lastName: "Frank",
-        mrn: "849-221-009",
-        dateOfBirth: "04/12/1985",
-        ssn: "***-**-****",
-        email: "mymail@gmail.com",
-        mobilePhone: "(555) 123-4567",
+        firstName: "",
+        lastName: "",
+        mrn: "N/A",
+        dateOfBirth: "",
+        ssn: "N/A",
+        email: "",
+        mobilePhone: "",
         homePhone: "",
         avatar: benjaminImage.src
     });
@@ -55,12 +54,18 @@ export default function ProfilePage() {
     const loadProfile = async () => {
         setLoading(true);
         try {
-            // TODO: Replace with actual API call
-            // const data = await fetchProfile();
-            // setProfileData(data);
-
-            console.log("fetchProfile called");
-            // Using dummy data for now
+            const data = await fetchProfile();
+            setProfileData({
+                firstName: data.first_name || "",
+                lastName: data.last_name || "",
+                mrn: data.mrn || "N/A",
+                dateOfBirth: data.dob || "N/A",
+                ssn: data.ssn || "***-**-****",
+                email: data.email || "",
+                mobilePhone: data.phone || "",
+                homePhone: data.home_phone || "",
+                avatar: data.avatar_url || benjaminImage.src
+            });
         } catch (error) {
             console.error("Failed to load profile:", error);
         } finally {
@@ -78,18 +83,10 @@ export default function ProfilePage() {
         }
 
         try {
-            // TODO: Replace with actual API call
-            // await updateProfile({
-            //   first_name: profileData.firstName,
-            //   last_name: profileData.lastName,
-            //   date_of_birth: profileData.dateOfBirth,
-            //   ssn: profileData.ssn
-            // });
-
-            console.log("updateProfile (basic) called with:", {
-                firstName: profileData.firstName,
-                lastName: profileData.lastName,
-                dateOfBirth: profileData.dateOfBirth
+            await updateProfile({
+                first_name: profileData.firstName,
+                last_name: profileData.lastName,
+                dob: profileData.dateOfBirth
             });
 
             setIsEditingBasic(false);
@@ -110,17 +107,10 @@ export default function ProfilePage() {
         }
 
         try {
-            // TODO: Replace with actual API call
-            // await updateProfile({
-            //   email: profileData.email,
-            //   mobile_phone: profileData.mobilePhone,
-            //   home_phone: profileData.homePhone
-            // });
-
-            console.log("updateProfile (contact) called with:", {
+            await updateProfile({
                 email: profileData.email,
-                mobilePhone: profileData.mobilePhone,
-                homePhone: profileData.homePhone
+                phone: profileData.mobilePhone,
+                home_phone: profileData.homePhone
             });
 
             setIsEditingContact(false);

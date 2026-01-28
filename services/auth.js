@@ -1,142 +1,150 @@
-/**
- * Authentication Service
- * 
- * Placeholder functions for future API integration.
- * These will handle all authentication-related API calls.
- */
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+import { API_BASE_URL } from "./apiConfig";
 
 /**
  * Register a new user
- * 
- * @param {Object} payload - User registration data
- * @param {string} payload.email - User email
- * @param {string} payload.password - User password
- * @param {string} payload.confirm_password - Password confirmation
- * @param {string} payload.first_name - User's first name
- * @param {string} payload.last_name - User's last name
- * @param {string} payload.phone - User's phone number (with country code)
- * @param {string} payload.role - User role: "patient" | "doctor" | "admin" | "hospital"
- * @param {string} payload.organization_name - Organization name (required for non-patient roles)
- * 
- * @returns {Promise<Object>} User object (without token - need to call loginUser after)
- * 
- * Expected Response (HTTP 201):
- * {
- *   id: "user_id",
- *   email: "user@example.com",
- *   first_name: "John",
- *   last_name: "Doe",
- *   phone_number: "+919876543210",
- *   role: "doctor",
- *   organization_name: "Saramedico Clinic",
- *   is_active: true,
- *   created_at: "2024-01-01T00:00:00Z"
- * }
  */
 export const registerUser = async (payload) => {
-    // TODO: Implement actual API call
-    // const response = await fetch(`${API_BASE_URL}/auth/register`, {
-    //   method: "POST",
-    //   headers: {
-    //     "Content-Type": "application/json",
-    //   },
-    //   body: JSON.stringify(payload),
-    // });
-    // 
-    // if (!response.ok) {
-    //   const error = await response.json();
-    //   throw new Error(error.detail || "Registration failed");
-    // }
-    // 
-    // return await response.json();
+    const response = await fetch(`${API_BASE_URL}/auth/register`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+    });
 
-    console.log("registerUser called with:", payload);
-    return null;
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || "Registration failed");
+    }
+
+    return await response.json();
 };
 
 /**
  * Login user and get authentication token
- * 
- * @param {Object} payload - Login credentials
- * @param {string} payload.email - User email
- * @param {string} payload.password - User password
- * 
- * @returns {Promise<Object>} Authentication token and user data
- * 
- * Expected Response (HTTP 200):
- * {
- *   token: "jwt_token_here",
- *   user: {
- *     id: "user_id",
- *     email: "user@example.com",
- *     first_name: "John",
- *     last_name: "Doe",
- *     role: "doctor",
- *     organization_name: "Saramedico Clinic"
- *   }
- * }
  */
 export const loginUser = async (payload) => {
-    // TODO: Implement actual API call
-    // const response = await fetch(`${API_BASE_URL}/auth/login`, {
-    //   method: "POST",
-    //   headers: {
-    //     "Content-Type": "application/json",
-    //   },
-    //   body: JSON.stringify(payload),
-    // });
-    // 
-    // if (!response.ok) {
-    //   const error = await response.json();
-    //   throw new Error(error.detail || "Login failed");
-    // }
-    // 
-    // return await response.json();
+    const response = await fetch(`${API_BASE_URL}/auth/login`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+    });
 
-    console.log("loginUser called with:", payload);
-    return null;
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || "Login failed");
+    }
+
+    const data = await response.json();
+
+    // Store token safely
+    localStorage.setItem("authToken", data.access_token || data.token);
+
+    return data;
 };
 
 /**
- * Logout user (clear token)
+ * Logout user
  */
 export const logoutUser = async () => {
-    // TODO: Implement actual API call if backend has logout endpoint
-    // Clear local storage
-    // localStorage.removeItem("authToken");
-    // localStorage.removeItem("user");
+    const token = localStorage.getItem("authToken");
 
-    console.log("logoutUser called");
-    return null;
+    if (token) {
+        try {
+            await fetch(`${API_BASE_URL}/auth/logout`, {
+                method: "POST",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+        } catch (err) {
+            console.warn("Logout API failed, clearing local session anyway");
+        }
+    }
+
+    localStorage.removeItem("authToken");
 };
 
 /**
- * Verify OTP for 2FA
- * 
- * @param {Object} payload - OTP verification data
- * @param {string} payload.email - User email
- * @param {string} payload.otp - OTP code
- * 
- * @returns {Promise<Object>} Verification result
+ * Get current user (session restore)
  */
+export const getCurrentUser = async () => {
+    const token = localStorage.getItem("authToken");
+
+    if (!token) return null;
+
+    const response = await fetch(`${API_BASE_URL}/auth/me`, {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    });
+
+    if (!response.ok) return null;
+
+    return await response.json();
+};
+
+/**
+ * ------------------------------
+ * OTP-BASED AUTH (NOT USED NOW)
+ * ------------------------------
+ * Backend does NOT currently support OTP.
+ * Keeping this for future use.
+ */
+
+/*
 export const verifyOTP = async (payload) => {
-    // TODO: Implement actual API call
-    console.log("verifyOTP called with:", payload);
-    return null;
+  const response = await fetch(`${API_BASE_URL}/auth/verify-otp`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.detail || "OTP verification failed");
+  }
+
+  return await response.json();
 };
 
-/**
- * Resend OTP
- * 
- * @param {Object} payload - Resend OTP data
- * @param {string} payload.email - User email
- * 
- * @returns {Promise<Object>} Resend result
- */
 export const resendOTP = async (payload) => {
-    // TODO: Implement actual API call
-    console.log("resendOTP called with:", payload);
-    return null;
+  const response = await fetch(`${API_BASE_URL}/auth/resend-otp`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(error.detail || "Resend OTP failed");
+  }
+
+  return await response.json();
+};
+*/
+/**
+ * Request password reset link
+ */
+export const forgotPassword = async (payload) => {
+    const response = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || "Forgot password request failed");
+    }
+
+    return await response.json();
 };

@@ -3,11 +3,12 @@
 import { useState, useEffect } from "react";
 import styles from "../DoctorDashboard.module.css";
 // TODO: Uncomment when connecting backend
-// import { fetchTasks as fetchTasksAPI, addTask as addTaskAPI, updateTask as updateTaskAPI, deleteTask as deleteTaskAPI } from "@/services/doctor";
+import { fetchTasks as fetchTasksAPI, addTask as addTaskAPI, updateTask as updateTaskAPI, deleteTask as deleteTaskAPI } from "@/services/doctor";
 
 export default function TasksSection() {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   // Load tasks on component mount
   useEffect(() => {
@@ -15,49 +16,17 @@ export default function TasksSection() {
   }, []);
 
   /**
-   * Fetch tasks from backend (currently using dummy data)
+   * Fetch tasks from backend
    */
   const loadTasks = async () => {
     setLoading(true);
+    setError("");
     try {
-      // TODO: Replace with actual API call
-      // const data = await fetchTasksAPI();
-      // setTasks(data);
-
-      // TEMPORARY: Using dummy data
-      const dummyTasks = [
-        {
-          id: 1,
-          label: "Sign off on lab results",
-          time: "Due Today - Urgent",
-          completed: false,
-          urgent: true,
-        },
-        {
-          id: 2,
-          label: "Review referral for Patient #902",
-          time: "Due Tomorrow",
-          completed: false,
-          urgent: false,
-        },
-        {
-          id: 3,
-          label: "Approve prescription refill",
-          time: "Due Friday",
-          completed: false,
-          urgent: false,
-        },
-        {
-          id: 4,
-          label: "Team Meeting preparation",
-          time: "Completed",
-          completed: true,
-          urgent: false,
-        },
-      ];
-      setTasks(dummyTasks);
+      const data = await fetchTasksAPI();
+      setTasks(data);
     } catch (error) {
       console.error("Failed to load tasks:", error);
+      setError("Failed to load tasks.");
     } finally {
       setLoading(false);
     }
@@ -68,14 +37,15 @@ export default function TasksSection() {
    */
   const handleAddTask = async (taskData) => {
     try {
-      // TODO: Replace with actual API call
-      // const newTask = await addTaskAPI(taskData);
-      // setTasks([...tasks, newTask]);
-
-      console.log("Add task:", taskData);
-      // For now, just log - will implement UI for adding tasks later
+      const newTask = await addTaskAPI({
+        title: taskData.label,
+        priority: taskData.urgent ? "urgent" : "normal",
+        due_date: new Date().toISOString()
+      });
+      setTasks(prev => [...prev, newTask]);
     } catch (error) {
       console.error("Failed to add task:", error);
+      alert("Failed to add task");
     }
   };
 
@@ -86,15 +56,16 @@ export default function TasksSection() {
     const task = tasks.find(t => t.id === id);
     if (!task) return;
 
-    const updatedTask = { ...task, completed: !task.completed };
+    // Use task status (assuming "completed" vs "pending" string or boolean in backend)
+    // The flow doc says status can be "pending" or "completed".
+    const newStatus = task.status === "completed" ? "pending" : "completed";
+    const updatedTask = { ...task, status: newStatus };
 
     // Optimistic update
     setTasks(tasks.map((t) => t.id === id ? updatedTask : t));
 
     try {
-      // TODO: Replace with actual API call
-      // await updateTaskAPI(id, { completed: updatedTask.completed });
-      console.log("Update task:", id, updatedTask);
+      await updateTaskAPI(id, { status: newStatus });
     } catch (error) {
       console.error("Failed to update task:", error);
       // Revert on error
@@ -106,18 +77,19 @@ export default function TasksSection() {
    * Delete a task
    */
   const handleDeleteTask = async (id) => {
-    try {
-      // TODO: Replace with actual API call
-      // await deleteTaskAPI(id);
-      // setTasks(tasks.filter(t => t.id !== id));
+    if (!confirm("Are you sure you want to delete this task?")) return;
 
-      console.log("Delete task:", id);
+    try {
+      await deleteTaskAPI(id);
+      setTasks(prev => prev.filter(t => t.id !== id));
     } catch (error) {
       console.error("Failed to delete task:", error);
+      alert("Failed to delete task");
     }
   };
 
-  const urgentCount = tasks.filter((t) => !t.completed && t.urgent).length;
+
+  const urgentCount = tasks.filter((t) => t.status !== "completed" && (t.priority === "high" || t.priority === "urgent")).length;
 
   return (
     <div className={styles.card}>
@@ -126,30 +98,42 @@ export default function TasksSection() {
         <span className={styles.taskCountUrgent}>{urgentCount} Urgent</span>
       </div>
 
+      {error && <p style={{ color: "red", fontSize: "12px", margin: "10px" }}>{error}</p>}
+
       <div className={styles.tasksList}>
-        {tasks.map((task) => (
-          <div key={task.id} className={styles.taskItem}>
-            <button
-              className={`${styles.taskCheckbox} ${task.completed ? styles.taskCompleted : ""
-                }`}
-              onClick={() => toggleTask(task.id)}
-            />
-            <div className={styles.taskText}>
-              <span
-                className={`${styles.taskLabel} ${task.completed ? styles.taskLabelStrike : ""
-                  }`}
+        {loading ? (
+          <p style={{ textAlign: "center", padding: "20px" }}>Loading tasks...</p>
+        ) : tasks.length === 0 ? (
+          <p style={{ textAlign: "center", padding: "20px", color: "#64748b" }}>No tasks found.</p>
+        ) : (
+          tasks.map((task) => (
+            <div key={task.id} className={styles.taskItem}>
+              <div style={{ display: "flex", alignItems: "center", flex: 1 }}>
+                <button
+                  className={`${styles.taskCheckbox} ${task.status === "completed" ? styles.taskCompleted : ""}`}
+                  onClick={() => toggleTask(task.id)}
+                />
+                <div className={styles.taskText}>
+                  <span className={`${styles.taskLabel} ${task.status === "completed" ? styles.taskLabelStrike : ""}`}>
+                    {task.title}
+                  </span>
+                  <span
+                    className={`${styles.taskTime} ${(task.priority === "high" || task.priority === "urgent") && task.status !== "completed" ? styles.taskTimeUrgent : ""} ${task.status === "completed" ? styles.taskTimeCompleted : ""}`}
+                  >
+                    {task.status === "completed" ? "Completed" : (task.priority === "high" || task.priority === "urgent" ? "Urgent" : "Normal")}
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={() => handleDeleteTask(task.id)}
+                style={{ background: "none", border: "none", color: "#94a3b8", cursor: "pointer", fontSize: "18px" }}
+                title="Delete task"
               >
-                {task.label}
-              </span>
-              <span
-                className={`${styles.taskTime} ${task.urgent && !task.completed ? styles.taskTimeUrgent : ""
-                  } ${task.completed ? styles.taskTimeCompleted : ""}`}
-              >
-                {task.time}
-              </span>
+                ×
+              </button>
             </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
 
       <button
@@ -157,15 +141,7 @@ export default function TasksSection() {
         onClick={() => {
           const label = prompt("Enter task description:");
           if (label) {
-            const newTask = {
-              id: Date.now(),
-              label,
-              time: "Due Today",
-              completed: false,
-              urgent: false
-            };
-            setTasks([...tasks, newTask]);
-            handleAddTask(newTask);
+            handleAddTask({ label, urgent: false });
           }
         }}
       >

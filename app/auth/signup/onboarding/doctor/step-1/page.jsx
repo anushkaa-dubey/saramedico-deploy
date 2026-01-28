@@ -6,6 +6,7 @@ import styles from "./Step1.module.css";
 import Image from "next/image";
 import logo from "@/public/logo2.svg";
 import search from "@/public/icons/search.svg";
+import { updateDoctorProfile } from "@/services/doctor";
 
 import genMedIcon from "@/public/icons/speciality/general_medicine.svg";
 import cardiologyIcon from "@/public/icons/speciality/cardiology.svg";
@@ -39,19 +40,39 @@ export default function DoctorOnboardingStep1() {
   const router = useRouter();
   const [selectedSpecialty, setSelectedSpecialty] = useState("general_medicine"); // Default selection
   const [searchQuery, setSearchQuery] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const filteredSpecialties = specialties.filter((s) =>
     s.label.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!selectedSpecialty) {
       alert("Please select a specialty");
       return;
     }
-    // Save to state/context here if needed
-    router.push("/auth/signup/onboarding/doctor/step-2");
+
+    setLoading(true);
+    setError("");
+    try {
+      // Find the label for the selected ID
+      const specialtyLabel = specialties.find(s => s.id === selectedSpecialty)?.label || selectedSpecialty;
+
+      const updatedUser = await updateDoctorProfile({ specialty: specialtyLabel });
+
+      // Update local storage
+      const user = JSON.parse(localStorage.getItem("user") || "{}");
+      localStorage.setItem("user", JSON.stringify({ ...user, ...updatedUser }));
+
+      router.push("/auth/signup/onboarding/doctor/step-2");
+    } catch (err) {
+      console.error("Failed to update specialty:", err);
+      setError(err.message || "Failed to save specialty. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -122,8 +143,9 @@ export default function DoctorOnboardingStep1() {
                 type="button"
                 className={styles.continueBtn}
                 onClick={handleSubmit}
+                disabled={loading}
               >
-                Continue →
+                {loading ? "Saving..." : "Continue →"}
               </button>
             </div>
           </div>

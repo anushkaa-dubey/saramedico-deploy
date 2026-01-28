@@ -5,11 +5,12 @@ import Topbar from "../components/Topbar";
 import styles from "../records/Records.module.css";
 import { motion } from "framer-motion";
 import Link from "next/link";
-// import { fetchAppointments } from "@/services/patient";
+import { fetchAppointments } from "@/services/patient";
 
 export default function AppointmentsPage() {
     const [appointments, setAppointments] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
 
     useEffect(() => {
         loadAppointments();
@@ -17,33 +18,13 @@ export default function AppointmentsPage() {
 
     const loadAppointments = async () => {
         setLoading(true);
+        setError("");
         try {
-            // TODO: Replace with actual API call
-            // const data = await fetchAppointments();
-            // setAppointments(data);
-
-            // Dummy data for Section 6 Part 3
-            const dummyAppointments = [
-                {
-                    id: "uuid-1",
-                    doctor_id: "doc-1",
-                    doctor_name: "Dr. Emily Chen",
-                    requested_date: "2026-02-01T10:00:00Z",
-                    status: "accepted",
-                    doctor_notes: "Scheduled for next week"
-                },
-                {
-                    id: "uuid-2",
-                    doctor_id: "doc-2",
-                    doctor_name: "Dr. Sarah Wilson",
-                    requested_date: "2026-02-15T14:30:00Z",
-                    status: "pending",
-                    doctor_notes: ""
-                }
-            ];
-            setAppointments(dummyAppointments);
-        } catch (error) {
-            console.error("Failed to load appointments:", error);
+            const data = await fetchAppointments();
+            setAppointments(data);
+        } catch (err) {
+            console.error("Failed to load appointments:", err);
+            setError(err.message || "Failed to load your appointments. Please try again later.");
         } finally {
             setLoading(false);
         }
@@ -64,11 +45,13 @@ export default function AppointmentsPage() {
                         <p style={{ color: '#64748b' }}>Check your appointment status and history.</p>
                     </div>
                     <Link href="/dashboard/patient/appointments/request">
-                        <button className={styles.editBtn} style={{ background: '#3b82f6', color: 'white', border: 'none' }}>
-                            + Request New Appointment
+                        <button className={styles.requestCTA}>
+                            <span>+</span> Request New Appointment
                         </button>
                     </Link>
                 </div>
+
+                {error && <p style={{ color: "red", padding: "0 24px" }}>{error}</p>}
 
                 <div className={styles.card}>
                     <div className={styles.cardHeader}>
@@ -77,6 +60,8 @@ export default function AppointmentsPage() {
 
                     {loading ? (
                         <div style={{ padding: '40px', textAlign: 'center' }}>Loading appointments...</div>
+                    ) : appointments.length === 0 ? (
+                        <div style={{ padding: '40px', textAlign: 'center' }}>You have no appointment requests.</div>
                     ) : (
                         <div style={{ padding: '0 24px 24px' }}>
                             <table className={styles.table}>
@@ -91,24 +76,39 @@ export default function AppointmentsPage() {
                                 <tbody>
                                     {appointments.map((apt) => (
                                         <tr key={apt.id}>
-                                            <td>{apt.doctor_name}</td>
+                                            <td>{apt.doctor_name || (apt.doctor && apt.doctor.full_name) || "Unknown Doctor"}</td>
                                             <td>{new Date(apt.requested_date).toLocaleString()}</td>
                                             <td>
-                                                <span
-                                                    style={{
-                                                        padding: '4px 8px',
-                                                        borderRadius: '4px',
-                                                        fontSize: '12px',
-                                                        fontWeight: '600',
-                                                        background: apt.status === 'accepted' ? '#dcfce7' : '#fef9c3',
-                                                        color: apt.status === 'accepted' ? '#166534' : '#854d0e'
-                                                    }}
-                                                >
-                                                    {apt.status.toUpperCase()}
-                                                </span>
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                                    <span
+                                                        style={{
+                                                            padding: '4px 8px',
+                                                            borderRadius: '4px',
+                                                            fontSize: '12px',
+                                                            fontWeight: '600',
+                                                            background: apt.status === 'accepted' ? '#dcfce7' :
+                                                                apt.status === 'declined' ? '#fee2e2' : '#fef9c3',
+                                                            color: apt.status === 'accepted' ? '#166534' :
+                                                                apt.status === 'declined' ? '#991b1b' : '#854d0e',
+                                                            width: 'fit-content'
+                                                        }}
+                                                    >
+                                                        {apt.status.toUpperCase()}
+                                                    </span>
+                                                    {apt.status === 'accepted' && (apt.join_url || apt.zoom_url) && (
+                                                        <a
+                                                            href={apt.join_url || apt.zoom_url}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            style={{ fontSize: "11px", color: "#3b82f6", textDecoration: "underline" }}
+                                                        >
+                                                            Join Zoom
+                                                        </a>
+                                                    )}
+                                                </div>
                                             </td>
                                             <td style={{ fontSize: '14px', color: '#64748b' }}>
-                                                {apt.doctor_notes || "No notes yet"}
+                                                {apt.doctor_notes || apt.reason || "No notes yet"}
                                             </td>
                                         </tr>
                                     ))}

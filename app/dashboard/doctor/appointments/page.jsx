@@ -3,11 +3,12 @@ import { useState, useEffect } from "react";
 import Topbar from "../components/Topbar";
 import styles from "../DoctorDashboard.module.css";
 import { motion } from "framer-motion";
-// import { fetchAppointments, updateAppointmentStatus } from "@/services/doctor";
+import { fetchAppointments, approveAppointment, updateAppointmentStatus } from "@/services/doctor";
 
 export default function DoctorAppointments() {
     const [appointments, setAppointments] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
 
     useEffect(() => {
         loadAppointments();
@@ -15,31 +16,13 @@ export default function DoctorAppointments() {
 
     const loadAppointments = async () => {
         setLoading(true);
+        setError("");
         try {
-            // TODO: Replace with actual API call
-            // const data = await fetchAppointments();
-            // setAppointments(data);
-
-            // Dummy data
-            const dummyAppointments = [
-                {
-                    id: "uuid-1",
-                    patientName: "Rohit Sharma",
-                    date: "2026-02-01T10:00:00Z",
-                    reason: "Follow-up consultation",
-                    status: "pending"
-                },
-                {
-                    id: "uuid-2",
-                    patientName: "Sara Shetty",
-                    date: "2026-02-02T11:30:00Z",
-                    reason: "Initial check-up",
-                    status: "pending"
-                }
-            ];
-            setAppointments(dummyAppointments);
+            const data = await fetchAppointments();
+            setAppointments(data);
         } catch (error) {
             console.error("Failed to load appointments:", error);
+            setError("Failed to load appointments. Please ensure you are logged in.");
         } finally {
             setLoading(false);
         }
@@ -47,15 +30,20 @@ export default function DoctorAppointments() {
 
     const handleStatusChange = async (id, status) => {
         try {
-            // TODO: Replace with actual API call
-            // await updateAppointmentStatus(id, status);
-
-            setAppointments(prev => prev.map(apt =>
-                apt.id === id ? { ...apt, status } : apt
-            ));
-            console.log(`Appointment ${id} status updated to ${status}`);
+            if (status === 'accepted') {
+                const updated = await approveAppointment(id);
+                setAppointments(prev => prev.map(apt =>
+                    apt.id === id ? { ...apt, status: 'accepted', zoom_url: updated.join_url } : apt
+                ));
+            } else {
+                await updateAppointmentStatus(id, status);
+                setAppointments(prev => prev.map(apt =>
+                    apt.id === id ? { ...apt, status } : apt
+                ));
+            }
         } catch (error) {
             console.error("Failed to update status:", error);
+            alert(error.message || "Failed to update status");
         }
     };
 
@@ -75,9 +63,13 @@ export default function DoctorAppointments() {
                 </div>
             </section>
 
+            {error && <p style={{ color: "red", padding: "0 24px" }}>{error}</p>}
+
             <div className={styles.card} style={{ margin: "24px" }}>
                 {loading ? (
                     <div style={{ padding: "40px", textAlign: "center" }}>Loading requests...</div>
+                ) : appointments.length === 0 ? (
+                    <div style={{ padding: "40px", textAlign: "center" }}>No appointment requests found.</div>
                 ) : (
                     <table className={styles.table}>
                         <thead>
@@ -92,13 +84,23 @@ export default function DoctorAppointments() {
                         <tbody>
                             {appointments.map((apt) => (
                                 <tr key={apt.id}>
-                                    <td>{apt.patientName}</td>
-                                    <td>{new Date(apt.date).toLocaleString()}</td>
+                                    <td>{apt.patient_name || apt.patientName || (apt.user && apt.user.full_name) || "Unknown Patient"}</td>
+                                    <td>{new Date(apt.requested_date || apt.date).toLocaleString()}</td>
                                     <td>{apt.reason}</td>
                                     <td>
                                         <span className={apt.status === 'pending' ? styles.inReview : styles.completed}>
                                             {apt.status}
                                         </span>
+                                        {apt.status === 'accepted' && (apt.join_url || apt.zoom_url) && (
+                                            <a
+                                                href={apt.join_url || apt.zoom_url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                style={{ display: "block", fontSize: "11px", color: "#3b82f6", marginTop: "4px" }}
+                                            >
+                                                Join Zoom
+                                            </a>
+                                        )}
                                     </td>
                                     <td>
                                         {apt.status === 'pending' && (

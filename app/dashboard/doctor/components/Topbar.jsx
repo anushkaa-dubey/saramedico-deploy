@@ -1,29 +1,22 @@
-"use client";
-
+import { useState, useEffect } from "react";
 import styles from "../DoctorDashboard.module.css";
 import notificationIcon from "@/public/icons/notification.svg";
-import profileIcon from "@/public/icons/profile.svg";
-
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
-// import { getCurrentUser } from "@/services/auth";
 
 export default function Topbar() {
   const router = useRouter();
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
-    // Section 4: Get Current User (Session Persistence)
-    const checkSession = async () => {
-      try {
-        // TODO: Replace with actual API call
-        // const user = await getCurrentUser();
-        console.log("Session Check: Requesting /api/v1/auth/me");
-      } catch (err) {
-        console.error("Session check failed", err);
-      }
-    };
-    checkSession();
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
   }, []);
+
+  const displayName = user ? `Dr. ${user.first_name} ${user.last_name}` : "Doctor";
+  const displayRole = user?.organization_name || user?.role || "Doctor";
+
   return (
     <div className={styles.topbar}>
       <input
@@ -47,11 +40,13 @@ export default function Topbar() {
         <div className={styles.profile}>
           <div className={styles.profileInfo}>
             <span style={{ fontSize: "13px", fontWeight: "600", color: "#0f172a" }}>
-              Dr. Sarah Smith
+              {displayName}
             </span>
-            <small style={{ color: "#94a3b8", fontSize: "12px" }}>Cardiology</small>
+            <small style={{ color: "#94a3b8", fontSize: "12px" }}>{displayRole}</small>
           </div>
-          <div className={styles.avatar} style={{ backgroundColor: '#bfdbfe' }}></div>
+          <div className={styles.avatar} style={{ backgroundColor: '#bfdbfe', overflow: 'hidden' }}>
+            {user?.avatar_url && <img src={user.avatar_url} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
+          </div>
         </div>
       </div>
     </div>

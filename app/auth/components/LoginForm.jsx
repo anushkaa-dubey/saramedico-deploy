@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { loginUser } from "@/services/auth";
 
 export default function LoginForm() {
   const router = useRouter();
@@ -9,6 +10,7 @@ export default function LoginForm() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
+  const [loading, setLoading] = useState(false);
   const [computedRole, setComputedRole] = useState("patient");
 
   // Get role from URL or sessionStorage safely
@@ -18,59 +20,40 @@ export default function LoginForm() {
     setComputedRole(urlRole || sessionRole || "patient");
   }, [searchParams]);
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
+    setError("");
+    setLoading(true);
 
-    // Prepare payload for API integration
-    const payload = {
-      email,
-      password
-    };
+    try {
+      const payload = {
+        email,
+        password
+      };
 
-    // TODO: Replace with actual API call
-    // const response = await loginUser(payload);
-    // Expected response shape:
-    // {
-    //   token: "jwt_token_here",
-    //   user: {
-    //     role: "patient" | "doctor" | "admin" | "hospital",
-    //     email: "...",
-    //     first_name: "...",
-    //     last_name: "..."
-    //   }
-    // }
+      const response = await loginUser(payload);
 
-    console.log("Login payload ready:", payload);
+      // Get role from response (prioritize API response over URL param)
+      // Role-aware redirect after successful login
+      const user = response.user;
+      const userRole = user?.role || response.role || computedRole;
 
-    // TEMPORARY: Demo credentials for testing (remove when API is connected)
-    let userRole = computedRole; // default to URL/session role
+      // Store user metadata if provided
+      if (user) {
+        localStorage.setItem("user", JSON.stringify(user));
+      }
 
-    // ADMIN LOGIN
-    if (email === "admin@saramedico.com" && password === "admin123") {
-      userRole = "admin";
+      if (userRole === "doctor" && !user?.onboarding_complete) {
+        router.push("/auth/signup/onboarding/doctor/step-1");
+      } else {
+        router.push(`/dashboard/${userRole}`);
+      }
+    } catch (err) {
+
+      setError(err.message || "Invalid credentials. Please try again.");
+    } finally {
+      setLoading(false);
     }
-    // DOCTOR LOGIN
-    else if (email === "doctor@saramedico.com" && password === "doctor123") {
-      userRole = "doctor";
-    }
-    // PATIENT LOGIN
-    else if (email === "test@saramedico.com" && password === "123456") {
-      userRole = "patient";
-    }
-    // HOSPITAL LOGIN
-    else if (email === "hospital@saramedico.com" && password === "hospital123") {
-      userRole = "hospital";
-    }
-
-    // TODO: When API is connected, use response.user.role instead
-    // const userRole = response.user.role;
-
-    // TODO: Store token in localStorage/sessionStorage
-    // localStorage.setItem("authToken", response.token);
-    // localStorage.setItem("user", JSON.stringify(response.user));
-
-    // Role-aware redirect (Bypassing 2FA as per "Skip OTP" requirement prep)
-    router.push(`/dashboard/${userRole}`);
   };
 
   return (
@@ -102,7 +85,9 @@ export default function LoginForm() {
 
         {error && <p style={{ color: "red", fontSize: "12px" }}>{error}</p>}
 
-        <button className="primary-btn">Login</button>
+        <button className="primary-btn" disabled={loading}>
+          {loading ? "Logging in..." : "Login"}
+        </button>
 
         <div className="divider">OR</div>
 

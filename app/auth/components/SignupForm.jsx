@@ -3,10 +3,14 @@ import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
+import { registerUser, loginUser } from "@/services/auth";
 
 export default function SignupForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  const [loading, setLoading] = useState(false);
+  const [apiError, setApiError] = useState("");
 
   // Form state matching backend payload
   const [formData, setFormData] = useState({
@@ -16,6 +20,8 @@ export default function SignupForm() {
     first_name: "",
     last_name: "",
     phone: "",
+    date_of_birth: "",
+    gender: "",
     role: "patient",
     organization_name: ""
   });
@@ -55,6 +61,16 @@ export default function SignupForm() {
       newErrors.phone = "Valid phone number is required";
     }
 
+    // DOB validation
+    if (!formData.date_of_birth) {
+      newErrors.date_of_birth = "Date of Birth is required";
+    }
+
+    // Gender validation
+    if (!formData.gender) {
+      newErrors.gender = "Gender is required";
+    }
+
     // Password validation
     if (!formData.password) {
       newErrors.password = "Password is required";
@@ -82,48 +98,62 @@ export default function SignupForm() {
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: "" }));
     }
+    if (apiError) setApiError("");
   };
 
   const handleSignup = async (e) => {
     e.preventDefault();
+    setApiError("");
 
     if (!validateForm()) {
       return;
     }
 
-    // Prepare payload for future API integration
-    const payload = {
-      email: formData.email,
-      password: formData.password,
-      confirm_password: formData.confirm_password,
-      first_name: formData.first_name,
-      last_name: formData.last_name,
-      phone: formData.phone,
-      role: formData.role,
-      organization_name: formData.organization_name
-    };
+    setLoading(true);
 
-    // TODO: Connect to backend. Requirement says:
-    // 1. Call POST /register
-    // 2. If success, Call POST /login (using same password)
-    // 3. Store token
-    // 4. Redirect to /dashboard/{role}
-
-    /*
     try {
-      await registerUser(payload);
-      const loginResponse = await loginUser({ email: payload.email, password: payload.password });
-      localStorage.setItem("authToken", loginResponse.token);
-      router.push(`/dashboard/${payload.role}`);
-    } catch (err) {
-      console.error(err);
-    }
-    */
+      const payload = {
+        email: formData.email,
+        password: formData.password,
+        confirm_password: formData.confirm_password,
+        first_name: formData.first_name,
+        last_name: formData.last_name,
+        phone: formData.phone,
+        date_of_birth: formData.date_of_birth,
+        gender: formData.gender,
+        role: formData.role,
+        organization_name: formData.organization_name
+      };
 
-    console.log("Signup payload ready (will auto-login after register):", payload);
-    alert("Account created (dummy). You are being logged in.");
-    // Mocking the auto-login redirect
-    router.push(`/dashboard/${formData.role}`);
+      // 1. Register User
+      await registerUser(payload);
+
+      // 2. Auto-login after registration
+      const loginResponse = await loginUser({
+        email: formData.email,
+        password: formData.password
+      });
+
+      // 3. Store user metadata if provided
+      if (loginResponse.user) {
+        localStorage.setItem("user", JSON.stringify(loginResponse.user));
+      }
+
+      // 4. Redirect to dashboard or onboarding
+      const user = loginResponse.user;
+      const userRole = user?.role || loginResponse.role || formData.role;
+
+      if (userRole === "doctor" && !user?.onboarding_complete) {
+        router.push("/auth/signup/onboarding/doctor/step-1");
+      } else {
+        router.push(`/dashboard/${userRole}`);
+      }
+    } catch (err) {
+      console.error("Signup/Login failed:", err);
+      setApiError(err.message || "Failed to create account. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Password Rules
@@ -202,6 +232,39 @@ export default function SignupForm() {
         />
         {errors.phone && <p style={{ color: "red", fontSize: "12px", marginTop: "-16px", marginBottom: "12px" }}>{errors.phone}</p>}
 
+        {/* Date of Birth */}
+        <label>Date of Birth</label>
+        <input
+          type="date"
+          value={formData.date_of_birth}
+          onChange={(e) => handleInputChange("date_of_birth", e.target.value)}
+          required
+        />
+        {errors.date_of_birth && <p style={{ color: "red", fontSize: "12px", marginTop: "-8px" }}>{errors.date_of_birth}</p>}
+
+        {/* Gender */}
+        <label>Gender</label>
+        <select
+          value={formData.gender}
+          onChange={(e) => handleInputChange("gender", e.target.value)}
+          style={{
+            width: "100%",
+            height: "40px",
+            fontSize: "14px",
+            borderRadius: "6px",
+            border: "1px solid #ddd",
+            marginBottom: "16px",
+            padding: "0 10px"
+          }}
+          required
+        >
+          <option value="">Select Gender</option>
+          <option value="Male">Male</option>
+          <option value="Female">Female</option>
+          <option value="Other">Other</option>
+        </select>
+        {errors.gender && <p style={{ color: "red", fontSize: "12px", marginTop: "-16px", marginBottom: "12px" }}>{errors.gender}</p>}
+
         {/* Organization Name - Only for non-patient roles */}
         {formData.role !== "patient" && (
           <>
@@ -256,7 +319,11 @@ export default function SignupForm() {
         />
         {errors.confirm_password && <p style={{ color: "red", fontSize: "12px", marginTop: "-8px" }}>{errors.confirm_password}</p>}
 
-        <button className="primary-btn">Sign Up</button>
+        {apiError && <p style={{ color: "red", fontSize: "12px", marginBottom: "16px" }}>{apiError}</p>}
+
+        <button className="primary-btn" disabled={loading}>
+          {loading ? "Creating Account..." : "Sign Up"}
+        </button>
 
         <div className="divider">OR</div>
 

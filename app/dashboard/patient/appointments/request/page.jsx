@@ -4,36 +4,72 @@ import { useRouter } from "next/navigation";
 import Topbar from "../../components/Topbar";
 import styles from "../../PatientDashboard.module.css";
 import { motion } from "framer-motion";
-// import { createAppointment } from "@/services/patient";
+import { useEffect } from "react";
+import { bookAppointment, fetchDoctors } from "@/services/patient";
 
 export default function RequestAppointment() {
     const router = useRouter();
+    const [doctors, setDoctors] = useState([]);
     const [formData, setFormData] = useState({
-        doctor_id: "default-doc-id", // In real app, this would come from a selection
+        doctor_id: "",
         requested_date: "",
-        reason: ""
+        reason: "",
+        grant_access_to_history: true
     });
     const [submitting, setSubmitting] = useState(false);
+    const [loadingDocs, setLoadingDocs] = useState(true);
+    const [error, setError] = useState("");
+
+    useEffect(() => {
+        loadDoctors();
+    }, []);
+
+    const loadDoctors = async () => {
+        setLoadingDocs(true);
+        setError("");
+        try {
+            const data = await fetchDoctors();
+            console.log("Fetched doctors raw data:", data);
+
+            // Defensive: ensure we have an array
+            let doctorsArray = [];
+            if (Array.isArray(data)) {
+                doctorsArray = data;
+            } else if (data && typeof data === 'object') {
+                // Check for common wrappers
+                doctorsArray = data.doctors || data.items || data.data || [];
+            }
+
+            setDoctors(doctorsArray);
+        } catch (err) {
+            console.error("Failed to load doctors:", err);
+            setError(err.message || "Failed to load available doctors.");
+        } finally {
+            setLoadingDocs(false);
+        }
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (!formData.doctor_id) {
+            alert("Please select a doctor");
+            return;
+        }
         setSubmitting(true);
+        setError("");
 
         try {
-            // Prepare payload
             const payload = {
                 ...formData,
                 requested_date: new Date(formData.requested_date).toISOString()
             };
 
-            // TODO: Replace with actual API call
-            // await createAppointment(payload);
-
-            console.log("Appointment request payload ready:", payload);
+            await bookAppointment(payload);
             alert("Appointment requested successfully!");
-            router.push("/dashboard/patient");
+            router.push("/dashboard/patient/appointments");
         } catch (error) {
             console.error("Failed to request appointment:", error);
+            setError(error.message || "Failed to book appointment. Please try again.");
         } finally {
             setSubmitting(false);
         }
@@ -55,46 +91,76 @@ export default function RequestAppointment() {
                 </div>
             </section>
 
-            <div style={{ maxWidth: "600px", margin: "24px", padding: "32px", background: "white", borderRadius: "16px", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)" }}>
+            <div className={styles.formCard}>
+                {error && <p style={{ color: "#ef4444", background: "#fef2f2", padding: "12px", borderRadius: "8px", marginBottom: "16px", fontSize: "14px", border: "1px solid #fee2e2" }}>{error}</p>}
+
                 <form onSubmit={handleSubmit}>
-                    <div style={{ marginBottom: "20px" }}>
-                        <label style={{ display: "block", marginBottom: "8px", fontWeight: "600", color: "#1e293b" }}>Preferred Date & Time</label>
+                    <div className={styles.formGroup}>
+                        <label>Select Doctor</label>
+                        {loadingDocs ? (
+                            <p style={{ fontSize: "14px", color: "#64748b" }}>Loading doctors...</p>
+                        ) : (
+                            <select
+                                required
+                                value={formData.doctor_id}
+                                onChange={(e) => setFormData({ ...formData, doctor_id: e.target.value })}
+                            >
+                                <option value="">Choose a doctor</option>
+                                {doctors.map(doc => (
+                                    <option key={doc.id} value={doc.id}>
+                                        {doc.name} ({doc.specialty})
+                                    </option>
+                                ))}
+                            </select>
+                        )}
+                    </div>
+
+                    <div className={styles.formGroup}>
+                        <label>Preferred Date & Time</label>
                         <input
                             type="datetime-local"
                             required
-                            style={{ width: "100%", padding: "12px", borderRadius: "8px", border: "1px solid #e2e8f0" }}
                             value={formData.requested_date}
                             onChange={(e) => setFormData({ ...formData, requested_date: e.target.value })}
                         />
                     </div>
 
-                    <div style={{ marginBottom: "24px" }}>
-                        <label style={{ display: "block", marginBottom: "8px", fontWeight: "600", color: "#1e293b" }}>Reason for Visit</label>
+                    <div className={styles.formGroup}>
+                        <label>Reason for Visit</label>
                         <textarea
                             required
                             placeholder="Briefly describe your health concern..."
-                            style={{ width: "100%", padding: "12px", borderRadius: "8px", border: "1px solid #e2e8f0", height: "120px" }}
+                            style={{ height: "120px" }}
                             value={formData.reason}
                             onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
                         />
                     </div>
 
+                    <div style={{ marginBottom: "24px", display: "flex", alignItems: "center", gap: "10px" }}>
+                        <input
+                            type="checkbox"
+                            id="grant_access"
+                            checked={formData.grant_access_to_history}
+                            onChange={(e) => setFormData({ ...formData, grant_access_to_history: e.target.checked })}
+                        />
+                        <label htmlFor="grant_access" style={{ fontSize: "14px", color: "#475569" }}>
+                            Grant doctor access to my medical history (HIPAA compliant)
+                        </label>
+                    </div>
+
                     <button
                         type="submit"
                         disabled={submitting}
-                        style={{
-                            width: "100%",
-                            padding: "14px",
-                            background: "#3b82f6",
-                            color: "white",
-                            border: "none",
-                            borderRadius: "8px",
-                            fontWeight: "700",
-                            cursor: submitting ? "not-allowed" : "pointer",
-                            opacity: submitting ? 0.7 : 1
-                        }}
+                        className={styles.submitBtn}
                     >
-                        {submitting ? "Sending Request..." : "Request Appointment"}
+                        {submitting ? (
+                            <>
+                                <div className={styles.loadingSpinner}></div>
+                                Sending Request...
+                            </>
+                        ) : (
+                            "Request Appointment"
+                        )}
                     </button>
                 </form>
             </div>

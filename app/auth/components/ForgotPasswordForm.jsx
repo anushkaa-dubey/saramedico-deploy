@@ -2,30 +2,30 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { forgotPassword } from "@/services/auth";
+
 export default function ForgotPasswordForm() {
     const router = useRouter();
     const [email, setEmail] = useState("");
     const [message, setMessage] = useState("");
+    const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
         setMessage("");
+        setError("");
 
-        // Prepare payload
-        const payload = { email };
-
-        // TODO: Replace with actual API call
-        // await forgotPassword(payload);
-
-        console.log("Forgot Password payload ready:", payload);
-
-        // Simulate API response
-        setTimeout(() => {
+        try {
+            await forgotPassword({ email });
             setMessage("If an account exists, a reset link has been sent.");
+        } catch (err) {
+            console.error(err);
+            setError(err.message || "Something went wrong. Please try again.");
+        } finally {
             setLoading(false);
-        }, 1000);
+        }
     };
 
     return (
@@ -46,6 +46,12 @@ export default function ForgotPasswordForm() {
                 {message && (
                     <p style={{ color: "#16a34a", fontSize: "14px", marginTop: "10px", textAlign: "center" }}>
                         {message}
+                    </p>
+                )}
+
+                {error && (
+                    <p style={{ color: "#ef4444", fontSize: "14px", marginTop: "10px", textAlign: "center" }}>
+                        {error}
                     </p>
                 )}
 

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import styles from "../PatientDashboard.module.css";
 import doctorImage from "@/public/icons/images/doctor_image.png";
 // TODO: Uncomment when connecting backend
-// import { fetchAppointments } from "@/services/patient";
+import { fetchAppointments } from "@/services/patient";
 
 export default function UpNextCard() {
   const [nextAppointment, setNextAppointment] = useState(null);
@@ -20,24 +20,32 @@ export default function UpNextCard() {
   const loadNextAppointment = async () => {
     setLoading(true);
     try {
-      // TODO: Replace with actual API call
-      // const appointments = await fetchAppointments();
-      // const upcoming = appointments.filter(apt => new Date(apt.date) > new Date());
-      // setNextAppointment(upcoming[0] || null);
+      const appointments = await fetchAppointments();
+      const now = new Date();
 
-      // TEMPORARY: Using dummy data
-      const dummyAppointment = {
-        id: 1,
-        title: "Annual Physical Examination",
-        time: "10:30",
-        period: "AM",
-        type: "In-Person Visit",
-        doctor: "Dr. Emily Chen",
-        reason: "Post-op check",
-        lastVisit: "Oct 12, 2025",
-        doctorImage: doctorImage.src
-      };
-      setNextAppointment(dummyAppointment);
+      // Get upcoming accepted appointments
+      const upcoming = appointments
+        .filter(apt => apt.status === 'accepted' && new Date(apt.requested_date) >= now)
+        .sort((a, b) => new Date(a.requested_date) - new Date(b.requested_date));
+
+      if (upcoming.length > 0) {
+        const apt = upcoming[0];
+        const date = new Date(apt.requested_date);
+        setNextAppointment({
+          id: apt.id,
+          title: apt.reason || "Medical Consultation",
+          time: date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }).split(' ')[0],
+          period: date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }).split(' ')[1],
+          type: "Video Consultation",
+          doctor: apt.doctor_name || (apt.doctor && apt.doctor.full_name) || "Dr. Sara",
+          reason: apt.reason || "General checkup",
+          lastVisit: "N/A",
+          doctorImage: doctorImage.src,
+          join_url: apt.join_url || apt.zoom_url
+        });
+      } else {
+        setNextAppointment(null);
+      }
     } catch (error) {
       console.error("Failed to load next appointment:", error);
     } finally {
@@ -100,7 +108,19 @@ export default function UpNextCard() {
 
         {/* Actions */}
         <div className={styles.upNextActions}>
-          <button className={styles.checkinBtn}>Check-in</button>
+          {nextAppointment.join_url ? (
+            <a
+              href={nextAppointment.join_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={styles.checkinBtn}
+              style={{ textDecoration: 'none', textAlign: 'center' }}
+            >
+              Join Zoom
+            </a>
+          ) : (
+            <button className={styles.checkinBtn}>Check-in</button>
+          )}
           <button className={styles.detailsBtn}>Details</button>
         </div>
       </div>

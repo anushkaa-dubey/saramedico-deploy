@@ -1,141 +1,143 @@
-/**
- * Patient Service
- * 
- * Placeholder functions for future API integration.
- * These will handle all patient-related API calls.
- */
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+import { API_BASE_URL, getAuthHeaders, handleResponse } from "./apiConfig";
 
 /**
- * Get authentication token from storage
- */
-const getAuthToken = () => {
-    // TODO: Implement when auth is connected
-    // return localStorage.getItem("authToken");
-    return null;
-};
-
-/**
- * Fetch patient's appointments
+ * Fetch patient's appointments history
  * Endpoint: GET /api/v1/appointments/patient-appointments
  */
 export const fetchAppointments = async () => {
-    // TODO: Implement actual API call
-    console.log("fetchAppointments called");
-    return [];
+    try {
+        const response = await fetch(`${API_BASE_URL}/appointments/patient-appointments`, {
+            headers: getAuthHeaders(),
+        });
+        const data = await handleResponse(response);
+        return Array.isArray(data) ? data : (data.appointments || data.items || data.data || []);
+    } catch (err) {
+        console.error("fetchAppointments error:", err);
+        return [];
+    }
 };
 
 /**
  * Request a new appointment
  * Endpoint: POST /api/v1/appointments
  */
-export const bookAppointment = async (appointment) => {
-    // TODO: Implement actual API call
-    console.log("bookAppointment called with:", appointment);
-    return null;
+export const bookAppointment = async (appointmentData) => {
+    if (!appointmentData.doctor_id) {
+        throw new Error("Doctor selection is required for booking.");
+    }
+
+    const response = await fetch(`${API_BASE_URL}/appointments`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(appointmentData),
+    });
+    return handleResponse(response);
 };
 
 /**
- * Cancel an appointment
- * 
- * @param {string} appointmentId - Appointment ID
- * @returns {Promise<void>}
+ * Cancel/Update appointment status (if needed)
+ * Endpoint: PATCH /api/v1/appointments/{id}/status
  */
-export const cancelAppointment = async (appointmentId) => {
-    // TODO: Implement actual API call
-    console.log("cancelAppointment called with:", appointmentId);
-    return null;
+export const updateAppointmentStatus = async (appointmentId, status) => {
+    const response = await fetch(`${API_BASE_URL}/appointments/${appointmentId}/status`, {
+        method: "PATCH",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ status }),
+    });
+    return handleResponse(response);
 };
 
 /**
  * Fetch patient's medical records
- * 
- * @returns {Promise<Array>} List of medical records
+ * Endpoint: GET /api/v1/patient/medical-history/
  */
 export const fetchMedicalRecords = async () => {
-    // TODO: Implement actual API call
-    console.log("fetchMedicalRecords called");
-    return [];
+    try {
+        const response = await fetch(`${API_BASE_URL}/patient/medical-history/`, {
+            headers: getAuthHeaders(),
+        });
+
+        // Handle "Method Not Allowed" gracefully - backend might only support POST for upload
+        if (response.status === 405) {
+            console.warn("GET /patient/medical-history/ is not allowed. Listing may not be implemented.");
+            return [];
+        }
+
+        const data = await handleResponse(response);
+        return Array.isArray(data) ? data : (data.records || data.items || data.data || []);
+    } catch (err) {
+        console.error("fetchMedicalRecords error:", err);
+        // Fallback to empty array to prevent UI crash if endpoint is missing
+        return [];
+    }
 };
 
 /**
  * Upload a medical record
- * 
- * @param {FormData} formData - Form data with file
- * @returns {Promise<Object>} Uploaded record
+ * Endpoint: POST /api/v1/patient/medical-history
  */
 export const uploadMedicalRecord = async (formData) => {
-    // TODO: Implement actual API call
-    console.log("uploadMedicalRecord called");
-    return null;
-};
-
-/**
- * Delete a medical record
- * 
- * @param {string} recordId - Record ID
- * @returns {Promise<void>}
- */
-export const deleteMedicalRecord = async (recordId) => {
-    // TODO: Implement actual API call
-    console.log("deleteMedicalRecord called with:", recordId);
-    return null;
-};
-
-/**
- * Fetch patient's prescriptions
- * 
- * @returns {Promise<Array>} List of prescriptions
- */
-export const fetchPrescriptions = async () => {
-    // TODO: Implement actual API call
-    console.log("fetchPrescriptions called");
-    return [];
-};
-
-/**
- * Fetch patient's test results
- * 
- * @returns {Promise<Array>} List of test results
- */
-export const fetchTestResults = async () => {
-    // TODO: Implement actual API call
-    console.log("fetchTestResults called");
-    return [];
+    const response = await fetch(`${API_BASE_URL}/patient/medical-history`, {
+        method: "POST",
+        headers: getAuthHeaders(true),
+        body: formData,
+    });
+    return handleResponse(response);
 };
 
 /**
  * Fetch patient profile
- * 
- * @returns {Promise<Object>} Patient profile data
+ * Endpoint: GET /api/v1/auth/me
  */
 export const fetchProfile = async () => {
-    // TODO: Implement actual API call
-    console.log("fetchProfile called");
-    return null;
+    const response = await fetch(`${API_BASE_URL}/auth/me`, {
+        headers: getAuthHeaders(),
+    });
+    return handleResponse(response);
 };
 
 /**
  * Update patient profile
- * 
- * @param {Object} updates - Profile updates
- * @returns {Promise<Object>} Updated profile
  */
 export const updateProfile = async (updates) => {
-    // TODO: Implement actual API call
-    console.log("updateProfile called with:", updates);
-    return null;
+    const response = await fetch(`${API_BASE_URL}/auth/me`, {
+        method: "PATCH",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(updates),
+    });
+    return handleResponse(response);
 };
 
 /**
- * Fetch available doctors
- * 
- * @param {Object} filters - Search filters
- * @returns {Promise<Array>} List of doctors
+ * Search available doctors
+ * Endpoint: GET /api/v1/doctors/search with fallback to GET /api/v1/doctors
  */
 export const fetchDoctors = async (filters = {}) => {
-    // TODO: Implement actual API call
-    console.log("fetchDoctors called with:", filters);
-    return [];
+    try {
+        const queryParams = new URLSearchParams();
+        if (filters.specialty) queryParams.append("specialty", filters.specialty);
+        if (filters.name) queryParams.append("name", filters.name);
+
+        const response = await fetch(`${API_BASE_URL}/doctors/search?${queryParams.toString()}`, {
+            headers: getAuthHeaders(),
+        });
+
+        let data;
+        if (response.ok) {
+            data = await handleResponse(response);
+        } else {
+            // Fallback to general list if search is not supported or fails
+            console.warn("Doctor search failed, falling back to general list");
+            const fallbackResponse = await fetch(`${API_BASE_URL}/doctors`, {
+                headers: getAuthHeaders(),
+            });
+            data = await handleResponse(fallbackResponse);
+        }
+
+        return Array.isArray(data) ? data : (data.doctors || data.items || data.data || []);
+    } catch (err) {
+        console.error("fetchDoctors error:", err);
+        return [];
+    }
 };
+

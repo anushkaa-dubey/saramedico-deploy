@@ -5,10 +5,13 @@ import { useRouter } from "next/navigation";
 import styles from "./Step3.module.css";
 import logo from "@/public/logo2.svg";
 import mic from "@/public/icons/mic.svg";
+import { updateDoctorProfile } from "@/services/doctor";
 
 export default function DoctorOnboardingStep3() {
   const router = useRouter();
   const [isRecording, setIsRecording] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleStartRecording = () => {
     setIsRecording(true);
@@ -22,9 +25,24 @@ export default function DoctorOnboardingStep3() {
     setIsRecording(false);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    router.push("/dashboard/doctor");
+    setLoading(true);
+    setError("");
+    try {
+      const updatedUser = await updateDoctorProfile({ onboarding_complete: true });
+
+      // Update local storage
+      const user = JSON.parse(localStorage.getItem("user") || "{}");
+      localStorage.setItem("user", JSON.stringify({ ...user, ...updatedUser }));
+
+      router.push("/dashboard/doctor");
+    } catch (err) {
+      console.error("Failed to complete onboarding:", err);
+      setError(err.message || "Failed to finalize onboarding. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -47,6 +65,7 @@ export default function DoctorOnboardingStep3() {
               </div>
             </div>
           </div>
+          {error && <div style={{ color: "red", padding: "0 40px", fontSize: "14px", marginBottom: "10px" }}>{error}</div>}
 
           <div className={styles.mainContent}>
             <div className={styles.headerBlock}>
@@ -129,8 +148,9 @@ export default function DoctorOnboardingStep3() {
                   <button
                     type="submit"
                     className={styles.continueBtn}
+                    disabled={loading}
                   >
-                    Continue →
+                    {loading ? "Finalizing..." : "Continue →"}
                   </button>
                 </div>
               </div>

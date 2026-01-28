@@ -1,144 +1,95 @@
-/**
- * Doctor Service
- * 
- * Placeholder functions for future API integration.
- * These will handle all doctor-related API calls.
- */
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
-
-/**
- * Get authentication token from storage
- */
-const getAuthToken = () => {
-    // TODO: Implement when auth is connected
-    // return localStorage.getItem("authToken");
-    return null;
-};
+import { API_BASE_URL, getAuthHeaders, handleResponse } from "./apiConfig";
 
 /**
  * Fetch doctor's tasks
- * 
- * @returns {Promise<Array>} List of tasks
+ * Endpoint: GET /api/v1/doctor/tasks
  */
 export const fetchTasks = async () => {
-    // TODO: Implement actual API call
-    // const token = getAuthToken();
-    // const response = await fetch(`${API_BASE_URL}/doctor/tasks`, {
-    //   headers: {
-    //     "Authorization": `Bearer ${token}`,
-    //   },
-    // });
-    // 
-    // if (!response.ok) {
-    //   throw new Error("Failed to fetch tasks");
-    // }
-    // 
-    // return await response.json();
-
-    console.log("fetchTasks called");
-    return [];
+    try {
+        console.log("Fetching tasks from:", `${API_BASE_URL}/doctor/tasks`);
+        const response = await fetch(`${API_BASE_URL}/doctor/tasks`, {
+            headers: getAuthHeaders(),
+        });
+        const data = await handleResponse(response);
+        return Array.isArray(data) ? data : (data.tasks || data.items || data.data || []);
+    } catch (err) {
+        console.error("fetchTasks error:", err);
+        return [];
+    }
 };
 
 /**
  * Add a new task
- * 
- * @param {Object} task - Task data
- * @returns {Promise<Object>} Created task
+ * Endpoint: POST /api/v1/doctor/tasks
  */
 export const addTask = async (task) => {
-    // TODO: Implement actual API call
-    // const token = getAuthToken();
-    // const response = await fetch(`${API_BASE_URL}/doctor/tasks`, {
-    //   method: "POST",
-    //   headers: {
-    //     "Authorization": `Bearer ${token}`,
-    //     "Content-Type": "application/json",
-    //   },
-    //   body: JSON.stringify(task),
-    // });
-    // 
-    // if (!response.ok) {
-    //   throw new Error("Failed to add task");
-    // }
-    // 
-    // return await response.json();
-
-    console.log("addTask called with:", task);
-    return null;
+    const response = await fetch(`${API_BASE_URL}/doctor/tasks`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(task),
+    });
+    return handleResponse(response);
 };
 
 /**
  * Update an existing task
- * 
- * @param {string} taskId - Task ID
- * @param {Object} updates - Task updates
- * @returns {Promise<Object>} Updated task
+ * Endpoint: PATCH /api/v1/doctor/tasks/{taskId}
  */
 export const updateTask = async (taskId, updates) => {
-    // TODO: Implement actual API call
-    // const token = getAuthToken();
-    // const response = await fetch(`${API_BASE_URL}/doctor/tasks/${taskId}`, {
-    //   method: "PUT",
-    //   headers: {
-    //     "Authorization": `Bearer ${token}`,
-    //     "Content-Type": "application/json",
-    //   },
-    //   body: JSON.stringify(updates),
-    // });
-    // 
-    // if (!response.ok) {
-    //   throw new Error("Failed to update task");
-    // }
-    // 
-    // return await response.json();
-
-    console.log("updateTask called with:", taskId, updates);
-    return null;
+    const response = await fetch(`${API_BASE_URL}/doctor/tasks/${taskId}`, {
+        method: "PATCH",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(updates),
+    });
+    return handleResponse(response);
 };
 
 /**
  * Delete a task
- * 
- * @param {string} taskId - Task ID
- * @returns {Promise<void>}
+ * Endpoint: DELETE /api/v1/doctor/tasks/{taskId}
  */
 export const deleteTask = async (taskId) => {
-    // TODO: Implement actual API call
-    // const token = getAuthToken();
-    // const response = await fetch(`${API_BASE_URL}/doctor/tasks/${taskId}`, {
-    //   method: "DELETE",
-    //   headers: {
-    //     "Authorization": `Bearer ${token}`,
-    //   },
-    // });
-    // 
-    // if (!response.ok) {
-    //   throw new Error("Failed to delete task");
-    // }
-
-    console.log("deleteTask called with:", taskId);
-    return null;
+    const response = await fetch(`${API_BASE_URL}/doctor/tasks/${taskId}`, {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+    });
+    if (!response.ok) {
+        return handleResponse(response);
+    }
+    return true;
 };
 
 /**
  * Fetch patient directory
- * Endpoint: GET /api/v1/doctor/patients
  */
 export const fetchPatients = async () => {
-    // TODO: Implement actual API call
-    console.log("fetchPatients called");
-    return [];
+    const response = await fetch(`${API_BASE_URL}/doctor/patients`, {
+        headers: getAuthHeaders(),
+    });
+    const data = await handleResponse(response);
+    return Array.isArray(data) ? data : (data.patients || data.items || data.data || []);
 };
 
 /**
- * Fetch patient profile by ID
+ * Fetch patient profile details
  * Endpoint: GET /api/v1/patients/{id}
  */
-export const fetchPatientById = async (patientId) => {
-    // TODO: Implement actual API call
-    console.log("fetchPatientById called with:", patientId);
-    return null;
+export const fetchPatientProfile = async (patientId) => {
+    const response = await fetch(`${API_BASE_URL}/patients/${patientId}`, {
+        headers: getAuthHeaders(),
+    });
+    return handleResponse(response);
+};
+
+/**
+ * Fetch patient medical documents (with permission)
+ * Endpoint: GET /api/v1/doctor/patients/{patient_id}/documents
+ */
+export const fetchPatientDocuments = async (patientId) => {
+    const response = await fetch(`${API_BASE_URL}/doctor/patients/${patientId}/documents`, {
+        headers: getAuthHeaders(),
+    });
+    return handleResponse(response);
 };
 
 /**
@@ -146,52 +97,75 @@ export const fetchPatientById = async (patientId) => {
  * Endpoint: GET /api/v1/doctor/appointments?status=pending
  */
 export const fetchAppointments = async () => {
-    // TODO: Implement actual API call
-    console.log("fetchAppointments called");
-    return [];
+    try {
+        const response = await fetch(`${API_BASE_URL}/doctor/appointments?status=pending`, {
+            headers: getAuthHeaders(),
+        });
+        const data = await handleResponse(response);
+        return Array.isArray(data) ? data : (data.appointments || data.items || data.data || []);
+    } catch (err) {
+        console.error("fetchDoctorAppointments error:", err);
+        return [];
+    }
 };
 
 /**
- * Update appointment status (Accept/Decline)
- * Endpoint: PATCH /api/v1/appointments/{id}/status
+ * Approve Appointment (Generates Zoom)
+ * Endpoint: POST /api/v1/appointments/{id}/approve
  */
-export const updateAppointmentStatus = async (appointmentId, status) => {
-    // TODO: Implement actual API call
-    console.log("updateAppointmentStatus called with:", appointmentId, status);
-    return null;
+export const approveAppointment = async (appointmentId, data = {}) => {
+    // Backend requires appointment_time. Default to requested_date if passed or now+1h
+    const payload = {
+        appointment_time: data.appointment_time || new Date(Date.now() + 3600000).toISOString(),
+        doctor_notes: data.doctor_notes || ""
+    };
+
+    const response = await fetch(`${API_BASE_URL}/appointments/${appointmentId}/approve`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(payload)
+    });
+    return handleResponse(response);
+};
+
+/**
+ * Update appointment status (e.g., Decline or Accept)
+ * Endpoint: PATCH /api/v1/appointments/{id}/status
+ * payload example: { status: "accepted", doctor_notes: "..." }
+ */
+export const updateAppointmentStatus = async (appointmentId, status, notes = "") => {
+    const response = await fetch(`${API_BASE_URL}/appointments/${appointmentId}/status`, {
+        method: "PATCH",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ status, doctor_notes: notes }),
+    });
+    return handleResponse(response);
 };
 
 /**
  * Fetch team members
- * 
- * @returns {Promise<Array>} List of team members
  */
 export const fetchTeamMembers = async () => {
-    // TODO: Implement actual API call
-    console.log("fetchTeamMembers called");
-    return [];
-};
-
-/**
- * Fetch SOAP notes for a patient
- * 
- * @param {string} patientId - Patient ID
- * @returns {Promise<Array>} List of SOAP notes
- */
-export const fetchSOAPNotes = async (patientId) => {
-    // TODO: Implement actual API call
-    console.log("fetchSOAPNotes called with:", patientId);
     return [];
 };
 
 /**
  * Create a new SOAP note
- * 
- * @param {Object} soapNote - SOAP note data
- * @returns {Promise<Object>} Created SOAP note
  */
 export const createSOAPNote = async (soapNote) => {
-    // TODO: Implement actual API call
-    console.log("createSOAPNote called with:", soapNote);
+    console.log("createSOAPNote placeholder called");
     return null;
+};
+
+/**
+ * Update doctor's profile
+ * (Includes specialty, onboarding_complete, etc.)
+ */
+export const updateDoctorProfile = async (updates) => {
+    const response = await fetch(`${API_BASE_URL}/doctor/profile`, {
+        method: "PATCH",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(updates),
+    });
+    return handleResponse(response);
 };
