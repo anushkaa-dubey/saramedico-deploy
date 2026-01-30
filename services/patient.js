@@ -8,7 +8,7 @@ import { API_BASE_URL, getAuthHeaders, handleResponse } from "./apiConfig";
 
 /**
  * Fetch patient's appointments
- * ✅ Endpoint: GET /api/v1/appointments/patient-appointments
+ * Endpoint: GET /api/v1/appointments/patient-appointments
  */
 export const fetchAppointments = async () => {
     try {
@@ -26,8 +26,8 @@ export const fetchAppointments = async () => {
 
 /**
  * Book new appointment
- * ✅ Endpoint: POST /api/v1/appointments
- * ✅ Patient SELECTS doctor (as per E2E report)
+ *  Endpoint: POST /api/v1/appointments
+ *  Patient SELECTS doctor
  */
 export const bookAppointment = async ({
     doctor_id,
@@ -57,7 +57,7 @@ export const bookAppointment = async ({
 
 /**
  * Update appointment status (cancel etc.)
- * ✅ Endpoint: PATCH /api/v1/appointments/{id}/status
+ *  Endpoint: PATCH /api/v1/appointments/{id}/status
  */
 export const updateAppointmentStatus = async (appointmentId, status) => {
     const response = await fetch(
@@ -79,7 +79,7 @@ export const updateAppointmentStatus = async (appointmentId, status) => {
 
 /**
  * Upload medical record
- * ✅ Endpoint: POST /api/v1/patient/medical-history
+ *  Endpoint: POST /api/v1/patient/medical-history
  */
 export const uploadMedicalRecord = async (formData) => {
     const response = await fetch(
@@ -94,6 +94,18 @@ export const uploadMedicalRecord = async (formData) => {
 };
 
 /**
+ * Fetch medical records
+ * Endpoint: GET /api/v1/patient/medical-history
+ */
+export const fetchMedicalRecords = async () => {
+    const response = await fetch(`${API_BASE_URL}/patient/medical-history`, {
+        headers: getAuthHeaders(),
+    });
+    const data = await handleResponse(response);
+    return Array.isArray(data) ? data : (data.records || []);
+};
+
+/**
  * =========================
  * PROFILE
  * =========================
@@ -101,7 +113,7 @@ export const uploadMedicalRecord = async (formData) => {
 
 /**
  * Fetch logged-in user profile
- * ✅ Endpoint: GET /api/v1/auth/me
+ * Endpoint: GET /api/v1/auth/me
  */
 export const fetchProfile = async () => {
     const response = await fetch(`${API_BASE_URL}/auth/me`, {
@@ -112,7 +124,7 @@ export const fetchProfile = async () => {
 
 /**
  * Update profile
- * ✅ Endpoint: PATCH /api/v1/auth/me
+ * Endpoint: PATCH /api/v1/auth/me
  */
 export const updateProfile = async (updates) => {
     const response = await fetch(`${API_BASE_URL}/auth/me`, {
@@ -131,8 +143,8 @@ export const updateProfile = async (updates) => {
 
 /**
  * Search doctors
- * ✅ Endpoint: GET /api/v1/doctors/search
- * ✅ Always read from response.results
+ * Endpoint: GET /api/v1/doctors/search
+ * Always read from response.results
  */
 export const fetchDoctors = async (filters = {}) => {
     try {

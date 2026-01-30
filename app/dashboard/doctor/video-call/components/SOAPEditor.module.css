@@ -124,19 +124,12 @@
 }
 
 /* Scrollbar styling */
+/* Scrollbar styling */
 .sectionsContainer::-webkit-scrollbar {
-    width: 6px;
+    display: none;
 }
 
-.sectionsContainer::-webkit-scrollbar-track {
-    background: #f8fafc;
-}
-
-.sectionsContainer::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
-    border-radius: 3px;
-}
-
-.sectionsContainer::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
+.sectionsContainer {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
 }

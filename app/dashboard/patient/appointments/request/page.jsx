@@ -84,14 +84,14 @@ export default function RequestAppointment() {
         >
             <Topbar />
 
-            <section className={styles.header} style={{ padding: "24px" }}>
+            <section className={styles.header} style={{ padding: "24px 24px 12px 24px" }}>
                 <div>
                     <h2 className={styles.greeting}>Request Appointment</h2>
                     <p className={styles.sub}>Schedule a new consultation with your doctor</p>
                 </div>
             </section>
 
-            <div className={styles.formCard}>
+            <div className={styles.formCard} style={{ marginTop: "12px" }}>
                 {error && <p style={{ color: "#ef4444", background: "#fef2f2", padding: "12px", borderRadius: "8px", marginBottom: "16px", fontSize: "14px", border: "1px solid #fee2e2" }}>{error}</p>}
 
                 <form onSubmit={handleSubmit}>
@@ -136,14 +136,15 @@ export default function RequestAppointment() {
                         />
                     </div>
 
-                    <div style={{ marginBottom: "24px", display: "flex", alignItems: "center", gap: "10px" }}>
+                    <div style={{ marginBottom: "24px", display: "flex", alignItems: "flex-start", gap: "10px", marginTop: "12px" }}>
                         <input
                             type="checkbox"
                             id="grant_access"
                             checked={formData.grant_access_to_history}
                             onChange={(e) => setFormData({ ...formData, grant_access_to_history: e.target.checked })}
+                            style={{ marginTop: "3px", width: "16px", height: "16px", flexShrink: 0 }}
                         />
-                        <label htmlFor="grant_access" style={{ fontSize: "14px", color: "#475569" }}>
+                        <label htmlFor="grant_access" style={{ fontSize: "14px", color: "#475569", lineHeight: "1.5" }}>
                             Grant doctor access to my medical history (HIPAA compliant)
                         </label>
                     </div>

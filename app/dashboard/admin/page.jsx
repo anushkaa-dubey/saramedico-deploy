@@ -1,4 +1,5 @@
 "use client";
+import { useState } from "react";
 import styles from "./AdminDashboard.module.css";
 import notificationIcon from "@/public/icons/notification.svg";
 import searchIcon from "@/public/icons/search.svg";
@@ -54,6 +55,7 @@ export default function AdminDashboard() {
       style={{ width: "100%" }}
     >
       <motion.div variants={itemVariants} className={styles.topbar}>
+        {/* ... existing topbar content ... */}
         <div className={styles.searchWrapper}>
           <img src={searchIcon.src} alt="Search" className={styles.searchIcon} />
           <input

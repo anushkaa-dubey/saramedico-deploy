@@ -72,7 +72,7 @@
 
 .navItem:hover {
   background: #f1f5f9;
-  color: #359AFF;
+  color: #359AFF !important;
 }
 
 .active {

@@ -144,7 +144,9 @@ export default function ProfilePage() {
                 <motion.div className={styles.detailsCard} variants={itemVariants}>
                     {/* Left Avatar */}
                     <div className={styles.avatarSection}>
-                        <img src={profileData.avatar} alt={`${profileData.firstName} ${profileData.lastName}`} className={styles.bigAvatar} style={{ objectFit: "cover" }} />
+                        <div style={{ width: '80px', height: '80px', background: '#359aff', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '32px', fontWeight: 'bold' }}>
+                            {profileData.firstName[0]}{profileData.lastName[0]}
+                        </div>
                         <h3 className={styles.profileName}>{profileData.firstName} {profileData.lastName}</h3>
                         <span className={styles.mrn}>MRN: {profileData.mrn}</span>
                     </div>

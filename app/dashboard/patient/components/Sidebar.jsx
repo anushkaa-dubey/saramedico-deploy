@@ -105,13 +105,36 @@ export default function Sidebar() {
           </div>
         </div>
 
+        <Link
+          href="/dashboard/patient/audio-check"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+            padding: "12px 16px",
+            margin: "0 0 10px 0",
+            background: "#3b82f6",
+            color: "white",
+            borderRadius: "8px",
+            textDecoration: "none",
+            fontWeight: "600",
+            fontSize: "14px",
+            marginTop: "auto"
+          }}
+        >
+          <img src={micIcon.src} style={{ filter: "brightness(0) invert(1)" }} alt="Join" width="18" height="18" />
+          Join Session
+        </Link>
+
         <button
           className={styles.logoutBtn}
           onClick={() => setIsSignoutModalOpen(true)}
+          style={{ marginTop: "0" }}
         >
           <span className={styles.logoutIcon}>→</span>
           Logout
         </button>
+
       </aside>
 
       <SignoutModal

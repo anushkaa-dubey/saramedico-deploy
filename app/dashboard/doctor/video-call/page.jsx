@@ -119,58 +119,7 @@ export default function DoctorVideoCallPage() {
                 </div>
             </section>
 
-            {/* Video Display Section */}
-            <div className={`${styles.videoSection} ${isVideoFullscreen ? styles.fullscreen : ''}`}>
-                <div className={styles.videoContainer}>
-                    <div className={styles.videoFeed}>
-                        {/* Placeholder for actual video stream */}
-                        <div className={styles.videoPlaceholder}>
-                            <div className={styles.patientVideoLabel}>Patient Video Feed</div>
-                        </div>
-                    </div>
 
-                    {/* Video Controls Overlay */}
-                    <div className={styles.videoControls}>
-                        <button className={styles.fullscreenBtn} onClick={toggleFullscreen} title={isVideoFullscreen ? "Exit Fullscreen" : "Fullscreen"}>
-                            {isVideoFullscreen ? (
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3" />
-                                </svg>
-                            ) : (
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
-                                </svg>
-                            )}
-                        </button>
-                    </div>
-                </div>
-
-                {/* Recording Controls Bar */}
-                <div className={styles.recordingBar}>
-                    <div className={styles.recordingBadge}>
-                        <div className={styles.dot}></div>
-                        Recording
-                    </div>
-                    <div className={styles.timer}>04:53</div>
-                    <div className={styles.waveform}>
-                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(i => (
-                            <div
-                                key={i}
-                                className={styles.waveBar}
-                                style={{
-                                    animationDelay: `${i * 0.1}s`,
-                                    height: `${Math.random() * 20 + 10}px`,
-                                    animationPlayState: isRecording ? 'running' : 'paused'
-                                }}
-                            ></div>
-                        ))}
-                    </div>
-                    <button className={styles.stopBtn} onClick={() => setIsRecording(false)}>
-                        <div style={{ width: 12, height: 12, background: 'white', borderRadius: 2 }}></div>
-                        {isRecording ? "Stop" : "Stopped"}
-                    </button>
-                </div>
-            </div>
 
             {/* 3-Column Layout: Transcript | SOAP | Assist */}
             <section className={styles.grid} style={{ padding: '0 24px 24px' }}>

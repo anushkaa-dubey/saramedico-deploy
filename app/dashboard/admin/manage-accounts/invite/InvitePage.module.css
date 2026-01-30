@@ -1,36 +1,30 @@
+/* Container */
 .container {
   display: flex;
   min-height: 100vh;
   background: #f8fafc;
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Main */
 .main {
   flex: 1;
-  padding: 20px 24px;
-  background: #F5F7FA;
-  overflow-y: auto;
-  animation: fadeIn 0.4s ease-out;
+  padding: 40px;
 }
+
+/* Mobile Header */
+.mobileHeader {
+  display: none;
+}
+
+/* Back Arrow logic for Desktop is not explicit in design, assuming handled by navigation or breadcrumb
+   but we will rely on Sidebar for navigation. */
+
 
 /* Topbar */
 .topbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  margin-bottom: 32px;
 }
 
 .searchWrapper {
@@ -48,23 +42,19 @@
 }
 
 .search {
-  width: 320px;
-  height: 36px;
+  width: 380px;
+  height: 40px;
   padding: 0 12px 0 36px;
   border-radius: 8px;
-  border: 1px solid #DFF2FF;
-  background: #ffffff;
+  border: 1px solid #e5e7eb;
   font-size: 13px;
-}
-
-.search::placeholder {
-  color: #cbd5e1;
+  background: white;
 }
 
 .topActions {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
 }
 
 .iconBtn {
@@ -77,182 +67,166 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.2s ease, transform 0.2s ease;
+  transition: all 0.2s;
 }
 
 .iconBtn:hover {
-  background: #f1f5f9;
-  transform: scale(1.05);
+  background: #eef2f7;
 }
 
 .profile {
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: right;
   font-size: 13px;
+}
+
+.profileInfo {
+  display: flex;
+  flex-direction: column;
   align-items: flex-end;
 }
 
 .avatar {
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   background: #e5e7eb;
-  margin-bottom: 4px;
 }
 
-.iconPlaceholder {
-  width: 18px;
-  height: 18px;
-  border-radius: 4px;
-  background: #e5e7eb;
-}
-
-/* Modal Container */
-.mobileHeader {
-  display: none;
-}
-
+/* Modal Container (Center Alignment) */
 .modalContainer {
   display: flex;
   justify-content: center;
-  align-items: flex-start;
-  padding: 20px 0;
+  margin-top: 40px;
+  /* Spacing from topbar */
 }
 
+/* Modal Content Card */
 .modalContent {
   width: 100%;
-  max-width: 900px;
+  max-width: 680px;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
 }
 
 .modalHeader {
-  padding: 0 0 24px 0;
-  margin-bottom: 24px;
+  padding: 24px 32px;
+  border-bottom: 1px solid #f1f5f9;
+  text-align: center;
 }
 
 .modalTitle {
   font-size: 20px;
   font-weight: 700;
   color: #0f172a;
-  margin-bottom: 4px;
+  margin-bottom: 8px;
 }
 
 .modalSubtitle {
-  font-size: 13px;
-  color: #94a3b8;
-  margin: 0;
+  font-size: 14px;
+  color: #64748b;
 }
 
+/* Form */
 .formContent {
-  background: #ffffff;
-  border-radius: 16px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
   padding: 32px;
-  padding-bottom: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
 }
 
-/* Form Fields */
 .formGroup {
-  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
 }
 
 .label {
-  display: block;
   font-size: 11px;
-  font-weight: 600;
-  color: #64748b;
+  font-weight: 700;
+  color: #94a3b8;
+  letter-spacing: 0.5px;
   margin-bottom: 8px;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
 }
 
 .input {
-  width: 100%;
   height: 40px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
   padding: 0 12px;
-  border: 1px solid #e5e7eb;
-  border-radius: 10px;
-  font-size: 13px;
-  background: #f9fafb;
+  font-size: 14px;
 }
 
-.input::placeholder {
-  color: #cbd5e1;
-}
-
-.input:focus {
-  outline: none;
-  border-color: #359aff;
-  background: #ffffff;
-}
-
-/* Role Section */
+/* User Role Section */
 .roleSection {
-  margin-top: 28px;
-  margin-bottom: 24px;
+  padding: 0 32px 32px 32px;
 }
 
 .roleTitle {
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 700;
   color: #0f172a;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .roleGrid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: 1fr 1fr 1fr;
   gap: 16px;
 }
 
 .roleCard {
-  border: 2px solid #e5e7eb;
-  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
   padding: 16px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
+  background: #ffffff;
 }
 
 .roleCard:hover {
-  border-color: #359aff;
-  box-shadow: 0 4px 12px rgba(53, 154, 255, 0.1);
+  border-color: #3b82f6;
+  background: #f8fafc;
 }
 
 .roleCardActive {
-  border-color: #359aff;
-  background: #f0f8ff;
-  box-shadow: 0 4px 12px rgba(53, 154, 255, 0.2);
+  border: 2px solid #3b82f6;
+  background: #eff6ff;
+  position: relative;
 }
 
 .roleCardHeader {
   display: flex;
-  align-items: flex-start;
-  gap: 12px;
+  align-items: center;
+  gap: 10px;
   margin-bottom: 12px;
 }
 
 .roleIcon {
-  font-size: 24px;
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
+  background: #e0f2fe;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #eef2f7;
-  border-radius: 8px;
-  flex-shrink: 0;
+  color: #0284c7;
 }
 
 .roleName {
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
   color: #0f172a;
-  margin: 0 0 2px 0;
 }
 
 .roleAccess {
   font-size: 11px;
   color: #64748b;
-  margin: 0;
 }
 
 .roleFeatures {
@@ -262,236 +236,193 @@
 }
 
 .roleFeatures li {
-  font-size: 12px;
-  color: #0f172a;
-  padding: 6px 0;
+  font-size: 11px;
+  color: #64748b;
+  margin-bottom: 4px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 .checkmark {
-  color: #16a34a;
-  font-weight: 600;
+  color: #10b981;
+  font-weight: bold;
 }
 
 .checkmarkDisabled {
-  color: #cbd5e1;
-  font-weight: 600;
+  color: #ef4444;
+  font-weight: bold;
 }
 
 .disabled {
   color: #94a3b8;
+  font-style: italic;
 }
 
 /* Security Notice */
 .securityNotice {
-  background: #eff6ff;
-  border: 1px solid #dbeafe;
-  border-radius: 10px;
+  background: #fffbeb;
+  border: 1px solid #fcd34d;
+  margin: 0 32px 32px 32px;
   padding: 12px 16px;
+  border-radius: 8px;
   display: flex;
   gap: 12px;
-  margin-bottom: 24px;
+  font-size: 12px;
+  color: #b45309;
+  line-height: 1.5;
 }
 
 .noticeIcon {
-  width: 20px;
-  height: 20px;
-  background: #3b82f6;
-  color: #ffffff;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
+  font-size: 16px;
   font-weight: bold;
-  flex-shrink: 0;
-}
-
-.securityNotice strong {
-  display: block;
-  font-size: 12px;
-  color: #1e40af;
-  margin-bottom: 4px;
-}
-
-.securityNotice p {
-  font-size: 12px;
-  color: #1e40af;
-  margin: 0;
-  line-height: 1.4;
 }
 
 /* Modal Footer */
 .modalFooter {
   padding: 20px 32px;
+  background: #f8fafc;
   border-top: 1px solid #eef2f7;
   display: flex;
   justify-content: flex-end;
   gap: 12px;
-  background: #ffffff;
-  border-bottom-left-radius: 16px;
-  border-bottom-right-radius: 16px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
 }
 
 .cancelBtn {
-  height: 40px;
-  padding: 0 20px;
-  border: 1px solid #e5e7eb;
-  background: #ffffff;
-  border-radius: 10px;
+  padding: 10px 20px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background: white;
+  color: #475569;
+  font-weight: 600;
   font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  color: #64748b;
   text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-}
-
-.cancelBtn:hover {
-  background: #f9fafb;
+  cursor: pointer;
 }
 
 .submitBtn {
-  height: 40px;
-  padding: 0 20px;
+  padding: 10px 20px;
+  border-radius: 8px;
   border: none;
-  background: linear-gradient(90deg, #359aff, #9ccdff);
-  border-radius: 10px;
-  font-size: 13px;
+  background: #3b82f6;
+  color: white;
   font-weight: 600;
+  font-size: 13px;
   cursor: pointer;
-  color: #ffffff;
+  transition: all 0.2s;
 }
 
 .submitBtn:hover {
-  box-shadow: 0 4px 12px rgba(53, 154, 255, 0.3);
+  background: #2563eb;
 }
 
-/* Responsive */
+/* ==================== TABLET RESPONSIVE (1024px) ==================== */
+@media (max-width: 1024px) {
+  .modalContent {
+    max-width: 600px;
+  }
+}
+
+/* ==================== MOBILE RESPONSIVE (768px) ==================== */
 @media (max-width: 768px) {
-  .main {
+  .container {
+    flex-direction: column;
     padding: 0;
-    background: #f8fafc;
+    background: #ffffff;
   }
 
+  .main {
+    padding: 0;
+    min-height: 100vh;
+  }
+
+  /* Hide Desktop Headers */
   .topbar {
     display: none;
   }
 
-  /* Custom Mobile Header */
+  /* Mobile Header */
   .mobileHeader {
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 16px 20px;
+    border-bottom: 1px solid #f1f5f9;
     background: #ffffff;
     position: sticky;
     top: 0;
-    z-index: 100;
+    z-index: 10;
   }
 
   .backArrow {
     font-size: 24px;
-    color: #0f172a;
-    cursor: pointer;
     text-decoration: none;
-    width: 32px;
+    color: #0f172a;
+    width: 24px;
   }
 
   .mobileTitle {
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 700;
     color: #0f172a;
-    flex: 1;
-    text-align: center;
   }
 
   .headerPlaceholder {
-    width: 32px;
+    width: 24px;
   }
 
+  /* Modal acts like full page */
   .modalContainer {
+    margin-top: 0;
     padding: 20px;
+  }
+
+  .modalContent {
+    box-shadow: none;
+    border-radius: 0;
   }
 
   .modalHeader {
-    display: none;
+    padding: 0 0 24px 0;
+    text-align: left;
+  }
+
+  .modalTitle {
+    font-size: 18px;
   }
 
   .formContent {
-    background: #ffffff;
-    border-radius: 12px;
-    padding: 24px;
-    box-shadow: none;
-    border: 1px solid #eef2f7;
-    margin-bottom: 24px;
+    padding: 0 0 24px 0;
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .roleSection {
+    padding: 0 0 24px 0;
   }
 
   .roleGrid {
-    display: flex;
-    overflow-x: auto;
-    gap: 16px;
-    padding: 4px 0 16px 0;
-    scrollbar-width: none;
-    /* Firefox */
-    -ms-overflow-style: none;
-    /* IE/Edge */
-    scroll-snap-type: x mandatory;
-    margin: 0 -20px;
-    padding: 0 20px 16px 20px;
-  }
-
-  .roleGrid::-webkit-scrollbar {
-    display: none;
-    /* Chrome/Safari/Webkit */
-  }
-
-  .roleCard {
-    min-width: 280px;
-    flex-shrink: 0;
-    border-width: 1px;
-    padding: 16px;
-    scroll-snap-align: center;
-  }
-
-  .roleTitle {
-    font-size: 16px;
-    font-weight: 700;
-    margin-top: 0;
+    grid-template-columns: 1fr;
   }
 
   .securityNotice {
-    background: #eff6ff;
-    border: none;
-    padding: 16px;
+    margin: 0 0 24px 0;
   }
 
   .modalFooter {
+    padding: 20px 0 40px 0;
     background: transparent;
-    box-shadow: none;
+    border-top: none;
     flex-direction: column-reverse;
-    gap: 24px;
-    padding: 20px;
-    border: none;
+    /* Save button on top for mobile often preferred, but column reverse puts save bottom */
+    flex-direction: row;
+    justify-content: space-between;
   }
 
-  .cancelBtn {
-    border: none;
-    background: transparent;
-    font-weight: 600;
-    color: #64748b;
-    justify-content: center;
-    width: 100%;
-  }
-
+  .cancelBtn,
   .submitBtn {
-    width: 100%;
-    height: 48px;
-    border-radius: 10px;
-    font-size: 15px;
+    flex: 1;
+    text-align: center;
+    padding: 12px;
   }
 }

@@ -151,17 +151,18 @@
 
 .submitBtn {
     padding: 10px 24px;
-    border-radius: 8px;
-    background: #3182ce;
+    border-radius: 10px;
+    background: linear-gradient(90deg, #359AFF, #9CCDFF);
     border: none;
     color: white;
     cursor: pointer;
     font-weight: 600;
-    transition: opacity 0.2s, background 0.2s;
+    transition: all 0.2s ease;
 }
 
 .submitBtn:hover:not(:disabled) {
-    background: #2b6cb0;
+    opacity: 0.95;
+    transform: scale(1.05);
 }
 
 .submitBtn:disabled {

@@ -184,3 +184,13 @@ export const updateDoctorProfile = async (updates) => {
     });
     return handleResponse(response);
 };
+/**
+ * Fetch logged-in doctor profile
+ * Endpoint: GET /api/v1/auth/me
+ */
+export const fetchProfile = async () => {
+    const response = await fetch(`${API_BASE_URL}/auth/me`, {
+        headers: getAuthHeaders(),
+    });
+    return handleResponse(response);
+};

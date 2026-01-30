@@ -67,7 +67,7 @@ export default function RecordsPage() {
             <button
               onClick={() => setShowUpload(true)}
               className={styles.editBtn}
-              style={{ background: "#3b82f6", color: "white", border: "none" }}
+              style={{ background: "linear-gradient(90deg, #359AFF, #9CCDFF)", color: "white", border: "none", borderRadius: "10px", padding: "10px 20px", fontWeight: "600", cursor: "pointer" }}
             >
               + Upload Document
             </button>
@@ -94,7 +94,7 @@ export default function RecordsPage() {
               <input type="text" name="description" placeholder="Short description" style={{ padding: "8px", borderRadius: "4px", border: "1px solid #ddd" }} />
               <input type="file" name="file" required style={{ marginTop: "5px" }} />
               <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
-                <button type="submit" disabled={uploading} style={{ padding: "10px 20px", background: "#3b82f6", color: "white", border: "none", borderRadius: "6px", cursor: "pointer" }}>
+                <button type="submit" disabled={uploading} style={{ padding: "10px 20px", background: "linear-gradient(90deg, #359AFF, #9CCDFF)", color: "white", border: "none", borderRadius: "10px", cursor: "pointer", fontWeight: "600" }}>
                   {uploading ? "Uploading..." : "Submit Upload"}
                 </button>
                 <button type="button" onClick={() => setShowUpload(false)} style={{ padding: "10px 20px", background: "#f1f5f9", border: "none", borderRadius: "6px", cursor: "pointer" }}>Cancel</button>

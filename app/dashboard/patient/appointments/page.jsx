@@ -5,7 +5,7 @@ import Topbar from "../components/Topbar";
 import styles from "../records/Records.module.css";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { fetchAppointments } from "@/services/patient";
+import { fetchAppointments, fetchDoctors } from "@/services/patient";
 
 export default function AppointmentsPage() {
     const [appointments, setAppointments] = useState([]);
@@ -16,12 +16,26 @@ export default function AppointmentsPage() {
         loadAppointments();
     }, []);
 
+    const [doctorsMap, setDoctorsMap] = useState({});
+
     const loadAppointments = async () => {
         setLoading(true);
         setError("");
         try {
-            const data = await fetchAppointments();
-            setAppointments(data);
+            const [appointmentsData, doctorsData] = await Promise.all([
+                fetchAppointments(),
+                fetchDoctors()
+            ]);
+
+            // Create map of doctor id -> name
+            const dMap = {};
+            if (Array.isArray(doctorsData)) {
+                doctorsData.forEach(d => {
+                    dMap[d.id] = `Dr. ${d.first_name} ${d.last_name}`;
+                });
+            }
+            setDoctorsMap(dMap);
+            setAppointments(appointmentsData);
         } catch (err) {
             console.error("Failed to load appointments:", err);
             setError(err.message || "Failed to load your appointments. Please try again later.");
@@ -45,8 +59,8 @@ export default function AppointmentsPage() {
                         <p style={{ color: '#64748b' }}>Check your appointment status and history.</p>
                     </div>
                     <Link href="/dashboard/patient/appointments/request">
-                        <button className={styles.requestCTA}>
-                            <span>+</span> Request New Appointment
+                        <button className={styles.requestCTA} style={{ background: "linear-gradient(90deg, #359AFF, #9CCDFF)", border: "none", color: "white", padding: "10px 20px", fontWeight: "600", borderRadius: "10px", cursor: "pointer", textDecoration: "none", display: "inline-block" }}>
+                            Request Appointment
                         </button>
                     </Link>
                 </div>
@@ -76,7 +90,12 @@ export default function AppointmentsPage() {
                                 <tbody>
                                     {appointments.map((apt) => (
                                         <tr key={apt.id}>
-                                            <td>{apt.doctor_name || (apt.doctor && apt.doctor.full_name) || "Unknown Doctor"}</td>
+                                            <td>
+                                                {apt.doctor_name ||
+                                                    (apt.doctor && (apt.doctor.full_name || `Dr. ${apt.doctor.first_name} ${apt.doctor.last_name}`)) ||
+                                                    doctorsMap[apt.doctor_id] ||
+                                                    "Unknown Doctor"}
+                                            </td>
                                             <td>{new Date(apt.requested_date).toLocaleString()}</td>
                                             <td>
                                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -105,7 +124,7 @@ export default function AppointmentsPage() {
                                                                 alignItems: "center",
                                                                 justifyContent: "center",
                                                                 padding: "6px 12px",
-                                                                background: "linear-gradient(90deg, #359AFF, #9CCDFF)",
+                                                                background: "#3b82f6",
                                                                 color: "white",
                                                                 borderRadius: "6px",
                                                                 fontSize: "12px",
@@ -114,7 +133,7 @@ export default function AppointmentsPage() {
                                                                 marginTop: "4px"
                                                             }}
                                                         >
-                                                            🎥 Join Meeting
+                                                            Join Meeting
                                                         </a>
                                                     )}
                                                 </div>

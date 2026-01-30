@@ -114,7 +114,12 @@ export default function UpNextCard() {
               target="_blank"
               rel="noopener noreferrer"
               className={styles.checkinBtn}
-              style={{ textDecoration: 'none', textAlign: 'center' }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                textDecoration: 'none'
+              }}
             >
               Join Session
             </a>
@@ -124,6 +129,6 @@ export default function UpNextCard() {
           <button className={styles.detailsBtn}>Details</button>
         </div>
       </div>
-    </div>
+    </div >
   );
 }

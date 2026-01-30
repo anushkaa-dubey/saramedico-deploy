@@ -72,6 +72,14 @@ export default function PatientDashboard() {
 
         {/* Desktop Header Actions - Hidden on mobile via CSS */}
         <div className={styles.headerActions}>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className={styles.iconBtn}
+            onClick={() => router.push("/dashboard/patient/appointments/request")}
+          >
+            <img src={scheduleIcon.src} alt="Schedule" width="20" height="20" />
+          </motion.button>
           <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className={styles.iconBtn}>
             <img src={uploadIcon.src} alt="Upload" width="20" height="20" />
           </motion.button>
@@ -91,26 +99,7 @@ export default function PatientDashboard() {
         <div className={styles.leftCol}>
           {/* Dashboard Quick Actions moved closer to appointment card */}
           <div className={styles.dashboardActions}>
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className={styles.primaryBtn}
-              onClick={() => router.push("/dashboard/patient/audio-check")}
-              style={{ flex: 1, height: '44px', fontSize: '14px' }}
-            >
-              <img src={micWhiteIcon.src} alt="Join Session" width="18" height="18" />
-              Join Session
-            </motion.button>
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className={styles.outlineBtn}
-              onClick={() => router.push("/dashboard/patient/appointments/request")}
-              style={{ flex: 1, height: '44px', fontSize: '14px' }}
-            >
-              <img src={scheduleIcon.src} alt="Schedule" width="18" height="18" />
-              Schedule Visit
-            </motion.button>
+
           </div>
 
           {/* Mobile  Title */}

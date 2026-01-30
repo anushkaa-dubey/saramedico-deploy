@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import Topbar from "../components/Topbar";
 import styles from "../DoctorDashboard.module.css";
 import { motion } from "framer-motion";
-import { fetchAppointments, approveAppointment, updateAppointmentStatus } from "@/services/doctor";
+import { fetchAppointments, approveAppointment, updateAppointmentStatus, fetchPatients } from "@/services/doctor";
 
 export default function DoctorAppointments() {
     const [appointments, setAppointments] = useState([]);
@@ -14,14 +14,28 @@ export default function DoctorAppointments() {
         loadAppointments();
     }, []);
 
+    const [patientsMap, setPatientsMap] = useState({});
+
     const loadAppointments = async () => {
         setLoading(true);
         setError("");
         try {
-            const data = await fetchAppointments();
-            setAppointments(data);
+            const [appointmentsData, patientsData] = await Promise.all([
+                fetchAppointments(),
+                fetchPatients()
+            ]);
+
+            // Create a lookup map for patients
+            const pMap = {};
+            if (Array.isArray(patientsData)) {
+                patientsData.forEach(p => {
+                    if (p.id) pMap[p.id] = p;
+                });
+            }
+            setPatientsMap(pMap);
+            setAppointments(appointmentsData);
         } catch (error) {
-            console.error("Failed to load appointments:", error);
+            console.error("Failed to load data:", error);
             setError("Failed to load appointments. Please ensure you are logged in.");
         } finally {
             setLoading(false);
@@ -103,6 +117,7 @@ export default function DoctorAppointments() {
                                                 apt.patient_name ||
                                                 apt.patientName ||
                                                 (apt.patient && (apt.patient.full_name || (apt.patient.first_name ? `${apt.patient.first_name} ${apt.patient.last_name}` : null))) ||
+                                                (patientsMap[apt.patient_id] && (patientsMap[apt.patient_id].name || patientsMap[apt.patient_id].full_name)) ||
                                                 (apt.user && apt.user.full_name) ||
                                                 "Unknown Patient"
                                             }

@@ -89,10 +89,26 @@ export default function TasksSection() {
   };
 
 
+  /* Modal State */
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [newTaskLabel, setNewTaskLabel] = useState("");
+  const [newTaskPriority, setNewTaskPriority] = useState("normal");
+
+  const submitNewTask = () => {
+    if (!newTaskLabel.trim()) return;
+    handleAddTask({
+      label: newTaskLabel,
+      urgent: newTaskPriority === "urgent"
+    });
+    setIsModalOpen(false);
+    setNewTaskLabel("");
+    setNewTaskPriority("normal");
+  };
+
   const urgentCount = tasks.filter((t) => t.status !== "completed" && (t.priority === "high" || t.priority === "urgent")).length;
 
   return (
-    <div className={styles.card}>
+    <div className={styles.card} style={{ position: "relative" }}>
       <div className={styles.tasksHeader}>
         <h3 className={styles.cardTitle}>Tasks</h3>
         <span className={styles.taskCountUrgent}>{urgentCount} Urgent</span>
@@ -108,7 +124,7 @@ export default function TasksSection() {
         ) : (
           tasks.map((task) => (
             <div key={task.id} className={styles.taskItem}>
-              <div style={{ display: "flex", alignItems: "center", flex: 1 }}>
+              <div style={{ display: "flex", alignItems: "center", flex: 1, gap: "12px" }}>
                 <button
                   className={`${styles.taskCheckbox} ${task.status === "completed" ? styles.taskCompleted : ""}`}
                   onClick={() => toggleTask(task.id)}
@@ -138,16 +154,92 @@ export default function TasksSection() {
 
       <button
         className={styles.addTaskBtn}
-        onClick={() => {
-          const label = prompt("Enter task description:");
-          if (label) {
-            const urgent = confirm("Is this task urgent?");
-            handleAddTask({ label, urgent });
-          }
-        }}
+        onClick={() => setIsModalOpen(true)}
       >
         + Add New Task
       </button>
+
+      {/* Inline Modal for Task Creation */}
+      {isModalOpen && (
+        <div style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: "rgba(255,255,255,0.95)",
+          backdropFilter: "blur(5px)",
+          display: "flex",
+          flexDirection: "column",
+          padding: "20px",
+          gap: "12px",
+          borderRadius: "12px",
+          zIndex: 10
+        }}>
+          <h4 style={{ margin: 0, color: "#1e293b" }}>New Task</h4>
+          <input
+            type="text"
+            placeholder="What needs to be done?"
+            value={newTaskLabel}
+            onChange={(e) => setNewTaskLabel(e.target.value)}
+            style={{
+              padding: "10px",
+              borderRadius: "8px",
+              border: "1px solid #e2e8f0",
+              width: "100%",
+              boxSizing: "border-box"
+            }}
+          />
+          <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+            <label style={{ fontSize: "14px", color: "#64748b" }}>Priority:</label>
+            <select
+              value={newTaskPriority}
+              onChange={(e) => setNewTaskPriority(e.target.value)}
+              style={{
+                padding: "8px",
+                borderRadius: "6px",
+                border: "1px solid #e2e8f0",
+                flex: 1
+              }}
+            >
+              <option value="normal">Normal</option>
+              <option value="urgent">Urgent</option>
+            </select>
+          </div>
+          <div style={{ display: "flex", gap: "10px", marginTop: "auto" }}>
+            <button
+              onClick={() => setIsModalOpen(false)}
+              style={{
+                flex: 1,
+                padding: "8px",
+                background: "#f1f5f9",
+                color: "#64748b",
+                border: "none",
+                borderRadius: "6px",
+                cursor: "pointer",
+                fontWeight: "600"
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={submitNewTask}
+              style={{
+                flex: 1,
+                padding: "8px",
+                background: "#3b82f6",
+                color: "white",
+                border: "none",
+                borderRadius: "6px",
+                cursor: "pointer",
+                fontWeight: "600"
+              }}
+            >
+              Save
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

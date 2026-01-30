@@ -162,10 +162,8 @@
 .gridItem {
   position: relative;
   aspect-ratio: 1.4;
-  /* Aspect ratio roughly matching the design */
   background: #ffffff;
   border: 1px solid #94a3b8;
-  /* Darker border as per image? Actually image has grey borders, blue when selected */
   border: 1px solid #cbd5e1;
   border-radius: 12px;
   display: flex;
@@ -188,7 +186,6 @@
   border-color: #3b82f6;
   border-width: 2px;
   background: #ffffff;
-  /* Or slight blue tint if desired */
 }
 
 .gridItem.selected .gridLabel {
@@ -209,10 +206,10 @@
 }
 
 .iconWrapper {
-  width: 40px;
-  height: 40px;
+  width: 60px;
+  height: 60px;
   background: #f1f5f9;
-  border-radius: 8px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -220,8 +217,8 @@
 }
 
 .iconWrapper img {
-  width: 24px;
-  height: 24px;
+  width: 40px;
+  height: 40px;
   object-fit: contain;
 }
 

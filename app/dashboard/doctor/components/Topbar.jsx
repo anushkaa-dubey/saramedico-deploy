@@ -25,13 +25,7 @@ export default function Topbar() {
       />
 
       <div className={styles.topActions}>
-        <button
-          className={styles.primaryBtn}
-          style={{ height: '32px', fontSize: '12px' }}
-          onClick={() => router.push("/dashboard/doctor/video-call")}
-        >
-          Start Session
-        </button>
+
 
         <button className={styles.notificationBtn}>
           <img src={notificationIcon.src} alt="Notifications" width="20" height="20" />

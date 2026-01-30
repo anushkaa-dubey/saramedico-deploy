@@ -40,6 +40,7 @@ const itemVariants = {
 export default function DoctorDashboard() {
   const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
+
   return (
     <motion.div
       initial="hidden"
@@ -59,7 +60,7 @@ export default function DoctorDashboard() {
 
       <motion.section className={styles.header} variants={itemVariants}>
         <div>
-          <h2 className={styles.greeting}>Good Morning, Dr. Sarah</h2>
+          <h2 className={styles.greeting}>Good Morning, Doctor</h2>
           <p className={styles.sub}>Here's your schedule overview for today</p>
         </div>
 

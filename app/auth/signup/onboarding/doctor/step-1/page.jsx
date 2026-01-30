@@ -22,18 +22,18 @@ import emergencyIcon from "@/public/icons/speciality/emergency.svg";
 import otherIcon from "@/public/icons/speciality/other.svg";
 
 const specialties = [
-  { id: "general_medicine", label: "General Medicine", icon: <img src={genMedIcon.src} alt="" width="24" height="24" /> },
-  { id: "cardiology", label: "Cardiology", icon: <img src={cardiologyIcon.src} alt="" width="24" height="24" /> },
-  { id: "dermatology", label: "Dermatology", icon: <img src={dermatologyIcon.src} alt="" width="24" height="24" /> },
-  { id: "pediatrics", label: "Pediatrics", icon: <img src={pediatricsIcon.src} alt="" width="24" height="24" /> },
-  { id: "psychiatry", label: "Psychiatry", icon: <img src={psychiatryIcon.src} alt="" width="24" height="24" /> },
-  { id: "orthopedics", label: "Orthopedics", icon: <img src={orthopedicsIcon.src} alt="" width="24" height="24" /> },
-  { id: "oncology", label: "Oncology", icon: <img src={oncologyIcon.src} alt="" width="24" height="24" /> },
-  { id: "neurology", label: "Neurology", icon: <img src={neurologyIcon.src} alt="" width="24" height="24" /> },
-  { id: "radiology", label: "Radiology", icon: <img src={radiologyIcon.src} alt="" width="24" height="24" /> },
-  { id: "surgery", label: "Surgery", icon: <img src={surgeryIcon.src} alt="" width="24" height="24" /> },
-  { id: "emergency", label: "Emergency", icon: <img src={emergencyIcon.src} alt="" width="24" height="24" /> },
-  { id: "other", label: "Other Speciality", icon: <img src={otherIcon.src} alt="" width="24" height="24" /> },
+  { id: "general_medicine", label: "General Medicine", icon: <img src={genMedIcon.src} alt="" width="40" height="40" /> },
+  { id: "cardiology", label: "Cardiology", icon: <img src={cardiologyIcon.src} alt="" width="40" height="40" /> },
+  { id: "dermatology", label: "Dermatology", icon: <img src={dermatologyIcon.src} alt="" width="40" height="40" /> },
+  { id: "pediatrics", label: "Pediatrics", icon: <img src={pediatricsIcon.src} alt="" width="40" height="40" /> },
+  { id: "psychiatry", label: "Psychiatry", icon: <img src={psychiatryIcon.src} alt="" width="40" height="40" /> },
+  { id: "orthopedics", label: "Orthopedics", icon: <img src={orthopedicsIcon.src} alt="" width="40" height="40" /> },
+  { id: "oncology", label: "Oncology", icon: <img src={oncologyIcon.src} alt="" width="40" height="40" /> },
+  { id: "neurology", label: "Neurology", icon: <img src={neurologyIcon.src} alt="" width="40" height="40" /> },
+  { id: "radiology", label: "Radiology", icon: <img src={radiologyIcon.src} alt="" width="40" height="40" /> },
+  { id: "surgery", label: "Surgery", icon: <img src={surgeryIcon.src} alt="" width="40" height="40" /> },
+  { id: "emergency", label: "Emergency", icon: <img src={emergencyIcon.src} alt="" width="40" height="40" /> },
+  { id: "other", label: "Other Speciality", icon: <img src={otherIcon.src} alt="" width="40" height="40" /> },
 ];
 
 export default function DoctorOnboardingStep1() {
