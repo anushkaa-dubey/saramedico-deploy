@@ -31,26 +31,35 @@ export default function LoginForm() {
         password
       };
 
-      const response = await loginUser(payload);
+      // 1. Login to get token
+      const authData = await loginUser(payload); // Returns { access_token, ... }
 
-      // Get role from response (prioritize API response over URL param)
-      // Role-aware redirect after successful login
-      const user = response.user;
-      const userRole = user?.role || response.role || computedRole;
+      // Token is already stored in localStorage by loginUser service
 
-      // Store user metadata if provided
-      if (user) {
-        localStorage.setItem("user", JSON.stringify(user));
+      // 2. Fetch user details to get role
+      const { getCurrentUser } = await import("@/services/auth");
+      const user = await getCurrentUser();
+
+      if (!user) {
+        throw new Error("Failed to fetch user profile.");
       }
 
-      if (userRole === "doctor" && !user?.onboarding_complete) {
-        router.push("/auth/signup/onboarding/doctor/step-1");
+      localStorage.setItem("user", JSON.stringify(user));
+      const userRole = user.role || computedRole;
+
+      if (userRole === "doctor") {
+        router.push("/dashboard/doctor");
+      } else if (userRole === "patient") {
+        router.push("/dashboard/patient");
       } else {
         router.push(`/dashboard/${userRole}`);
       }
     } catch (err) {
-
-      setError(err.message || "Invalid credentials. Please try again.");
+      console.error("Login Error:", err);
+      const errorMessage = err.message === "Failed to fetch"
+        ? "Network Error: Unable to connect to backend. Please check your connection."
+        : err.message || "Login failed. Please check your credentials.";
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -101,9 +110,11 @@ export default function LoginForm() {
           Continue with Google
         </button>
 
-        <div className="bottom-text">
-          Don't have an account? <a href={`/auth/signup?role=${computedRole}`}>Sign Up</a>
-        </div>
+        {computedRole !== "patient" && (
+          <div className="bottom-text">
+            Don't have an account? <a href={`/auth/signup?role=${computedRole}`}>Sign Up</a>
+          </div>
+        )}
       </form>
     </>
   );

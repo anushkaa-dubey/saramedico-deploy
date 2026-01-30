@@ -9,11 +9,24 @@ import dashboardIcon from "@/public/icons/dashboard.svg";
 import manageIcon from "@/public/icons/manage.svg";
 import settingsIcon from "@/public/icons/settings.svg";
 import notificationIcon from "@/public/icons/notification.svg";
+import SignoutModal from "../../../auth/components/SignoutModal";
+import { logoutUser } from "@/services/auth";
+import { useRouter } from "next/navigation";
+
 
 export default function AdminSidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const [isSignoutModalOpen, setIsSignoutModalOpen] = useState(false);
+
+  const handleLogout = async () => {
+    await logoutUser();
+    router.push("/auth/login");
+  };
+
   const isActive = (path) => pathname === path || pathname.startsWith(path);
   const [isOpen, setIsOpen] = useState(false);
+
 
   return (
     <>
@@ -78,7 +91,21 @@ export default function AdminSidebar() {
             </Link>
           </div>
         </div>
+
+        <button
+          className={styles.logoutBtn}
+          onClick={() => setIsSignoutModalOpen(true)}
+        >
+          <span className={styles.logoutIcon}>→</span>
+          Logout
+        </button>
       </aside>
+
+      <SignoutModal
+        isOpen={isSignoutModalOpen}
+        onConfirm={handleLogout}
+        onCancel={() => setIsSignoutModalOpen(false)}
+      />
     </>
   );
 }

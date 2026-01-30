@@ -8,11 +8,21 @@ import billIcon from "@/public/icons/bill.svg";
 import manageIcon from "@/public/icons/manage.svg";
 import notificationIcon from "@/public/icons/notification.svg";
 import { useState } from "react";
+import SignoutModal from "../../../../auth/components/SignoutModal";
+import { logoutUser } from "@/services/auth";
+
 
 export default function SettingsSidebar() {
     const pathname = usePathname();
     const router = useRouter();
     const [isOpen, setIsOpen] = useState(false);
+    const [isSignoutModalOpen, setIsSignoutModalOpen] = useState(false);
+
+    const handleLogout = async () => {
+        await logoutUser();
+        router.push("/auth/login");
+    };
+
 
     const isActive = (path) => pathname === path || pathname.startsWith(path);
 
@@ -100,11 +110,18 @@ export default function SettingsSidebar() {
                     </div>
                 </div>
 
-                <button className={styles.logoutBtn}>
+                <button className={styles.logoutBtn} onClick={() => setIsSignoutModalOpen(true)}>
                     <span>→</span>
                     Log Out
                 </button>
             </aside>
+
+            <SignoutModal
+                isOpen={isSignoutModalOpen}
+                onConfirm={handleLogout}
+                onCancel={() => setIsSignoutModalOpen(false)}
+            />
         </>
     );
 }
+

@@ -62,12 +62,14 @@ export default function Home() {
                 >
                   Login
                 </button>
-                <button
-                  onClick={() => handleRoleSelect(role.id)}
-                  className={styles.primaryBtn}
-                >
-                  Sign Up
-                </button>
+                {role.id !== "patient" && (
+                  <button
+                    onClick={() => handleRoleSelect(role.id)}
+                    className={styles.primaryBtn}
+                  >
+                    Sign Up
+                  </button>
+                )}
               </div>
             </div>
           ))}

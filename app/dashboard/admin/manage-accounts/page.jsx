@@ -67,7 +67,7 @@ export default function ManageAccountsPage() {
   return (
     <div className={styles.container}>
       {/* Sidebar */}
-      
+
 
       {/* Main */}
       <main className={styles.main}>
@@ -167,7 +167,9 @@ export default function ManageAccountsPage() {
                   </td>
                   <td>{user.lastLogin}</td>
                   <td>
-                    <button className={styles.actionBtn}>⋮</button>
+                    <Link href={`/dashboard/admin/manage-accounts/edit/${user.id}`} className={styles.editBtn}>
+                      Edit
+                    </Link>
                   </td>
                 </tr>
               ))}

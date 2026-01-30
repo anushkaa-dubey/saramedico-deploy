@@ -1077,3 +1077,30 @@
     height: 240px;
   }
 }
+
+.logoutBtn {
+  margin-top: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 14px;
+  color: #991b1b;
+  cursor: pointer;
+  text-decoration: none;
+  background: #fee2e2;
+  border: 1px solid #fecaca;
+  transition: all 0.2s ease-in-out;
+  font-weight: 600;
+  width: 100%;
+}
+
+.logoutBtn:hover {
+  background: #fecaca;
+  transform: translateY(-1px);
+}
+
+.logoutIcon {
+  font-size: 18px;
+}

@@ -9,6 +9,9 @@ import micWhiteIcon from "@/public/icons/mic_white.svg";
 import Daniel from "@/public/icons/images/Daniel.png";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
+import OnboardPatientModal from "./patients/components/OnboardPatientModal";
+
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -36,6 +39,7 @@ const itemVariants = {
 
 export default function DoctorDashboard() {
   const router = useRouter();
+  const [isModalOpen, setIsModalOpen] = useState(false);
   return (
     <motion.div
       initial="hidden"
@@ -47,6 +51,12 @@ export default function DoctorDashboard() {
         <Topbar />
       </motion.div>
 
+      <OnboardPatientModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSuccess={() => router.push("/dashboard/doctor/patients")}
+      />
+
       <motion.section className={styles.header} variants={itemVariants}>
         <div>
           <h2 className={styles.greeting}>Good Morning, Dr. Sarah</h2>
@@ -57,7 +67,12 @@ export default function DoctorDashboard() {
           <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className={styles.iconBtn}>
             <img src={uploadIcon.src} alt="Upload" width="20" height="20" />
           </motion.button>
-          <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className={styles.iconBtn}>
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className={styles.iconBtn}
+            onClick={() => setIsModalOpen(true)}
+          >
             <img src={personIcon.src} alt="Add Person" width="20" height="20" />
           </motion.button>
           <motion.button

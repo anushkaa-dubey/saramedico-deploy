@@ -63,7 +63,7 @@ export default function AppointmentsPage() {
                     ) : appointments.length === 0 ? (
                         <div style={{ padding: '40px', textAlign: 'center' }}>You have no appointment requests.</div>
                     ) : (
-                        <div style={{ padding: '0 24px 24px' }}>
+                        <div className={styles.tableContainer}>
                             <table className={styles.table}>
                                 <thead>
                                     <tr>
@@ -100,9 +100,21 @@ export default function AppointmentsPage() {
                                                             href={apt.join_url || apt.zoom_url}
                                                             target="_blank"
                                                             rel="noopener noreferrer"
-                                                            style={{ fontSize: "11px", color: "#3b82f6", textDecoration: "underline" }}
+                                                            style={{
+                                                                display: "flex",
+                                                                alignItems: "center",
+                                                                justifyContent: "center",
+                                                                padding: "6px 12px",
+                                                                background: "linear-gradient(90deg, #359AFF, #9CCDFF)",
+                                                                color: "white",
+                                                                borderRadius: "6px",
+                                                                fontSize: "12px",
+                                                                fontWeight: "bold",
+                                                                textDecoration: "none",
+                                                                marginTop: "4px"
+                                                            }}
                                                         >
-                                                            Join Zoom
+                                                            🎥 Join Meeting
                                                         </a>
                                                     )}
                                                 </div>

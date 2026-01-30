@@ -39,7 +39,13 @@ export const handleResponse = async (response) => {
         let errorMessage = `Request failed with status ${response.status}`;
         try {
             const errorData = await response.json();
-            errorMessage = errorData.detail || errorData.message || errorMessage;
+
+            if (Array.isArray(errorData.detail)) {
+                // Handle FastAPI validation error arrays
+                errorMessage = errorData.detail.map(err => `${err.loc.join('.')}: ${err.msg}`).join(', ');
+            } else {
+                errorMessage = errorData.detail || errorData.message || errorMessage;
+            }
         } catch (e) {
             // If response is not JSON
         }

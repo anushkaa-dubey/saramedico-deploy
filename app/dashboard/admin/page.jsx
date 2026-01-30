@@ -2,6 +2,9 @@
 import styles from "./AdminDashboard.module.css";
 import notificationIcon from "@/public/icons/notification.svg";
 import searchIcon from "@/public/icons/search.svg";
+import docIcon from "@/public/icons/docs.svg";
+import personIcon from "@/public/icons/person.svg";
+
 import micIcon from "@/public/icons/mic_white.svg";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -31,7 +34,19 @@ const itemVariants = {
 };
 
 export default function AdminDashboard() {
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [searchFilter, setSearchFilter] = useState("All");
+
+  const searchFilters = ["All", "Logins", "Exports", "Patient Data"];
+
+  const topMatches = [
+    { type: "doctor", name: "Dr. Smith Sara", icon: personIcon },
+    { type: "doctor", name: "Dr. Angel Batista", icon: personIcon },
+    { type: "document", name: "patient_data_report.pdf", icon: docIcon },
+  ];
+
   return (
+
     <motion.div
       initial="hidden"
       animate="show"
@@ -43,9 +58,37 @@ export default function AdminDashboard() {
           <img src={searchIcon.src} alt="Search" className={styles.searchIcon} />
           <input
             className={styles.search}
-            placeholder="Search something..."
+            placeholder="Search filters, matches..."
+            onFocus={() => setIsSearchFocused(true)}
+            onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
           />
+
+          {isSearchFocused && (
+            <div className={styles.searchDropdown}>
+              <div className={styles.filterRow}>
+                {searchFilters.map(filter => (
+                  <button
+                    key={filter}
+                    className={`${styles.filterBtn} ${searchFilter === filter ? styles.filterBtnActive : ""}`}
+                    onClick={() => setSearchFilter(filter)}
+                  >
+                    {filter}
+                  </button>
+                ))}
+              </div>
+              <div className={styles.matchesSection}>
+                <h4 className={styles.sectionTitle}>Top Matches</h4>
+                {topMatches.map((match, idx) => (
+                  <div key={idx} className={styles.matchItem}>
+                    <img src={match.icon.src} alt="" width="16" height="16" />
+                    <span>{match.name}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
+
 
         <div className={styles.topActions}>
           <button className={styles.iconBtn}>

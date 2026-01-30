@@ -94,11 +94,11 @@ export const fetchPatientDocuments = async (patientId) => {
 
 /**
  * Fetch appointment requests for doctor
- * Endpoint: GET /api/v1/doctor/appointments?status=pending
+ * Endpoint: GET /api/v1/doctor/appointments
  */
 export const fetchAppointments = async () => {
     try {
-        const response = await fetch(`${API_BASE_URL}/doctor/appointments?status=pending`, {
+        const response = await fetch(`${API_BASE_URL}/doctor/appointments`, {
             headers: getAuthHeaders(),
         });
         const data = await handleResponse(response);
@@ -129,15 +129,28 @@ export const approveAppointment = async (appointmentId, data = {}) => {
 };
 
 /**
- * Update appointment status (e.g., Decline or Accept)
+ * Update appointment status (e.g., Decline or status update)
  * Endpoint: PATCH /api/v1/appointments/{id}/status
- * payload example: { status: "accepted", doctor_notes: "..." }
+ * payload example: { status: "declined", doctor_notes: "..." }
  */
 export const updateAppointmentStatus = async (appointmentId, status, notes = "") => {
     const response = await fetch(`${API_BASE_URL}/appointments/${appointmentId}/status`, {
         method: "PATCH",
         headers: getAuthHeaders(),
         body: JSON.stringify({ status, doctor_notes: notes }),
+    });
+    return handleResponse(response);
+};
+
+/**
+ * Onboard/Invite a new patient (Doctor creating patient)
+ * Endpoint: POST /api/v1/patients
+ */
+export const onboardPatient = async (patientData) => {
+    const response = await fetch(`${API_BASE_URL}/patients`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(patientData),
     });
     return handleResponse(response);
 };
@@ -162,6 +175,8 @@ export const createSOAPNote = async (soapNote) => {
  * (Includes specialty, onboarding_complete, etc.)
  */
 export const updateDoctorProfile = async (updates) => {
+    // Note: The backend uses /auth/me for some profile updates or /doctor/profile
+    // Based on test_full_flow.js, it uses /doctor/profile
     const response = await fetch(`${API_BASE_URL}/doctor/profile`, {
         method: "PATCH",
         headers: getAuthHeaders(),

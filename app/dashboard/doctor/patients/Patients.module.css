@@ -28,7 +28,80 @@
     font-size: 24px;
     font-weight: 700;
     color: #0f172a;
-    margin-bottom: 24px;
+    margin: 0;
+}
+
+.pageHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 0 20px 0;
+    gap: 16px;
+}
+
+.headerControls {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.searchWrapper {
+    position: relative;
+}
+
+.searchInput {
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    width: 300px;
+    font-size: 14px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.searchInput:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.onboardBtn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    background: #3b82f6;
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.2s;
+}
+
+.onboardBtn:hover {
+    background: #2563eb;
+}
+
+@media (max-width: 768px) {
+    .pageHeader {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+        padding-right: 0;
+    }
+
+    .headerControls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .searchInput {
+        width: 100%;
+    }
+
+    .onboardBtn {
+        width: 100%;
+        text-align: center;
+    }
 }
 
 .contentRow {

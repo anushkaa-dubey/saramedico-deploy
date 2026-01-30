@@ -28,12 +28,25 @@ export default function DoctorAppointments() {
         }
     };
 
-    const handleStatusChange = async (id, status) => {
+    const handleStatusChange = async (appointment, status) => {
+        const id = appointment.id || appointment;
+
         try {
             if (status === 'accepted') {
-                const updated = await approveAppointment(id);
+                // Use requested_date as appointment_time
+                const appointmentTime = appointment.requested_date || new Date().toISOString();
+
+                const updated = await approveAppointment(id, {
+                    appointment_time: appointmentTime
+                });
+
                 setAppointments(prev => prev.map(apt =>
-                    apt.id === id ? { ...apt, status: 'accepted', zoom_url: updated.join_url } : apt
+                    apt.id === id ? {
+                        ...apt,
+                        status: 'accepted',
+                        start_url: updated.start_url,
+                        join_url: updated.join_url
+                    } : apt
                 ));
             } else {
                 await updateAppointmentStatus(id, status);
@@ -71,59 +84,86 @@ export default function DoctorAppointments() {
                 ) : appointments.length === 0 ? (
                     <div style={{ padding: "40px", textAlign: "center" }}>No appointment requests found.</div>
                 ) : (
-                    <table className={styles.table}>
-                        <thead>
-                            <tr>
-                                <th>PATIENT</th>
-                                <th>DATE & TIME</th>
-                                <th>REASON</th>
-                                <th>STATUS</th>
-                                <th>ACTIONS</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {appointments.map((apt) => (
-                                <tr key={apt.id}>
-                                    <td>{apt.patient_name || apt.patientName || (apt.user && apt.user.full_name) || "Unknown Patient"}</td>
-                                    <td>{new Date(apt.requested_date || apt.date).toLocaleString()}</td>
-                                    <td>{apt.reason}</td>
-                                    <td>
-                                        <span className={apt.status === 'pending' ? styles.inReview : styles.completed}>
-                                            {apt.status}
-                                        </span>
-                                        {apt.status === 'accepted' && (apt.join_url || apt.zoom_url) && (
-                                            <a
-                                                href={apt.join_url || apt.zoom_url}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                style={{ display: "block", fontSize: "11px", color: "#3b82f6", marginTop: "4px" }}
-                                            >
-                                                Join Zoom
-                                            </a>
-                                        )}
-                                    </td>
-                                    <td>
-                                        {apt.status === 'pending' && (
-                                            <div style={{ display: "flex", gap: "8px" }}>
-                                                <button
-                                                    onClick={() => handleStatusChange(apt.id, 'accepted')}
-                                                    style={{ background: "#22c55e", color: "white", border: "none", padding: "4px 8px", borderRadius: "4px", cursor: "pointer" }}
-                                                >
-                                                    Accept
-                                                </button>
-                                                <button
-                                                    onClick={() => handleStatusChange(apt.id, 'declined')}
-                                                    style={{ background: "#ef4444", color: "white", border: "none", padding: "4px 8px", borderRadius: "4px", cursor: "pointer" }}
-                                                >
-                                                    Decline
-                                                </button>
-                                            </div>
-                                        )}
-                                    </td>
+                    <div style={{ overflowX: "auto" }}>
+                        <table className={styles.table}>
+                            <thead>
+                                <tr>
+                                    <th>PATIENT</th>
+                                    <th>DATE & TIME</th>
+                                    <th>REASON</th>
+                                    <th>STATUS</th>
+                                    <th>ACTIONS</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                {appointments.map((apt) => (
+                                    <tr key={apt.id}>
+                                        <td>
+                                            {
+                                                apt.patient_name ||
+                                                apt.patientName ||
+                                                (apt.patient && (apt.patient.full_name || (apt.patient.first_name ? `${apt.patient.first_name} ${apt.patient.last_name}` : null))) ||
+                                                (apt.user && apt.user.full_name) ||
+                                                "Unknown Patient"
+                                            }
+                                        </td>
+                                        <td>{new Date(apt.requested_date || apt.date).toLocaleString()}</td>
+                                        <td>{apt.reason}</td>
+                                        <td>
+                                            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                                                <span
+                                                    className={apt.status === 'pending' ? styles.inReview : styles.completed}
+                                                    style={{ padding: "4px 10px", borderRadius: "20px", fontSize: "12px", width: "fit-content", fontWeight: "600" }}
+                                                >
+                                                    {apt.status.toUpperCase()}
+                                                </span>
+                                                {apt.status === 'accepted' && (apt.start_url || apt.zoom_url) && (
+                                                    <a
+                                                        href={apt.start_url || apt.zoom_url}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        style={{
+                                                            display: "flex",
+                                                            alignItems: "center",
+                                                            justifyContent: "center",
+                                                            padding: "6px 12px",
+                                                            background: "#3b82f6",
+                                                            color: "white",
+                                                            borderRadius: "6px",
+                                                            fontSize: "12px",
+                                                            fontWeight: "bold",
+                                                            textDecoration: "none",
+                                                            width: "fit-content"
+                                                        }}
+                                                    >
+                                                        ▶ Start Meeting
+                                                    </a>
+                                                )}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            {apt.status === 'pending' && (
+                                                <div style={{ display: "flex", gap: "8px" }}>
+                                                    <button
+                                                        onClick={() => handleStatusChange(apt, 'accepted')}
+                                                        style={{ background: "#22c55e", color: "white", border: "none", padding: "4px 8px", borderRadius: "4px", cursor: "pointer" }}
+                                                    >
+                                                        Accept
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleStatusChange(apt, 'declined')}
+                                                        style={{ background: "#ef4444", color: "white", border: "none", padding: "4px 8px", borderRadius: "4px", cursor: "pointer" }}
+                                                    >
+                                                        Decline
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 )}
             </div>
         </motion.div>

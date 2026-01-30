@@ -136,6 +136,84 @@
   background: white;
 }
 
+.searchDropdown {
+  position: absolute;
+  top: 42px;
+  left: 0;
+  width: 400px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
+  z-index: 1000;
+  padding: 16px;
+  animation: dropdownAppear 0.2s ease-out;
+}
+
+@keyframes dropdownAppear {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.filterRow {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.filterBtn {
+  padding: 6px 12px;
+  border-radius: 20px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: #64748b;
+}
+
+.filterBtnActive {
+  background: #359aff;
+  color: white;
+  border-color: #359aff;
+}
+
+.sectionTitle {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: #94a3b8;
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+  font-weight: 700;
+}
+
+.matchItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.matchItem:hover {
+  background: #f1f5f9;
+}
+
+.matchItem span {
+  font-size: 14px;
+  color: #0f172a;
+}
+
+
 .topActions {
   display: flex;
   align-items: center;
@@ -720,4 +798,31 @@
     padding: 8px 6px;
     font-size: 11px;
   }
+}
+
+.logoutBtn {
+  margin-top: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 14px;
+  color: #991b1b;
+  cursor: pointer;
+  text-decoration: none;
+  background: #fee2e2;
+  border: 1px solid #fecaca;
+  transition: all 0.2s ease-in-out;
+  font-weight: 600;
+  width: 100%;
+}
+
+.logoutBtn:hover {
+  background: #fecaca;
+  transform: translateY(-1px);
+}
+
+.logoutIcon {
+  font-size: 18px;
 }

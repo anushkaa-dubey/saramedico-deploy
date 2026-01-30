@@ -11,10 +11,20 @@ import patientsIcon from "@/public/icons/manage.svg";
 import appointmentsIcon from "@/public/icons/settings.svg";
 import messagesIcon from "@/public/icons/messages.svg";
 import settingsIcon from "@/public/icons/settings.svg";
+import SignoutModal from "../../../auth/components/SignoutModal";
+import { logoutUser } from "@/services/auth";
+
 
 export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
+  const [isSignoutModalOpen, setIsSignoutModalOpen] = useState(false);
+
+  const handleLogout = async () => {
+    await logoutUser();
+    router.push("/auth/login");
+  };
+
   const isActive = (path) => pathname === path || pathname.startsWith(path);
 
   // State for mobile sidebar toggle
@@ -112,7 +122,21 @@ export default function Sidebar() {
         >
           + Start Session
         </button>
+
+        <button
+          className={styles.logoutBtn}
+          onClick={() => setIsSignoutModalOpen(true)}
+        >
+          <span className={styles.logoutIcon}>→</span>
+          Logout
+        </button>
       </aside>
+
+      <SignoutModal
+        isOpen={isSignoutModalOpen}
+        onConfirm={handleLogout}
+        onCancel={() => setIsSignoutModalOpen(false)}
+      />
     </>
   );
 }

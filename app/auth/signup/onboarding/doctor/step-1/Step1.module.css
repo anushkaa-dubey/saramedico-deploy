@@ -99,11 +99,8 @@
 }
 
 /* Main Content Area */
-.mainContent {
-  background: #ffffff;
-  padding: 40px;
-  border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+.headerBlock {
+  margin-bottom: 24px;
 }
 
 .heading {
@@ -216,8 +213,18 @@
   height: 40px;
   background: #f1f5f9;
   border-radius: 8px;
-  /* Icons to be added later */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
 }
+
+.iconWrapper img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
 
 .gridItem.selected .iconWrapper {
   background: #eff6ff;

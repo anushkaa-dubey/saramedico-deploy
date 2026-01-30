@@ -139,10 +139,13 @@
     transition: all 0.2s ease;
 }
 
-.uploadZone:hover {
+.uploadZone:hover,
+.uploadZoneActive {
     border-color: #359aff;
-    background: #f8fafc;
+    background: #eff6ff;
+    transform: scale(1.01);
 }
+
 
 .uploadZone svg {
     color: #94a3b8;
@@ -284,72 +287,73 @@
         min-height: 300px;
     }
 }
+
 /* Split View Container */
 .splitViewContainer {
-  padding: 0 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+    padding: 0 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
 }
 
 .viewerControls {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  padding: 16px 20px;
-  background: #ffffff;
-  border: 1px solid #eef2f7;
-  border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 16px 20px;
+    background: #ffffff;
+    border: 1px solid #eef2f7;
+    border-radius: 12px;
 }
 
 .documentTitle {
-  flex: 1;
-  font-size: 16px;
-  font-weight: 600;
-  color: #0f172a;
-  margin: 0;
+    flex: 1;
+    font-size: 16px;
+    font-weight: 600;
+    color: #0f172a;
+    margin: 0;
 }
 
 .viewToggle {
-  display: flex;
-  gap: 8px;
-  background: #f8fafc;
-  padding: 4px;
-  border-radius: 8px;
+    display: flex;
+    gap: 8px;
+    background: #f8fafc;
+    padding: 4px;
+    border-radius: 8px;
 }
 
 .toggleBtn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 14px;
-  background: transparent;
-  border: none;
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 600;
-  color: #64748b;
-  cursor: pointer;
-  transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.2s ease;
 }
 
 .toggleBtn:hover {
-  color: #0f172a;
+    color: #0f172a;
 }
 
 .toggleBtn.active {
-  background: #ffffff;
-  color: #359aff;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    background: #ffffff;
+    color: #359aff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .toggleBtn svg {
-  flex-shrink: 0;
+    flex-shrink: 0;
 }
 
 .sidePanel {
-  background: #ffffff;
-  border: 1px solid #eef2f7;
-  border-radius: 12px;
-  overflow: hidden;
+    background: #ffffff;
+    border: 1px solid #eef2f7;
+    border-radius: 12px;
+    overflow: hidden;
 }

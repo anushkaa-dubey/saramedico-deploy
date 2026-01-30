@@ -16,14 +16,19 @@ export default function DocumentsList({ patientId }) {
     }, [patientId]);
 
     const loadDocuments = async () => {
+        if (!patientId) return;
         setLoading(true);
         setError("");
         try {
             const data = await fetchPatientDocuments(patientId);
             setDocuments(data);
         } catch (err) {
-            console.error(err);
-            setError(err.message || "Unauthorized access or error fetching documents.");
+            console.error("fetchPatientDocuments error:", err);
+            if (err.message.includes("403") || err.message.toLowerCase().includes("unauthorized") || err.message.toLowerCase().includes("permission")) {
+                setError("Patient has not granted permission to view medical records. Once granted, documents will appear here.");
+            } else {
+                setError(err.message || "Error fetching documents. Please try again.");
+            }
         } finally {
             setLoading(false);
         }

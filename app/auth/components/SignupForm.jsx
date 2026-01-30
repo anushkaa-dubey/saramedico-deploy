@@ -33,8 +33,15 @@ export default function SignupForm() {
     const urlRole = searchParams.get("role");
     const sessionRole = typeof window !== "undefined" ? sessionStorage.getItem("selectedRole") : null;
     const role = urlRole || sessionRole || "patient";
+
+    // Patients cannot sign up
+    if (role === "patient") {
+      router.push(`/auth/login?role=patient`);
+      return;
+    }
+
     setFormData(prev => ({ ...prev, role }));
-  }, [searchParams]);
+  }, [searchParams, router]);
 
   // Frontend validation
   const validateForm = () => {
@@ -129,19 +136,23 @@ export default function SignupForm() {
       await registerUser(payload);
 
       // 2. Auto-login after registration
-      const loginResponse = await loginUser({
+      await loginUser({
         email: formData.email,
         password: formData.password
       });
 
-      // 3. Store user metadata if provided
-      if (loginResponse.user) {
-        localStorage.setItem("user", JSON.stringify(loginResponse.user));
+      // 3. Fetch user details to get role
+      const { getCurrentUser } = await import("@/services/auth");
+      const user = await getCurrentUser();
+
+      if (!user) {
+        throw new Error("Failed to fetch user profile after signup.");
       }
 
+      localStorage.setItem("user", JSON.stringify(user));
+
       // 4. Redirect to dashboard or onboarding
-      const user = loginResponse.user;
-      const userRole = user?.role || loginResponse.role || formData.role;
+      const userRole = user.role || formData.role;
 
       if (userRole === "doctor" && !user?.onboarding_complete) {
         router.push("/auth/signup/onboarding/doctor/step-1");

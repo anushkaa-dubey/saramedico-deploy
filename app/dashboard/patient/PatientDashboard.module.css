@@ -134,6 +134,12 @@
   padding: 12px 24px 24px;
 }
 
+.dashboardActions {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
 .leftCol,
 .rightCol {
   display: flex;
@@ -214,6 +220,32 @@
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(53, 154, 255, 0.3);
   filter: brightness(1.05);
+}
+
+.logoutBtn {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid #fecaca;
+  background: #fee2e2;
+  color: #991b1b;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+.logoutBtn:hover {
+  background: #fecaca;
+  transform: translateY(-1px);
+}
+
+.logoutIcon {
+  font-size: 18px;
 }
 
 
@@ -673,7 +705,9 @@
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* Tablet */

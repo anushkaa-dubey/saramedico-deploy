@@ -6,12 +6,14 @@ import DocumentsList from "./components/DocumentsList";
 import styles from "./Patients.module.css";
 import { motion } from "framer-motion";
 import { fetchAppointments, fetchPatients } from "@/services/doctor";
+import OnboardPatientModal from "./components/OnboardPatientModal";
 
 export default function Patients() {
     const [patientsList, setPatientsList] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedId, setSelectedId] = useState(null);
     const [activeTab, setActiveTab] = useState('visits');
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     useEffect(() => {
         loadPatients();
@@ -38,7 +40,7 @@ export default function Patients() {
                     email: p.email || "N/A"
                 }));
                 setPatientsList(mappedPatients);
-                if (mappedPatients.length > 0) setSelectedId(mappedPatients[0].id);
+                if (mappedPatients.length > 0 && !selectedId) setSelectedId(mappedPatients[0].id);
             } else {
                 // 2. Fallback: derive from appointments
                 const appointments = await fetchAppointments();
@@ -65,7 +67,7 @@ export default function Patients() {
                     }
                 });
                 setPatientsList(uniquePatients);
-                if (uniquePatients.length > 0) setSelectedId(uniquePatients[0].id);
+                if (uniquePatients.length > 0 && !selectedId) setSelectedId(uniquePatients[0].id);
             }
         } catch (error) {
             console.error("Failed to fetch patients:", error);
@@ -91,18 +93,32 @@ export default function Patients() {
         >
             <Topbar />
 
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingRight: "24px" }}>
+            <div className={styles.pageHeader}>
                 <h2 className={styles.title}>Patient Directory</h2>
-                <div style={{ position: "relative" }}>
-                    <input
-                        type="text"
-                        placeholder="Search by name or MRN..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        style={{ padding: "8px 12px", borderRadius: "8px", border: "1px solid #e2e8f0", width: "300px" }}
-                    />
+                <div className={styles.headerControls}>
+                    <div className={styles.searchWrapper}>
+                        <input
+                            type="text"
+                            placeholder="Search by name or MRN..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className={styles.searchInput}
+                        />
+                    </div>
+                    <button
+                        onClick={() => setIsModalOpen(true)}
+                        className={styles.onboardBtn}
+                    >
+                        + Onboard Patient
+                    </button>
                 </div>
             </div>
+
+            <OnboardPatientModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                onSuccess={loadPatients}
+            />
 
             <div className={styles.contentRow}>
                 {/* Patient List */}

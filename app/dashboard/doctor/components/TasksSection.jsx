@@ -141,7 +141,8 @@ export default function TasksSection() {
         onClick={() => {
           const label = prompt("Enter task description:");
           if (label) {
-            handleAddTask({ label, urgent: false });
+            const urgent = confirm("Is this task urgent?");
+            handleAddTask({ label, urgent });
           }
         }}
       >

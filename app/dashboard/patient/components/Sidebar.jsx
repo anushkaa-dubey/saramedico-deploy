@@ -9,13 +9,26 @@ import dashboardIcon from "@/public/icons/dashboard.svg";
 import micIcon from "@/public/icons/mic.svg";
 import manageIcon from "@/public/icons/manage.svg";
 import messagesIcon from "@/public/icons/messages.svg";
+import SignoutModal from "../../../auth/components/SignoutModal";
+import { logoutUser } from "@/services/auth";
+import { useRouter } from "next/navigation";
+
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const [isSignoutModalOpen, setIsSignoutModalOpen] = useState(false);
+
+  const handleLogout = async () => {
+    await logoutUser();
+    router.push("/auth/login");
+  };
+
   const isActive = (path) => pathname === path;
 
   // State for mobile sidebar toggle
   const [isOpen, setIsOpen] = useState(false);
+
 
   return (
     <>
@@ -92,10 +105,20 @@ export default function Sidebar() {
           </div>
         </div>
 
-        <Link href="/dashboard/patient/audio-check" className={styles.joinBtn}>
-          + Join Session
-        </Link>
+        <button
+          className={styles.logoutBtn}
+          onClick={() => setIsSignoutModalOpen(true)}
+        >
+          <span className={styles.logoutIcon}>→</span>
+          Logout
+        </button>
       </aside>
+
+      <SignoutModal
+        isOpen={isSignoutModalOpen}
+        onConfirm={handleLogout}
+        onCancel={() => setIsSignoutModalOpen(false)}
+      />
     </>
   );
 }

@@ -116,7 +116,7 @@ export default function UpNextCard() {
               className={styles.checkinBtn}
               style={{ textDecoration: 'none', textAlign: 'center' }}
             >
-              Join Zoom
+              Join Session
             </a>
           ) : (
             <button className={styles.checkinBtn}>Check-in</button>
