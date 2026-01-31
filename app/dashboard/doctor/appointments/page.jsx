@@ -3,9 +3,11 @@ import { useState, useEffect } from "react";
 import Topbar from "../components/Topbar";
 import styles from "../DoctorDashboard.module.css";
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 import { fetchAppointments, approveAppointment, updateAppointmentStatus, fetchPatients } from "@/services/doctor";
 
 export default function DoctorAppointments() {
+    const router = useRouter();
     const [appointments, setAppointments] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
@@ -132,11 +134,9 @@ export default function DoctorAppointments() {
                                                 >
                                                     {apt.status.toUpperCase()}
                                                 </span>
-                                                {apt.status === 'accepted' && (apt.start_url || apt.zoom_url) && (
-                                                    <a
-                                                        href={apt.start_url || apt.zoom_url}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
+                                                {apt.status === 'accepted' && (
+                                                    <button
+                                                        onClick={() => router.push("/dashboard/doctor/video-call")}
                                                         style={{
                                                             display: "flex",
                                                             alignItems: "center",
@@ -144,15 +144,16 @@ export default function DoctorAppointments() {
                                                             padding: "6px 12px",
                                                             background: "#3b82f6",
                                                             color: "white",
+                                                            border: "none",
                                                             borderRadius: "6px",
                                                             fontSize: "12px",
                                                             fontWeight: "bold",
-                                                            textDecoration: "none",
+                                                            cursor: "pointer",
                                                             width: "fit-content"
                                                         }}
                                                     >
                                                         Start Meeting
-                                                    </a>
+                                                    </button>
                                                 )}
                                             </div>
                                         </td>

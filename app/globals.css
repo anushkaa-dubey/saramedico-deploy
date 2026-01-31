@@ -9,7 +9,6 @@ body {
   margin: 0;
   background: #0c1424;
   color: #111;
-  /* Invisible scrollbar */
   scrollbar-width: none;
   /* Firefox */
   -ms-overflow-style: none;

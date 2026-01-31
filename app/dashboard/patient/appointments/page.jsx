@@ -4,10 +4,12 @@ import { useState, useEffect } from "react";
 import Topbar from "../components/Topbar";
 import styles from "../records/Records.module.css";
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { fetchAppointments, fetchDoctors } from "@/services/patient";
 
 export default function AppointmentsPage() {
+    const router = useRouter();
     const [appointments, setAppointments] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
@@ -114,11 +116,9 @@ export default function AppointmentsPage() {
                                                     >
                                                         {apt.status.toUpperCase()}
                                                     </span>
-                                                    {apt.status === 'accepted' && (apt.join_url || apt.zoom_url) && (
-                                                        <a
-                                                            href={apt.join_url || apt.zoom_url}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
+                                                    {apt.status === 'accepted' && (
+                                                        <button
+                                                            onClick={() => router.push("/dashboard/patient/video-call")}
                                                             style={{
                                                                 display: "flex",
                                                                 alignItems: "center",
@@ -126,15 +126,16 @@ export default function AppointmentsPage() {
                                                                 padding: "6px 12px",
                                                                 background: "#3b82f6",
                                                                 color: "white",
+                                                                border: "none",
                                                                 borderRadius: "6px",
                                                                 fontSize: "12px",
                                                                 fontWeight: "bold",
-                                                                textDecoration: "none",
+                                                                cursor: "pointer",
                                                                 marginTop: "4px"
                                                             }}
                                                         >
                                                             Join Meeting
-                                                        </a>
+                                                        </button>
                                                     )}
                                                 </div>
                                             </td>

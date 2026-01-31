@@ -1,0 +1,283 @@
+.videoContainer {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: #ffffff;
+    border-radius: 16px;
+    border: 1px solid #eef2f7;
+    overflow: hidden;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+}
+
+.videoWrapper {
+    flex: 1;
+    position: relative;
+    background: #f1f5f9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.videoCanvas {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    background: #000;
+    border-radius: 12px;
+}
+
+.placeholder {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    color: #64748b;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid rgba(53, 154, 255, 0.1);
+    border-top-color: #359aff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.videoOff {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    z-index: 5;
+}
+
+.avatarCircle {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #359aff 0%, #9ccdff 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 60px;
+    font-weight: 700;
+    color: white;
+    box-shadow: 0 12px 32px rgba(53, 154, 255, 0.3);
+}
+
+.videoOffText {
+    color: #475569;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.selfView {
+    position: absolute;
+    bottom: 24px;
+    right: 24px;
+    width: 280px;
+    height: 160px;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 3px solid #ffffff;
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
+    z-index: 20;
+    background: #000;
+    display: flex;
+    flex-direction: column;
+}
+
+.selfTag {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    padding: 4px 10px;
+    background: rgba(53, 154, 255, 0.9);
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    border-radius: 4px;
+    letter-spacing: 0.5px;
+    z-index: 21;
+}
+
+.selfViewInner {
+    width: 100%;
+    height: 100%;
+    background: #f1f5f9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.selfVideoPlaceholder {
+    color: #64748b;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.selfAvatarSmall {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #359aff 0%, #9ccdff 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: 700;
+    color: white;
+}
+
+.statusBadge {
+    position: absolute;
+    top: 24px;
+    left: 24px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    border: 1px solid #eef2f7;
+    color: #0f172a;
+    font-size: 13px;
+    font-weight: 600;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    z-index: 30;
+}
+
+.statusDot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #22c55e;
+    box-shadow: 0 0 10px rgba(34, 197, 94, 0.5);
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.6;
+        transform: scale(1.1);
+    }
+}
+
+.controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 24px;
+    background: #ffffff;
+    border-top: 1px solid #eef2f7;
+}
+
+.controlBtn {
+    width: 54px;
+    height: 54px;
+    border-radius: 14px;
+    border: 1px solid #eef2f7;
+    background: #f8fafc;
+    color: #475569;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.controlBtn:hover {
+    background: #f1f5f9;
+    color: #359aff;
+    border-color: #359aff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(53, 154, 255, 0.1);
+}
+
+.controlBtn:active {
+    transform: translateY(0);
+}
+
+.controlBtnOff {
+    background: #fff1f2;
+    color: #e11d48;
+    border-color: #fecdd3;
+}
+
+.controlBtnOff:hover {
+    background: #ffe4e6;
+    color: #be123c;
+    border-color: #fda4af;
+}
+
+.endCallBtn {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: #ef4444;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 8px 16px rgba(239, 68, 68, 0.3);
+    margin: 0 16px;
+}
+
+.endCallBtn:hover {
+    background: #dc2626;
+    transform: scale(1.1);
+    box-shadow: 0 12px 20px rgba(239, 68, 68, 0.4);
+}
+
+.endCallBtn:active {
+    transform: scale(0.95);
+}
+
+@media (max-width: 768px) {
+    .selfView {
+        width: 140px;
+        height: 100px;
+        bottom: 16px;
+        right: 16px;
+    }
+
+    .avatarCircle {
+        width: 100px;
+        height: 100px;
+        font-size: 40px;
+    }
+
+    .controlBtn {
+        width: 48px;
+        height: 48px;
+    }
+}

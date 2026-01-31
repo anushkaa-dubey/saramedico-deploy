@@ -3,12 +3,14 @@
 import { useState, useEffect } from "react";
 import styles from "../PatientDashboard.module.css";
 import doctorImage from "@/public/icons/images/doctor_image.png";
+import { useRouter } from "next/navigation";
 // TODO: Uncomment when connecting backend
 import { fetchAppointments } from "@/services/patient";
 
 export default function UpNextCard() {
   const [nextAppointment, setNextAppointment] = useState(null);
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     loadNextAppointment();
@@ -108,24 +110,12 @@ export default function UpNextCard() {
 
         {/* Actions */}
         <div className={styles.upNextActions}>
-          {nextAppointment.join_url ? (
-            <a
-              href={nextAppointment.join_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={styles.checkinBtn}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                textDecoration: 'none'
-              }}
-            >
-              Join Session
-            </a>
-          ) : (
-            <button className={styles.checkinBtn}>Check-in</button>
-          )}
+          <button
+            className={styles.checkinBtn}
+            onClick={() => router.push("/dashboard/patient/video-call")}
+          >
+            Join Session
+          </button>
           <button className={styles.detailsBtn}>Details</button>
         </div>
       </div>
