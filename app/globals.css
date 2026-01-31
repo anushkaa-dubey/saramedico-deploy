@@ -9,6 +9,16 @@ body {
   margin: 0;
   background: #0c1424;
   color: #111;
+  /* Invisible scrollbar */
+  scrollbar-width: none;
+  /* Firefox */
+  -ms-overflow-style: none;
+  /* IE and Edge */
+}
+
+body::-webkit-scrollbar {
+  display: none;
+  /* Chrome, Safari and Opera */
 }
 
 /* Layout */
@@ -165,7 +175,7 @@ input:focus {
   background: #fff;
   border-radius: 14px;
   padding: 32px 28px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
   text-align: center;
 }
 
@@ -218,7 +228,7 @@ input:focus {
     width: 50%;
     padding: 40px;
   }
-  
+
   .auth-right {
     width: 50%;
   }
@@ -240,17 +250,21 @@ input:focus {
   .auth-right {
     display: none;
   }
-  
+
   /* Adjust 2FA card for small screens */
   .auth-2fa-card {
     padding: 24px 20px;
-    box-shadow: none; /* Cleaner on mobile */
-    background: transparent; /* Merge with background or keep white? generic mobile pattern often simplifies */
-    background: #fff; /* Keep white card for now */
+    box-shadow: none;
+    /* Cleaner on mobile */
+    background: transparent;
+    /* Merge with background or keep white? generic mobile pattern often simplifies */
+    background: #fff;
+    /* Keep white card for now */
   }
 
   .otp-input {
-    width: 38px; /* Slightly smaller OTP inputs */
+    width: 38px;
+    /* Slightly smaller OTP inputs */
     height: 38px;
   }
 }
