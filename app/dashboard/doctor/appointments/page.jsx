@@ -151,7 +151,7 @@ export default function DoctorAppointments() {
                                                             width: "fit-content"
                                                         }}
                                                     >
-                                                        ▶ Start Meeting
+                                                        Start Meeting
                                                     </a>
                                                 )}
                                             </div>

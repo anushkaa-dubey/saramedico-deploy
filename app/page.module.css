@@ -122,10 +122,10 @@
 
 /* Hero Section */
 .hero {
-  padding: 160px 24px 120px;
+  padding: 160px 24px 100px;
   position: relative;
   text-align: center;
-  background: #ffffff;
+  background: linear-gradient(180deg, #E8F4FE 0%, #F0F8FF 35%, #FFFFFF 100%);
   overflow: hidden;
 }
 
@@ -137,11 +137,11 @@
   right: 0;
   bottom: 0;
   background-image:
-    linear-gradient(rgba(0, 129, 254, 0.08) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 129, 254, 0.08) 1px, transparent 1px);
+    linear-gradient(rgba(0, 129, 254, 0.15) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 129, 254, 0.15) 1px, transparent 1px);
   background-size: 60px 60px;
   background-position: center center;
-  mask-image: radial-gradient(circle at center, black 10%, transparent 90%);
+  mask-image: radial-gradient(circle at center, black 30%, transparent 80%);
   pointer-events: none;
   z-index: 0;
 }
@@ -297,14 +297,14 @@
 
 /* Problem/Solution Section */
 .problemsSection {
-  padding: 100px 24px;
+  padding: 70px 24px;
   max-width: 1280px;
   margin: 0 auto;
   text-align: center;
 }
 
 .sectionHeader {
-  margin-bottom: 64px;
+  margin-bottom: 48px;
 }
 
 .sectionTitle {
@@ -418,7 +418,7 @@
 
 /* Features Section */
 .featuresSection {
-  padding: 100px 24px;
+  padding: 70px 24px;
   background: #ffffff;
 }
 
@@ -457,7 +457,7 @@
   align-items: center;
   gap: 80px;
   max-width: 1280px;
-  margin: 0 auto 120px;
+  margin: 0 auto 80px;
 }
 
 .featureDetail:last-child {
@@ -640,7 +640,7 @@
 
 /* Pricing Section */
 .pricingSection {
-  padding: 100px 24px;
+  padding: 70px 24px;
   text-align: center;
 }
 
@@ -818,7 +818,7 @@
 
 /* FAQ Section */
 .faqSection {
-  padding: 100px 24px;
+  padding: 70px 24px;
   max-width: 900px;
   margin: 0 auto;
 }
@@ -859,8 +859,8 @@
   color: var(--foreground);
   border-radius: 40px 40px 0 0;
   border-top: 1px solid rgba(0, 129, 254, 0.1);
-  padding: 100px 24px 60px;
-  margin-top: 100px;
+  padding: 80px 24px 50px;
+  margin-top: 60px;
   position: relative;
   overflow: hidden;
 }
@@ -1060,7 +1060,7 @@
 
 /* Feature Comparison Table */
 .comparisonSection {
-  padding: 80px 24px;
+  padding: 60px 24px;
   max-width: 900px;
   /* Shortened width */
   margin: 0 auto;
@@ -1166,7 +1166,7 @@
   display: flex;
   align-items: center;
   gap: 80px;
-  padding: 100px 0 100px 40px;
+  padding: 70px 0 70px 40px;
   /* Slight shift to the right */
   text-align: left;
   max-width: 1280px;
