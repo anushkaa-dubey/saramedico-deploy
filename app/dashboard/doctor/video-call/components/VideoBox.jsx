@@ -9,17 +9,36 @@ export default function VideoBox({ userRole, userName, onClientReady, onEndCall 
     const [isAudioOn, setIsAudioOn] = useState(false);
     const [isConnected, setIsConnected] = useState(false);
     const [client, setClient] = useState(null);
+    const [error, setError] = useState(null);
     const [mediaStream, setMediaStream] = useState(null);
     const [remoteUserId, setRemoteUserId] = useState(null);
+    const [isMounted, setIsMounted] = useState(true);
 
     const mainCanvasRef = useRef(null);
     const selfCanvasRef = useRef(null);
+
+    useEffect(() => {
+        setIsMounted(true);
+        return () => setIsMounted(false);
+    }, []);
 
     useEffect(() => {
         let zoomClient = null;
 
         const setupZoom = async () => {
             try {
+                // Pre-join: Request browser media permissions explicitly
+                // This ensures prompts appear before the SDK tries to initialize
+                console.info('Requesting browser media permissions...');
+                try {
+                    const localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                    // Stop tracks immediately as we only wanted the permission
+                    localStream.getTracks().forEach(track => track.stop());
+                } catch (permErr) {
+                    console.warn('Initial media permission request failed:', permErr);
+                    // Continue anyway, Zoom SDK might handle it or show better error
+                }
+
                 const sdkClient = await initZoomClient();
                 if (!sdkClient) return;
 
@@ -28,15 +47,25 @@ export default function VideoBox({ userRole, userName, onClientReady, onEndCall 
 
                 const config = await getSessionConfig(userRole, userName);
                 if (!config || !config.token) {
-                    console.error('Failed to generate Zoom token');
+                    setError('Failed to generate Zoom token or config');
                     return;
                 }
 
-                await zoomClient.init('en-US', 'Global', { patchJsMedia: true });
+                // Initialize SDK
+                await zoomClient.init('en-US', 'Global', { patchJsMedia: true }).catch(err => {
+                    console.warn('Init with Global failed, trying US:', err);
+                    return zoomClient.init('en-US', 'US', { patchJsMedia: true });
+                });
 
                 // Join session
-                console.log('Attempting to join Zoom session:', config.sessionName);
-                await zoomClient.join(config.sessionName, config.token, userName, config.sessionPassword);
+                console.log('Joining Zoom session:', config.sessionName, 'Identity:', config.userIdentity);
+                await zoomClient.join(
+                    config.sessionName,
+                    config.token,
+                    config.userIdentity, // Unique identity
+                    config.sessionPassword
+                );
+
                 console.log('Successfully joined Zoom session');
 
                 const stream = zoomClient.getMediaStream();
@@ -45,128 +74,137 @@ export default function VideoBox({ userRole, userName, onClientReady, onEndCall 
 
                 if (onClientReady) onClientReady(zoomClient);
 
-                // Initial participants check
-                const users = zoomClient.getAllUser();
-                const myUserId = zoomClient.getCurrentUserInfo().userId;
-                users.forEach(u => {
-                    if (u.userId !== myUserId && u.bVideoOn) {
-                        setRemoteUserId(u.userId);
-                        renderUserVideo(stream, u.userId, mainCanvasRef.current);
-                    }
-                });
+                // Set default states based on what's available
+                const userInfo = zoomClient.getCurrentUserInfo();
+                setIsVideoOn(!!userInfo.bVideoOn);
+                setIsAudioOn(!!userInfo.audio);
 
-                // Handle events
-                zoomClient.on('peer-video-state-change', (payload) => {
-                    if (payload.action === 'Start') {
-                        setRemoteUserId(payload.userId);
-                        renderUserVideo(stream, payload.userId, mainCanvasRef.current);
-                    } else if (payload.action === 'Stop') {
-                        if (payload.userId === remoteUserId) {
-                            setRemoteUserId(null);
-                        }
-                    }
-                });
+                // Setup event listeners...
+                setupEventListeners(zoomClient, stream);
 
-                zoomClient.on('user-added', (users) => {
-                    console.log('User joined');
-                });
-
-                zoomClient.on('user-removed', (users) => {
-                    users.forEach(u => {
-                        if (u.userId === remoteUserId) setRemoteUserId(null);
-                    });
-                });
-
-            } catch (error) {
-                console.error('Zoom SDK error detailed:', {
-                    message: error.message,
-                    type: error.type,
-                    reason: error.reason,
-                    code: error.code,
-                    full: error
-                });
+            } catch (err) {
+                console.error('Zoom SDK error detailed:', err);
+                setError(err.reason || err.message || 'Failed to connect');
             }
+        };
+
+        const setupEventListeners = (client, stream) => {
+            if (!client) return;
+
+            // Handle peers
+            const myUserId = client.getCurrentUserInfo().userId;
+
+            client.on('peer-video-state-change', (payload) => {
+                if (!isMounted) return;
+                console.log('Peer video change:', payload);
+                if (payload.action === 'Start') {
+                    setRemoteUserId(payload.userId);
+                    setTimeout(() => renderUserVideo(stream, payload.userId, mainCanvasRef.current), 500);
+                } else if (payload.action === 'Stop') {
+                    if (payload.userId === remoteUserId) setRemoteUserId(null);
+                }
+            });
+
+            client.on('user-added', (users) => {
+                console.log('Users joined:', users);
+            });
+
+            client.on('user-removed', (users) => {
+                if (!isMounted) return;
+                users.forEach(u => {
+                    if (u.userId === remoteUserId) setRemoteUserId(null);
+                });
+            });
         };
 
         setupZoom();
 
         return () => {
             if (zoomClient) {
-                zoomClient.leave().catch(console.error);
+                // Ignore error if already left
+                zoomClient.leave().catch(() => { });
             }
         };
     }, []);
 
     const renderUserVideo = async (stream, userId, canvas) => {
         if (!stream || !canvas || !userId) {
-            console.log('Skipping render: missing dependencies', { hasStream: !!stream, hasCanvas: !!canvas, userId });
             return;
         }
         try {
-            console.log(`Attempting to render video for user: ${userId} on canvas:`, canvas);
+            console.log(`Rendering video for: ${userId}`);
             await stream.renderVideo(
                 canvas,
                 userId,
                 canvas.width,
                 canvas.height,
                 0, 0, 2
-            );
-            console.log(`Render successful for user: ${userId}`);
+            ).catch(e => {
+                // If it fails because canvas is not in DOM or already rendering
+                if (e.reason !== 'Render is already start') {
+                    console.warn('Render error:', e);
+                }
+            });
         } catch (e) {
-            console.error('Render error:', e);
+            // Silently catch
         }
     };
 
     const toggleVideo = async () => {
-        if (!mediaStream || !client) return;
+        if (!mediaStream || !client) {
+            console.warn('Media stream not ready');
+            return;
+        }
 
         try {
             if (isVideoOn) {
+                console.log('Stopping video...');
                 await mediaStream.stopVideo();
                 setIsVideoOn(false);
                 if (selfCanvasRef.current) {
                     await mediaStream.clearVideo(selfCanvasRef.current);
                 }
             } else {
-                // Ensure we don't try to start video if it's already capturing from another call
-                try {
-                    await mediaStream.startVideo();
-                    setIsVideoOn(true);
+                console.log('Starting video...');
+                await mediaStream.startVideo();
+                setIsVideoOn(true);
 
-                    const myUserId = client.getCurrentUserInfo().userId;
-                    // Force a re-render after a short delay
-                    setTimeout(() => {
-                        if (selfCanvasRef.current) {
-                            renderUserVideo(mediaStream, myUserId, selfCanvasRef.current);
-                        }
-                    }, 800);
-                } catch (e) {
-                    console.error('Camera start error:', e);
-                    alert('Camera access failed. Please ensure it is not used by another app and try again.');
-                }
+                const myUserId = client.getCurrentUserInfo().userId;
+                // Render self view after a short delay for camera to warm up
+                setTimeout(() => {
+                    if (selfCanvasRef.current && isMounted) {
+                        renderUserVideo(mediaStream, myUserId, selfCanvasRef.current);
+                    }
+                }, 800);
             }
         } catch (error) {
             console.error('Toggle video error:', error);
+            alert(`Camera error: ${error.reason || error.message || 'Check permissions'}`);
         }
     };
 
     const handleAudio = async () => {
-        if (!mediaStream || !client) return;
+        if (!mediaStream || !client) {
+            console.warn('Audio handle: mediaStream or client missing');
+            return;
+        }
         try {
             const userInfo = client.getCurrentUserInfo();
-            const isAudioStarted = userInfo.audio;
+            const isAudioStarted = !!userInfo.audio;
 
-            if (isAudioStarted === '' || !isAudioStarted) {
-                // Session audio not started
-                await mediaStream.startAudio();
+            if (!isAudioStarted) {
+                console.log('Starting audio stream...');
+                await mediaStream.startAudio().catch(e => console.warn('startAudio failed:', e));
                 setIsAudioOn(true);
             } else {
-                const isMuted = userInfo.muted;
+                const isMuted = !!userInfo.muted;
                 if (isMuted) {
-                    await mediaStream.unmuteAudio();
+                    console.log('Unmuting mic...');
+                    await mediaStream.unmuteAudio().catch(e => console.warn('unmute failed:', e));
                     setIsAudioOn(true);
                 } else {
-                    await mediaStream.muteAudio();
+                    console.log('Muting mic...');
+                    await mediaStream.muteAudio().catch(e => console.warn('mute failed:', e));
                     setIsAudioOn(false);
                 }
             }
@@ -185,10 +223,19 @@ export default function VideoBox({ userRole, userName, onClientReady, onEndCall 
                     height={720}
                 />
 
-                {!isConnected && (
+                {!isConnected && !error && (
                     <div className={styles.placeholder}>
                         <div className={styles.spinner}></div>
                         <p>Connecting...</p>
+                    </div>
+                )}
+
+                {error && (
+                    <div className={styles.placeholder}>
+                        <div className={styles.errorIcon}>⚠️</div>
+                        <p className={styles.errorText}>Connection Error</p>
+                        <p className={styles.errorDetail}>{error}</p>
+                        <button className={styles.retryBtn} onClick={() => window.location.reload()}>Retry</button>
                     </div>
                 )}
 

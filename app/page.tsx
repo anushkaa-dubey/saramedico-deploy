@@ -6,6 +6,7 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import styles from "./page.module.css";
 
+
 const PlusIcon = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
@@ -117,6 +118,7 @@ export default function Home() {
   const [isYearly, setIsYearly] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -141,6 +143,13 @@ export default function Home() {
         title: "Intelligent OCR & Data Extraction",
         description: "Transform messy faxes and PDFs into searchable, structured data instantly. Our AI identifies key medical entities, lab results, and patient demographics, populating your database automatically with 99% accuracy.",
         items: ["Handles handwritten doctor notes", "Smart categorization of document types", "Instant searchability across millions of pages"],
+        details: [
+          "Advanced handwriting recognition for clinician notes",
+          "Automated table extraction for lab results & vitals",
+          "ICD-10 Mapping for instant diagnostic coding",
+          "Multi-format support: Fax, physical scans, and PDFs"
+        ],
+
         icon: <DocIcon />,
         image: "/landing%20page%20images/intelligentOCR.jpg",
         reverse: false
@@ -150,6 +159,13 @@ export default function Home() {
         title: "Visual Patient Chronology",
         description: "Stop scrolling through hundreds of pages. Our Timeline View aggregates every encounter, lab result, and prescription into an interactive visual history, allowing reviewers to grasp complex cases in seconds.",
         items: ["60% faster chart review time", "Zero missed critical events", "Integrated lab trends"],
+        details: [
+          "Event Correlation across multiple encounters",
+          "Visual Timelines of patient healthcare journeys",
+          "Automated Medication Reconciliation detection",
+          "Smart Filtering by specialty or date range"
+        ],
+
         icon: <GraphIcon />,
         image: "/landing%20page%20images/visualPatient.jpg",
         reverse: true
@@ -163,6 +179,13 @@ export default function Home() {
           { label: "Dates & Birthdays", icon: <CalendarIconBase /> },
           { label: "Addresses & Locations", icon: <HomeIconBase /> }
         ],
+        details: [
+          "18 HIPAA-compliant Identifiers automatically detected",
+          "Contextual Anonymization maintaining medical logic",
+          "Batch Processing for large document scales",
+          "Audit Logging & Full Redaction Certificates"
+        ],
+
         icon: <PlusIcon />,
         image: "/landing%20page%20images/automate_PII.jpg",
         reverse: false,
@@ -229,11 +252,11 @@ export default function Home() {
               exit={{ opacity: 0, height: 0 }}
               className={styles.mobileMenu}
             >
-              <Link href="#" className={styles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>Home</Link>
-              <Link href="#" className={styles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>Product & Features</Link>
-              <Link href="#" className={styles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>Use Cases</Link>
-              <Link href="#" className={styles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>Pricing</Link>
-              <Link href="#" className={styles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>Security</Link>
+              <Link href="#home" className={styles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>Home</Link>
+              <Link href="#features" className={styles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>Product & Features</Link>
+              <Link href="#use-cases" className={styles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>Use Cases</Link>
+              <Link href="#pricing" className={styles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>Pricing</Link>
+              <Link href="#security" className={styles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>Security</Link>
               <Link href="/auth/signup" className={styles.mobileGetStartedBtn} onClick={() => setIsMobileMenuOpen(false)}>
                 Get SaraMedico for free
               </Link>
@@ -436,9 +459,38 @@ export default function Home() {
                           </motion.div>
                         ))}
                       </div>
-                      <Link href="#" className={styles.learnMore} style={{ marginTop: '32px' }}>
-                        Learn about PII engine <ArrowRight />
-                      </Link>
+                      <div className={styles.dropdownContainer}>
+                        <div
+                          className={styles.learnMore}
+                          style={{ marginTop: '32px', cursor: 'pointer' }}
+                          onClick={() => setOpenDropdown(openDropdown === f.id ? null : f.id)}
+                        >
+                          Learn about PII engine
+                          <motion.span animate={{ rotate: openDropdown === f.id ? 90 : 0 }}>
+                            <ArrowRight />
+                          </motion.span>
+                        </div>
+
+                        <AnimatePresence>
+                          {openDropdown === f.id && (
+                            <motion.div
+                              initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                              animate={{ opacity: 1, height: 'auto', marginTop: 16 }}
+                              exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                              className={styles.dropdownContent}
+                            >
+                              {f.details?.map((detail, idx) => (
+                                <div key={idx} className={styles.dropdownItem}>
+                                  <div style={{ color: 'var(--primary)', flexShrink: 0 }}>
+                                    <CheckIcon />
+                                  </div>
+                                  <span>{detail}</span>
+                                </div>
+                              ))}
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
                     </motion.div>
                     <motion.div
                       initial={{ opacity: 0, x: 40 }}
@@ -491,9 +543,35 @@ export default function Home() {
                           </motion.li>
                         ))}
                       </ul>
-                      <Link href="#" className={styles.learnMore}>
-                        Learn about {f.id.toUpperCase()} engine <ArrowRight />
-                      </Link>
+                      <div className={styles.dropdownContainer}>
+                        <div
+                          className={styles.learnMore}
+                          style={{ cursor: 'pointer' }}
+                          onClick={() => setOpenDropdown(openDropdown === f.id ? null : f.id)}
+                        >
+                          Learn about {f.title} <ArrowRight />
+                        </div>
+
+                        <AnimatePresence>
+                          {openDropdown === f.id && (
+                            <motion.div
+                              initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                              animate={{ opacity: 1, height: 'auto', marginTop: 16 }}
+                              exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                              className={styles.dropdownContent}
+                            >
+                              {f.details?.map((detail, idx) => (
+                                <div key={idx} className={styles.dropdownItem}>
+                                  <div style={{ color: 'var(--primary)', flexShrink: 0 }}>
+                                    <CheckIcon />
+                                  </div>
+                                  <span>{detail}</span>
+                                </div>
+                              ))}
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
                     </motion.div>
                     <motion.div
                       initial={{ opacity: 0, x: f.reverse ? -40 : 40 }}

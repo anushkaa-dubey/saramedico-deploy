@@ -12,26 +12,36 @@ export async function POST(req) {
             return NextResponse.json({ error: 'Zoom SDK credentials missing on server' }, { status: 500 });
         }
 
-        const iat = Math.round(new Date().getTime() / 1000) - 30;
+        const iat = Math.floor(Date.now() / 1000) - 60;
         const exp = iat + 60 * 60 * 2; // 2 hours
 
         const payload = {
             app_key: sdkKey,
             tpc: sessionName,
-            role_type: role,
+            role_type: parseInt(role, 10),
             version: 1,
             user_identity: userIdentity,
             iat,
             exp
         };
 
-        const token = jwt.sign(payload, sdkSecret, { algorithm: 'HS256' });
+        // Header for JWT
+        const header = { alg: 'HS256', typ: 'JWT' };
+
+        console.log('Generating Zoom Token with payload:', {
+            app_key: sdkKey,
+            tpc: sessionName,
+            role_type: parseInt(role, 10),
+            userIdentity
+        });
+
+        const token = jwt.sign(payload, sdkSecret, { algorithm: 'HS256', header });
 
         return NextResponse.json({
             token,
             sdkKey,
             sessionName,
-            role,
+            role: parseInt(role, 10),
             userIdentity,
             sessionPassword: process.env.NEXT_PUBLIC_ZOOM_SESSION_PASSWORD || '',
         });

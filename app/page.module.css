@@ -33,9 +33,9 @@
   left: 0;
   right: 0;
   height: 90px;
-  background: linear-gradient(180deg, rgba(224, 242, 254, 0.6) 0%, rgba(255, 255, 255, 0.3) 100%);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(15px) saturate(180%);
+  -webkit-backdrop-filter: blur(15px) saturate(180%);
   z-index: 1000;
   display: flex;
   align-items: center;
@@ -44,9 +44,11 @@
 
 .navbarScrolled {
   height: 80px;
-  background: rgba(224, 242, 254, 0.85);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px) saturate(190%);
+  -webkit-backdrop-filter: blur(20px) saturate(190%);
   border-bottom: 1px solid rgba(0, 129, 254, 0.1);
-  box-shadow: 0 4px 20px rgba(0, 129, 254, 0.05);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
 }
 
 .navbarContainer {
@@ -277,10 +279,12 @@
 }
 
 .avatar {
-  width: 40px;
-  height: 40px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   background: #e2e8f0;
+  flex-shrink: 0;
+
 }
 
 .testimonialInfo h4 {
@@ -533,7 +537,44 @@
   font-weight: 700;
   text-decoration: none;
   margin-top: 24px;
-  transition: gap 0.2s;
+  transition: all 0.2s;
+}
+
+.learnMore:hover {
+  gap: 12px;
+}
+
+.dropdownContainer {
+  position: relative;
+  width: 100%;
+}
+
+.dropdownContent {
+  margin-top: 16px;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+  border-left: 4px solid var(--primary);
+  width: 100%;
+  max-width: 400px;
+}
+
+.dropdownItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--muted-foreground);
+  font-weight: 500;
+}
+
+.dropdownItem span {
+  flex: 1;
 }
 
 .redactionMockup {

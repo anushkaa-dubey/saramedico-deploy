@@ -24,20 +24,21 @@ export default function ChatBox({ currentUser, isDoctor, zoomClient }) {
         if (!zoomClient) return;
 
         const handleCommand = (payload) => {
-            const { message, senderName, senderId } = payload;
+            if (!payload || !payload.message) return;
+            const { message, senderName } = payload;
             try {
                 const msgData = JSON.parse(message);
                 setMessages(prev => [...prev, {
-                    id: Date.now(),
-                    sender: msgData.sender,
+                    id: Date.now() + Math.random(),
+                    sender: msgData.sender || senderName || 'User',
                     text: msgData.text,
-                    time: msgData.time,
-                    isDoctor: msgData.isDoctor
+                    time: msgData.time || new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                    isDoctor: !!msgData.isDoctor
                 }]);
             } catch (e) {
                 // Handle non-JSON messages if any
                 setMessages(prev => [...prev, {
-                    id: Date.now(),
+                    id: Date.now() + Math.random(),
                     sender: senderName || 'User',
                     text: message,
                     time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
@@ -49,7 +50,7 @@ export default function ChatBox({ currentUser, isDoctor, zoomClient }) {
         zoomClient.on('command-channel-message', handleCommand);
 
         return () => {
-            zoomClient.off('command-channel-message', handleCommand);
+            zoomClient.off?.('command-channel-message', handleCommand);
         };
     }, [zoomClient]);
 
@@ -58,7 +59,9 @@ export default function ChatBox({ currentUser, isDoctor, zoomClient }) {
     }, [messages]);
 
     const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        if (messagesEndRef.current) {
+            messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+        }
     };
 
     const handleSendMessage = (e) => {
@@ -73,13 +76,18 @@ export default function ChatBox({ currentUser, isDoctor, zoomClient }) {
         };
 
         // Send via Zoom Command Channel if connected
-        if (zoomClient && zoomClient.getCommandChannel()) {
-            zoomClient.getCommandChannel().send(JSON.stringify(msgData));
+        try {
+            const channel = zoomClient?.getCommandChannel?.();
+            if (channel) {
+                channel.send(JSON.stringify(msgData));
+            }
+        } catch (e) {
+            console.warn('Failed to send message:', e);
         }
 
         // Add to local state
         setMessages(prev => [...prev, {
-            id: Date.now(),
+            id: Date.now() + Math.random(),
             ...msgData
         }]);
 

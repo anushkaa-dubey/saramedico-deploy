@@ -56,6 +56,42 @@
     }
 }
 
+.errorIcon {
+    font-size: 48px;
+    margin-bottom: 8px;
+}
+
+.errorText {
+    color: #ef4444;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.errorDetail {
+    color: #64748b;
+    font-size: 14px;
+    max-width: 300px;
+    text-align: center;
+    margin-bottom: 16px;
+    font-family: monospace;
+}
+
+.retryBtn {
+    padding: 10px 24px;
+    background: #359aff;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.retryBtn:hover {
+    background: #2563eb;
+    transform: translateY(-1px);
+}
+
 .videoOff {
     position: absolute;
     top: 50%;

@@ -43,3 +43,21 @@ export async function initZoomClient() {
         return null;
     }
 }
+
+/**
+ * Initiate Zoom OAuth Flow (for Doctors/Hosts)
+ */
+export function initiateZoomOAuth() {
+    const clientId = process.env.ZOOM_CLIENT_ID;
+    const redirectUri = encodeURIComponent('http://localhost:3000/api/zoom/callback');
+    const responseType = 'code';
+
+    // Scopes required for Video SDK & Meeting access
+    const scopes = encodeURIComponent('video:read video:write meeting:read meeting:write');
+
+    const oauthUrl = `https://zoom.us/oauth/authorize?response_type=${responseType}&client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scopes}`;
+
+    if (typeof window !== 'undefined') {
+        window.location.href = oauthUrl;
+    }
+}

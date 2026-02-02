@@ -19,6 +19,14 @@ body::-webkit-scrollbar {
   display: none;
   /* Chrome, Safari and Opera */
 }
+html {
+  scroll-behavior: smooth;
+}
+
+section[id] {
+  scroll-margin-top: 100px;
+}
+
 
 /* Layout */
 .auth-container {
