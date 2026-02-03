@@ -86,7 +86,7 @@ export default function DoctorVideoCallPage() {
     return (
         <div className={styles.sessionContainer}>
             <Topbar />
-
+            {/* will fetch patient data here. */}
             <section className={styles.patientInfoBar}>
                 <div className={styles.patientMain}>
                     <span className={styles.patientName}>Benjamin Frank</span>

@@ -5,8 +5,8 @@ import notificationIcon from "@/public/icons/notification.svg";
 import searchIcon from "@/public/icons/search.svg";
 import docIcon from "@/public/icons/docs.svg";
 import personIcon from "@/public/icons/person.svg";
-
 import micIcon from "@/public/icons/mic_white.svg";
+import scheduleIcon from "@/public/icons/schedule.svg";
 import Link from "next/link";
 import { motion } from "framer-motion";
 
@@ -46,8 +46,13 @@ export default function AdminDashboard() {
     { type: "document", name: "patient_data_report.pdf", icon: docIcon },
   ];
 
-  return (
+  const bookings = [
+    { time: "09:00 AM", patient: "John Doe", type: "Checkup", status: "Pending" },
+    { time: "10:30 AM", patient: "Jane Smith", type: "Follow-up", status: "Confirmed" },
+    { time: "02:00 PM", patient: "Robert Brown", type: "Consultation", status: "Pending" },
+  ];
 
+  return (
     <motion.div
       initial="hidden"
       animate="show"
@@ -55,7 +60,6 @@ export default function AdminDashboard() {
       style={{ width: "100%" }}
     >
       <motion.div variants={itemVariants} className={styles.topbar}>
-        {/* ... existing topbar content ... */}
         <div className={styles.searchWrapper}>
           <img src={searchIcon.src} alt="Search" className={styles.searchIcon} />
           <input
@@ -91,7 +95,6 @@ export default function AdminDashboard() {
           )}
         </div>
 
-
         <div className={styles.topActions}>
           <button className={styles.iconBtn}>
             <img src={notificationIcon.src} alt="Notifications" width="20" height="20" />
@@ -111,7 +114,7 @@ export default function AdminDashboard() {
         <div>
           <h2 className={styles.heading}>Dashboard Overview</h2>
           <p className={styles.subtext}>
-            Access to your clinic's workspace securely
+            Welcome back, Sarah. Here's what's happening in your clinic today.
           </p>
         </div>
 
@@ -121,15 +124,73 @@ export default function AdminDashboard() {
         </Link>
       </motion.div>
 
-      <section className={styles.grid}>
+      <motion.div className={styles.summaryCards} variants={itemVariants}>
+        <div className={styles.summaryCard}>
+          <div className={styles.summaryIcon} style={{ background: '#eff6ff' }}>
+            <img src={scheduleIcon.src} alt="" width="20" />
+          </div>
+          <div className={styles.summaryInfo}>
+            <span className={styles.summaryLabel}>Appointments Today</span>
+            <h3 className={styles.summaryValue}>42</h3>
+            <span className={styles.summaryTrend} style={{ color: '#16a34a' }}>↑ 12% vs yesterday</span>
+          </div>
+        </div>
+        <div className={styles.summaryCard}>
+          <div className={styles.summaryIcon} style={{ background: '#fff7ed' }}>
+            <img src={docIcon.src} alt="" width="20" />
+          </div>
+          <div className={styles.summaryInfo}>
+            <span className={styles.summaryLabel}>Pending Uploads</span>
+            <h3 className={styles.summaryValue}>18</h3>
+            <span className={styles.summaryTrend} style={{ color: '#ea580c' }}>Requires Action</span>
+          </div>
+        </div>
+        <div className={styles.summaryCard}>
+          <div className={styles.summaryIcon} style={{ background: '#f0fdf4' }}>
+            <img src={personIcon.src} alt="" width="20" />
+          </div>
+          <div className={styles.summaryInfo}>
+            <span className={styles.summaryLabel}>Active Doctors</span>
+            <h3 className={styles.summaryValue}>12</h3>
+            <span className={styles.summaryTrend} style={{ color: '#16a34a' }}>All on duty</span>
+          </div>
+        </div>
+      </motion.div>
+
+      <section className={styles.dashboardGrid}>
         <div className={styles.leftCol}>
-          {/* Recent Activity (TABLE) */}
+          <motion.div className={styles.card} variants={itemVariants}>
+            <div className={styles.cardHeader}>
+              <h3>Today's Schedule</h3>
+              <Link href="/dashboard/admin/appointments" className={styles.link}>View All</Link>
+            </div>
+            <div className={styles.scheduleList}>
+              {bookings.map((booking, idx) => (
+                <div key={idx} className={styles.scheduleItem}>
+                  <div className={styles.timeLine}>
+                    <span className={styles.timeText}>{booking.time}</span>
+                    <div className={styles.timeDot}></div>
+                  </div>
+                  <div className={styles.scheduleContent}>
+                    <div className={styles.scheduleInfo}>
+                      <strong>{booking.patient}</strong>
+                      <span>{booking.type}</span>
+                    </div>
+                    <span className={`${styles.statusBadge} ${styles[booking.status.toLowerCase()]}`}>
+                      {booking.status}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+
+          {/* Activity Table */}
           <motion.div className={styles.card} variants={itemVariants}>
             <div className={styles.cardHeader}>
               <h3>Recent Activity</h3>
               <span className={styles.link}>View Logs</span>
             </div>
-
             <table className={styles.table}>
               <thead>
                 <tr>
@@ -149,75 +210,63 @@ export default function AdminDashboard() {
                   </td>
                   <td>Viewed Lab Results</td>
                   <td>Today, 9:15 AM</td>
-                  <td>
-                    <span className={styles.success}>Completed</span>
-                  </td>
+                  <td><span className={styles.success}>Completed</span></td>
                 </tr>
                 <tr>
                   <td>
                     <div className={styles.userCell}>
                       <div className={styles.avatarSmall}></div>
-                      John Von
+                      Sarah Miller
                     </div>
                   </td>
-                  <td>Started a session</td>
-                  <td>Yesterday, 4:30 PM</td>
-                  <td>
-                    <span className={styles.warning}>In Review</span>
-                  </td>
-                </tr>
-                <tr>
-                  <td>
-                    <div className={styles.userCell}>
-                      <div className={styles.avatarSmall}></div>
-                      John Von
-                    </div>
-                  </td>
-                  <td>Joined a session</td>
-                  <td>Sept 12, 2:10 PM</td>
-                  <td>
-                    <span className={styles.success}>Completed</span>
-                  </td>
+                  <td>Uploaded Records</td>
+                  <td>Today, 8:45 AM</td>
+                  <td><span className={styles.warning}>Processing</span></td>
                 </tr>
               </tbody>
             </table>
           </motion.div>
-
-          <motion.div className={styles.card} variants={itemVariants}>
-            <div className={styles.securityHeader}>
-              <h3>Security</h3>
-            </div>
-
-            <div className={styles.securityRow}>
-              <div>
-                <strong>Password</strong>
-                <p>Last changed 3 months ago</p>
-              </div>
-              <button className={styles.changeBtn}>Change</button>
-            </div>
-          </motion.div>
         </div>
 
         <div className={styles.rightCol}>
-          <motion.div className={`${styles.card} ${styles.alertCard}`} variants={itemVariants}>
-            <h3>Alerts</h3>
-
-            <div className={styles.alertList}>
-              {Array.from({ length: 6 }).map((_, i) => (
-                <div className={styles.alert} key={i}>
-                  <strong>Consultation summary ready</strong>
-                  <p>
-                    Patient Daniel Koshear - AI Analysis complete. Key vitals
-                    extracted.
-                  </p>
-                  <span>42m ago</span>
-                </div>
-              ))}
+          {/* Calendar Widget */}
+          <motion.div className={styles.card} variants={itemVariants}>
+            <div className={styles.calendarHeader}>
+              <h3>Calendar</h3>
+              <span>February 2026</span>
+            </div>
+            <div className={styles.calendarWidget}>
+              <div className={styles.calendarGrid}>
+                {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(d => <span key={d} className={styles.calDayHead}>{d}</span>)}
+                {Array.from({ length: 30 }).map((_, i) => {
+                  const day = i + 1;
+                  return (
+                    <div
+                      key={day}
+                      className={`${styles.calDay} ${day === 3 ? styles.calToday : ''} ${[10, 15, 22].includes(day) ? styles.calHasEvent : ''}`}
+                    >
+                      {day}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </motion.div>
-          <motion.div className={styles.card} variants={itemVariants}>
-            <h3>Quick Actions</h3>
-            <div className={styles.quickEmpty}></div>
+
+          <motion.div className={`${styles.card} ${styles.alertCard}`} variants={itemVariants}>
+            <h3>System Alerts</h3>
+            <div className={styles.alertList}>
+              <div className={styles.alert}>
+                <strong>Database Backup</strong>
+                <p>Successful backup at 04:00 AM</p>
+                <span>5h ago</span>
+              </div>
+              <div className={styles.alert}>
+                <strong>New Staff Onboarded</strong>
+                <p>Dr. Angel Batista updated profile</p>
+                <span>1h ago</span>
+              </div>
+            </div>
           </motion.div>
         </div>
       </section>
