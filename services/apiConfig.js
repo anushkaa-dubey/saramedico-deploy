@@ -8,24 +8,24 @@
  */
 
 const getApiBaseUrl = () => {
-    const baseUrl =
-        process.env.NEXT_PUBLIC_API_URL ||
-        process.env.NEXT_PUBLIC_API_BASE;
+    const envUrl = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE;
 
-    if (!baseUrl) {
-        if (process.env.NODE_ENV === "development") {
+    // In production, if the URL is the insecure HTTP backend or missing, use relative path for proxy
+    if (!envUrl || (process.env.NODE_ENV === "production" && envUrl.includes("http://65.0.98.170"))) {
+        if (process.env.NODE_ENV === "development" && !envUrl) {
             console.warn(
                 "WARNING: NEXT_PUBLIC_API_URL not set. Falling back to http://localhost:8000/api/v1"
             );
             return "http://localhost:8000/api/v1";
         }
 
-        throw new Error(
-            "CRITICAL: NEXT_PUBLIC_API_URL is missing. Frontend cannot reach backend."
-        );
+        // Return relative path to use Next.js rewrite proxy
+        return "/api/v1";
     }
 
-    return baseUrl;
+    return envUrl;
+
+    return envUrl;
 };
 
 export const API_BASE_URL = getApiBaseUrl();
