@@ -194,3 +194,85 @@ export const fetchProfile = async () => {
     });
     return handleResponse(response);
 };
+
+/**
+ * Upload a document for a patient
+ * Endpoint: POST /api/v1/documents/upload
+ * Payload: Multipart form-data with 'file', 'patient_id', 'metadata'
+ */
+/**
+ * Upload a document for a patient
+ * Strategies:
+ * 1. Presigned URL (Preferred): POST /upload-url -> PUT file -> POST /confirm
+ * 2. Direct Multipart (Fallback): POST /upload
+ */
+export const uploadPatientDocument = async (patientId, file, metadata) => {
+    try {
+        console.log("Attempting upload via Presigned URL flow...");
+        // Step 1: Request Presigned URL
+        const initResponse = await fetch(`${API_BASE_URL}/documents/upload-url`, {
+            method: "POST",
+            headers: {
+                ...getAuthHeaders(),
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                filename: file.name,
+                content_type: file.type || "application/octet-stream",
+                patient_id: patientId,
+                ...metadata
+            })
+        });
+
+        if (initResponse.ok) {
+            const { upload_url, document_id } = await initResponse.json();
+
+            // Step 2: Upload payload to S3 (No auth headers, just the file)
+            const uploadResponse = await fetch(upload_url, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": file.type || "application/octet-stream"
+                },
+                body: file
+            });
+
+            if (!uploadResponse.ok) {
+                throw new Error("Failed to upload file to storage.");
+            }
+
+            // Step 3: Confirm Upload
+            const confirmResponse = await fetch(`${API_BASE_URL}/documents/${document_id}/confirm`, {
+                method: "POST",
+                headers: getAuthHeaders()
+            });
+
+            return handleResponse(confirmResponse);
+        } else {
+            // If 404 or other error, throw to trigger fallback
+            console.warn("Presigned URL endpoint not available or failed, falling back to direct upload.");
+        }
+    } catch (err) {
+        console.warn("Presigned upload flow error:", err);
+    }
+
+    console.log("Attempting fallback: Direct Multipart Upload...");
+    // Fallback: Direct Multipart Upload
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("patient_id", patientId);
+    if (metadata) {
+        formData.append("metadata", JSON.stringify(metadata));
+    }
+
+    const headers = getAuthHeaders();
+    if (headers["Content-Type"]) {
+        delete headers["Content-Type"];
+    }
+
+    const response = await fetch(`${API_BASE_URL}/documents/upload`, {
+        method: "POST",
+        headers: headers,
+        body: formData,
+    });
+    return handleResponse(response);
+};

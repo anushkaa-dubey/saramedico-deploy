@@ -227,9 +227,9 @@ export default function Patients() {
                                 <div>
                                     <div className={styles.sectionHeader}>
                                         <h3 className={styles.sectionTitle}>Recent Visits</h3>
-                                        <Link href="/dashboard/doctor/live-consult">
+                                        {/* <Link href="/dashboard/doctor/live-consult">
                                             <button className={styles.newVisitBtn}>+ New Visit</button>
-                                        </Link>
+                                        </Link> */}
                                     </div>
 
                                     <div className={styles.visitList}>

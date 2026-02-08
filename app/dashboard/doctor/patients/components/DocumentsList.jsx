@@ -3,13 +3,14 @@
 import { useState, useEffect } from "react";
 import styles from "./DocumentsList.module.css";
 import { useRouter } from "next/navigation";
-import { fetchPatientDocuments } from "@/services/doctor";
+import { fetchPatientDocuments, uploadPatientDocument } from "@/services/doctor";
 import { processDocumentWithAI } from "@/services/ai";
 
 export default function DocumentsList({ patientId }) {
     const router = useRouter();
     const [documents, setDocuments] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [uploading, setUploading] = useState(false);
     const [error, setError] = useState("");
     const [processingDoc, setProcessingDoc] = useState(null);
     const [processResult, setProcessResult] = useState(null);
@@ -34,6 +35,27 @@ export default function DocumentsList({ patientId }) {
             }
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleFileUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        setUploading(true);
+        setError("");
+        try {
+            // Using title as filename for now, category as medical_record
+            await uploadPatientDocument(patientId, file, { title: file.name, category: "medical_record" });
+            // Refresh list on success
+            await loadDocuments();
+        } catch (err) {
+            console.error("Upload error:", err);
+            setError(err.message || "Failed to upload document");
+        } finally {
+            setUploading(false);
+            // Reset input
+            e.target.value = null;
         }
     };
 
@@ -68,14 +90,54 @@ export default function DocumentsList({ patientId }) {
         if (url) window.open(url, "_blank");
     };
 
-    if (loading) return <div style={{ padding: "20px" }}>Loading documents...</div>;
-    if (error) return <div style={{ padding: "20px", color: "red" }}>{error}</div>;
+    if (loading && !documents.length) return <div style={{ padding: "20px" }}>Loading documents...</div>;
 
     return (
         <div className={styles.documentsList}>
-            <div className={styles.header}>
+            <div className={styles.header} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <h3 className={styles.title}>Patient Documents</h3>
+                <div className={styles.actions}>
+                    <input
+                        type="file"
+                        id="doc-upload"
+                        style={{ display: "none" }}
+                        onChange={handleFileUpload}
+                        disabled={uploading}
+                    />
+                    <label
+                        htmlFor="doc-upload"
+                        style={{
+                            background: "#359AFF",
+                            color: "white",
+                            padding: "8px 16px",
+                            borderRadius: "8px",
+                            cursor: uploading ? "not-allowed" : "pointer",
+                            fontSize: "14px",
+                            fontWeight: "600",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                            opacity: uploading ? 0.7 : 1,
+                            transition: "all 0.2s ease"
+                        }}
+                    >
+                        {uploading ? (
+                            <span>Uploading...</span>
+                        ) : (
+                            <>
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                    <polyline points="17 8 12 3 7 8" />
+                                    <line x1="12" y1="3" x2="12" y2="15" />
+                                </svg>
+                                Upload Document
+                            </>
+                        )}
+                    </label>
+                </div>
             </div>
+
+            {error && <div style={{ padding: "12px", color: "red", background: "#fee2e2", borderRadius: "8px", margin: "12px 0", fontSize: "14px" }}>{error}</div>}
 
             {processResult && (
                 <div style={{
@@ -94,7 +156,7 @@ export default function DocumentsList({ patientId }) {
 
             <div className={styles.grid}>
                 {documents.length === 0 ? (
-                    <p>No documents found for this patient.</p>
+                    <p style={{ color: "#64748b", fontStyle: "italic", padding: "20px" }}>No documents found for this patient.</p>
                 ) : (
                     documents.map((doc) => (
                         <div key={doc.id} className={styles.card}>
