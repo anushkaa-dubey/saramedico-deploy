@@ -2,8 +2,8 @@
 
 .container {
   display: flex;
-  min-height: 100vh;
-  background: #ffffff;
+  min-height: 100%;
+  background: #F5F7FA;
   padding: 16px;
   font-family: "Inter", sans-serif;
 }

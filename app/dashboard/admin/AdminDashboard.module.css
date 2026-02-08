@@ -78,6 +78,7 @@
 }
 
 .active:hover {
+  background: linear-gradient(90deg, #359AFF, #9CCDFF);
   opacity: 0.9;
   color: #ffffff !important;
 }

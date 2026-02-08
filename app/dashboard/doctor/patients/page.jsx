@@ -3,9 +3,10 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Topbar from "../components/Topbar";
 import DocumentsList from "./components/DocumentsList";
+import PatientAIChat from "./components/PatientAIChat";
 import styles from "./Patients.module.css";
 import { motion } from "framer-motion";
-import { fetchAppointments, fetchPatients } from "@/services/doctor";
+import { fetchAppointments, fetchPatients, fetchProfile } from "@/services/doctor";
 import OnboardPatientModal from "./components/OnboardPatientModal";
 
 export default function Patients() {
@@ -14,10 +15,21 @@ export default function Patients() {
     const [selectedId, setSelectedId] = useState(null);
     const [activeTab, setActiveTab] = useState('visits');
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [doctorId, setDoctorId] = useState(null);
 
     useEffect(() => {
         loadPatients();
+        loadDoctorProfile();
     }, []);
+
+    const loadDoctorProfile = async () => {
+        try {
+            const profile = await fetchProfile();
+            setDoctorId(profile.id);
+        } catch (err) {
+            console.error("Failed to fetch doctor profile:", err);
+        }
+    };
 
     const loadPatients = async () => {
         setLoading(true);
@@ -199,6 +211,12 @@ export default function Patients() {
                                     >
                                         Documents
                                     </div>
+                                    <div
+                                        className={`${styles.tab} ${activeTab === 'ai-chat' ? styles.active : ''}`}
+                                        onClick={() => setActiveTab('ai-chat')}
+                                    >
+                                        AI Chat
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -243,9 +261,17 @@ export default function Patients() {
                                         </div>
                                     </div>
                                 </div>
-                            ) : (
+                            ) : activeTab === 'documents' ? (
                                 <DocumentsList patientId={selectedPatient.id} />
-                            )}
+                            ) : activeTab === 'ai-chat' && doctorId ? (
+                                <div style={{ height: '600px' }}>
+                                    <PatientAIChat
+                                        patientId={selectedPatient.id}
+                                        chatType="doctor"
+                                        doctorId={doctorId}
+                                    />
+                                </div>
+                            ) : null}
                         </div>
                     </div>
                 )}

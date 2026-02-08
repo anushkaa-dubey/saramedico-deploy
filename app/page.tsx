@@ -202,6 +202,12 @@ export default function Home() {
           { label: "Dates & Birthdays", icon: <CalendarIconBase /> },
           { label: "Addresses & Locations", icon: <HomeIconBase /> }
         ],
+        details: [
+          "18 HIPAA-compliant Identifiers automatically detected",
+          "Contextual Anonymization maintaining medical logic",
+          "Batch Processing for large document scales",
+          "Audit Logging & Full Redaction Certificates"
+        ],
         icon: <PlusIcon />,
         image: "/landing%20page%20images/automate_PII.jpg",
         reverse: false,
@@ -779,40 +785,183 @@ export default function Home() {
         >
           <h2 className={styles.sectionTitle}>Frequently Asked Questions</h2>
         </motion.div>
-        <div className={styles.faqGrid}>
-          {[1, 2, 3, 4].map((_, i) => (
+        <div className={styles.faqContainer}>
+          {[
+            {
+              question: "What is Saramedico?",
+              answer: "Saramedico is an AI-powered clinical documentation and decision-support platform designed to help healthcare providers reduce documentation burden, improve accuracy, and streamline patient care workflows—without disrupting existing clinical systems."
+            },
+            {
+              question: "Who is Saramedico designed for?",
+              answer: "Saramedico is designed for: Physicians (Primary care & specialists), Clinics and hospitals, Telehealth providers, and Care coordinators and clinical teams."
+            },
+            {
+              question: "Does Saramedico replace doctors or clinical judgment?",
+              answer: "No. Saramedico is a clinical support tool, not a diagnostic replacement. All outputs are meant to assist clinicians, who retain full medical responsibility and final decision-making authority."
+            },
+            {
+              question: "Is my data secure?",
+              answer: "Yes. Saramedico follows industry-standard security practices, including: End-to-end encryption (in transit and at rest), Role-based access control (RBAC), Secure audit logs, and Continuous monitoring and intrusion detection."
+            },
+            {
+              question: "Is Saramedico HIPAA compliant?",
+              answer: "Yes. Saramedico is fully HIPAA compliant and signs a Business Associate Agreement (BAA) with all eligible customers."
+            },
+            {
+              question: "Where is patient data stored?",
+              answer: "Patient data is stored in secure, HIPAA-compliant cloud infrastructure located in approved regions within the United States."
+            },
+            {
+              question: "Does Saramedico train AI models on my patient data?",
+              answer: "No. Patient data is never used to train shared or public AI models. Your data remains private to your organization."
+            },
+            {
+              question: "Can Saramedico support SOC 2 or enterprise security reviews?",
+              answer: "Yes. Enterprise customers can request security documentation, architecture summaries, and compliance attestations during onboarding."
+            },
+            {
+              question: "Does Saramedico record patient conversations?",
+              answer: "Only if explicitly enabled by the clinician. Recording starts and stops under full user control."
+            },
+            {
+              question: "Are patients notified when recording is active?",
+              answer: "Yes. Saramedico supports configurable consent prompts and visual indicators to ensure patient awareness and compliance with consent laws."
+            },
+            {
+              question: "How accurate is transcription?",
+              answer: "Saramedico uses advanced medical-grade transcription optimized for clinical terminology, accents, and conversational speech."
+            },
+            {
+              question: "Can I edit transcripts?",
+              answer: "Yes. All transcripts are fully editable before approval and storage."
+            },
+            {
+              question: "What types of notes can Saramedico generate?",
+              answer: "Saramedico can generate: SOAP notes, Visit summaries, Follow-up instructions, Assessment & plan drafts, and Patient-friendly summaries."
+            },
+            {
+              question: "Can I customize note formats?",
+              answer: "Yes. Templates are configurable by specialty, clinic, or individual provider."
+            },
+            {
+              question: "Are summaries auto-saved to the medical record?",
+              answer: "Only after clinician review and approval. Nothing is finalized automatically."
+            },
+            {
+              question: "Does it work for telehealth visits?",
+              answer: "Yes. Saramedico supports both in-person and virtual consultations."
+            },
+            {
+              question: "Can multiple clinicians use one account?",
+              answer: "Yes. Saramedico supports multi-user organizations with: Admin roles, Provider roles, and Read-only roles."
+            },
+            {
+              question: "Can I restrict access to specific patient records?",
+              answer: "Yes. Role-based permissions allow fine-grained access control."
+            },
+            {
+              question: "What plans does Saramedico offer?",
+              answer: "Saramedico offers: Starter (individual clinicians), Clinic / Team plans, and Enterprise plans (custom)."
+            },
+            {
+              question: "Do you offer a free trial?",
+              answer: "Yes. A 14-day free trial is available for Premium plans."
+            },
+            {
+              question: "Can I cancel anytime?",
+              answer: "Yes. There are no long-term contracts unless explicitly agreed for enterprise customers."
+            },
+            {
+              question: "Can I switch plans later?",
+              answer: "Yes. You can upgrade or downgrade your plan at any time. Changes take effect at the next billing cycle."
+            },
+            {
+              question: "What payment methods do you accept?",
+              answer: "We accept major credit cards (Visa, Mastercard, American Express) and invoice billing for eligible organizations."
+            },
+            {
+              question: "Who owns the data?",
+              answer: "You do. Saramedico does not claim ownership of your patient or clinical data."
+            },
+            {
+              question: "Can I export my data?",
+              answer: "Yes. You can export notes, transcripts, and summaries in standard formats at any time."
+            },
+            {
+              question: "What happens to my data if I cancel?",
+              answer: "Your data remains accessible for a limited retention period, after which it is securely deleted upon request."
+            },
+            {
+              question: "What support options are available?",
+              answer: "Email support (all plans), Priority support (Premium), and Dedicated account manager (Enterprise)."
+            },
+            {
+              question: "Is Saramedico reliable?",
+              answer: "Saramedico is built for high availability with redundancy, monitoring, and automated failover mechanisms."
+            },
+            {
+              question: "Do you provide onboarding or training?",
+              answer: "Yes. We offer guided onboarding, documentation, and optional live training for teams."
+            },
+            {
+              question: "Is Saramedico FDA-approved?",
+              answer: "Saramedico is classified as a clinical documentation and decision-support tool, not a medical device. Regulatory positioning is continuously reviewed as features evolve."
+            },
+            {
+              question: "Does Saramedico provide medical advice?",
+              answer: "No. Saramedico provides informational support only. All medical decisions remain with licensed clinicians."
+            },
+            {
+              question: "Will Saramedico add more AI features?",
+              answer: "Yes. Future features may include deeper specialty support, predictive insights, and advanced workflow automation—always with clinician oversight."
+            },
+            {
+              question: "Can customers request features?",
+              answer: "Yes. Customer feedback directly influences our roadmap."
+            }
+          ].map((faq, i) => (
             <motion.div
               key={i}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
+              transition={{ delay: (i % 4) * 0.1 }}
               className={styles.faqItem}
             >
-              {i === 0 && (
-                <>
-                  <span className={styles.faqQuestion}>Is my data Secure?</span>
-                  <p className={styles.faqAnswer}>Yes, Saramedico is fully HIPAA compliant. We sign a BAA (Business Associate Agreement) for all Premium and Clinic team plans to ensure your practice is covered.</p>
-                </>
-              )}
-              {i === 1 && (
-                <>
-                  <span className={styles.faqQuestion}>Can I Switch plans later?</span>
-                  <p className={styles.faqAnswer}>Absolutely. You can upgrade or downgrade your plan at any time from your account dashboard. Changes take effect at the start of the next billing cycle.</p>
-                </>
-              )}
-              {i === 2 && (
-                <>
-                  <span className={styles.faqQuestion}>What payment methods do you accept?</span>
-                  <p className={styles.faqAnswer}>We accept all major credit cards including Visa, Mastercard, and American Express. For Clinic Team plans, we also support invoice billing.</p>
-                </>
-              )}
-              {i === 3 && (
-                <>
-                  <span className={styles.faqQuestion}>Do you offer a free trial for Premium?</span>
-                  <p className={styles.faqAnswer}>We offer a 14-Day free trial for the Premium plan so you can experience our advanced AI diagnostics risk-free.</p>
-                </>
-              )}
+              <div
+                className={styles.faqQuestion}
+                onClick={() => setOpenDropdown(openDropdown === `faq-${i}` ? null : `faq-${i}`)}
+                style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+              >
+                <span>{faq.question}</span>
+                <motion.svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  animate={{ rotate: openDropdown === `faq-${i}` ? 180 : 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <path d="M6 9l6 6 6-6" />
+                </motion.svg>
+              </div>
+              <AnimatePresence>
+                {openDropdown === `faq-${i}` && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                    animate={{ opacity: 1, height: 'auto', marginTop: 12 }}
+                    exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                    transition={{ duration: 0.2 }}
+                    style={{ overflow: 'hidden' }}
+                  >
+                    <p className={styles.faqAnswer}>{faq.answer}</p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </motion.div>
           ))}
         </div>

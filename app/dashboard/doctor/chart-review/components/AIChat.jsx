@@ -2,18 +2,13 @@
 
 import { useState, useRef, useEffect } from "react";
 import styles from "./AIChat.module.css";
+import { doctorAIChat, fetchDoctorChatHistory } from "@/services/ai";
 
-export default function AIChat({ onCitationClick }) {
-    const [messages, setMessages] = useState([
-        {
-            id: 1,
-            role: "assistant",
-            text: "I've analyzed the document. What would you like to know?",
-            citations: []
-        }
-    ]);
+export default function AIChat({ onCitationClick, patientId, doctorId, documentId }) {
+    const [messages, setMessages] = useState([]);
     const [input, setInput] = useState("");
     const [isTyping, setIsTyping] = useState(false);
+    const [conversationId, setConversationId] = useState(null);
     const messagesEndRef = useRef(null);
 
     const sampleQuestions = [
@@ -23,6 +18,51 @@ export default function AIChat({ onCitationClick }) {
         "Extract all dates and events"
     ];
 
+    useEffect(() => {
+        loadChatHistory();
+    }, [patientId, doctorId]);
+
+    const loadChatHistory = async () => {
+        if (!patientId || !doctorId) return;
+
+        setIsTyping(true);
+        try {
+            const history = await fetchDoctorChatHistory(patientId, doctorId);
+            if (history && Array.isArray(history) && history.length > 0) {
+                const formattedMessages = history.map((msg, idx) => ({
+                    id: idx,
+                    role: msg.role || (msg.sender === "ai" ? "assistant" : "user"),
+                    text: msg.message || msg.text || msg.query,
+                    citations: [] // Backend text response doesn't have citations yet
+                }));
+                setMessages(formattedMessages);
+
+                if (history[0].conversation_id) {
+                    setConversationId(history[0].conversation_id);
+                }
+            } else {
+                // Default greeting if no history
+                setMessages([{
+                    id: 'init',
+                    role: "assistant",
+                    text: "I've analyzed the document. What would you like to know?",
+                    citations: []
+                }]);
+            }
+        } catch (err) {
+            console.error("Failed to load chat history:", err);
+            // Fallback to greeting
+            setMessages([{
+                id: 'init',
+                role: "assistant",
+                text: "I've analyzed the document. What would you like to know?",
+                citations: []
+            }]);
+        } finally {
+            setIsTyping(false);
+        }
+    };
+
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     };
@@ -31,38 +71,68 @@ export default function AIChat({ onCitationClick }) {
         scrollToBottom();
     }, [messages]);
 
-    const handleSend = () => {
-        if (!input.trim()) return;
+    const handleSend = async (textInput = null) => {
+        const query = textInput || input;
+        if (!query.trim() || isTyping) return;
 
         const userMessage = {
-            id: messages.length + 1,
+            id: Date.now(),
             role: "user",
-            text: input,
+            text: query,
             citations: []
         };
 
-        setMessages([...messages, userMessage]);
+        setMessages(prev => [...prev, userMessage]);
         setInput("");
         setIsTyping(true);
 
-        // Simulate AI response
-        setTimeout(() => {
-            const aiResponse = {
-                id: messages.length + 2,
-                role: "assistant",
-                text: "Based on the lab results, the patient's platelet count is slightly low at 180 K/μL (normal range: 150-400). All other CBC values are within normal limits. The WBC count of 7.2 K/μL indicates no signs of infection.",
-                citations: [
-                    { page: 1, text: "Platelets: 180 K/μL" },
-                    { page: 1, text: "WBC: 7.2 K/μL" }
-                ]
+        try {
+            const payload = {
+                patient_id: patientId,
+                query: query
             };
+
+            if (documentId) {
+                payload.document_id = documentId;
+            }
+
+            if (conversationId) {
+                payload.conversation_id = conversationId;
+            }
+
+            const result = await doctorAIChat(payload);
+
+            // Result is { response: "text" } from our updated service
+            const aiText = result.response || result.message || "No response received.";
+
+            if (result.conversation_id) {
+                setConversationId(result.conversation_id);
+            }
+
+            const aiResponse = {
+                id: Date.now() + 1,
+                role: "assistant",
+                text: aiText,
+                citations: [] // Backend text response doesn't support citations yet
+            };
+
             setMessages(prev => [...prev, aiResponse]);
+        } catch (err) {
+            console.error("AI chat error:", err);
+            const errorMsg = {
+                id: Date.now() + 1,
+                role: "assistant",
+                text: `Error: ${err.message || "Something went wrong"}`,
+                citations: []
+            };
+            setMessages(prev => [...prev, errorMsg]);
+        } finally {
             setIsTyping(false);
-        }, 1500);
+        }
     };
 
     const handleQuestionClick = (question) => {
-        setInput(question);
+        handleSend(question);
     };
 
     return (
@@ -123,7 +193,7 @@ export default function AIChat({ onCitationClick }) {
             </div>
 
             {/* Sample Questions */}
-            {messages.length === 1 && (
+            {messages.length <= 1 && (
                 <div className={styles.sampleQuestions}>
                     <p className={styles.sampleLabel}>Try asking:</p>
                     <div className={styles.questionGrid}>
@@ -149,11 +219,12 @@ export default function AIChat({ onCitationClick }) {
                     onChange={(e) => setInput(e.target.value)}
                     onKeyPress={(e) => e.key === "Enter" && handleSend()}
                     className={styles.input}
+                    disabled={isTyping}
                 />
                 <button
                     className={styles.sendBtn}
-                    onClick={handleSend}
-                    disabled={!input.trim()}
+                    onClick={() => handleSend()}
+                    disabled={!input.trim() || isTyping}
                 >
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <line x1="22" y1="2" x2="11" y2="13" />

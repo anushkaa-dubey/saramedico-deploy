@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Topbar from "../components/Topbar";
 import PDFViewer from "./components/PDFViewer";
 import AIChat from "./components/AIChat";
 import Timeline from "./components/Timeline";
 import styles from "./ChartReview.module.css";
 import { motion } from "framer-motion";
+import { fetchPatients, fetchProfile, fetchPatientDocuments } from "@/services/doctor";
 
 export default function ChartReviewPage() {
     const [selectedDocument, setSelectedDocument] = useState(null);
@@ -14,14 +15,53 @@ export default function ChartReviewPage() {
     const [showTimeline, setShowTimeline] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
 
+    // AI Integration State
+    const [doctorId, setDoctorId] = useState(null);
+    const [patientId, setPatientId] = useState(null);
+    const [documents, setDocuments] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        loadData();
+    }, []);
+
+    const loadData = async () => {
+        try {
+            // 1. Fetch Doctor Profile
+            const profile = await fetchProfile();
+            setDoctorId(profile.id);
+
+            // 2. Fetch Patients & Select First
+            const patients = await fetchPatients();
+            if (patients && patients.length > 0) {
+                const firstPatientId = patients[0].id; // Use first patient by default for Chart Review context
+                setPatientId(firstPatientId);
+                loadDocuments(firstPatientId);
+            }
+        } catch (err) {
+            console.error("Failed to load chart review data:", err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const loadDocuments = async (pId) => {
+        try {
+            const docs = await fetchPatientDocuments(pId);
+            setDocuments(docs || []);
+        } catch (err) {
+            console.error("Failed to load documents:", err);
+            setDocuments([]);
+        }
+    };
 
     const handleFileUpload = (e) => {
         e.preventDefault();
         const files = e.target.files || e.dataTransfer?.files;
         if (files && files.length > 0) {
             console.log("Files uploaded:", files);
-            alert(`Selected ${files.length} file(s): ${files[0].name}`);
-            // In a real app, you'd upload these to the backend here
+            alert(`Selected ${files.length} file(s): ${files[0].name}. (Upload disabled)`);
+            // Upload disabled as per instructions - only verify confirmed backend endpoints
         }
     };
 
@@ -44,32 +84,6 @@ export default function ChartReviewPage() {
         setIsDragging(false);
         handleFileUpload(e);
     };
-
-
-
-    const sampleDocuments = [
-        {
-            id: 1,
-            name: "Lab Results - CBC Panel",
-            date: "2024-01-15",
-            pages: 3,
-            status: "analyzed"
-        },
-        {
-            id: 2,
-            name: "MRI Scan Report",
-            date: "2024-01-10",
-            pages: 12,
-            status: "analyzed"
-        },
-        {
-            id: 3,
-            name: "Previous Visit Notes",
-            date: "2023-12-20",
-            pages: 5,
-            status: "pending"
-        }
-    ];
 
     const handleCitationClick = (page) => {
         setCurrentPage(page);
@@ -119,7 +133,10 @@ export default function ChartReviewPage() {
                 // Document Library View
                 <div className={styles.libraryView}>
                     <div className={styles.documentsGrid}>
-                        {sampleDocuments.map((doc) => (
+                        {loading && <p>Loading documents...</p>}
+                        {!loading && documents.length === 0 && <p>No documents found for the active patient.</p>}
+
+                        {documents.map((doc) => (
                             <div
                                 key={doc.id}
                                 className={styles.documentCard}
@@ -135,15 +152,15 @@ export default function ChartReviewPage() {
                                     </svg>
                                 </div>
                                 <div className={styles.docInfo}>
-                                    <h3 className={styles.docName}>{doc.name}</h3>
+                                    <h3 className={styles.docName}>{doc.title || doc.file_name || "Untitled"}</h3>
                                     <div className={styles.docMeta}>
-                                        <span>{doc.pages} pages</span>
+                                        <span>{doc.category || "General"}</span>
                                         <span>•</span>
-                                        <span>{doc.date}</span>
+                                        <span>{new Date(doc.uploaded_at || doc.created_at).toLocaleDateString()}</span>
                                     </div>
                                 </div>
-                                <span className={`${styles.statusBadge} ${styles[doc.status]}`}>
-                                    {doc.status === "analyzed" ? "Ready" : "Processing"}
+                                <span className={`${styles.statusBadge} ${styles.analyzed}`}>
+                                    Ready
                                 </span>
                             </div>
                         ))}
@@ -181,7 +198,7 @@ export default function ChartReviewPage() {
                         <button className={styles.backBtn} onClick={() => setSelectedDocument(null)}>
                             ← Back to Library
                         </button>
-                        <h3 className={styles.documentTitle}>{selectedDocument.name}</h3>
+                        <h3 className={styles.documentTitle}>{selectedDocument.title || selectedDocument.file_name || "Document"}</h3>
                         <div className={styles.viewToggle}>
                             <button
                                 className={`${styles.toggleBtn} ${!showTimeline ? styles.active : ""}`}
@@ -213,7 +230,12 @@ export default function ChartReviewPage() {
                             {showTimeline ? (
                                 <Timeline onEventClick={handleEventClick} />
                             ) : (
-                                <AIChat onCitationClick={handleCitationClick} />
+                                <AIChat
+                                    onCitationClick={handleCitationClick}
+                                    patientId={patientId}
+                                    doctorId={doctorId}
+                                    documentId={selectedDocument.id}
+                                />
                             )}
                         </div>
                     </div>
