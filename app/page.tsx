@@ -70,8 +70,32 @@ const StartIcon = () => (
 )
 
 
+interface FeatureBase {
+  id: string;
+  title: string;
+  description: string;
+  details: string[];
+  icon: React.ReactNode;
+  image: string;
+  reverse: boolean;
+  helper?: string;
+}
+
+interface NormalFeature extends FeatureBase {
+  items: string[];
+  isPII?: false;
+}
+
+interface PIIFeature extends FeatureBase {
+  items: { label: string; icon: React.ReactNode }[];
+  isPII: true;
+}
+
+type Feature = NormalFeature | PIIFeature;
+type Tab = "Reviewers" | "Clinicians";
+
 export default function Home() {
-  const [activeTab, setActiveTab] = useState("Reviewers");
+  const [activeTab, setActiveTab] = useState<Tab>("Reviewers");
   const [isYearly, setIsYearly] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -93,7 +117,7 @@ export default function Home() {
     { name: "Dr. Robert Wilson", role: "Neurology", company: "Seamless integration into our existing workflow. A must-have for modern practice." },
   ];
 
-  const features = {
+  const features: Record<Tab, Feature[]> = {
     Reviewers: [
       {
         id: "ocr",
@@ -571,7 +595,7 @@ export default function Home() {
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.3 }}
             >
-              {features[activeTab as keyof typeof features].map((f) =>
+              {features[activeTab].map((f) =>
                 f.isPII ? (
                   <div key={f.id} className={styles.featureGridPII}>
                     <motion.div
@@ -589,7 +613,7 @@ export default function Home() {
                       {f.helper && <p style={{ fontSize: '13px', color: '#64748b', fontStyle: 'italic', marginBottom: '24px' }}>{f.helper}</p>}
 
                       <div className={styles.redactionItems}>
-                        {(f.items as any[]).map((item, idx) => (
+                        {f.items.map((item, idx) => (
                           <motion.div
                             key={idx}
                             initial={{ opacity: 0, y: 10 }}
@@ -680,7 +704,7 @@ export default function Home() {
                       {f.helper && <p style={{ fontSize: '13px', color: '#64748b', fontStyle: 'italic', marginBottom: '24px' }}>{f.helper}</p>}
 
                       <ul className={styles.featureList}>
-                        {(f.items as string[]).map((item, idx) => (
+                        {f.items.map((item, idx) => (
                           <motion.li
                             key={idx}
                             initial={{ opacity: 0, x: -10 }}
