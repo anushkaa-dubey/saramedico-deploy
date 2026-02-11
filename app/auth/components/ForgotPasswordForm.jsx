@@ -33,10 +33,13 @@ export default function ForgotPasswordForm() {
             <h2>Forgot Password</h2>
             <p className="subtext">Enter your email to receive a reset link.</p>
 
-            <form onSubmit={handleSubmit}>
-                <label>Email Address</label>
+            <form onSubmit={handleSubmit} autoComplete="on">
+                <label htmlFor="email" style={{ fontSize: "16px", fontWeight: "600", color: "#374151" }}>Email Address</label>
                 <input
+                    id="email"
                     type="email"
+                    name="email"
+                    autoComplete="email"
                     placeholder="yourname@gmail.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -44,18 +47,18 @@ export default function ForgotPasswordForm() {
                 />
 
                 {message && (
-                    <p style={{ color: "#16a34a", fontSize: "14px", marginTop: "10px", textAlign: "center" }}>
+                    <p style={{ color: "#16a34a", fontSize: "14px", fontWeight: "600", marginTop: "10px", textAlign: "center" }}>
                         {message}
                     </p>
                 )}
 
                 {error && (
-                    <p style={{ color: "#ef4444", fontSize: "14px", marginTop: "10px", textAlign: "center" }}>
+                    <p style={{ color: "#ef4444", fontSize: "14px", fontWeight: "600", marginTop: "10px", textAlign: "center" }}>
                         {error}
                     </p>
                 )}
 
-                <button className="primary-btn" disabled={loading}>
+                <button className="primary-btn" disabled={loading} style={{ marginTop: "16px" }}>
                     {loading ? "Sending..." : "Send Reset Link"}
                 </button>
 
