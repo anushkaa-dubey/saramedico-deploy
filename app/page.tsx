@@ -65,53 +65,10 @@ const GraphIcon = () => (
   </svg>
 );
 
-const RedactionMockup = () => (
-  <div className={styles.redactionMockup}>
-    <div className={styles.redactionInfo}>
-      <div className={styles.redactionBadge}><ShieldIconBase /></div>
-      <h3 className={styles.redactionTitle}>Automated PII Redaction</h3>
-      <p className={styles.redactionDescription}>Share data securely for research or second opinions. Our AI automatically detects and redacts 18 types of identifiers, ensuring compliance.</p>
+const StartIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+)
 
-      <div className={styles.redactionItems}>
-        <div className={styles.redactionItem}>
-          <div className={styles.redactionItemLeft}>
-            <UserIconBase /> <span>Patient Names</span>
-          </div>
-          <span className={styles.redactionTag}>REDACTED</span>
-        </div>
-        <div className={styles.redactionItem}>
-          <div className={styles.redactionItemLeft}>
-            <CalendarIconBase /> <span>Dates & Birthdays</span>
-          </div>
-          <span className={styles.redactionTag}>REDACTED</span>
-        </div>
-        <div className={styles.redactionItem}>
-          <div className={styles.redactionItemLeft}>
-            <HomeIconBase /> <span>Addresses & Locations</span>
-          </div>
-          <span className={styles.redactionTag}>REDACTED</span>
-        </div>
-      </div>
-    </div>
-
-    <div className={styles.redactionDoc}>
-      <p>
-        <span className={styles.redactedBar} style={{ width: '80px' }}></span> presented to the clinic on <span className={styles.redactedBar} style={{ width: '60px' }}></span> from there complaining of severe chest pain.
-      </p>
-      <p style={{ marginTop: '16px' }}>
-        Patient resides at <span className={styles.redactedBar} style={{ width: '120px' }}></span> rather<br />
-        Contact number: <span className={styles.redactedBar} style={{ width: '70px' }}></span>
-      </p>
-      <p style={{ marginTop: '16px' }}>
-        SSN: <span className={styles.redactedBar} style={{ width: '90px' }}></span> Referred by Dr. <span className={styles.redactedBar} style={{ width: '100px' }}></span> from <span className={styles.redactedBar} style={{ width: '60px' }}></span>
-      </p>
-      <p style={{ marginTop: '16px' }}>
-        Patient resides at <span className={styles.redactedBar} style={{ width: '120px' }}></span> rather<br />
-        Contact number: <span className={styles.redactedBar} style={{ width: '70px' }}></span>
-      </p>
-    </div>
-  </div>
-);
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState("Reviewers");
@@ -141,7 +98,7 @@ export default function Home() {
       {
         id: "ocr",
         title: "Intelligent OCR & Data Extraction",
-        description: "Transform messy faxes and PDFs into searchable, structured data instantly. Our AI identifies key medical entities, lab results, and patient demographics, populating your database automatically with 99% accuracy.",
+        description: "Transform messy faxes and PDFs into searchable, structured data instantly. Our AI identifies key medical entities, lab results, and patient demographics, populating your database automatically with high accuracy.",
         items: ["Handles handwritten doctor notes", "Smart categorization of document types", "Instant searchability across millions of pages"],
         details: [
           "Advanced handwriting recognition for clinician notes",
@@ -149,6 +106,7 @@ export default function Home() {
           "ICD-10 Mapping for instant diagnostic coding",
           "Multi-format support: Fax, physical scans, and PDFs"
         ],
+        helper: "Requires clinician review before final chart entry.",
 
         icon: <DocIcon />,
         image: "/landing%20page%20images/intelligentOCR.jpg",
@@ -158,7 +116,7 @@ export default function Home() {
         id: "chronology",
         title: "Visual Patient Chronology",
         description: "Stop scrolling through hundreds of pages. Our Timeline View aggregates every encounter, lab result, and prescription into an interactive visual history, allowing reviewers to grasp complex cases in seconds.",
-        items: ["60% faster chart review time", "Zero missed critical events", "Integrated lab trends"],
+        items: ["60% faster chart review time", "Zero missed critical events", "Integrated lab trends", "Searchable patient timeline"],
         details: [
           "Event Correlation across multiple encounters",
           "Visual Timelines of patient healthcare journeys",
@@ -212,9 +170,162 @@ export default function Home() {
         image: "/landing%20page%20images/automate_PII.jpg",
         reverse: false,
         isPII: true
+      },
+      {
+        id: "soap-notes",
+        title: "AI SOAP Notes & Documentation",
+        description: "Record patient visits securely and let our AI generate structured SOAP notes, assessment plans, and visit summaries in seconds. Always giving you the final edit.",
+        items: ["Ambient listening for natural conversations", "Specialty-specific templates", "Multi-speaker diarization"],
+        details: [
+          "Role-based access controls",
+          "Export to PDF, DOCX, JSON",
+          "Customizable templates (H&P, SOAP)",
+          "Audit logs for all interactions"
+        ],
+        helper: "AI generates drafts. Clinicians must review and approve before use.",
+        icon: <DocIcon />,
+        image: "/landing%20page%20images/intelligentOCR.jpg", // Using valid image per request
+        reverse: true
       }
     ]
   };
+
+  const faqs = [
+    {
+      question: "What is Saramedico?",
+      answer: "Saramedico is an AI-powered clinical documentation and decision-support platform designed to help healthcare providers reduce documentation burden, improve accuracy, and streamline patient care workflows—without disrupting existing clinical systems."
+    },
+    {
+      question: "Who is Saramedico designed for?",
+      answer: "Saramedico is designed for: Physicians (Primary care & specialists), Clinics and hospitals, Telehealth providers, and Care coordinators and clinical teams."
+    },
+    {
+      question: "Does Saramedico replace doctors or clinical judgment?",
+      answer: "No. Saramedico is a clinical support tool, not a diagnostic replacement. All outputs are meant to assist clinicians, who retain full medical responsibility and final decision-making authority."
+    },
+    {
+      question: "Is my data secure?",
+      answer: "Yes. Saramedico follows industry-standard security practices, including: End-to-end encryption (in transit and at rest), Role-based access control (RBAC), Secure audit logs, and Continuous monitoring and intrusion detection."
+    },
+    {
+      question: "Is Saramedico HIPAA compliant?",
+      // Updated copy
+      answer: "Yes. Saramedico supports HIPAA-aligned workflows and offers BAA for eligible plans. We are fully committed to data security and compliance."
+    },
+    {
+      question: "Where is patient data stored?",
+      answer: "Patient data is stored in secure, HIPAA-compliant cloud infrastructure located in approved regions within the United States."
+    },
+    {
+      question: "Does Saramedico train AI models on my patient data?",
+      answer: "No. Patient data is never used to train shared or public AI models. Your data remains private to your organization."
+    },
+    {
+      question: "Can Saramedico support SOC 2 or enterprise security reviews?",
+      answer: "Yes. Enterprise customers can request security documentation, architecture summaries, and compliance attestations during onboarding."
+    },
+    {
+      question: "Does Saramedico record patient conversations?",
+      answer: "Only if explicitly enabled by the clinician. Recording starts and stops under full user control."
+    },
+    {
+      question: "Are patients notified when recording is active?",
+      answer: "Yes. Saramedico supports configurable consent prompts and visual indicators to ensure patient awareness and compliance with consent laws."
+    },
+    {
+      question: "How accurate is transcription?",
+      answer: "Saramedico uses advanced medical-grade transcription optimized for clinical terminology, accents, and conversational speech."
+    },
+    {
+      question: "Can I edit transcripts?",
+      answer: "Yes. All transcripts are fully editable before approval and storage."
+    },
+    {
+      question: "What types of notes can Saramedico generate?",
+      answer: "Saramedico can generate: SOAP notes, Visit summaries, Follow-up instructions, Assessment & plan drafts, and Patient-friendly summaries."
+    },
+    {
+      question: "Can I customize note formats?",
+      answer: "Yes. Templates are configurable by specialty, clinic, or individual provider."
+    },
+    {
+      question: "Are summaries auto-saved to the medical record?",
+      answer: "Only after clinician review and approval. Nothing is finalized automatically."
+    },
+    {
+      question: "Does it work for telehealth visits?",
+      answer: "Yes. Saramedico supports both in-person and virtual consultations."
+    },
+    {
+      question: "Can multiple clinicians use one account?",
+      answer: "Yes. Saramedico supports multi-user organizations with: Admin roles, Provider roles, and Read-only roles."
+    },
+    {
+      question: "Can I restrict access to specific patient records?",
+      answer: "Yes. Role-based permissions allow fine-grained access control."
+    },
+    {
+      question: "What plans does Saramedico offer?",
+      answer: "Saramedico offers: Starter (individual clinicians), Clinic / Team plans, and Enterprise plans (custom)."
+    },
+    {
+      question: "Do you offer a free trial?",
+      // Ensure specific copy: "14-day free trial"
+      answer: "Yes. A 14-day free trial is available for Premium plans."
+    },
+    {
+      question: "Can I cancel anytime?",
+      answer: "Yes. There are no long-term contracts unless explicitly agreed for enterprise customers."
+    },
+    {
+      question: "Can I switch plans later?",
+      answer: "Yes. You can upgrade or downgrade your plan at any time. Changes take effect at the next billing cycle."
+    },
+    {
+      question: "What payment methods do you accept?",
+      answer: "We accept major credit cards (Visa, Mastercard, American Express) and invoice billing for eligible organizations."
+    },
+    {
+      question: "Who owns the data?",
+      answer: "You do. Saramedico does not claim ownership of your patient or clinical data."
+    },
+    {
+      question: "Can I export my data?",
+      answer: "Yes. You can export notes, transcripts, and summaries in standard formats at any time."
+    },
+    {
+      question: "What happens to my data if I cancel?",
+      answer: "Your data remains accessible for a limited retention period, after which it is securely deleted upon request."
+    },
+    {
+      question: "What support options are available?",
+      answer: "Email support (all plans), Priority support (Premium), and Dedicated account manager (Enterprise)."
+    },
+    {
+      question: "Is Saramedico reliable?",
+      answer: "Saramedico is built for high availability with redundancy, monitoring, and automated failover mechanisms."
+    },
+    {
+      question: "Do you provide onboarding or training?",
+      answer: "Yes. We offer guided onboarding, documentation, and optional live training for teams."
+    },
+    {
+      question: "Is Saramedico FDA-approved?",
+      answer: "Saramedico is classified as a clinical documentation and decision-support tool, not a medical device. Regulatory positioning is continuously reviewed as features evolve."
+    },
+    {
+      question: "Does Saramedico provide medical advice?",
+      answer: "No. Saramedico provides informational support only. All medical decisions remain with licensed clinicians."
+    },
+    {
+      question: "Will Saramedico add more AI features?",
+      answer: "Yes. Future features may include deeper specialty support, predictive insights, and advanced workflow automation—always with clinician oversight."
+    },
+    {
+      question: "Can customers request features?",
+      answer: "Yes. Customer feedback directly influences our roadmap."
+    }
+  ];
 
   return (
     <main className={styles.main}>
@@ -226,16 +337,18 @@ export default function Home() {
           </Link>
 
           <div className={styles.navLinks}>
-            <a href="#home" className={styles.navLink}>Home</a>
-            <a href="#features" className={styles.navLink}>Product & Features</a>
+            <a href="#features" className={styles.navLink}>Features</a>
             <a href="#use-cases" className={styles.navLink}>Use Cases</a>
             <a href="#pricing" className={styles.navLink}>Pricing</a>
             <a href="#security" className={styles.navLink}>Security</a>
+            <a href="#security" className={styles.navLink}>Compliance / BAA</a>
+            <a href="#faq" className={styles.navLink}>FAQ</a>
+            <a href="#contact" className={styles.navLink}>Contact</a>
           </div>
 
           <div className={styles.navActions}>
             <Link href="/auth/signup" className={styles.getStartedBtn}>
-              Get SaraMedico for free
+              Get Saramedico
             </Link>
           </div>
 
@@ -258,13 +371,14 @@ export default function Home() {
               exit={{ opacity: 0, height: 0 }}
               className={styles.mobileMenu}
             >
-              <Link href="#home" className={styles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>Home</Link>
-              <Link href="#features" className={styles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>Product & Features</Link>
+              <Link href="#features" className={styles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>Features</Link>
               <Link href="#use-cases" className={styles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>Use Cases</Link>
               <Link href="#pricing" className={styles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>Pricing</Link>
               <Link href="#security" className={styles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>Security</Link>
+              <Link href="#faq" className={styles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>FAQ</Link>
+              <Link href="#contact" className={styles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>Contact</Link>
               <Link href="/auth/signup" className={styles.mobileGetStartedBtn} onClick={() => setIsMobileMenuOpen(false)}>
-                Get SaraMedico for free
+                Get Saramedico
               </Link>
             </motion.div>
           )}
@@ -279,8 +393,10 @@ export default function Home() {
             animate={{ opacity: 1, y: 0 }}
             className={styles.badge}
           >
-            <span className={styles.badgeDot}></span>
-            For Medical Practitioners
+            {/* Neutral Trust Badge */}
+            <span style={{ fontWeight: 500, fontSize: '13px', letterSpacing: '0.02em', color: '#4cc9f0' }}>
+              HIPAA-ready &nbsp;•&nbsp; BAA Available &nbsp;•&nbsp; Audit Logs
+            </span>
           </motion.div>
 
           <motion.h1
@@ -292,6 +408,16 @@ export default function Home() {
             The Operating System for <br />
             <span className={styles.heroTitleHighlight}>Modern Medical</span> Practice.
           </motion.h1>
+
+          {/* Concrete Sub-headline */}
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
+            style={{ fontSize: '18px', fontWeight: 600, color: '#93c5fd', marginBottom: '16px', marginTop: '-10px' }}
+          >
+            AI documentation + OCR intake + visit transcription + compliant reporting.
+          </motion.p>
 
           <motion.p
             initial={{ opacity: 0, y: 20 }}
@@ -309,12 +435,22 @@ export default function Home() {
             className={styles.heroActions}
           >
             <Link href="/auth/signup" className={styles.primaryBtn}>
-              Start Free 10-Day Trial
+              Start Free 14-Day Trial
             </Link>
             <Link href="#pricing" className={styles.secondaryBtn}>
               View Pricing
             </Link>
           </motion.div>
+
+          {/* Trust Micro-lines */}
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4 }}
+            style={{ fontSize: '12px', color: '#64748b', marginTop: '16px' }}
+          >
+            Cancel anytime &nbsp;•&nbsp; BAA available for eligible plans
+          </motion.p>
         </div>
 
         {/* Ticker */}
@@ -371,8 +507,8 @@ export default function Home() {
               <CheckIcon />
             </div>
             <span className={`${styles.cardLabel} ${styles.solutionLabel}`}>Solution</span>
-            <h3 className={styles.cardTitle}>Upload 500 pages, get a summary in seconds.</h3>
-            <p className={styles.cardDescription}>Our OCR technology extracts and organizes patient data instantly</p>
+            <h3 className={styles.cardTitle}>Upload large PDFs and generate structured summaries.</h3>
+            <p className={styles.cardDescription}>Our OCR technology extracts and organizes patient data instantly.</p>
           </motion.div>
 
           <motion.div
@@ -392,8 +528,8 @@ export default function Home() {
               <CheckIcon />
             </div>
             <span className={`${styles.cardLabel} ${styles.solutionLabel}`}>Solution</span>
-            <h3 className={styles.cardTitle}>Record your visit, let AI write the SOAP note.</h3>
-            <p className={styles.cardDescription}>Focus on patients while AI handles documentation in real-time</p>
+            <h3 className={styles.cardTitle}>Record visits (with consent) and generate draft SOAP notes.</h3>
+            <p className={styles.cardDescription}>Focus on patients while AI handles documentation for clinician review.</p>
           </motion.div>
         </div>
       </section>
@@ -448,6 +584,10 @@ export default function Home() {
                       <div className={styles.redactionBadge} style={{ marginBottom: '24px' }}><ShieldIconBase /></div>
                       <h2 className={styles.sectionTitle}>{f.title}</h2>
                       <p className={styles.cardDescription} style={{ fontSize: '18px', margin: '24px 0' }}>{f.description}</p>
+
+                      {/* Compliance Helper */}
+                      {f.helper && <p style={{ fontSize: '13px', color: '#64748b', fontStyle: 'italic', marginBottom: '24px' }}>{f.helper}</p>}
+
                       <div className={styles.redactionItems}>
                         {(f.items as any[]).map((item, idx) => (
                           <motion.div
@@ -535,6 +675,10 @@ export default function Home() {
                       <div className={styles.featureIcon}>{f.icon}</div>
                       <h2 className={styles.sectionTitle}>{f.title}</h2>
                       <p className={styles.cardDescription} style={{ fontSize: '18px', margin: '24px 0' }}>{f.description}</p>
+
+                      {/* Compliance Helper */}
+                      {f.helper && <p style={{ fontSize: '13px', color: '#64748b', fontStyle: 'italic', marginBottom: '24px' }}>{f.helper}</p>}
+
                       <ul className={styles.featureList}>
                         {(f.items as string[]).map((item, idx) => (
                           <motion.li
@@ -637,8 +781,8 @@ export default function Home() {
             <Link href="/auth/signup" className={styles.planBtnSecondary} style={{ marginBottom: '32px' }}>Start Free</Link>
             <h4 style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', marginBottom: '16px', letterSpacing: '0.05em', color: '#64748b' }}>Features</h4>
             <ul className={styles.planFeatures}>
-              <motion.li initial={{ opacity: 0, x: -10 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: 0.1 }} className={styles.planFeature}><CheckIcon /> Solo notes & dictation</motion.li>
-              <motion.li initial={{ opacity: 0, x: -10 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: 0.2 }} className={styles.planFeature}><CheckIcon /> Basic PDF Analysis (5/mo)</motion.li>
+              <motion.li initial={{ opacity: 0, x: -10 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: 0.1 }} className={styles.planFeature}><CheckIcon /> Solo notes & dictation (inside editor)</motion.li>
+              <motion.li initial={{ opacity: 0, x: -10 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: 0.2 }} className={styles.planFeature}><CheckIcon /> Basic PDF Analysis (OCR/summaries) (5/mo)</motion.li>
               <motion.li initial={{ opacity: 0, x: -10 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: 0.3 }} className={styles.planFeature}><CheckIcon /> Community Support</motion.li>
             </ul>
           </motion.div>
@@ -653,7 +797,7 @@ export default function Home() {
             <h3 className={styles.planName}>Premium</h3>
             <p className={styles.planDescription}>Advanced AI for growth clinics.</p>
             <div className={styles.planPrice}>${isYearly ? "39" : "49"}<span>/mo</span></div>
-            <Link href="/auth/signup" className={styles.planBtnPrimary} style={{ marginBottom: '32px' }}>Contact Sales</Link>
+            <Link href="/auth/signup" className={styles.planBtnPrimary} style={{ marginBottom: '32px' }}>Start 14-Day Free Trial</Link>
             <h4 style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', marginBottom: '16px', letterSpacing: '0.05em', color: '#64748b' }}>Everything in Standard, Plus</h4>
             <ul className={styles.planFeatures}>
               <motion.li initial={{ opacity: 0, x: -10 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: 0.1 }} className={styles.planFeature}><CheckIcon /> Unlimited Audio Recording</motion.li>
@@ -671,7 +815,7 @@ export default function Home() {
             className={styles.pricingCard}
           >
             <h3 className={styles.planName}>Clinic Team</h3>
-            <p className={styles.planDescription}>Collaboration for medical teams.</p>
+            <p className={styles.planDescription}>Collaboration for medical teams (Min. 5 seats).</p>
             <div className={styles.planPrice}>$129<span>/seat/mo</span></div>
             <Link href="/auth/signup" className={styles.planBtnSecondary} style={{ marginBottom: '32px' }}>Contact Sales</Link>
             <h4 style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', marginBottom: '16px', letterSpacing: '0.05em', color: '#64748b' }}>Everything in Premium, Plus</h4>
@@ -739,9 +883,21 @@ export default function Home() {
               </tr>
               <tr>
                 <td className={styles.featureName}>Team Seats</td>
+                <td>1 Seat</td>
+                <td>1 Seat</td>
+                <td>Custom (5+)</td>
+              </tr>
+              <tr>
+                <td className={styles.featureName}>Role-based Access</td>
                 <td>-</td>
                 <td>-</td>
-                <td>Custom</td>
+                <td className={styles.checkIconGreen}><CheckIcon /></td>
+              </tr>
+              <tr>
+                <td className={styles.featureName}>Audit Logs</td>
+                <td>-</td>
+                <td className={styles.checkIconGreen}><CheckIcon /></td>
+                <td className={styles.checkIconGreen}><CheckIcon /></td>
               </tr>
               <tr>
                 <td className={styles.featureName}>Centralized Billing</td>
@@ -756,7 +912,7 @@ export default function Home() {
                 <td className={styles.checkIconGreen}><CheckIcon /></td>
               </tr>
               <tr className={styles.categoryRow}>
-                <td colSpan={4}>Security & Support</td>
+                <td colSpan={4}>Security & Compliance</td>
               </tr>
               <tr>
                 <td className={styles.featureName}>HIPAA</td>
@@ -765,7 +921,34 @@ export default function Home() {
                 <td className={styles.checkIconGreen}><CheckIcon /></td>
               </tr>
               <tr>
-                <td className={styles.featureName}>Support Level</td>
+                <td className={styles.featureName}>Encryption (At Rest & Transit)</td>
+                <td className={styles.checkIconGreen}><CheckIcon /></td>
+                <td className={styles.checkIconGreen}><CheckIcon /></td>
+                <td className={styles.checkIconGreen}><CheckIcon /></td>
+              </tr>
+              <tr>
+                <td className={styles.featureName}>Data Retention Controls</td>
+                <td>-</td>
+                <td className={styles.checkIconGreen}><CheckIcon /></td>
+                <td className={styles.checkIconGreen}><CheckIcon /></td>
+              </tr>
+              <tr>
+                <td className={styles.featureName}>SSO / SAML</td>
+                <td>-</td>
+                <td>-</td>
+                <td className={styles.checkIconGreen}><CheckIcon /></td>
+              </tr>
+              <tr className={styles.categoryRow}>
+                <td colSpan={4}>Integrations & Support</td>
+              </tr>
+              <tr>
+                <td className={styles.featureName}>Integrations / Exports</td>
+                <td>PDF</td>
+                <td>PDF, JSON</td>
+                <td>EHR, API</td>
+              </tr>
+              <tr>
+                <td className={styles.featureName}>Support SLA</td>
                 <td>Community</td>
                 <td>Priority Email</td>
                 <td>Dedicated Manager</td>
@@ -775,7 +958,7 @@ export default function Home() {
         </motion.div>
       </section>
 
-      <section id="security" className={styles.faqSection}>
+      <section id="faq" className={styles.faqSection}>
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -786,140 +969,7 @@ export default function Home() {
           <h2 className={styles.sectionTitle}>Frequently Asked Questions</h2>
         </motion.div>
         <div className={styles.faqContainer}>
-          {[
-            {
-              question: "What is Saramedico?",
-              answer: "Saramedico is an AI-powered clinical documentation and decision-support platform designed to help healthcare providers reduce documentation burden, improve accuracy, and streamline patient care workflows—without disrupting existing clinical systems."
-            },
-            {
-              question: "Who is Saramedico designed for?",
-              answer: "Saramedico is designed for: Physicians (Primary care & specialists), Clinics and hospitals, Telehealth providers, and Care coordinators and clinical teams."
-            },
-            {
-              question: "Does Saramedico replace doctors or clinical judgment?",
-              answer: "No. Saramedico is a clinical support tool, not a diagnostic replacement. All outputs are meant to assist clinicians, who retain full medical responsibility and final decision-making authority."
-            },
-            {
-              question: "Is my data secure?",
-              answer: "Yes. Saramedico follows industry-standard security practices, including: End-to-end encryption (in transit and at rest), Role-based access control (RBAC), Secure audit logs, and Continuous monitoring and intrusion detection."
-            },
-            {
-              question: "Is Saramedico HIPAA compliant?",
-              answer: "Yes. Saramedico is fully HIPAA compliant and signs a Business Associate Agreement (BAA) with all eligible customers."
-            },
-            {
-              question: "Where is patient data stored?",
-              answer: "Patient data is stored in secure, HIPAA-compliant cloud infrastructure located in approved regions within the United States."
-            },
-            {
-              question: "Does Saramedico train AI models on my patient data?",
-              answer: "No. Patient data is never used to train shared or public AI models. Your data remains private to your organization."
-            },
-            {
-              question: "Can Saramedico support SOC 2 or enterprise security reviews?",
-              answer: "Yes. Enterprise customers can request security documentation, architecture summaries, and compliance attestations during onboarding."
-            },
-            {
-              question: "Does Saramedico record patient conversations?",
-              answer: "Only if explicitly enabled by the clinician. Recording starts and stops under full user control."
-            },
-            {
-              question: "Are patients notified when recording is active?",
-              answer: "Yes. Saramedico supports configurable consent prompts and visual indicators to ensure patient awareness and compliance with consent laws."
-            },
-            {
-              question: "How accurate is transcription?",
-              answer: "Saramedico uses advanced medical-grade transcription optimized for clinical terminology, accents, and conversational speech."
-            },
-            {
-              question: "Can I edit transcripts?",
-              answer: "Yes. All transcripts are fully editable before approval and storage."
-            },
-            {
-              question: "What types of notes can Saramedico generate?",
-              answer: "Saramedico can generate: SOAP notes, Visit summaries, Follow-up instructions, Assessment & plan drafts, and Patient-friendly summaries."
-            },
-            {
-              question: "Can I customize note formats?",
-              answer: "Yes. Templates are configurable by specialty, clinic, or individual provider."
-            },
-            {
-              question: "Are summaries auto-saved to the medical record?",
-              answer: "Only after clinician review and approval. Nothing is finalized automatically."
-            },
-            {
-              question: "Does it work for telehealth visits?",
-              answer: "Yes. Saramedico supports both in-person and virtual consultations."
-            },
-            {
-              question: "Can multiple clinicians use one account?",
-              answer: "Yes. Saramedico supports multi-user organizations with: Admin roles, Provider roles, and Read-only roles."
-            },
-            {
-              question: "Can I restrict access to specific patient records?",
-              answer: "Yes. Role-based permissions allow fine-grained access control."
-            },
-            {
-              question: "What plans does Saramedico offer?",
-              answer: "Saramedico offers: Starter (individual clinicians), Clinic / Team plans, and Enterprise plans (custom)."
-            },
-            {
-              question: "Do you offer a free trial?",
-              answer: "Yes. A 14-day free trial is available for Premium plans."
-            },
-            {
-              question: "Can I cancel anytime?",
-              answer: "Yes. There are no long-term contracts unless explicitly agreed for enterprise customers."
-            },
-            {
-              question: "Can I switch plans later?",
-              answer: "Yes. You can upgrade or downgrade your plan at any time. Changes take effect at the next billing cycle."
-            },
-            {
-              question: "What payment methods do you accept?",
-              answer: "We accept major credit cards (Visa, Mastercard, American Express) and invoice billing for eligible organizations."
-            },
-            {
-              question: "Who owns the data?",
-              answer: "You do. Saramedico does not claim ownership of your patient or clinical data."
-            },
-            {
-              question: "Can I export my data?",
-              answer: "Yes. You can export notes, transcripts, and summaries in standard formats at any time."
-            },
-            {
-              question: "What happens to my data if I cancel?",
-              answer: "Your data remains accessible for a limited retention period, after which it is securely deleted upon request."
-            },
-            {
-              question: "What support options are available?",
-              answer: "Email support (all plans), Priority support (Premium), and Dedicated account manager (Enterprise)."
-            },
-            {
-              question: "Is Saramedico reliable?",
-              answer: "Saramedico is built for high availability with redundancy, monitoring, and automated failover mechanisms."
-            },
-            {
-              question: "Do you provide onboarding or training?",
-              answer: "Yes. We offer guided onboarding, documentation, and optional live training for teams."
-            },
-            {
-              question: "Is Saramedico FDA-approved?",
-              answer: "Saramedico is classified as a clinical documentation and decision-support tool, not a medical device. Regulatory positioning is continuously reviewed as features evolve."
-            },
-            {
-              question: "Does Saramedico provide medical advice?",
-              answer: "No. Saramedico provides informational support only. All medical decisions remain with licensed clinicians."
-            },
-            {
-              question: "Will Saramedico add more AI features?",
-              answer: "Yes. Future features may include deeper specialty support, predictive insights, and advanced workflow automation—always with clinician oversight."
-            },
-            {
-              question: "Can customers request features?",
-              answer: "Yes. Customer feedback directly influences our roadmap."
-            }
-          ].map((faq, i) => (
+          {faqs.map((faq, i) => (
             <motion.div
               key={i}
               initial={{ opacity: 0, y: 20 }}
@@ -968,105 +1018,110 @@ export default function Home() {
       </section>
 
       {/* Merged Footer Section */}
-      <footer className={styles.mergedFooter}>
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className={styles.ctaContainer}
-        >
-          <div className={styles.ctaTextContent}>
-            <h2 className={styles.ctaTitle}>Need a custom enterprise solution?</h2>
-            <p className={styles.ctaSubtitle}>For larger hospital networks requiring custom integrations, on-premise deployment, or volume discounts.</p>
-          </div>
-          <Link href="#" className={styles.ctaBtn}>Contact Sales Team</Link>
-        </motion.div>
-
-        <div className={styles.footerContainer}>
+      <section id="contact">
+        <footer className={styles.mergedFooter}>
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className={styles.footerInfo}
+            className={styles.ctaContainer}
           >
-            <Link href="/" className={styles.logo} style={{ color: 'white' }}>
-              <Image src="/logo-icon.svg" alt="SaraMedico" width={64} height={64} />
-            </Link>
-            <p>The operating system for modern medical practice.</p>
-            <div className={styles.socials}>
-              <Link href="#" className={styles.socialLink}>FB</Link>
-              <Link href="#" className={styles.socialLink}>TW</Link>
-              <Link href="#" className={styles.socialLink}>LN</Link>
+            <div className={styles.ctaTextContent}>
+              <h2 className={styles.ctaTitle}>Need a custom enterprise solution?</h2>
+              <div style={{ color: '#94a3b8', marginTop: '12px', fontSize: '15px' }}>
+                <ul style={{ listStyleType: 'none', padding: 0, margin: 0 }}>
+                  <li style={{ marginBottom: '8px' }}>• SSO / SAML Integration</li>
+                  <li style={{ marginBottom: '8px' }}>• Custom Retention Policies</li>
+                  <li>• Dedicated Deployment Options</li>
+                </ul>
+              </div>
             </div>
+            <Link href="/auth/signup" className={styles.ctaBtn}>Contact Sales Team</Link>
           </motion.div>
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-            className={styles.footerColumn}
-          >
-            <h5>Product</h5>
-            <ul className={styles.footerLinks}>
-              <li><Link href="#">Features</Link></li>
-              <li><Link href="#">Pricing</Link></li>
-              <li><Link href="#">Security</Link></li>
-              <li><Link href="#">Integrations</Link></li>
-            </ul>
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className={styles.footerColumn}
-          >
-            <h5>Company</h5>
-            <ul className={styles.footerLinks}>
-              <li><Link href="#">About Us</Link></li>
-              <li><Link href="#">Careers</Link></li>
-              <li><Link href="#">Blog</Link></li>
-              <li><Link href="#">Press Kit</Link></li>
-            </ul>
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-            className={styles.footerColumn}
-          >
-            <h5>Resources</h5>
-            <ul className={styles.footerLinks}>
-              <li><Link href="#">FAQ</Link></li>
-              <li><Link href="#">Documentation</Link></li>
-              <li><Link href="#">API</Link></li>
-              <li><Link href="#">Status</Link></li>
-            </ul>
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            className={styles.footerColumn}
-          >
-            <h5>Legal</h5>
-            <ul className={styles.footerLinks}>
-              <li><Link href="#">Privacy Policy</Link></li>
-              <li><Link href="#">Terms of Service</Link></li>
-              <li><Link href="#">BAA Request</Link></li>
-              <li><Link href="#">Cookie Policy</Link></li>
-            </ul>
-          </motion.div>
-        </div>
-        <div className={styles.footerBottom}>
-          <p>© 2025 SaraMedico, Inc. All rights reserved.</p>
-          <p>Built with care for healthcare professionals everywhere.</p>
-        </div>
-      </footer>
+
+          <div className={styles.footerContainer}>
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className={styles.footerInfo}
+            >
+              <Link href="/" className={styles.logo} style={{ color: 'white' }}>
+                <Image src="/logo-icon.svg" alt="SaraMedico" width={64} height={64} />
+              </Link>
+              <p>The operating system for modern medical practice.</p>
+              <div className={styles.socials}>
+                <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className={styles.socialLink}>LN</a>
+              </div>
+              {/* Global Medical Disclaimer */}
+              <p style={{ fontSize: '11px', color: '#64748b', marginTop: '24px', lineHeight: '1.4' }}>
+                Disclaimer: Not for emergency use. Saramedico is a documentation aid, not a medical device. Does not provide medical advice.
+              </p>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+              className={styles.footerColumn}
+            >
+              <h5>Product</h5>
+              <ul className={styles.footerLinks}>
+                <li><Link href="#features">Features</Link></li>
+                <li><Link href="#pricing">Pricing</Link></li>
+                <li><Link href="#security">Security</Link></li>
+              </ul>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className={styles.footerColumn}
+            >
+              <h5>Company</h5>
+              <ul className={styles.footerLinks}>
+                <li><Link href="#contact">Contact</Link></li>
+              </ul>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              className={styles.footerColumn}
+            >
+              <h5>Resources</h5>
+              <ul className={styles.footerLinks}>
+                <li><Link href="#faq">FAQ</Link></li>
+                <li><Link href="#use-cases">Use Cases</Link></li>
+              </ul>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+              className={styles.footerColumn}
+            >
+              <h5>Legal</h5>
+              <ul className={styles.footerLinks}>
+                <li><Link href="#">Privacy Policy</Link></li>
+                <li><Link href="#">Terms of Service</Link></li>
+                <li><Link href="#">BAA Request</Link></li>
+                <li><Link href="#">Accessibility</Link></li>
+                <li><Link href="#">Data Retention</Link></li>
+              </ul>
+            </motion.div>
+          </div>
+          <div className={styles.footerBottom}>
+            <p>© 2025 SaraMedico, Inc. All rights reserved.</p>
+            <p>Built with care for healthcare professionals everywhere.</p>
+          </div>
+        </footer>
+      </section>
     </main>
   );
 }
