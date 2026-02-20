@@ -30,9 +30,7 @@ const getApiBaseUrl = () => {
 
 export const API_BASE_URL = getApiBaseUrl();
 
-if (typeof window !== "undefined") {
-    console.log("Using API_BASE_URL:", API_BASE_URL);
-}
+// removed console log for security
 
 /**
  * Helper to handle fetch responses and extract meaningful errors

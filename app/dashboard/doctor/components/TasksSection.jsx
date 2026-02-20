@@ -5,7 +5,7 @@ import styles from "../DoctorDashboard.module.css";
 // TODO: Uncomment when connecting backend
 import { fetchTasks as fetchTasksAPI, addTask as addTaskAPI, updateTask as updateTaskAPI, deleteTask as deleteTaskAPI } from "@/services/doctor";
 
-export default function TasksSection() {
+export default function TasksSection(props) {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -43,6 +43,7 @@ export default function TasksSection() {
         due_date: new Date().toISOString()
       });
       setTasks(prev => [...prev, newTask]);
+      if (typeof props.onRefresh === 'function') props.onRefresh();
     } catch (error) {
       console.error("Failed to add task:", error);
       alert("Failed to add task");
@@ -66,6 +67,7 @@ export default function TasksSection() {
 
     try {
       await updateTaskAPI(id, { status: newStatus });
+      if (typeof props.onRefresh === 'function') props.onRefresh();
     } catch (error) {
       console.error("Failed to update task:", error);
       // Revert on error
@@ -82,6 +84,7 @@ export default function TasksSection() {
     try {
       await deleteTaskAPI(id);
       setTasks(prev => prev.filter(t => t.id !== id));
+      if (typeof props.onRefresh === 'function') props.onRefresh();
     } catch (error) {
       console.error("Failed to delete task:", error);
       alert("Failed to delete task");
