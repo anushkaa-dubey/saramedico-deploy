@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import styles from "./DocumentsList.module.css";
 import { useRouter } from "next/navigation";
 import { fetchPatientDocuments, uploadPatientDocument } from "@/services/doctor";
-import { processDocumentWithAI } from "@/services/ai";
+import { processDocumentWithAI, analyzeDocument, getDocumentStatus } from "@/services/ai";
 
 export default function DocumentsList({ patientId }) {
     const router = useRouter();
@@ -14,9 +14,17 @@ export default function DocumentsList({ patientId }) {
     const [error, setError] = useState("");
     const [processingDoc, setProcessingDoc] = useState(null);
     const [processResult, setProcessResult] = useState(null);
+    const pollingIntervalRef = useRef(null);
 
     useEffect(() => {
         if (patientId) loadDocuments();
+
+        // Cleanup function for unmount
+        return () => {
+            if (pollingIntervalRef.current) {
+                clearInterval(pollingIntervalRef.current);
+            }
+        };
     }, [patientId]);
 
     const loadDocuments = async () => {
@@ -65,24 +73,49 @@ export default function DocumentsList({ patientId }) {
         setError("");
 
         try {
-            const payload = {
-                patient_id: patientId,
-                document_id: documentId,
-                processing_type: "comprehensive",
-                priority: "normal"
-            };
-
-            const result = await processDocumentWithAI(payload);
+            // Step 1: Trigger AI Analysis
+            const result = await analyzeDocument(documentId);
             setProcessResult({
                 documentId,
-                jobId: result.job_id,
-                status: result.status || result.message
+                status: result.status || "processing"
             });
+
+            // Step 2: Poll for status
+            const intervalId = setInterval(async () => {
+                try {
+                    const statusData = await getDocumentStatus(documentId);
+                    setProcessResult({
+                        documentId,
+                        status: statusData.status || "processing",
+                        details: statusData.message || ""
+                    });
+
+                    if (statusData.status === "completed" || statusData.status === "failed") {
+                        clearInterval(pollingIntervalRef.current);
+                        pollingIntervalRef.current = null; // Clear ref
+                        setProcessingDoc(null);
+                        // Refresh documents to show updated status/data if any
+                        loadDocuments();
+                    }
+                } catch (err) {
+                    console.error("Polling error:", err);
+                    clearInterval(pollingIntervalRef.current);
+                    pollingIntervalRef.current = null; // Clear ref
+                    setProcessingDoc(null);
+                    setError("Failed to get analysis status");
+                }
+            }, 3000); // Poll every 3 seconds
+
+            pollingIntervalRef.current = intervalId; // Store the interval ID in the ref
+
         } catch (err) {
             console.error("AI processing error:", err);
             setError(err.message || "Failed to process document with AI");
-        } finally {
             setProcessingDoc(null);
+            if (pollingIntervalRef.current) {
+                clearInterval(pollingIntervalRef.current);
+                pollingIntervalRef.current = null;
+            }
         }
     };
 
@@ -143,14 +176,14 @@ export default function DocumentsList({ patientId }) {
                 <div style={{
                     padding: "12px",
                     margin: "12px 0",
-                    background: "rgba(76, 175, 80, 0.1)",
-                    border: "1px solid rgba(76, 175, 80, 0.3)",
+                    background: processResult.status === 'failed' ? "rgba(239, 68, 68, 0.1)" : "rgba(76, 175, 80, 0.1)",
+                    border: `1px solid ${processResult.status === 'failed' ? "rgba(239, 68, 68, 0.3)" : "rgba(76, 175, 80, 0.3)"}`,
                     borderRadius: "8px",
                     fontSize: "14px"
                 }}>
-                    <strong>✓ Processing Queued</strong>
-                    <div style={{ marginTop: "4px" }}>Job ID: <code>{processResult.jobId}</code></div>
-                    <div style={{ marginTop: "2px", opacity: 0.8 }}>{processResult.status}</div>
+                    <strong>{processResult.status === 'completed' ? '✓ Processing Complete' : processResult.status === 'failed' ? '❌ Processing Failed' : '⏳ AI Processing...'}</strong>
+                    <div style={{ marginTop: "4px" }}>Status: <code style={{ textTransform: 'capitalize' }}>{processResult.status}</code></div>
+                    {processResult.details && <div style={{ marginTop: "2px", opacity: 0.8 }}>{processResult.details}</div>}
                 </div>
             )}
 
