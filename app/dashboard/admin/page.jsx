@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import styles from "./AdminDashboard.module.css";
 import notificationIcon from "@/public/icons/notification.svg";
 import searchIcon from "@/public/icons/search.svg";
@@ -9,6 +9,7 @@ import micIcon from "@/public/icons/mic_white.svg";
 import scheduleIcon from "@/public/icons/schedule.svg";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { fetchCalendarMonth, fetchCalendarDay } from "@/services/calendar";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -39,18 +40,92 @@ export default function AdminDashboard() {
   const [searchFilter, setSearchFilter] = useState("All");
 
   const searchFilters = ["All", "Logins", "Exports", "Patient Data"];
-
   const topMatches = [
     { type: "doctor", name: "Dr. Smith Sara", icon: personIcon },
     { type: "doctor", name: "Dr. Angel Batista", icon: personIcon },
     { type: "document", name: "patient_data_report.pdf", icon: docIcon },
   ];
-
   const bookings = [
     { time: "09:00 AM", patient: "John Doe", type: "Checkup", status: "Pending" },
     { time: "10:30 AM", patient: "Jane Smith", type: "Follow-up", status: "Confirmed" },
     { time: "02:00 PM", patient: "Robert Brown", type: "Consultation", status: "Pending" },
   ];
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [monthData, setMonthData] = useState({});
+  const [selectedDayEvents, setSelectedDayEvents] = useState(null);
+
+  useEffect(() => {
+    const loadMonthData = async () => {
+      try {
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth() + 1;
+        const data = await fetchCalendarMonth(year, month);
+        setMonthData(data);
+      } catch (err) {
+        console.error("Failed to fetch calendar monthly data:", err);
+      }
+    };
+    loadMonthData();
+  }, [currentDate]);
+
+  const handleDayClick = async (day) => {
+    try {
+      const dateStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      const events = await fetchCalendarDay(dateStr);
+      setSelectedDayEvents(events);
+    } catch (err) {
+      console.error("Failed to fetch calendar day events:", err);
+    }
+  };
+
+  const changeMonth = (offset) => {
+    const newDate = new Date(currentDate);
+    newDate.setMonth(newDate.getMonth() + offset);
+    setCurrentDate(newDate);
+  };
+
+  const currentMonthName = currentDate.toLocaleString('default', { month: 'long' });
+  const currentYear = currentDate.getFullYear();
+  const daysInMonthCount = new Date(currentYear, currentDate.getMonth() + 1, 0).getDate();
+  const daysInMonth = Array.from({ length: daysInMonthCount }, (_, i) => i + 1);
+  const todayDate = new Date().getDate();
+  const isTodayMonth = currentDate.getMonth() === new Date().getMonth() && currentDate.getFullYear() === new Date().getFullYear();
+
+  const getDayAvailability = (day) => {
+    const data = monthData[day];
+    if (!data) return "none";
+    const count = typeof data === 'number' ? data : (data.count || 0);
+    if (count >= 10) return "red";
+    if (count > 0) return "green";
+    return "none";
+  };
+
+  useEffect(() => {
+    // Fetch today's events initially
+    const fetchToday = async () => {
+      try {
+        const todayStr = new Date().toISOString().split('T')[0];
+        const events = await fetchCalendarDay(todayStr);
+        setSelectedDayEvents(events);
+      } catch (err) {
+        console.error("Failed to fetch today's events:", err);
+      }
+    };
+    fetchToday();
+  }, []);
+
+  const formatEventsForSchedule = (events) => {
+    if (!events || events.length === 0) return [];
+    return events.map(event => ({
+      time: new Date(event.start_time || event.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      patient: event.metadata?.patient_name || event.title || "Consultation",
+      type: event.event_type.charAt(0).toUpperCase() + event.event_type.slice(1),
+      status: event.metadata?.appointment_status || (event.event_type === 'appointment' ? 'Confirmed' : 'Active'),
+      zoomLink: event.metadata?.zoom_link
+    }));
+  };
+
+  const displaySchedule = selectedDayEvents ? formatEventsForSchedule(selectedDayEvents) : bookings;
 
   return (
     <motion.div
@@ -131,7 +206,7 @@ export default function AdminDashboard() {
           </div>
           <div className={styles.summaryInfo}>
             <span className={styles.summaryLabel}>Appointments Today</span>
-            <h3 className={styles.summaryValue}>42</h3>
+            <h3 className={styles.summaryValue}>{selectedDayEvents ? selectedDayEvents.length : 42}</h3>
             <span className={styles.summaryTrend} style={{ color: '#16a34a' }}>↑ 12% vs yesterday</span>
           </div>
         </div>
@@ -161,11 +236,12 @@ export default function AdminDashboard() {
         <div className={styles.leftCol}>
           <motion.div className={styles.card} variants={itemVariants}>
             <div className={styles.cardHeader}>
-              <h3>Today's Schedule</h3>
+              <h3>{selectedDayEvents ? "Events for Selected Day" : "Today's Schedule"}</h3>
+              {selectedDayEvents && <span onClick={() => setSelectedDayEvents(null)} style={{ cursor: 'pointer', fontSize: '12px', color: '#666' }}>Reset to Today</span>}
               <Link href="/dashboard/admin/appointments" className={styles.link}>View All</Link>
             </div>
             <div className={styles.scheduleList}>
-              {bookings.map((booking, idx) => (
+              {displaySchedule.map((booking, idx) => (
                 <div key={idx} className={styles.scheduleItem}>
                   <div className={styles.timeLine}>
                     <span className={styles.timeText}>{booking.time}</span>
@@ -173,15 +249,21 @@ export default function AdminDashboard() {
                   </div>
                   <div className={styles.scheduleContent}>
                     <div className={styles.scheduleInfo}>
-                      <strong>{booking.patient}</strong>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <strong>{booking.patient}</strong>
+                        {booking.zoomLink && <a href={booking.zoomLink} target="_blank" style={{ fontSize: '10px', color: '#359aff', fontWeight: 'bold' }}>JOIN ZOOM</a>}
+                      </div>
                       <span>{booking.type}</span>
                     </div>
-                    <span className={`${styles.statusBadge} ${styles[booking.status.toLowerCase()]}`}>
+                    <span className={`${styles.statusBadge} ${styles[booking.status.toLowerCase()] || styles.pending}`}>
                       {booking.status}
                     </span>
                   </div>
                 </div>
               ))}
+              {displaySchedule.length === 0 && (
+                <div style={{ padding: '20px', textAlign: 'center', color: '#64748b' }}>No events found.</div>
+              )}
             </div>
           </motion.div>
 
@@ -233,19 +315,39 @@ export default function AdminDashboard() {
           <motion.div className={styles.card} variants={itemVariants}>
             <div className={styles.calendarHeader}>
               <h3>Calendar</h3>
-              <span>February 2026</span>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <span style={{ fontSize: '14px', fontWeight: '600' }}>{currentMonthName} {currentYear}</span>
+                <div style={{ display: 'flex', gap: '4px' }}>
+                  <button onClick={() => changeMonth(-1)} className={styles.iconBtn} style={{ padding: '2px 6px', fontSize: '12px' }}>‹</button>
+                  <button onClick={() => changeMonth(1)} className={styles.iconBtn} style={{ padding: '2px 6px', fontSize: '12px' }}>›</button>
+                </div>
+              </div>
             </div>
             <div className={styles.calendarWidget}>
               <div className={styles.calendarGrid}>
                 {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(d => <span key={d} className={styles.calDayHead}>{d}</span>)}
-                {Array.from({ length: 30 }).map((_, i) => {
-                  const day = i + 1;
+                {daysInMonth.map((day) => {
+                  const availability = getDayAvailability(day);
+                  const isToday = isTodayMonth && day === todayDate;
+
                   return (
                     <div
                       key={day}
-                      className={`${styles.calDay} ${day === 3 ? styles.calToday : ''} ${[10, 15, 22].includes(day) ? styles.calHasEvent : ''}`}
+                      onClick={() => handleDayClick(day)}
+                      style={{ cursor: 'pointer' }}
+                      className={`${styles.calDay} ${isToday ? styles.calToday : ''} ${availability !== 'none' ? styles.calHasEvent : ''}`}
                     >
                       {day}
+                      {availability !== 'none' && (
+                        <div style={{
+                          width: '4px',
+                          height: '4px',
+                          borderRadius: '50%',
+                          background: availability === 'red' ? '#ef4444' : '#22c55e',
+                          position: 'absolute',
+                          bottom: '4px'
+                        }}></div>
+                      )}
                     </div>
                   );
                 })}

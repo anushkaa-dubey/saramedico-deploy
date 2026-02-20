@@ -14,6 +14,29 @@ export const processDocumentWithAI = async (payload) => {
 };
 
 /**
+ * Trigger AI document analysis
+ * Endpoint: POST /api/v1/documents/{document_id}/analyze
+ */
+export const analyzeDocument = async (documentId) => {
+    const response = await fetch(`${API_BASE_URL}/documents/${documentId}/analyze`, {
+        method: "POST",
+        headers: getAuthHeaders()
+    });
+    return handleResponse(response);
+};
+
+/**
+ * Get document processing status
+ * Endpoint: GET /api/v1/documents/{document_id}/status
+ */
+export const getDocumentStatus = async (documentId) => {
+    const response = await fetch(`${API_BASE_URL}/documents/${documentId}/status`, {
+        headers: getAuthHeaders()
+    });
+    return handleResponse(response);
+};
+
+/**
  * Helper for text responses
  */
 const handleTextResponse = async (response) => {

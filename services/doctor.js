@@ -6,7 +6,6 @@ import { API_BASE_URL, getAuthHeaders, handleResponse } from "./apiConfig";
  */
 export const fetchTasks = async () => {
     try {
-        console.log("Fetching tasks from:", `${API_BASE_URL}/doctor/tasks`);
         const response = await fetch(`${API_BASE_URL}/doctor/tasks`, {
             headers: getAuthHeaders(),
         });
@@ -166,7 +165,7 @@ export const fetchTeamMembers = async () => {
  * Create a new SOAP note
  */
 export const createSOAPNote = async (soapNote) => {
-    console.log("createSOAPNote placeholder called");
+
     return null;
 };
 
@@ -208,7 +207,7 @@ export const fetchProfile = async () => {
  */
 export const uploadPatientDocument = async (patientId, file, metadata) => {
     try {
-        console.log("Attempting upload via Presigned URL flow...");
+
         // Step 1: Request Presigned URL
         const initResponse = await fetch(`${API_BASE_URL}/documents/upload-url`, {
             method: "POST",
@@ -217,18 +216,19 @@ export const uploadPatientDocument = async (patientId, file, metadata) => {
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({
-                filename: file.name,
-                content_type: file.type || "application/octet-stream",
-                patient_id: patientId,
+                fileName: file.name,
+                fileType: file.type || "application/octet-stream",
+                fileSize: file.size,
+                patientId: patientId,
                 ...metadata
             })
         });
 
         if (initResponse.ok) {
-            const { upload_url, document_id } = await initResponse.json();
+            const { uploadUrl, documentId } = await initResponse.json();
 
             // Step 2: Upload payload to S3 (No auth headers, just the file)
-            const uploadResponse = await fetch(upload_url, {
+            const uploadResponse = await fetch(uploadUrl, {
                 method: "PUT",
                 headers: {
                     "Content-Type": file.type || "application/octet-stream"
@@ -241,7 +241,7 @@ export const uploadPatientDocument = async (patientId, file, metadata) => {
             }
 
             // Step 3: Confirm Upload
-            const confirmResponse = await fetch(`${API_BASE_URL}/documents/${document_id}/confirm`, {
+            const confirmResponse = await fetch(`${API_BASE_URL}/documents/${documentId}/confirm`, {
                 method: "POST",
                 headers: getAuthHeaders()
             });
@@ -255,7 +255,6 @@ export const uploadPatientDocument = async (patientId, file, metadata) => {
         console.warn("Presigned upload flow error:", err);
     }
 
-    console.log("Attempting fallback: Direct Multipart Upload...");
     // Fallback: Direct Multipart Upload
     const formData = new FormData();
     formData.append("file", file);
