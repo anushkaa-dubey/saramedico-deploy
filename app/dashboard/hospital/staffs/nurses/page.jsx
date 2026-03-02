@@ -16,12 +16,11 @@ export default function NursesPage() {
         <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            className={styles.container}
-            style={{ flexDirection: 'column', background: 'transparent', padding: 0 }}
+            style={{ display: 'flex', flexDirection: 'column', background: 'transparent', padding: 0, minHeight: '100%' }}
         >
             <Topbar title="Nurses Management" />
 
-            <div style={{ padding: '24px' }}>
+            <div className={styles.contentWrapper}>
                 <div className={styles.card}>
                     <div className={styles.cardTitle}>
                         <span style={{ fontSize: '18px', fontWeight: '700' }}>Nurses Directory</span>

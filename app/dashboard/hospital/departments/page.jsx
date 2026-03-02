@@ -23,12 +23,11 @@ export default function DepartmentsPage() {
         <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className={styles.container}
-            style={{ flexDirection: 'column', background: 'transparent', padding: 0 }}
+            style={{ display: 'flex', flexDirection: 'column', background: 'transparent', padding: 0, minHeight: '100%' }}
         >
             <Topbar title="Departments Overview" />
 
-            <div style={{ padding: '24px' }}>
+            <div className={styles.contentWrapper}>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', marginBottom: '32px' }}>
                     {statsGroup.map((stat, i) => (
                         <div key={i} className={styles.card} style={{ textAlign: 'center' }}>

@@ -1,6 +1,6 @@
 "use client";
-import Topbar from "../components/Topbar";
-import styles from "../HospitalDashboard.module.css";
+import Topbar from "../../components/Topbar";
+import styles from "../../HospitalDashboard.module.css";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useState } from "react";
@@ -11,7 +11,7 @@ export default function CardiologyDepartmentPage() {
             label: "NOTES PENDING SIGNATURE",
             value: "14",
             badge: "5 urgent",
-            icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>,
+            icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>,
             color: "#94a3b8",
             badgeBg: "#fef2f2",
             badgeColor: "#ef4444"
@@ -52,7 +52,7 @@ export default function CardiologyDepartmentPage() {
         >
             <Topbar title="Cardiology Department" />
 
-            <div className={styles.contentWrapper} style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '24px' }}>
+            <div className={styles.contentWrapper} style={{ display: 'grid', gridTemplateColumns: '1fr 280px', gap: '24px' }}>
                 {/* Left Column */}
                 <div className={styles.leftColMain}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
@@ -140,7 +140,7 @@ export default function CardiologyDepartmentPage() {
                     <div className={styles.card}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
                             <div style={{ flex: 1, position: 'relative' }}>
-                                <svg style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                                <svg style={{ position: 'absolute', left: '12px', top: '48%', transform: 'translateY(-50%)', color: '#94a3b8' }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                                 <input placeholder="Search Patient Name, MRN or Session ID" style={{ width: '100%', padding: '10px 12px 10px 40px', borderRadius: '10px', border: '1px solid #f1f5f9', fontSize: '13px', background: '#f8fafc' }} />
                             </div>
                             <div style={{ display: 'flex', gap: '8px' }}>
@@ -171,7 +171,9 @@ export default function CardiologyDepartmentPage() {
                                 {[
                                     { patient: "Doe, John", dob: "01/12/1980", age: "43y", sessionId: "#SESS-8842", time: "Today, 09:41 AM", provider: "Dr. Sarah Jenkins", dept: "Cardiology", status: "Needs Review", color: "#ef4444", active: true },
                                     { patient: "Smith, Jane", dob: "05/22/1975", age: "48y", sessionId: "#SESS-8841", time: "Today, 09:15 AM", provider: "Dr. Emily Chen", dept: "Neurology", status: "Processing", color: "#359aff", active: false },
-                                    { patient: "Brown, Robert", dob: "11/30/1990", age: "33y", sessionId: "#SESS-8839", time: "Today, 08:50 AM", provider: "Dr. Michael Ross", dept: "Pediatrics", status: "In Progress", color: "#94a3b8", active: true }
+                                    { patient: "Brown, Robert", dob: "11/30/1990", age: "33y", sessionId: "#SESS-8839", time: "Today, 08:50 AM", provider: "Dr. Michael Ross", dept: "Pediatrics", status: "In Progress", color: "#94a3b8", active: true },
+                                    { patient: "Wilson, Alice", dob: "03/14/1985", age: "39y", sessionId: "#SESS-8835", time: "Today, 08:30 AM", provider: "Dr. Sarah Jenkins", dept: "Cardiology", status: "Needs Review", color: "#ef4444", active: false },
+                                    { patient: "Davis, Chris", dob: "09/05/1962", age: "61y", sessionId: "#SESS-8830", time: "Today, 08:10 AM", provider: "Dr. James Wilson", dept: "Orthopedics", status: "Needs Review", color: "#ef4444", active: true }
                                 ].map((row, i) => (
                                     <tr key={i} className={styles.activityRow}>
                                         <td>
@@ -201,8 +203,8 @@ export default function CardiologyDepartmentPage() {
                                             </span>
                                         </td>
                                         <td style={{ textAlign: 'right' }}>
-                                            <button className={styles.outlineBtn} style={{ height: '32px', fontSize: '12px', marginLeft: 'auto', background: '#ffffff', color: '#64748b' }}>
-                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginRight: '6px' }}><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                            <button className={styles.outlineBtn} style={{ height: '32px', fontSize: '12px', marginLeft: 'auto', background: '#ffffff', color: '#64748b', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                                                 Review
                                             </button>
                                         </td>
@@ -215,17 +217,57 @@ export default function CardiologyDepartmentPage() {
 
                 {/* Right Column */}
                 <div className={styles.rightColMain}>
-                    <div className={styles.calendarCard} style={{ marginBottom: '24px' }}>
-                        <div className={styles.calendarHeader}>
-                            <h3 className={styles.calendarTitle}>February 2026</h3>
+                    <div className={styles.calendarCard} style={{ marginBottom: '24px', paddingBottom: '24px' }}>
+                        <div className={styles.calendarHeader} style={{ marginBottom: '24px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>
+                                <h3 style={{ fontSize: 'var(--font-base)', fontWeight: '800', margin: 0 }}>February 2026</h3>
+                            </div>
+                            <div style={{ display: 'flex', gap: '4px' }}>
+                                <button style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '18px' }}>‹</button>
+                                <button style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '18px' }}>›</button>
+                            </div>
                         </div>
                         <div className={styles.calendarGrid}>
-                            {['MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU'].map(d => <div key={d} className={styles.dayLabel}>{d}</div>)}
-                            {Array.from({ length: 28 }).map((_, i) => (
-                                <div key={i} className={styles.day} style={{ background: i + 1 === 8 ? '#359aff' : 'transparent', color: i + 1 === 8 ? 'white' : '#475569' }}>
-                                    {i + 1}
-                                </div>
-                            ))}
+                            {['MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU'].map(d => <div key={d} className={styles.dayLabel} style={{ fontSize: '10px', fontWeight: '800' }}>{d}</div>)}
+                            {Array.from({ length: 28 }).map((_, i) => {
+                                const day = i + 1;
+                                const isAvailable = day % 3 !== 0;
+                                const isSelected = day === 8;
+                                return (
+                                    <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', position: 'relative' }}>
+                                        <div className={`${styles.day} ${isSelected ? styles.selectedDay : ''}`} style={{
+                                            background: isSelected ? '#359aff' : 'transparent',
+                                            color: isSelected ? 'white' : '#475569',
+                                            fontWeight: isSelected ? '800' : '600',
+                                            borderRadius: '12px',
+                                            width: '32px',
+                                            height: '32px',
+                                            zIndex: 2
+                                        }}>
+                                            {day}
+                                        </div>
+                                        <div style={{
+                                            position: 'absolute',
+                                            bottom: '-2px',
+                                            width: '12px',
+                                            height: '2px',
+                                            borderRadius: '2px',
+                                            background: isAvailable ? '#10b981' : '#359aff'
+                                        }} />
+                                    </div>
+                                );
+                            })}
+                        </div>
+                        <div style={{ marginTop: '24px', display: 'flex', gap: '16px', borderTop: '1px solid #f1f5f9', paddingTop: '16px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '10px', fontWeight: '800', color: '#64748b' }}>
+                                <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#359aff' }} />
+                                FULLY BOOKED
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '10px', fontWeight: '800', color: '#64748b' }}>
+                                <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981' }} />
+                                AVAILABLE
+                            </div>
                         </div>
                     </div>
 
@@ -255,7 +297,7 @@ export default function CardiologyDepartmentPage() {
                                 <div style={{ width: '92%', height: '100%', background: '#ef4444', borderRadius: '3px' }} />
                             </div>
                             <div style={{ marginTop: '12px', padding: '8px', background: '#fef2f2', borderRadius: '4px', display: 'flex', gap: '8px', alignItems: 'center' }}>
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
                                 <span style={{ fontSize: '10px', color: '#ef4444', fontWeight: '600' }}>Documentation pressure critical</span>
                             </div>
                         </div>

@@ -16,12 +16,11 @@ export default function DoctorsPage() {
         <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className={styles.container}
-            style={{ flexDirection: 'column', background: 'transparent', padding: 0 }}
+            style={{ display: 'flex', flexDirection: 'column', background: 'transparent', padding: 0, minHeight: '100%' }}
         >
             <Topbar title="Doctors Directory" />
 
-            <div style={{ padding: '24px' }}>
+            <div className={styles.contentWrapper}>
                 <div className={styles.card}>
                     <div className={styles.cardTitle}>
                         <span>All Doctors</span>
