@@ -28,12 +28,12 @@ export default function StaffManagementPage() {
             <Topbar title="Staff Management" />
 
             <div className={styles.contentWrapper}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', flexWrap: 'wrap', gap: '16px' }}>
+                <div className={styles.pageHeaderRow} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', flexWrap: 'wrap', gap: '16px' }}>
                     <div>
                         <h1 style={{ fontSize: '24px', fontWeight: '800', color: '#0f172a', margin: 0 }}>Staff Management</h1>
                         <p style={{ color: '#64748b', margin: '4px 0 0 0' }}>Manage hospital personnel, shifts, and department assignments.</p>
                     </div>
-                    <div style={{ display: 'flex', gap: '12px' }}>
+                    <div className={styles.pageHeaderActions} style={{ display: 'flex', gap: '12px' }}>
                         <button className={styles.outlineBtn} style={{ background: '#ffffff' }}>Export Roster</button>
                         <Link href="/dashboard/hospital/settings" style={{ textDecoration: 'none' }}>
                             <button className={styles.primaryBtn}>+ Add New Staff</button>
@@ -52,8 +52,8 @@ export default function StaffManagementPage() {
                 </div>
 
                 <div className={styles.card} style={{ border: 'none', borderRadius: '16px', padding: '0', overflow: 'hidden' }}>
-                    <div style={{ padding: '24px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
-                        <div style={{ position: 'relative', width: '300px' }}>
+                    <div className={styles.filterButtonRow} style={{ padding: '24px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+                        <div style={{ position: 'relative', width: '100%', maxWidth: '300px' }}>
                             <input
                                 type="text"
                                 placeholder="Search staff name or role..."
@@ -67,39 +67,41 @@ export default function StaffManagementPage() {
                         </div>
                     </div>
 
-                    <table className={styles.activityTable} style={{ fontSize: '13px' }}>
-                        <thead>
-                            <tr className={styles.activityHeader}>
-                                <th style={{ padding: '16px 24px' }}>STAFF MEMBER</th>
-                                <th>ROLE</th>
-                                <th>DEPARTMENT</th>
-                                <th>SHIFT</th>
-                                <th>STATUS</th>
-                                <th style={{ textAlign: 'right', paddingRight: '24px' }}>ACTIONS</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {staffList.map((s, i) => (
-                                <tr key={i} className={styles.activityRow}>
-                                    <td style={{ padding: '16px 24px' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                            <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#359aff15', color: '#359aff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', fontSize: '11px' }}>{s.name.split(' ').map(n => n[0]).join('')}</div>
-                                            <div style={{ fontWeight: '700' }}>{s.name}</div>
-                                        </div>
-                                    </td>
-                                    <td>{s.role}</td>
-                                    <td>{s.dept}</td>
-                                    <td>{s.shift}</td>
-                                    <td>
-                                        <span style={{ color: s.color, background: `${s.color}10`, padding: '4px 12px', borderRadius: '20px', fontWeight: '700', fontSize: '11px' }}>{s.status}</span>
-                                    </td>
-                                    <td style={{ textAlign: 'right', paddingRight: '24px' }}>
-                                        <button className={styles.outlineBtn} style={{ height: '32px', fontSize: '12px' }}>Edit</button>
-                                    </td>
+                    <div className={styles.tableScrollWrapper}>
+                        <table className={styles.activityTable} style={{ fontSize: '13px' }}>
+                            <thead>
+                                <tr className={styles.activityHeader}>
+                                    <th style={{ padding: '16px 24px', whiteSpace: 'nowrap' }}>STAFF MEMBER</th>
+                                    <th style={{ whiteSpace: 'nowrap' }}>ROLE</th>
+                                    <th style={{ whiteSpace: 'nowrap' }}>DEPARTMENT</th>
+                                    <th style={{ whiteSpace: 'nowrap' }}>SHIFT</th>
+                                    <th style={{ whiteSpace: 'nowrap' }}>STATUS</th>
+                                    <th style={{ textAlign: 'right', paddingRight: '24px', whiteSpace: 'nowrap' }}>ACTIONS</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                {staffList.map((s, i) => (
+                                    <tr key={i} className={styles.activityRow}>
+                                        <td style={{ padding: '16px 24px', whiteSpace: 'nowrap' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#359aff15', color: '#359aff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', fontSize: '11px' }}>{s.name.split(' ').map(n => n[0]).join('')}</div>
+                                                <div style={{ fontWeight: '700' }}>{s.name}</div>
+                                            </div>
+                                        </td>
+                                        <td style={{ whiteSpace: 'nowrap' }}>{s.role}</td>
+                                        <td style={{ whiteSpace: 'nowrap' }}>{s.dept}</td>
+                                        <td style={{ whiteSpace: 'nowrap' }}>{s.shift}</td>
+                                        <td style={{ whiteSpace: 'nowrap' }}>
+                                            <span style={{ color: s.color, background: `${s.color}10`, padding: '4px 12px', borderRadius: '20px', fontWeight: '700', fontSize: '11px' }}>{s.status}</span>
+                                        </td>
+                                        <td style={{ textAlign: 'right', paddingRight: '24px', whiteSpace: 'nowrap' }}>
+                                            <button className={styles.outlineBtn} style={{ height: '32px', fontSize: '12px' }}>Edit</button>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </motion.div>

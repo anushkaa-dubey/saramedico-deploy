@@ -1,4 +1,4 @@
-import { API_BASE_URL } from "./apiConfig";
+import { API_BASE_URL, handleResponse } from "./apiConfig";
 
 /**
  * Register a new user
@@ -11,13 +11,7 @@ export const registerUser = async (payload) => {
         },
         body: JSON.stringify(payload),
     });
-
-    if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.detail || "Registration failed");
-    }
-
-    return await response.json();
+    return handleResponse(response);
 };
 
 /**
@@ -32,15 +26,12 @@ export const loginUser = async (payload) => {
         body: JSON.stringify(payload),
     });
 
-    if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.detail || "Login failed");
-    }
-
-    const data = await response.json();
+    const data = await handleResponse(response);
 
     // Store token safely
-    localStorage.setItem("authToken", data.access_token || data.token);
+    if (data.access_token || data.token) {
+        localStorage.setItem("authToken", data.access_token || data.token);
+    }
 
     return data;
 };
@@ -75,60 +66,26 @@ export const getCurrentUser = async () => {
 
     if (!token) return null;
 
-    const response = await fetch(`${API_BASE_URL}/auth/me`, {
-        headers: {
-            Authorization: `Bearer ${token}`,
-        },
-    });
+    try {
+        const response = await fetch(`${API_BASE_URL}/auth/me`, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
 
-    if (!response.ok) return null;
+        if (!response.ok) {
+            if (response.status === 401) {
+                localStorage.removeItem("authToken");
+            }
+            return null;
+        }
 
-    return await response.json();
+        return await response.json();
+    } catch (e) {
+        return null;
+    }
 };
 
-/**
- * ------------------------------
- * OTP-BASED AUTH (NOT USED NOW)
- * ------------------------------
- * Backend does NOT currently support OTP.
- * Keeping this for future use.
- */
-
-/*
-export const verifyOTP = async (payload) => {
-  const response = await fetch(`${API_BASE_URL}/auth/verify-otp`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
-  });
-
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.detail || "OTP verification failed");
-  }
-
-  return await response.json();
-};
-
-export const resendOTP = async (payload) => {
-  const response = await fetch(`${API_BASE_URL}/auth/resend-otp`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
-  });
-
-  if (!response.ok) {
-    const error = await response.json();
-    throw new Error(error.detail || "Resend OTP failed");
-  }
-
-  return await response.json();
-};
-*/
 /**
  * Request password reset link
  */
@@ -141,10 +98,5 @@ export const forgotPassword = async (payload) => {
         body: JSON.stringify(payload),
     });
 
-    if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.detail || "Forgot password request failed");
-    }
-
-    return await response.json();
+    return handleResponse(response);
 };

@@ -26,7 +26,7 @@ export default function Topbar({ title, onSearch }) {
                             className={styles.search}
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            style={{ width: '300px', fontSize: '13px' }}
+                            style={{ width: '100%', maxWidth: '300px', fontSize: '13px' }}
                         />
                         <svg style={{ position: 'absolute', right: '12px', top: '48%', transform: 'translateY(-50%)', color: '#94a3b8' }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                     </div>

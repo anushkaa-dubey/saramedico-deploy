@@ -20,7 +20,7 @@ export default function SurgeryPage() {
             <Topbar title="Surgery Schedule" />
 
             <div className={styles.contentWrapper}>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', marginBottom: '32px' }}>
+                <div className={styles.inlineGrid3} style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', marginBottom: '32px' }}>
                     <div className={styles.card} style={{ borderLeft: '4px solid #ef4444' }}>
                         <div style={{ fontSize: '13px', color: '#64748b' }}>Now In Progress</div>
                         <div style={{ fontSize: '24px', fontWeight: '800', margin: '4px 0' }}>2</div>

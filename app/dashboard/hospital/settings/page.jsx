@@ -13,7 +13,7 @@ export default function SettingsPage() {
             <Topbar title="Invite Staff Member" />
 
             <div className={styles.contentWrapper}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', flexWrap: 'wrap', gap: '16px' }}>
+                <div className={styles.pageHeaderRow} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', flexWrap: 'wrap', gap: '16px' }}>
                     <div>
                         <h1 style={{ fontSize: '24px', fontWeight: '800', color: '#0f172a', margin: 0 }}>Invite Staff Member</h1>
                         <p style={{ color: '#64748b', margin: '4px 0 0 0' }}>Onboard a new medical professional to your department network with secure credential.</p>

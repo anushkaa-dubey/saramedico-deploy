@@ -11,7 +11,7 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import OnboardPatientModal from "./patients/components/OnboardPatientModal";
-import { fetchAppointments } from "@/services/doctor";
+import { fetchAppointments, fetchActivityFeed, fetchDashboardMetrics } from "@/services/doctor";
 import { fetchCalendarMonth, fetchCalendarDay, deleteCalendarEvent } from "@/services/calendar";
 
 const containerVariants = {
@@ -51,12 +51,21 @@ export default function DoctorDashboard() {
   const [recordingReady, setRecordingReady] = useState(false);
   const [showConsentError, setShowConsentError] = useState(false);
 
-  const loadAppts = async () => {
+  const [activityFeed, setActivityFeed] = useState([]);
+  const [metrics, setMetrics] = useState(null);
+
+  const loadDashboardData = async () => {
     try {
-      const data = await fetchAppointments();
-      setAppointments(data);
+      const [appts, activity, kpis] = await Promise.all([
+        fetchAppointments(),
+        fetchActivityFeed(),
+        fetchDashboardMetrics()
+      ]);
+      setAppointments(appts || []);
+      setActivityFeed(activity || []);
+      setMetrics(kpis);
     } catch (err) {
-      console.error("Failed to load doctor appointments:", err);
+      console.error("Failed to load doctor dashboard data:", err);
     }
   };
 
@@ -72,7 +81,7 @@ export default function DoctorDashboard() {
   };
 
   useEffect(() => {
-    loadAppts();
+    loadDashboardData();
   }, []);
 
   useEffect(() => {
@@ -170,7 +179,11 @@ export default function DoctorDashboard() {
         <div className={styles.headerActions}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <div style={{ display: 'flex', gap: '10px' }}>
-              <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className={styles.iconBtn}>
+              <motion.button
+                whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+                className={styles.iconBtn}
+                onClick={() => router.push("/dashboard/admin/upload-documents")}
+              >
                 <img src={uploadIcon.src} alt="Upload" width="20" height="20" />
               </motion.button>
               <motion.button
@@ -221,45 +234,88 @@ export default function DoctorDashboard() {
         </div>
       </motion.section>
 
+      <motion.section className={styles.summaryCards} variants={itemVariants}>
+        <div className={styles.summaryCard}>
+          <div className={styles.summaryIcon} style={{ background: '#eff6ff' }}>
+            <img src={scheduleIcon.src} alt="Tasks" width="20" />
+          </div>
+          <div className={styles.summaryInfo}>
+            <span className={styles.summaryLabel}>Tasks Pending</span>
+            <h3 className={styles.summaryValue}>{metrics?.pending_notes || (selectedDayEvents?.length || 0)}</h3>
+            <span className={styles.summaryTrend} style={{ color: (metrics?.urgent_notes > 0) ? '#ef4444' : '#16a34a' }}>
+              {metrics?.urgent_notes > 0 ? `${metrics.urgent_notes} urgent` : 'Updated recently'}
+            </span>
+          </div>
+        </div>
+        <div className={styles.summaryCard}>
+          <div className={styles.summaryIcon} style={{ background: '#fff7ed' }}>
+            <img src={uploadIcon.src} alt="Notes" width="20" />
+          </div>
+          <div className={styles.summaryInfo}>
+            <span className={styles.summaryLabel}>Clinical Records</span>
+            <h3 className={styles.summaryValue}>{metrics?.unsigned_orders || 14}</h3>
+            <span className={styles.summaryTrend} style={{ color: '#ea580c' }}>Pending Sign</span>
+          </div>
+        </div>
+        <div className={styles.summaryCard}>
+          <div className={styles.summaryIcon} style={{ background: '#f0fdf4' }}>
+            <img src={personIcon.src} alt="Patients" width="20" />
+          </div>
+          <div className={styles.summaryInfo}>
+            <span className={styles.summaryLabel}>Patients This Month</span>
+            <h3 className={styles.summaryValue}>{metrics?.patients_today || 12}</h3>
+            <span className={styles.summaryTrend} style={{ color: '#16a34a' }}>Active Status</span>
+          </div>
+        </div>
+      </motion.section>
+
       <section className={styles.grid}>
         {/* LEFT COLUMN */}
         <div className={styles.leftCol}>
           {/* Patient Profile Card (Today's Session) */}
-          <motion.div className={styles.profileCard} variants={itemVariants}>
-            <div className={styles.profileImage}>
-              <img src={Daniel.src} alt="Daniel" />
-            </div>
-            <div className={styles.profileContent}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <div>
-                  <div className={styles.profileName}>Daniel Benjamin</div>
-                  <div className={styles.profileType}>Follow-Up · Post-op check</div>
-                </div>
-                <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '4px', background: '#3b82f615', color: '#3b82f6', fontWeight: '700' }}>
-                  CHECKED-IN
-                </span>
+          {appointments.length > 0 ? (
+            <motion.div className={styles.profileCard} variants={itemVariants}>
+              <div className={styles.profileImage}>
+                <img src={Daniel.src} alt="Patient" />
               </div>
-
-              <div className={styles.profileDetails}>
-                <div className={styles.detailItem}>
-                  <div className={styles.detailLabel}>REASON FOR VISIT</div>
-                  <div className={styles.detailValue}>Post-op check</div>
+              <div className={styles.profileContent}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <div>
+                    <div className={styles.profileName}>{appointments[0].patient_name || appointments[0].patient?.full_name || "Upcoming Patient"}</div>
+                    <div className={styles.profileType}>{appointments[0].reason || "Consultation"}</div>
+                  </div>
+                  <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '4px', background: '#3b82f615', color: '#3b82f6', fontWeight: '700' }}>
+                    {appointments[0].status.toUpperCase()}
+                  </span>
                 </div>
-                <div className={styles.detailItem}>
-                  <div className={styles.detailLabel}>LAST VISIT</div>
-                  <div className={styles.detailValue}>Oct 12, 2025</div>
+
+                <div className={styles.profileDetails}>
+                  <div className={styles.detailItem}>
+                    <div className={styles.detailLabel}>REASON FOR VISIT</div>
+                    <div className={styles.detailValue}>{appointments[0].reason || "N/A"}</div>
+                  </div>
+                  <div className={styles.detailItem}>
+                    <div className={styles.detailLabel}>REQUESTED DATE</div>
+                    <div className={styles.detailValue}>{new Date(appointments[0].requested_date).toLocaleDateString()}</div>
+                  </div>
+                </div>
+
+                <div className={styles.appointmentTime}>
+                  {new Date(appointments[0].requested_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </div>
+
+                <div className={styles.profileActions}>
+                  <button className={styles.startMeetBtn} onClick={handleStartSession}>Start Meet</button>
+                  <button className={styles.detailsBtn} onClick={() => router.push(`/dashboard/doctor/patients/${appointments[0].patient_id}`)}>Details</button>
+                  <button className={styles.detailsBtn} style={{ borderColor: '#3b82f6', color: '#3b82f6' }}>Resume</button>
                 </div>
               </div>
-
-              <div className={styles.appointmentTime}>10:30 AM</div>
-
-              <div className={styles.profileActions}>
-                <button className={styles.startMeetBtn} onClick={handleStartSession}>Start Meet</button>
-                <button className={styles.detailsBtn}>Details</button>
-                <button className={styles.detailsBtn} style={{ borderColor: '#3b82f6', color: '#3b82f6' }}>Resume</button>
-              </div>
-            </div>
-          </motion.div>
+            </motion.div>
+          ) : (
+            <motion.div className={styles.card} variants={itemVariants} style={{ padding: '40px', textAlign: 'center', color: '#64748b' }}>
+              No appointments scheduled for today.
+            </motion.div>
+          )}
 
           {/* Recent Activity / Selected Day Agenda */}
           <motion.div className={styles.card} variants={itemVariants}>
@@ -328,47 +384,34 @@ export default function DoctorDashboard() {
                     })
                   )
                 ) : (
-                  <>
-                    <tr>
-                      <td>
-                        <div className={styles.userCell}>
-                          <div className={styles.avatarSmall}></div>
-                          John Von
-                        </div>
-                      </td>
-                      <td>Lab Results Reviewed</td>
-                      <td>Today, 9:15 AM</td>
-                      <td>
-                        <span className={styles.completed} style={{ background: visitStates["Signed"] + '15', color: visitStates["Signed"] }}>Completed</span>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <div className={styles.userCell}>
-                          <div className={styles.avatarSmall}></div>
-                          John Von
-                        </div>
-                      </td>
-                      <td>Operation</td>
-                      <td>Yesterday, 4:30 PM</td>
-                      <td>
-                        <span className={styles.inReview} style={{ background: visitStates["Needs Review"] + '15', color: visitStates["Needs Review"] }}>In Review</span>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td>
-                        <div className={styles.userCell}>
-                          <div className={styles.avatarSmall}></div>
-                          John Von
-                        </div>
-                      </td>
-                      <td>Check-up</td>
-                      <td>Sept 12, 2:10 PM</td>
-                      <td>
-                        <span className={styles.completed} style={{ background: visitStates["Signed"] + '15', color: visitStates["Signed"] }}>Completed</span>
-                      </td>
-                    </tr>
-                  </>
+                  activityFeed.length === 0 ? (
+                    <tr><td colSpan="4" style={{ textAlign: 'center', padding: '20px', color: '#64748b' }}>No recent activity</td></tr>
+                  ) : (
+                    activityFeed.map((log, idx) => (
+                      <tr key={idx}>
+                        <td>
+                          <div className={styles.userCell}>
+                            <div className={styles.avatarSmall}></div>
+                            {log.activity_type.replace(/_/g, ' ').toUpperCase()}
+                          </div>
+                        </td>
+                        <td>{log.description}</td>
+                        <td style={{ fontSize: '11px' }}>{new Date(log.created_at).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}</td>
+                        <td>
+                          <span className={styles.completed} style={{
+                            background: log.status === 'completed' ? '#10b98115' : '#f59e0b15',
+                            color: log.status === 'completed' ? '#10b981' : '#f59e0b',
+                            padding: '2px 8px',
+                            borderRadius: '4px',
+                            fontSize: '11px',
+                            fontWeight: '700'
+                          }}>
+                            {log.status.toUpperCase()}
+                          </span>
+                        </td>
+                      </tr>
+                    ))
+                  )
                 )}
               </tbody>
             </table>

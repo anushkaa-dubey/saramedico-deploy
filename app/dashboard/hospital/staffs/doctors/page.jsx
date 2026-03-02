@@ -28,36 +28,38 @@ export default function DoctorsPage() {
                     </div>
 
                     <div className={styles.activityTableContainer} style={{ marginTop: '20px' }}>
-                        <table className={styles.activityTable}>
-                            <thead>
-                                <tr className={styles.activityHeader}>
-                                    <th>NAME</th>
-                                    <th>SPECIALTY</th>
-                                    <th>PATIENTS</th>
-                                    <th>SHIFT</th>
-                                    <th>STATUS</th>
-                                    <th style={{ textAlign: 'right' }}>ACTION</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {doctors.map(doc => (
-                                    <tr key={doc.id} className={styles.activityRow}>
-                                        <td style={{ fontWeight: '700' }}>{doc.name}</td>
-                                        <td style={{ color: '#64748b' }}>{doc.specialty}</td>
-                                        <td>{doc.patients}</td>
-                                        <td>{doc.shift}</td>
-                                        <td>
-                                            <span className={doc.status === 'Active' ? styles.statusCompleted : styles.statusReview}>
-                                                {doc.status}
-                                            </span>
-                                        </td>
-                                        <td style={{ textAlign: 'right' }}>
-                                            <button style={{ background: 'none', border: 'none', color: '#359aff', cursor: 'pointer', fontWeight: '700' }}>Manage</button>
-                                        </td>
+                        <div className={styles.tableScrollWrapper}>
+                            <table className={styles.activityTable}>
+                                <thead>
+                                    <tr className={styles.activityHeader}>
+                                        <th>NAME</th>
+                                        <th>SPECIALTY</th>
+                                        <th>PATIENTS</th>
+                                        <th>SHIFT</th>
+                                        <th>STATUS</th>
+                                        <th style={{ textAlign: 'right' }}>ACTION</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    {doctors.map(doc => (
+                                        <tr key={doc.id} className={styles.activityRow}>
+                                            <td style={{ fontWeight: '700', whiteSpace: 'nowrap' }}>{doc.name}</td>
+                                            <td style={{ color: '#64748b', whiteSpace: 'nowrap' }}>{doc.specialty}</td>
+                                            <td>{doc.patients}</td>
+                                            <td>{doc.shift}</td>
+                                            <td>
+                                                <span className={doc.status === 'Active' ? styles.statusCompleted : styles.statusReview} style={{ whiteSpace: 'nowrap' }}>
+                                                    {doc.status}
+                                                </span>
+                                            </td>
+                                            <td style={{ textAlign: 'right' }}>
+                                                <button style={{ background: 'none', border: 'none', color: '#359aff', cursor: 'pointer', fontWeight: '700' }}>Manage</button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>

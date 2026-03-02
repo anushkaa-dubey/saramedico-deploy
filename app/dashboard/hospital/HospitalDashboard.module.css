@@ -1195,11 +1195,10 @@
 /* Calendar Widget */
 .calendarCard {
     background: #ffffff;
-    border-radius: 12px;
-    padding: 10px;
-    border: 1px solid #eef2f7;
-    margin-bottom: 16px;
-    max-width: 260px;
+    padding: 24px;
+    border-radius: 20px;
+    border: 1px solid #f1f5f9;
+    width: 100%;
 }
 
 .calendarHeader {
@@ -1773,6 +1772,95 @@
 }
 
 /* =============================================
+   RESPONSIVE HELPER CLASSES
+   No visual effect at desktop — used by media queries
+   to override inline styles on mobile
+   ============================================= */
+.dashboardHeaderRow {
+    /* responsive hook */
+    display: flex;
+}
+
+.dashboardHeaderActions {
+    /* responsive hook */
+    display: flex;
+}
+
+.statCardsGrid {
+    /* responsive hook */
+    display: grid;
+}
+
+.sessionsSectionHeader {
+    /* responsive hook */
+    display: flex;
+}
+
+.sessionsTabBar {
+    /* responsive hook */
+    display: flex;
+}
+
+.tableScrollWrapper {
+    width: 100%;
+}
+
+.scheduleSectionHeader {
+    /* responsive hook */
+    display: flex;
+}
+
+.scheduleListWrapper {
+    /* responsive hook */
+    display: flex;
+}
+
+.scheduleItem {
+    /* responsive hook */
+    display: flex;
+}
+
+.pageHeaderRow {
+    /* responsive hook */
+    display: flex;
+}
+
+.pageHeaderActions {
+    /* responsive hook */
+    display: flex;
+}
+
+.inlineGrid4 {
+    /* responsive hook */
+    display: grid;
+}
+
+.inlineGrid3 {
+    /* responsive hook */
+    display: grid;
+}
+
+.inlineGrid2 {
+    /* responsive hook */
+    display: grid;
+}
+
+.inlineGridAuto {
+    /* responsive hook */
+    display: grid;
+}
+
+.appointmentListItem {
+    /* responsive hook */
+    display: flex;
+}
+
+.filterButtonRow {
+    /* responsive hook */
+    display: flex;
+}
+
+/* =============================================
    MOBILE RESPONSIVENESS — media queries only
    No desktop styles are changed above this line
    ============================================= */
@@ -1813,29 +1901,48 @@
 
     /* Two-column dashboard grid → single column */
     .dashboardGrid {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr !important;
     }
 
     /* 4-col stats → 2 columns */
     .overviewSection {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(2, 1fr) !important;
     }
 
     /* Content wrapper less padding */
     .contentWrapper {
         padding: 16px 20px;
+        /* Override any inline grid for contentWrapper used on cardiology etc. */
+        grid-template-columns: 1fr !important;
+        display: block !important;
     }
 
     /* Topbar needs left space for hamburger */
     .topbar {
         padding-left: 64px;
     }
+
+    /* Calendar card full width on tablet */
+    .calendarCard {
+        max-width: 100%;
+    }
+
+    /* Chart grid single col */
+    .chartGrid {
+        grid-template-columns: 1fr !important;
+    }
+
+    /* Right column main stacks */
+    .rightColMain {
+        display: flex !important;
+        flex-direction: column !important;
+    }
 }
 
 /* ---------- Mobile (≤768px) ---------- */
 @media (max-width: 768px) {
 
-    /* Scale down font system */
+    /* Prevent any horizontal overflow globally */
     .container {
         --font-3xl: 22px;
         --font-2xl: 18px;
@@ -1844,11 +1951,19 @@
         --font-base: 13px;
         --font-md: 12px;
         --font-xs: 10px;
+        overflow-x: hidden;
+    }
+
+    .main {
+        overflow-x: hidden;
     }
 
     /* Content wrapper tighter padding */
     .contentWrapper {
         padding: 14px 16px;
+        max-width: 100%;
+        overflow-x: hidden;
+        box-sizing: border-box;
     }
 
     /* Header stacks vertically */
@@ -1865,7 +1980,7 @@
         -webkit-overflow-scrolling: touch;
     }
 
-    /* Tables become horizontally scrollable */
+    /* Tables become horizontally scrollable inside their container */
     .activityTable {
         display: block;
         overflow-x: auto;
@@ -1873,9 +1988,15 @@
         white-space: nowrap;
     }
 
-    /* Cards less padding */
+    .activityTableContainer {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Cards responsive */
     .card {
         padding: 16px;
+        overflow: hidden;
     }
 
     /* Buttons slightly smaller */
@@ -1884,6 +2005,8 @@
         height: 34px;
         font-size: 12px;
         padding: 0 12px;
+        white-space: nowrap;
+        flex-shrink: 0;
     }
 
     /* Dashboard actions wrap */
@@ -1912,6 +2035,156 @@
     .topbar {
         padding: 12px 16px 12px 64px;
     }
+
+    /* Dashboard grid single column */
+    .dashboardGrid {
+        grid-template-columns: 1fr !important;
+        padding: 12px 0 !important;
+        gap: 16px !important;
+    }
+
+    /* Stat cards 2-col grid on medium mobile */
+    .overviewSection {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 12px !important;
+    }
+
+    /* Stat card compressor */
+    .statCard {
+        min-height: auto !important;
+        padding: 14px !important;
+    }
+
+    /* Calendar card full width */
+    .calendarCard {
+        max-width: 100% !important;
+    }
+
+    /* Chart grid single col  */
+    .chartGrid {
+        grid-template-columns: 1fr !important;
+        gap: 16px !important;
+    }
+
+    /* Chart card */
+    .chartCard {
+        padding: 16px;
+    }
+
+    /* Card title wrap */
+    .cardTitle {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    /* Form card responsive */
+    .formCard {
+        padding: 20px;
+        margin: 12px;
+    }
+
+    /* Form group responsive */
+    .formGroup select,
+    .formGroup input,
+    .formGroup textarea {
+        font-size: 14px;
+    }
+
+    /* ---- RESPONSIVE HELPER CLASS OVERRIDES ---- */
+
+    /* Dashboard header row: wrap on mobile */
+    .dashboardHeaderRow {
+        flex-wrap: wrap !important;
+        gap: 12px !important;
+    }
+
+    /* Dashboard header actions: wrap and full width */
+    .dashboardHeaderActions {
+        flex-wrap: wrap !important;
+        width: 100% !important;
+        gap: 8px !important;
+    }
+
+    /* Sessions section header: stack */
+    .sessionsSectionHeader {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 12px !important;
+        padding: 0 16px !important;
+    }
+
+    /* Sessions tab bar: horizontal scroll */
+    .sessionsTabBar {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        flex-shrink: 0 !important;
+        max-width: 100% !important;
+    }
+
+    /* Table scroll wrapper */
+    .tableScrollWrapper {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+        width: 100% !important;
+    }
+
+    /* Schedule section header: wrap */
+    .scheduleSectionHeader {
+        flex-wrap: wrap !important;
+        gap: 8px !important;
+    }
+
+    /* Schedule list wrapper: ensure no overflow */
+    .scheduleListWrapper {
+        overflow: hidden !important;
+    }
+
+    /* Page header row (generic for sub-pages): wrap */
+    .pageHeaderRow {
+        flex-wrap: wrap !important;
+        gap: 12px !important;
+    }
+
+    /* Page header actions: wrap */
+    .pageHeaderActions {
+        flex-wrap: wrap !important;
+        width: 100% !important;
+        gap: 8px !important;
+    }
+
+    /* Inline grid overrides for any inline style grids */
+    .inlineGrid4 {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 12px !important;
+    }
+
+    .inlineGrid3 {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+    }
+
+    .inlineGrid2 {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+    }
+
+    .inlineGridAuto {
+        grid-template-columns: 1fr !important;
+        gap: 12px !important;
+    }
+
+    /* Appointment list items: stack columns */
+    .appointmentListItem {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 12px !important;
+    }
+
+    /* Filter button row: wrap */
+    .filterButtonRow {
+        flex-wrap: wrap !important;
+        gap: 8px !important;
+    }
 }
 
 /* ---------- Small phone (≤480px) ---------- */
@@ -1919,7 +2192,7 @@
 
     /* Stats go single column */
     .overviewSection {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr !important;
     }
 
     /* Dashboard actions stack */
@@ -1947,5 +2220,11 @@
     .search {
         max-width: 150px;
         font-size: 12px !important;
+    }
+
+    /* Pie wrapper even smaller */
+    .pieWrapper {
+        width: 120px;
+        height: 120px;
     }
 }

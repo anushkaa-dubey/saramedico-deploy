@@ -59,8 +59,15 @@ export default function AdminDashboard() {
       try {
         const year = currentDate.getFullYear();
         const month = currentDate.getMonth() + 1;
-        const data = await fetchCalendarMonth(year, month);
-        setMonthData(data);
+        const response = await fetchCalendarMonth(year, month);
+        // Map the days array into a dictionary { day: count }
+        const mappedData = {};
+        if (response && response.days) {
+          response.days.forEach(d => {
+            mappedData[d.day] = d.event_count || d.count || 0;
+          });
+        }
+        setMonthData(mappedData);
       } catch (err) {
         console.error("Failed to fetch calendar monthly data:", err);
       }
@@ -71,8 +78,9 @@ export default function AdminDashboard() {
   const handleDayClick = async (day) => {
     try {
       const dateStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-      const events = await fetchCalendarDay(dateStr);
-      setSelectedDayEvents(events);
+      const response = await fetchCalendarDay(dateStr);
+      // The service handleResponse returns the json directly, which for DayViewResponse has an 'events' array
+      setSelectedDayEvents(response.events || response || []);
     } catch (err) {
       console.error("Failed to fetch calendar day events:", err);
     }
@@ -92,12 +100,10 @@ export default function AdminDashboard() {
   const isTodayMonth = currentDate.getMonth() === new Date().getMonth() && currentDate.getFullYear() === new Date().getFullYear();
 
   const getDayAvailability = (day) => {
-    const data = monthData[day];
-    if (!data) return "none";
-    const count = typeof data === 'number' ? data : (data.count || 0);
+    const count = monthData[day];
+    if (count === undefined || count === 0) return "none";
     if (count >= 10) return "red";
-    if (count > 0) return "green";
-    return "none";
+    return "green";
   };
 
   useEffect(() => {
@@ -105,8 +111,8 @@ export default function AdminDashboard() {
     const fetchToday = async () => {
       try {
         const todayStr = new Date().toISOString().split('T')[0];
-        const events = await fetchCalendarDay(todayStr);
-        setSelectedDayEvents(events);
+        const response = await fetchCalendarDay(todayStr);
+        setSelectedDayEvents(response.events || response || []);
       } catch (err) {
         console.error("Failed to fetch today's events:", err);
       }

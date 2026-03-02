@@ -208,12 +208,12 @@ export default function HospitalDashboard() {
             <Topbar title="Clinical Dashboard" />
 
             <div className={styles.contentWrapper}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                <div className={styles.dashboardHeaderRow} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                     <div>
                         <h1 style={{ fontSize: '22px', fontWeight: '800', color: '#0f172a', margin: 0 }}>Clinical Dashboard</h1>
                         <p style={{ color: '#64748b', fontSize: '13px', margin: '2px 0 0 0' }}>Good morning, Dr. Mitchell. You have <span style={{ color: '#3b82f6', fontWeight: '700' }}>4 priority drafts</span> pending review.</p>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <div className={styles.dashboardHeaderActions} style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                         <div style={{ display: 'flex', background: '#f1f5f9', padding: '4px', borderRadius: '10px', alignItems: 'center', gap: '4px' }}>
                             <button
                                 onClick={() => setIsAvailable(true)}
@@ -262,7 +262,7 @@ export default function HospitalDashboard() {
                 <div className={styles.dashboardGrid}>
                     {/* Main Content Area */}
                     <div className={styles.leftColMain}>
-                        <div className={styles.overviewSection} style={{ marginBottom: '32px' }}>
+                        <div className={`${styles.overviewSection} ${styles.statCardsGrid}`} style={{ marginBottom: '32px' }}>
                             {stats.map((s, i) => (
                                 <div key={`${s.label}-${i}`} className={styles.statCard} style={{ padding: '20px', borderRadius: '16px', border: '1px solid #f1f5f9', background: '#ffffff', minHeight: '120px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -292,9 +292,9 @@ export default function HospitalDashboard() {
                         </div>
 
                         <div className={styles.card} style={{ border: 'none', background: '#ffffff', padding: '24px 0', borderRadius: '16px', marginBottom: '32px' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', padding: '0 24px' }}>
+                            <div className={styles.sessionsSectionHeader} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', padding: '0 24px' }}>
                                 <h2 style={{ fontSize: '18px', fontWeight: '800', color: '#1e293b', margin: 0 }}>My Sessions & Documentation</h2>
-                                <div style={{ display: 'flex', background: '#f1f5f9', padding: '4px', borderRadius: '10px', gap: '4px' }}>
+                                <div className={styles.sessionsTabBar} style={{ display: 'flex', background: '#f1f5f9', padding: '4px', borderRadius: '10px', gap: '4px' }}>
                                     {['All Active', 'Drafts Ready', 'Pending Review', 'Signed'].map((tab, i) => (
                                         <button key={`${tab}-${i}`} style={{
                                             padding: '6px 16px',
@@ -311,7 +311,7 @@ export default function HospitalDashboard() {
                                 </div>
                             </div>
 
-                            <table className={styles.activityTable} style={{ fontSize: 'var(--font-body)', borderCollapse: 'collapse', borderSpacing: 0 }}>
+                            <div className={styles.tableScrollWrapper}><table className={styles.activityTable} style={{ fontSize: 'var(--font-body)', borderCollapse: 'collapse', borderSpacing: 0 }}>
                                 <thead style={{ background: '#f9fafb', borderBottom: '1px solid #f1f5f9' }}>
                                     <tr className={styles.activityHeader}>
                                         <th style={{ color: '#94a3b8', padding: '16px 24px', fontSize: '10px', fontWeight: '800', letterSpacing: '0.05em' }}>PATIENT</th>
@@ -372,7 +372,7 @@ export default function HospitalDashboard() {
                                         </tr>
                                     ))}
                                 </tbody>
-                            </table>
+                            </table></div>
                             <div style={{ marginTop: '24px', textAlign: 'right', padding: '0 24px' }}>
                                 <button style={{ background: 'transparent', border: 'none', color: '#359aff', fontWeight: '800', fontSize: '13px', cursor: 'pointer' }}>View All Sessions</button>
                             </div>
@@ -380,7 +380,7 @@ export default function HospitalDashboard() {
 
                         {/* Today's Schedule Section at bottom */}
                         <div className={styles.card} style={{ border: 'none', background: '#ffffff', padding: '24px', borderRadius: '16px' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                            <div className={styles.scheduleSectionHeader} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
                                 <h2 style={{ fontSize: '18px', fontWeight: '800', color: '#1e293b' }}>Today's Schedule</h2>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: '#64748b', fontWeight: '700' }}>
                                     <span style={{ cursor: 'pointer', padding: '4px' }}>‹</span>
@@ -388,7 +388,7 @@ export default function HospitalDashboard() {
                                     <span style={{ cursor: 'pointer', padding: '4px' }}>›</span>
                                 </div>
                             </div>
-                            <div style={{ display: 'flex', flexDirection: 'column', border: '1px solid #f1f5f9', borderRadius: '12px', overflow: 'hidden' }}>
+                            <div className={styles.scheduleListWrapper} style={{ display: 'flex', flexDirection: 'column', border: '1px solid #f1f5f9', borderRadius: '12px', overflow: 'hidden' }}>
                                 {[
                                     { time: "09:00 AM", patient: "John Doe", status: "Completed", type: "Follow-up", completed: true },
                                     { time: "10:30 AM", patient: "Jane Smith", status: "In Visit", tags: ["HTN", "Chest Pain"], badge: "NEW CONSULT", active: true },

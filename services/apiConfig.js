@@ -8,59 +8,62 @@
  */
 
 const getApiBaseUrl = () => {
+    // Priority: Explicit env variable
     const envUrl = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE;
 
-    // In production, if the URL is the insecure HTTP backend or missing, use relative path for proxy
-    if (!envUrl || (process.env.NODE_ENV === "production" && envUrl.includes("http://65.0.98.170"))) {
-        if (process.env.NODE_ENV === "development" && !envUrl) {
-            console.warn(
-                "WARNING: NEXT_PUBLIC_API_URL not set. Falling back to http://localhost:8000/api/v1"
-            );
-            return "http://localhost:8000/api/v1";
-        }
+    if (envUrl) return envUrl;
 
-        // Return relative path to use Next.js rewrite proxy
-        return "/api/v1";
+    // Fallback for local development
+    if (process.env.NODE_ENV === "development") {
+        return "http://localhost:8000/api/v1";
     }
 
-    return envUrl;
-
-    return envUrl;
+    // Default to relative path for production proxy/rewrites
+    return "/api/v1";
 };
 
 export const API_BASE_URL = getApiBaseUrl();
-
-// removed console log for security
 
 /**
  * Helper to handle fetch responses and extract meaningful errors
  */
 export const handleResponse = async (response) => {
     if (!response.ok) {
-        let errorMessage = `Request failed with status ${response.status}`;
+        let errorMessage = `API Error: ${response.status} ${response.statusText}`;
 
         try {
             const errorData = await response.json();
 
+            // Handle FastAPI list-style validation details
             if (Array.isArray(errorData?.detail)) {
-                // FastAPI validation errors
                 errorMessage = errorData.detail
-                    .map(err => `${err.loc.join(".")}: ${err.msg}`)
-                    .join(", ");
-            } else {
-                errorMessage =
-                    errorData?.detail ||
-                    errorData?.message ||
-                    errorMessage;
+                    .map(err => {
+                        const loc = err.loc ? err.loc.join(" -> ") : "unknown";
+                        return `[${loc}]: ${err.msg}`;
+                    })
+                    .join(" | ");
+            } else if (typeof errorData?.detail === 'string') {
+                errorMessage = errorData.detail;
+            } else if (errorData?.message) {
+                errorMessage = errorData.message;
+            } else if (errorData?.error) {
+                errorMessage = errorData.error;
             }
-        } catch {
-            // response not JSON
+        } catch (e) {
+            // Failed to parse JSON, use status text
         }
 
         throw new Error(errorMessage);
     }
 
-    return response.json();
+    // Handle empty 204 No Content responses
+    if (response.status === 204) return null;
+
+    try {
+        return await response.json();
+    } catch (e) {
+        return null; // Return null if response isn't JSON but was successful
+    }
 };
 
 /**

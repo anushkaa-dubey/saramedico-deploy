@@ -13,7 +13,7 @@ export default function AnalyticsPage() {
             <Topbar title="Hospital Analytics" />
 
             <div className={styles.contentWrapper}>
-                <div className={styles.overviewSection} style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
+                <div className={`${styles.overviewSection} ${styles.inlineGrid3}`} style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
                     <div className={styles.card}>
                         <h3 style={{ fontSize: '14px', color: '#64748b' }}>Total Patients</h3>
                         <p style={{ fontSize: '28px', fontWeight: '700', color: '#0f172a', margin: '8px 0' }}>1,280</p>

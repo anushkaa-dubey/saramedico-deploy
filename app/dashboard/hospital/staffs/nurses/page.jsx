@@ -28,36 +28,38 @@ export default function NursesPage() {
                     </div>
 
                     <div className={styles.activityTableContainer} style={{ marginTop: '20px' }}>
-                        <table className={styles.activityTable}>
-                            <thead>
-                                <tr className={styles.activityHeader}>
-                                    <th>NAME</th>
-                                    <th>WARD</th>
-                                    <th>EXP.</th>
-                                    <th>SHIFT</th>
-                                    <th>STATUS</th>
-                                    <th style={{ textAlign: 'right' }}>ACTION</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {nurses.map(nurse => (
-                                    <tr key={nurse.id} className={styles.activityRow}>
-                                        <td style={{ fontWeight: '700' }}>{nurse.name}</td>
-                                        <td style={{ color: '#64748b' }}>{nurse.ward}</td>
-                                        <td>{nurse.experience}</td>
-                                        <td>{nurse.shift}</td>
-                                        <td>
-                                            <span className={nurse.status === 'Active' ? styles.statusCompleted : styles.statusReview}>
-                                                {nurse.status}
-                                            </span>
-                                        </td>
-                                        <td style={{ textAlign: 'right' }}>
-                                            <button style={{ background: 'none', border: 'none', color: '#359aff', cursor: 'pointer', fontWeight: '700' }}>Details</button>
-                                        </td>
+                        <div className={styles.tableScrollWrapper}>
+                            <table className={styles.activityTable}>
+                                <thead>
+                                    <tr className={styles.activityHeader}>
+                                        <th>NAME</th>
+                                        <th>WARD</th>
+                                        <th>EXP.</th>
+                                        <th>SHIFT</th>
+                                        <th>STATUS</th>
+                                        <th style={{ textAlign: 'right' }}>ACTION</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    {nurses.map(nurse => (
+                                        <tr key={nurse.id} className={styles.activityRow}>
+                                            <td style={{ fontWeight: '700', whiteSpace: 'nowrap' }}>{nurse.name}</td>
+                                            <td style={{ color: '#64748b', whiteSpace: 'nowrap' }}>{nurse.ward}</td>
+                                            <td>{nurse.experience}</td>
+                                            <td>{nurse.shift}</td>
+                                            <td>
+                                                <span className={nurse.status === 'Active' ? styles.statusCompleted : styles.statusReview} style={{ whiteSpace: 'nowrap' }}>
+                                                    {nurse.status}
+                                                </span>
+                                            </td>
+                                            <td style={{ textAlign: 'right' }}>
+                                                <button style={{ background: 'none', border: 'none', color: '#359aff', cursor: 'pointer', fontWeight: '700' }}>Details</button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>

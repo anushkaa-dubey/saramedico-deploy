@@ -171,6 +171,25 @@
     margin-top: 20px;
 }
 
+.statusMsg {
+    margin-top: 12px;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 8px 12px;
+    border-radius: 6px;
+    animation: fadeIn 0.3s ease;
+}
+
+.statusMsg.success {
+    background: #ecfdf5;
+    color: #10b981;
+}
+
+.statusMsg.error {
+    background: #fef2f2;
+    color: #ef4444;
+}
+
 .checkbox {
     display: flex;
     align-items: center;

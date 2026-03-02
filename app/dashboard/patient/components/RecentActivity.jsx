@@ -1,6 +1,28 @@
+import { useState, useEffect } from "react";
+import { fetchAppointments } from "@/services/patient";
 import styles from "../PatientDashboard.module.css";
 
 export default function RecentActivity() {
+  const [activities, setActivities] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadActivities = async () => {
+      try {
+        const data = await fetchAppointments();
+        // Show last 3 appointments for dashboard
+        setActivities(data.slice(0, 3));
+      } catch (err) {
+        console.error("Failed to load patient activities:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadActivities();
+  }, []);
+
+  if (loading) return <div className={styles.card}><p>Loading activity...</p></div>;
+
   return (
     <div className={styles.card}>
       <div className={styles.cardTitle}>
@@ -21,85 +43,45 @@ export default function RecentActivity() {
 
         <table className={styles.activityTable}>
           <tbody>
-            <tr className={styles.activityRow}>
-              <td>
-                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                  <div className={styles.avatarSmall}></div>
-                  <span>John Von</span>
-                </div>
-              </td>
-              <td>Lab Results Reviewed</td>
-              <td style={{ color: "#64748b" }}>Today, 9:15 AM</td>
-              <td>
-                <span className={styles.statusCompleted}>Completed</span>
-              </td>
-            </tr>
-
-            <tr className={styles.activityRow}>
-              <td>
-                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                  <div className={styles.avatarSmall}></div>
-                  <span>John Von</span>
-                </div>
-              </td>
-              <td>Operation</td>
-              <td style={{ color: "#64748b" }}>Yesterday, 4:30 PM</td>
-              <td>
-                <span className={styles.statusReview}>In Review</span>
-              </td>
-            </tr>
-
-            <tr className={styles.activityRow}>
-              <td>
-                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                  <div className={styles.avatarSmall}></div>
-                  <span>John Von</span>
-                </div>
-              </td>
-              <td>Check-up</td>
-              <td style={{ color: "#64748b" }}>Sept 12, 2:10 PM</td>
-              <td>
-                <span className={styles.statusCompleted}>Completed</span>
-              </td>
-            </tr>
+            {activities.length === 0 ? (
+              <tr><td colSpan="4" style={{ textAlign: "center", padding: "20px" }}>No recent activity</td></tr>
+            ) : activities.map((item, idx) => (
+              <tr className={styles.activityRow} key={idx}>
+                <td>
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                    <div className={styles.avatarSmall}></div>
+                    <span>{item.doctor_name || "Dr. Sara"}</span>
+                  </div>
+                </td>
+                <td>{item.reason || "Consultation"}</td>
+                <td style={{ color: "#64748b" }}>{new Date(item.requested_date).toLocaleDateString()}</td>
+                <td>
+                  <span className={item.status === 'accepted' ? styles.statusCompleted : styles.statusReview}>
+                    {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
+                  </span>
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
 
       {/* Mobile-only list view */}
       <div className={styles.activityList}>
-        <div className={styles.activityListItem}>
-          <div className={styles.doctorInfo}>
-            <div className={styles.avatarCircle}></div>
-            <div>
-              <span className={styles.docName}>Dr. Arvind Shukla</span>
-              <span className={styles.visitMeta}>20m ago • MRI Analysis</span>
+        {activities.map((item, idx) => (
+          <div className={styles.activityListItem} key={idx}>
+            <div className={styles.doctorInfo}>
+              <div className={styles.avatarCircle}></div>
+              <div>
+                <span className={styles.docName}>{item.doctor_name || "Dr. Sara"}</span>
+                <span className={styles.visitMeta}>{new Date(item.requested_date).toLocaleDateString()} • {item.reason}</span>
+              </div>
             </div>
+            <span className={`${styles.statusBadge} ${item.status === 'accepted' ? styles.ready : styles.pending}`}>
+              {item.status}
+            </span>
           </div>
-          <span className={`${styles.statusBadge} ${styles.ready}`}>Ready</span>
-        </div>
-
-        <div className={styles.activityListItem}>
-          <div className={styles.doctorInfo}>
-            <div className={styles.avatarCircle}></div>
-            <div>
-              <span className={styles.docName}>Dr. Govind Sharma</span>
-              <span className={styles.visitMeta}>2h ago • Lab Results</span>
-            </div>
-          </div>
-          <span className={`${styles.statusBadge} ${styles.pending}`}>Pending</span>
-        </div>
-
-        <div className={styles.activityListItem}>
-          <div className={styles.doctorInfo}>
-            <div className={styles.avatarCircle}></div>
-            <div>
-              <span className={styles.docName}>Dr. Avantika Gupta</span>
-              <span className={styles.visitMeta}>6h ago • Check-Up</span>
-            </div>
-          </div>
-          <span className={`${styles.statusBadge} ${styles.closed}`}>Closed</span>
-        </div>
+        ))}
       </div>
     </div >
   );

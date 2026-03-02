@@ -155,6 +155,23 @@ export const onboardPatient = async (patientData) => {
 };
 
 /**
+ * Fetch doctor's recent activity feed
+ * Endpoint: GET /api/v1/doctor/activity
+ */
+export const fetchActivityFeed = async () => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/doctor/activity`, {
+            headers: getAuthHeaders(),
+        });
+        const data = await handleResponse(response);
+        return Array.isArray(data) ? data : [];
+    } catch (err) {
+        console.error("fetchActivityFeed error:", err);
+        return [];
+    }
+};
+
+/**
  * Fetch team members
  */
 export const fetchTeamMembers = async () => {
@@ -184,8 +201,29 @@ export const updateDoctorProfile = async (updates) => {
     return handleResponse(response);
 };
 /**
+ * Fetch doctor's clinical dashboard metrics
+ * Endpoint: GET /api/v1/doctor/me/dashboard
+ */
+export const fetchDashboardMetrics = async () => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/doctor/me/dashboard`, {
+            headers: getAuthHeaders(),
+        });
+        return await handleResponse(response);
+    } catch (err) {
+        console.error("fetchDashboardMetrics error:", err);
+        return {
+            pending_notes: 0,
+            urgent_notes: 0,
+            patients_today: 0,
+            scheduled_today: 0,
+            unsigned_orders: 0
+        };
+    }
+};
+
+/**
  * Fetch logged-in doctor profile
- * Endpoint: GET /api/v1/auth/me
  */
 export const fetchProfile = async () => {
     const response = await fetch(`${API_BASE_URL}/auth/me`, {

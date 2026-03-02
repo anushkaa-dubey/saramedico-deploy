@@ -7,7 +7,7 @@ import AIChat from "./components/AIChat";
 import Timeline from "./components/Timeline";
 import styles from "./ChartReview.module.css";
 import { motion } from "framer-motion";
-import { fetchPatients, fetchProfile, fetchPatientDocuments } from "@/services/doctor";
+import { fetchPatients, fetchProfile, fetchPatientDocuments, uploadPatientDocument } from "@/services/doctor";
 
 export default function ChartReviewPage() {
     const [selectedDocument, setSelectedDocument] = useState(null);
@@ -55,13 +55,35 @@ export default function ChartReviewPage() {
         }
     };
 
-    const handleFileUpload = (e) => {
+    const [uploadStatus, setUploadStatus] = useState({ msg: "", type: "" });
+
+    const handleFileUpload = async (e) => {
         e.preventDefault();
         const files = e.target.files || e.dataTransfer?.files;
-        if (files && files.length > 0) {
-            console.log("Files uploaded:", files);
-            alert(`Selected ${files.length} file(s): ${files[0].name}. (Upload disabled)`);
-            // Upload disabled as per instructions - only verify confirmed backend endpoints
+        if (!files || files.length === 0) return;
+
+        if (!patientId) {
+            alert("No patient context found. Please ensure a patient is selected.");
+            return;
+        }
+
+        setUploadStatus({ msg: "Uploading...", type: "" });
+        try {
+            const file = files[0];
+            await uploadPatientDocument(patientId, file, {
+                title: file.name,
+                category: "Chart Review"
+            });
+
+            setUploadStatus({ msg: "Upload Successful! Document processing started.", type: "success" });
+            // Refresh documents
+            loadDocuments(patientId);
+
+            setTimeout(() => setUploadStatus({ msg: "", type: "" }), 5000);
+        } catch (err) {
+            console.error("Upload failed:", err);
+            setUploadStatus({ msg: `Upload failed: ${err.message}`, type: "error" });
+            setTimeout(() => setUploadStatus({ msg: "", type: "" }), 8000);
         }
     };
 
@@ -185,10 +207,15 @@ export default function ChartReviewPage() {
                         <p>or click to browse files</p>
                         <div className={styles.uploadOptions}>
                             <label className={styles.checkbox}>
-                                <input type="checkbox" />
+                                <input type="checkbox" defaultChecked />
                                 <span>Auto-Redact PII (Names, SSN, DOB)</span>
                             </label>
                         </div>
+                        {uploadStatus.msg && (
+                            <div className={`${styles.statusMsg} ${uploadStatus.type ? styles[uploadStatus.type] : ""}`}>
+                                {uploadStatus.msg}
+                            </div>
+                        )}
                     </div>
                 </div>
             ) : (

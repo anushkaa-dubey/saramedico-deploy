@@ -25,7 +25,7 @@ export default function AppointmentsPage() {
             <Topbar title={view === 'schedule' ? "Staff Schedule" : "Appointments Schedule"} />
 
             <div className={styles.contentWrapper}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', flexWrap: 'wrap', gap: '16px' }}>
+                <div className={styles.pageHeaderRow} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', flexWrap: 'wrap', gap: '16px' }}>
                     <div>
                         <h1 style={{ fontSize: '24px', fontWeight: '800', color: '#0f172a', margin: 0 }}>
                             {view === 'schedule' ? "Schedule" : "Master Appointment Schedule"}
@@ -36,7 +36,7 @@ export default function AppointmentsPage() {
                                 : "Daily overview of all clinical encounters across departments."}
                         </p>
                     </div>
-                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                    <div className={styles.pageHeaderActions} style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                         <div style={{ display: 'flex', background: '#f1f5f9', padding: '4px', borderRadius: '10px' }}>
                             <button
                                 onClick={() => setView('list')}
@@ -100,11 +100,11 @@ export default function AppointmentsPage() {
 
                         <div style={{ display: 'flex', flexDirection: 'column' }}>
                             {appointments.map((appt, i) => (
-                                <div key={i} style={{ display: 'flex', padding: '24px', borderBottom: i === appointments.length - 1 ? 'none' : '1px solid #f1f5f9', alignItems: 'center' }}>
+                                <div key={i} className={styles.appointmentListItem} style={{ display: 'flex', padding: '24px', borderBottom: i === appointments.length - 1 ? 'none' : '1px solid #f1f5f9', alignItems: 'center' }}>
                                     <div style={{ width: '100px', flexShrink: 0 }}>
                                         <div style={{ fontSize: '15px', fontWeight: '800', color: '#0f172a' }}>{appt.time}</div>
                                     </div>
-                                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '48px' }}>
+                                    <div className={styles.appointmentListItem} style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '48px' }}>
                                         <div style={{ minWidth: '200px' }}>
                                             <div style={{ fontSize: '11px', fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '4px' }}>Patient</div>
                                             <div style={{ fontWeight: '700', color: '#1e293b' }}>{appt.patient}</div>
@@ -143,7 +143,7 @@ export default function AppointmentsPage() {
                                 </div>
                             </div>
 
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', border: '1px solid #f1f5f9', borderRadius: '8px', overflow: 'hidden' }}>
+                            <div className={styles.tableScrollWrapper} style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', border: '1px solid #f1f5f9', borderRadius: '8px', overflow: 'hidden' }}>
                                 {['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'].map(h => (
                                     <div key={h} style={{ padding: '12px', textAlign: 'center', fontSize: '10px', fontWeight: '800', color: '#94a3b8', borderBottom: '1px solid #f1f5f9' }}>{h}</div>
                                 ))}

@@ -28,7 +28,7 @@ export default function DepartmentsPage() {
             <Topbar title="Departments Overview" />
 
             <div className={styles.contentWrapper}>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', marginBottom: '32px' }}>
+                <div className={styles.inlineGrid4} style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', marginBottom: '32px' }}>
                     {statsGroup.map((stat, i) => (
                         <div key={i} className={styles.card} style={{ textAlign: 'center' }}>
                             <div style={{ fontSize: '13px', color: '#64748b', fontWeight: '600' }}>{stat.label}</div>
@@ -36,6 +36,45 @@ export default function DepartmentsPage() {
                             <div style={{ height: '4px', background: stat.color, borderRadius: '2px', marginTop: '12px', width: '40%', margin: '12px auto 0' }} />
                         </div>
                     ))}
+                </div>
+
+                <div className={styles.tableScrollWrapper}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '20px', marginBottom: '32px' }}>
+                        <thead>
+                            <tr style={{ borderBottom: '1px solid #f1f5f9', textAlign: 'left' }}>
+                                <th style={{ padding: '16px 24px', color: '#94a3b8', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>DEPARTMENT</th>
+                                <th style={{ color: '#94a3b8', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>CAPACITY</th>
+                                <th style={{ color: '#94a3b8', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>AVG WAIT</th>
+                                <th style={{ color: '#94a3b8', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>STATUS</th>
+                                <th style={{ textAlign: 'right', padding: '16px 24px', color: '#94a3b8', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' }}>ACTION</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {departments.map((dept, i) => (
+                                <tr key={i} style={{ borderBottom: '1px solid #f8fafc' }}>
+                                    <td style={{ padding: '20px 24px', fontWeight: '700', color: '#1e293b', whiteSpace: 'nowrap' }}>{dept.name}</td>
+                                    <td style={{ fontWeight: '600', color: '#475569', whiteSpace: 'nowrap' }}>{dept.capacity}</td>
+                                    <td style={{ fontWeight: '500', color: '#64748b', whiteSpace: 'nowrap' }}>{dept.wait}</td>
+                                    <td>
+                                        <span style={{
+                                            background: i === 3 ? '#fff1f2' : '#ecfdf5',
+                                            color: i === 3 ? '#e11d48' : '#059669',
+                                            padding: '4px 10px',
+                                            borderRadius: '6px',
+                                            fontSize: '11px',
+                                            fontWeight: '700',
+                                            whiteSpace: 'nowrap'
+                                        }}>
+                                            {dept.status}
+                                        </span>
+                                    </td>
+                                    <td style={{ textAlign: 'right', padding: '20px 24px' }}>
+                                        <button style={{ background: 'transparent', border: 'none', color: '#359aff', fontWeight: '700', cursor: 'pointer', fontSize: '13px' }}>Manage</button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
                 </div>
 
                 <div className={styles.chartGrid}>
@@ -96,28 +135,30 @@ export default function DepartmentsPage() {
                         <button className={styles.outlineBtn}>Full Report</button>
                     </div>
                     <div className={styles.activityTableContainer} style={{ marginTop: '20px' }}>
-                        <table className={styles.activityTable}>
-                            <thead>
-                                <tr className={styles.activityHeader}>
-                                    <th>DEPARTMENT</th>
-                                    <th>DOCTORS</th>
-                                    <th>STAFF</th>
-                                    <th>PATIENTS</th>
-                                    <th style={{ textAlign: 'right' }}>BEDS AVAILABLE</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {departments.map((dept, i) => (
-                                    <tr key={i} className={styles.activityRow}>
-                                        <td style={{ fontWeight: '700' }}>{dept.name}</td>
-                                        <td>{dept.doctors}</td>
-                                        <td>{dept.employees}</td>
-                                        <td>{dept.patients}</td>
-                                        <td style={{ textAlign: 'right', color: '#10b981', fontWeight: '700' }}>{dept.beds}</td>
+                        <div className={styles.tableScrollWrapper}>
+                            <table className={styles.activityTable}>
+                                <thead>
+                                    <tr className={styles.activityHeader}>
+                                        <th style={{ whiteSpace: 'nowrap' }}>DEPARTMENT</th>
+                                        <th style={{ whiteSpace: 'nowrap' }}>DOCTORS</th>
+                                        <th style={{ whiteSpace: 'nowrap' }}>STAFF</th>
+                                        <th style={{ whiteSpace: 'nowrap' }}>PATIENTS</th>
+                                        <th style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>BEDS AVAILABLE</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    {departments.map((dept, i) => (
+                                        <tr key={i} className={styles.activityRow}>
+                                            <td style={{ fontWeight: '700', whiteSpace: 'nowrap' }}>{dept.name}</td>
+                                            <td style={{ whiteSpace: 'nowrap' }}>{dept.doctors}</td>
+                                            <td style={{ whiteSpace: 'nowrap' }}>{dept.employees}</td>
+                                            <td style={{ whiteSpace: 'nowrap' }}>{dept.patients}</td>
+                                            <td style={{ textAlign: 'right', color: '#10b981', fontWeight: '700', whiteSpace: 'nowrap' }}>{dept.beds}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
