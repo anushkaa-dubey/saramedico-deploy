@@ -15,12 +15,11 @@ export default function SurgeryPage() {
         <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className={styles.container}
-            style={{ flexDirection: 'column', background: 'transparent', padding: 0 }}
+            style={{ display: 'flex', flexDirection: 'column', background: 'transparent', padding: 0, minHeight: '100%' }}
         >
             <Topbar title="Surgery Schedule" />
 
-            <div style={{ padding: '24px' }}>
+            <div className={styles.contentWrapper}>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', marginBottom: '32px' }}>
                     <div className={styles.card} style={{ borderLeft: '4px solid #ef4444' }}>
                         <div style={{ fontSize: '13px', color: '#64748b' }}>Now In Progress</div>
