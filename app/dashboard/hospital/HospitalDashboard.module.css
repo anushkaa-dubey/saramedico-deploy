@@ -1497,6 +1497,32 @@
     .rightColMain {
         grid-template-columns: 1fr;
     }
+
+    .dashboardHeaderRow {
+        flex-direction: column;
+        align-items: stretch !important;
+        gap: 16px;
+    }
+
+    .dashboardHeaderActions {
+        flex-direction: column;
+        align-items: stretch !important;
+    }
+
+    .sessionsSectionHeader {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 12px;
+    }
+
+    .sessionsTabBar {
+        flex-wrap: wrap;
+    }
+}
+
+.tableScrollWrapper {
+    width: 100%;
+    overflow-x: auto;
 }
 
 /* Sidebar Submenu */

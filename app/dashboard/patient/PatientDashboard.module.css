@@ -2,10 +2,11 @@
 
 .container {
   display: flex;
-  min-height: 100%;
+  min-height: 100vh;
   background: #F5F7FA;
-  padding: 16px;
+  padding: 0;
   font-family: "Inter", sans-serif;
+  overflow: hidden;
 }
 
 .iconPlaceholder img {
@@ -36,11 +37,12 @@
 .main {
   flex: 1;
   background: #F5F7FA;
-  border-radius: 16px;
-  overflow: hidden;
+  border-radius: 0;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   animation: fadeIn 0.4s ease-out;
+  height: 100vh;
 }
 
 
@@ -151,16 +153,18 @@
 .sidebar {
   width: 260px;
   background: #ffffff;
-  border-radius: 16px;
+  border-radius: 0;
   padding: 20px 16px;
-  margin-right: 16px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  border-right: 1px solid #eef2f7;
   transition: all 0.3s ease;
-  height: calc(100vh - 32px);
+  height: 100vh;
   position: sticky;
-  top: 16px;
+  top: 0;
+  z-index: 1000;
+  overflow-y: auto;
 }
 
 .logoRow {
@@ -256,6 +260,9 @@
   align-items: center;
   justify-content: space-between;
   background: #ffffff;
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
 .search {

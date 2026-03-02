@@ -49,11 +49,11 @@ export const createCalendarEvent = async (event) => {
 
 /**
  * Update a custom calendar event
- * Endpoint: PATCH /api/v1/calendar/events/{eventId}
+ * Endpoint: PUT /api/v1/calendar/events/{eventId}
  */
 export const updateCalendarEvent = async (eventId, event) => {
     const response = await fetch(`${API_BASE_URL}/calendar/events/${eventId}`, {
-        method: "PATCH",
+        method: "PUT",
         headers: getAuthHeaders(),
         body: JSON.stringify(event),
     });

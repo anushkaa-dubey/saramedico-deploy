@@ -82,7 +82,7 @@ export const fetchMedicalRecords = async () => {
         headers: getAuthHeaders(),
     });
     const data = await handleResponse(response);
-    return Array.isArray(data) ? data : (data.records || []);
+    return Array.isArray(data) ? data : (data.documents || data.records || []);
 };
 
 /**

@@ -10,9 +10,9 @@ export default function AudioCheck() {
 
   return (
     <div className={styles.container}>
-      <div className={styles.header}>
+      {/* <div className={styles.header}>
         <img src={logo.src} alt="SaraMedico" className={styles.logo} />
-      </div>
+      </div> */}
       <div className={styles.content}>
         <h1 className={styles.title}>Check your Audio</h1>
         <p className={styles.subtitle}>

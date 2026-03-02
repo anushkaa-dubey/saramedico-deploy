@@ -32,6 +32,7 @@ export default function SettingsSidebar() {
             path: "/dashboard/doctor/settings/profile",
             icon: profileIcon
         },
+        /*
         {
             label: "Billings & Plans",
             path: "/dashboard/doctor/settings/billing",
@@ -47,6 +48,7 @@ export default function SettingsSidebar() {
             path: "/dashboard/doctor/settings/notifications",
             icon: notificationIcon
         },
+        */
     ];
 
     return (

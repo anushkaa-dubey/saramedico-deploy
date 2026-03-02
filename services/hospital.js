@@ -27,16 +27,16 @@ export const fetchHospitalStats = async () => {
         });
         const data = await handleResponse(response);
         return {
-            notesPendingSignature: data.pending_review || 14,
-            transcriptionQueueStatus: data.high_urgency || 8,
-            averageNoteCompletionTime: `${data.avg_wait_time_minutes || 4.2} mins`
+            notesPendingSignature: data.pending_review || 0,
+            transcriptionQueueStatus: data.high_urgency || 0,
+            averageNoteCompletionTime: `${data.avg_wait_time_minutes || 0} mins`
         };
     } catch (err) {
         console.error("fetchHospitalStats error:", err);
         return {
-            notesPendingSignature: 14,
-            transcriptionQueueStatus: 8,
-            averageNoteCompletionTime: "4.2 hrs"
+            notesPendingSignature: 0,
+            transcriptionQueueStatus: 0,
+            averageNoteCompletionTime: "0 mins"
         };
     }
 };
@@ -60,19 +60,15 @@ export const fetchReviewQueue = async (filters = {}) => {
         return consultations.map(c => ({
             id: c.id,
             patient: c.patientName || "Unknown Patient",
-            mrn: c.patient_mrn || "#MRN-1022",
-            provider: c.doctorName || "Dr. Sarah Wilson",
+            mrn: c.patient_mrn || "N/A",
+            provider: c.doctorName || "Unknown Provider",
             status: c.visit_state || c.status || "Needs Review",
             urgency: c.urgency_level || "Normal",
-            time: c.scheduledAt ? new Date(c.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "09:41 AM",
+            time: c.scheduledAt ? new Date(c.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "N/A",
             date: c.scheduledAt ? new Date(c.scheduledAt).toLocaleDateString() : "Today"
         }));
     } catch (err) {
         console.error("fetchReviewQueue error:", err);
-        return [
-            { id: "REV001", patient: "John Von", provider: "Dr. Sarah Wilson", department: "Cardiology", urgency: "High", status: "Needs Review", time: "10:30 AM" },
-            { id: "REV002", patient: "Alice Bob", provider: "Dr. Michael Chen", department: "Neurology", urgency: "Medium", status: "Processing", time: "11:45 AM" },
-            { id: "REV003", patient: "Jane Roe", provider: "Dr. Elena Rodriguez", department: "Pediatrics", urgency: "Low", status: "Draft Ready", time: "01:15 PM" },
-        ];
+        return [];
     }
 };

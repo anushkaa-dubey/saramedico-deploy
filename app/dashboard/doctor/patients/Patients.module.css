@@ -107,7 +107,8 @@
 .contentRow {
     display: flex;
     gap: 24px;
-    height: calc(100vh - 120px);
+    min-height: calc(100vh - 120px);
+    height: auto;
     /* Approximate height minus headers */
 }
 

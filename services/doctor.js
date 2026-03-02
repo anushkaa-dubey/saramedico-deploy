@@ -172,6 +172,23 @@ export const fetchActivityFeed = async () => {
 };
 
 /**
+ * Fetch doctor's recent patients
+ * Endpoint: GET /api/v1/doctor/{doctor_id}/recent-patients
+ */
+export const fetchRecentPatients = async (doctorId) => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/doctor/${doctorId}/recent-patients`, {
+            headers: getAuthHeaders(),
+        });
+        const data = await handleResponse(response);
+        return Array.isArray(data) ? data : (data.patients || data.items || data.data || []);
+    } catch (err) {
+        console.error("fetchRecentPatients error:", err);
+        return [];
+    }
+};
+
+/**
  * Fetch team members
  */
 export const fetchTeamMembers = async () => {
@@ -281,7 +298,8 @@ export const uploadPatientDocument = async (patientId, file, metadata) => {
             // Step 3: Confirm Upload
             const confirmResponse = await fetch(`${API_BASE_URL}/documents/${documentId}/confirm`, {
                 method: "POST",
-                headers: getAuthHeaders()
+                headers: getAuthHeaders(),
+                body: JSON.stringify({ metadata: metadata || {} })
             });
 
             return handleResponse(confirmResponse);

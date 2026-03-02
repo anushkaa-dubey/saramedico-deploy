@@ -1,4 +1,5 @@
 "use client";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import Topbar from "../components/Topbar";
 import styles from "./LiveConsult.module.css";
@@ -6,9 +7,30 @@ import search from "@/public/icons/search.svg"
 import mic from "@/public/icons/mic.svg";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import { fetchProfile, fetchRecentPatients } from "@/services/doctor";
 
 export default function LiveConsultPage() {
     const router = useRouter();
+    const [recentPatients, setRecentPatients] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const loadData = async () => {
+            try {
+                const profile = await fetchProfile();
+                if (profile && profile.id) {
+                    const patients = await fetchRecentPatients(profile.id);
+                    setRecentPatients(patients);
+                }
+            } catch (err) {
+                console.error("Failed to load recent patients", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        loadData();
+    }, []);
+
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -69,34 +91,28 @@ export default function LiveConsultPage() {
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td>
-                                        <div className={styles.userCell}>
-                                            <div className={styles.avatar}></div>
-                                            John Von
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div className={styles.activityCell}>
-                                            Lab Results Reviewed
-                                        </div>
-                                    </td>
-                                    <td>Today, 9:15 AM</td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div className={styles.userCell}>
-                                            <div className={styles.avatar}></div>
-                                            John Von
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div className={styles.activityCell}>
-                                            Operation
-                                        </div>
-                                    </td>
-                                    <td>Yesterday, 4:30 PM</td>
-                                </tr>
+                                {loading ? (
+                                    <tr><td colSpan="3" style={{ textAlign: "center", padding: "20px" }}>Loading...</td></tr>
+                                ) : recentPatients.length === 0 ? (
+                                    <tr><td colSpan="3" style={{ textAlign: "center", padding: "20px", color: "#64748b" }}>No recent patients found.</td></tr>
+                                ) : (
+                                    recentPatients.map((patientRecord, idx) => (
+                                        <tr key={idx}>
+                                            <td>
+                                                <div className={styles.userCell}>
+                                                    <div className={styles.avatar}></div>
+                                                    {patientRecord.patient_name || patientRecord.full_name || patientRecord.name || "Unknown Patient"}
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div className={styles.activityCell}>
+                                                    {patientRecord.last_activity || patientRecord.reason || "Consultation"}
+                                                </div>
+                                            </td>
+                                            <td>{patientRecord.last_visit_date ? new Date(patientRecord.last_visit_date).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' }) : "Recent"}</td>
+                                        </tr>
+                                    ))
+                                )}
                             </tbody>
                         </table>
                     </div>

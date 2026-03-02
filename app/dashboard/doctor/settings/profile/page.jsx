@@ -1,13 +1,68 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import styles from "../Settings.module.css";
 import lock from "@/public/icons/lock.svg";
 import notification from "@/public/icons/notification.svg";
 import mfa from "@/public/icons/MFA.svg";
 import { motion } from "framer-motion";
+import { fetchProfile, updateDoctorProfile } from "@/services/doctor";
 
 export default function ProfileSettings() {
+    const [profile, setProfile] = useState({
+        full_name: "",
+        email: "",
+        credentials: "",
+        specialty: ""
+    });
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
+
+    useEffect(() => {
+        const getProfile = async () => {
+            try {
+                const data = await fetchProfile();
+                if (data) {
+                    setProfile({
+                        full_name: data.full_name || "",
+                        email: data.email || "",
+                        credentials: data.credentials || "",
+                        specialty: data.specialty || ""
+                    });
+                }
+            } catch (err) {
+                console.error("Failed to fetch profile", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        getProfile();
+    }, []);
+
+    const handleChange = (e) => {
+        setProfile({ ...profile, [e.target.name]: e.target.value });
+    };
+
+    const handleSave = async () => {
+        setSaving(true);
+        try {
+            await updateDoctorProfile({
+                full_name: profile.full_name,
+                specialty: profile.specialty,
+                credentials: profile.credentials
+            });
+            alert("Profile updated successfully!");
+        } catch (err) {
+            console.error("Failed to update profile", err);
+            alert("Failed to update profile.");
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    if (loading) return <div style={{ padding: "40px", textAlign: "center" }}>Loading profile...</div>;
+
     return (
         <motion.div
             initial={{ opacity: 0 }}
@@ -21,12 +76,12 @@ export default function ProfileSettings() {
                     placeholder="Search settings, reports, notes..."
                 />
                 <div className={styles.topActions}>
-                    <button className={styles.iconBtn}><Image src={notification.src} alt="Notification" width="18" height="18" /> </button>
+                    <button className={styles.iconBtn}><Image src={notification.src} alt="Notification" width={18} height={18} /> </button>
                     <div className={styles.profile}>
                         <div className={styles.avatar}></div>
                         <div>
-                            <strong>Dr. Sarah Smith</strong>
-                            <p>Cardiology</p>
+                            <strong>{profile.full_name || "Doctor"}</strong>
+                            <p>{profile.specialty || "Specialty"}</p>
                         </div>
                     </div>
                 </div>
@@ -48,33 +103,33 @@ export default function ProfileSettings() {
                     <div className={styles.profileCardContent}>
                         <div className={styles.profileAvatar}></div>
                         <div className={styles.profileInfo}>
-                            <h3>Dr. Sarah Smith</h3>
-                            <p>MD, CARDIOLOGY</p>
+                            <h3>{profile.full_name || "Doctor"}</h3>
+                            <p>{profile.credentials}{profile.credentials && profile.specialty ? ', ' : ''}{profile.specialty ? profile.specialty.toUpperCase() : ""}</p>
                         </div>
                     </div>
 
                     <div className={styles.formGrid}>
                         <div className={styles.formField}>
                             <label className={styles.label}>FULL NAME</label>
-                            <input className={styles.input} placeholder="Your name" defaultValue="Dr. Sarah Smith" />
+                            <input className={styles.input} name="full_name" placeholder="Your name" value={profile.full_name} onChange={handleChange} />
                         </div>
                         <div className={styles.formField}>
                             <label className={styles.label}>EMAIL ADDRESS</label>
-                            <input className={styles.input} placeholder="drhospital@gmail.com" defaultValue="drhospital@gmail.com" />
+                            <input className={styles.input} name="email" placeholder="Email" value={profile.email} disabled style={{ background: '#f8fafc', cursor: 'not-allowed' }} />
                         </div>
                         <div className={styles.formField}>
-                            <label className={styles.label}>CREDENTIAL</label>
-                            <input className={styles.input} placeholder="MD, MBBS" defaultValue="MD, MBBS" />
+                            <label className={styles.label}>CREDENTIALS</label>
+                            <input className={styles.input} name="credentials" placeholder="MD, MBBS" value={profile.credentials} onChange={handleChange} />
                         </div>
                         <div className={styles.formField}>
-                            <label className={styles.label}>SPECIALITY</label>
-                            <input className={styles.input} placeholder="Cardiology" defaultValue="Cardiology" />
+                            <label className={styles.label}>SPECIALTY</label>
+                            <input className={styles.input} name="specialty" placeholder="Cardiology" value={profile.specialty} onChange={handleChange} />
                         </div>
                     </div>
 
                     <div className={styles.buttonGroup}>
                         <button className={styles.cancelBtn}>Cancel</button>
-                        <button className={styles.saveBtn}>Save Changes</button>
+                        <button className={styles.saveBtn} onClick={handleSave} disabled={saving}>{saving ? "Saving..." : "Save Changes"}</button>
                     </div>
                 </div>
 
@@ -82,7 +137,7 @@ export default function ProfileSettings() {
                 <div className={styles.cardsGrid}>
                     <div className={styles.card}>
                         <div className={styles.cardTitleRow}>
-                            <span className={styles.cardIcon}><Image src={lock.src} alt="Lock" width="18" height="18" /></span>
+                            <span className={styles.cardIcon}><Image src={lock.src} alt="Lock" width={18} height={18} /></span>
                             <h3>Password</h3>
                         </div>
                         <p>Last changed 3 months ago. We recommend changing every 90 days.</p>
@@ -91,7 +146,7 @@ export default function ProfileSettings() {
 
                     <div className={styles.card}>
                         <div className={styles.cardTitleRow}>
-                            <span className={styles.cardIcon}><Image src={mfa.src} alt="MFA" width="18" height="18" /></span>
+                            <span className={styles.cardIcon}><Image src={mfa.src} alt="MFA" width={18} height={18} /></span>
                             <h3>MFA Setup</h3>
                             <span className={styles.badge}>Enabled</span>
                         </div>

@@ -74,7 +74,10 @@ export default function DocumentsList({ patientId }) {
 
         try {
             // Step 1: Trigger AI Analysis
-            const result = await analyzeDocument(documentId);
+            const result = await processDocumentWithAI({
+                patient_id: patientId,
+                document_id: documentId
+            });
             setProcessResult({
                 documentId,
                 status: result.status || "processing"
@@ -90,7 +93,7 @@ export default function DocumentsList({ patientId }) {
                         details: statusData.message || ""
                     });
 
-                    if (statusData.status === "completed" || statusData.status === "failed") {
+                    if (statusData.status === "completed" || statusData.status === "indexed" || statusData.status === "failed") {
                         clearInterval(pollingIntervalRef.current);
                         pollingIntervalRef.current = null; // Clear ref
                         setProcessingDoc(null);
@@ -181,7 +184,7 @@ export default function DocumentsList({ patientId }) {
                     borderRadius: "8px",
                     fontSize: "14px"
                 }}>
-                    <strong>{processResult.status === 'completed' ? '✓ Processing Complete' : processResult.status === 'failed' ? '❌ Processing Failed' : '⏳ AI Processing...'}</strong>
+                    <strong>{['completed', 'indexed'].includes(processResult.status) ? '✓ Processing Complete' : processResult.status === 'failed' ? '❌ Processing Failed' : '⏳ AI Processing...'}</strong>
                     <div style={{ marginTop: "4px" }}>Status: <code style={{ textTransform: 'capitalize' }}>{processResult.status}</code></div>
                     {processResult.details && <div style={{ marginTop: "2px", opacity: 0.8 }}>{processResult.details}</div>}
                 </div>

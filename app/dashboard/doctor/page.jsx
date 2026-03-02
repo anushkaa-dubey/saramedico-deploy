@@ -134,11 +134,18 @@ export default function DoctorDashboard() {
     return "none";
   };
 
+  const [showConsentModal, setShowConsentModal] = useState(false);
+
   const handleStartSession = () => {
+    setShowConsentModal(true);
+  };
+
+  const proceedToSession = () => {
     if (!consentVerified || !recordingReady) {
       setShowConsentError(true);
       return;
     }
+    setShowConsentModal(false);
     router.push("/dashboard/doctor/video-call");
   };
 
@@ -177,59 +184,40 @@ export default function DoctorDashboard() {
         </div>
 
         <div className={styles.headerActions}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <div style={{ display: 'flex', gap: '10px' }}>
-              <motion.button
-                whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
-                className={styles.iconBtn}
-                onClick={() => router.push("/dashboard/admin/upload-documents")}
-              >
-                <img src={uploadIcon.src} alt="Upload" width="20" height="20" />
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className={styles.iconBtn}
-                onClick={() => setIsModalOpen(true)}
-              >
-                <img src={personIcon.src} alt="Add Person" width="20" height="20" />
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className={styles.outlineBtn}
-                onClick={() => router.push("/dashboard/doctor/appointments")}
-              >
-                <img src={scheduleIcon.src} alt="Schedule" width="16" height="16" />
-                Schedule
-              </motion.button>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className={styles.primaryBtn}
-                onClick={handleStartSession}
-                style={{ opacity: (!consentVerified || !recordingReady) ? 0.6 : 1 }}
-              >
-                <img src={micWhiteIcon.src} alt="Start Session" width="16" height="16" />
-                Start Session
-              </motion.button>
-            </div>
-            {showConsentError && (!consentVerified || !recordingReady) && (
-              <div style={{ fontSize: '11px', color: '#ef4444', fontWeight: 'bold', background: '#fee2e2', padding: '4px 8px', borderRadius: '4px' }}>
-                {!consentVerified && "• Patient consent verification required. "}
-                {!recordingReady && "• Recording hardware check failed."}
-              </div>
-            )}
-            <div style={{ display: 'flex', gap: '16px', marginTop: '4px' }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', cursor: 'pointer' }}>
-                <input type="checkbox" checked={consentVerified} onChange={(e) => setConsentVerified(e.target.checked)} />
-                Consent Verified
-              </label>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', cursor: 'pointer' }}>
-                <input type="checkbox" checked={recordingReady} onChange={(e) => setRecordingReady(e.target.checked)} />
-                Recording Ready
-              </label>
-            </div>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <motion.button
+              whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+              className={styles.iconBtn}
+              onClick={() => router.push("/dashboard/admin/upload-documents")}
+            >
+              <img src={uploadIcon.src} alt="Upload" width="20" height="20" />
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className={styles.iconBtn}
+              onClick={() => setIsModalOpen(true)}
+            >
+              <img src={personIcon.src} alt="Add Person" width="20" height="20" />
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className={styles.outlineBtn}
+              onClick={() => router.push("/dashboard/doctor/appointments")}
+            >
+              <img src={scheduleIcon.src} alt="Schedule" width="16" height="16" />
+              Schedule
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className={styles.primaryBtn}
+              onClick={handleStartSession}
+            >
+              <img src={micWhiteIcon.src} alt="Start Session" width="16" height="16" />
+              Start Session
+            </motion.button>
           </div>
         </div>
       </motion.section>
@@ -241,9 +229,9 @@ export default function DoctorDashboard() {
           </div>
           <div className={styles.summaryInfo}>
             <span className={styles.summaryLabel}>Tasks Pending</span>
-            <h3 className={styles.summaryValue}>{metrics?.pending_notes || (selectedDayEvents?.length || 0)}</h3>
-            <span className={styles.summaryTrend} style={{ color: (metrics?.urgent_notes > 0) ? '#ef4444' : '#16a34a' }}>
-              {metrics?.urgent_notes > 0 ? `${metrics.urgent_notes} urgent` : 'Updated recently'}
+            <h3 className={styles.summaryValue}>{metrics?.unsigned_orders ?? 0}</h3>
+            <span className={styles.summaryTrend} style={{ color: '#16a34a' }}>
+              Updated recently
             </span>
           </div>
         </div>
@@ -253,7 +241,7 @@ export default function DoctorDashboard() {
           </div>
           <div className={styles.summaryInfo}>
             <span className={styles.summaryLabel}>Clinical Records</span>
-            <h3 className={styles.summaryValue}>{metrics?.unsigned_orders || 14}</h3>
+            <h3 className={styles.summaryValue}>{metrics?.pending_notes ?? 0}</h3>
             <span className={styles.summaryTrend} style={{ color: '#ea580c' }}>Pending Sign</span>
           </div>
         </div>
@@ -263,7 +251,7 @@ export default function DoctorDashboard() {
           </div>
           <div className={styles.summaryInfo}>
             <span className={styles.summaryLabel}>Patients This Month</span>
-            <h3 className={styles.summaryValue}>{metrics?.patients_today || 12}</h3>
+            <h3 className={styles.summaryValue}>{metrics?.patients_today ?? 0}</h3>
             <span className={styles.summaryTrend} style={{ color: '#16a34a' }}>Active Status</span>
           </div>
         </div>
@@ -392,21 +380,21 @@ export default function DoctorDashboard() {
                         <td>
                           <div className={styles.userCell}>
                             <div className={styles.avatarSmall}></div>
-                            {log.activity_type.replace(/_/g, ' ').toUpperCase()}
+                            {(log.activity_type || 'Activity').replace(/_/g, ' ').toUpperCase()}
                           </div>
                         </td>
-                        <td>{log.description}</td>
-                        <td style={{ fontSize: '11px' }}>{new Date(log.created_at).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}</td>
+                        <td>{log.description || "Performed an action"}</td>
+                        <td style={{ fontSize: '11px' }}>{log.created_at ? new Date(log.created_at).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' }) : "Recently"}</td>
                         <td>
                           <span className={styles.completed} style={{
-                            background: log.status === 'completed' ? '#10b98115' : '#f59e0b15',
-                            color: log.status === 'completed' ? '#10b981' : '#f59e0b',
+                            background: (log.status || 'completed') === 'completed' ? '#10b98115' : '#f59e0b15',
+                            color: (log.status || 'completed') === 'completed' ? '#10b981' : '#f59e0b',
                             padding: '2px 8px',
                             borderRadius: '4px',
                             fontSize: '11px',
                             fontWeight: '700'
                           }}>
-                            {log.status.toUpperCase()}
+                            {(log.status || 'completed').toUpperCase()}
                           </span>
                         </td>
                       </tr>
@@ -470,6 +458,57 @@ export default function DoctorDashboard() {
           </motion.div>
         </div>
       </section>
+
+      {/* Start Session Modal */}
+      {showConsentModal && (
+        <div style={{
+          position: "fixed",
+          top: 0, left: 0, right: 0, bottom: 0,
+          background: "rgba(15, 23, 42, 0.6)",
+          backdropFilter: "blur(4px)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          zIndex: 9999
+        }}>
+          <div style={{
+            background: "white",
+            padding: "32px",
+            borderRadius: "20px",
+            width: "100%", maxWidth: "400px",
+            boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)"
+          }}>
+            <h3 style={{ margin: "0 0 8px 0", fontSize: "20px", color: "#0f172a" }}>Pre-Visit Checklist</h3>
+            <p style={{ margin: "0 0 24px 0", color: "#64748b", fontSize: "14px" }}>Please verify the required pre-requisites before initializing the AI scribe session.</p>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px", marginBottom: "24px" }}>
+              <label style={{ display: "flex", alignItems: "center", gap: "12px", cursor: "pointer", background: consentVerified ? "#f0fdf4" : "#f8fafc", padding: "16px", borderRadius: "12px", border: "1px solid", borderColor: consentVerified ? "#bbf7d0" : "#e2e8f0", transition: "all 0.2s" }}>
+                <input type="checkbox" checked={consentVerified} onChange={(e) => setConsentVerified(e.target.checked)} style={{ width: "18px", height: "18px", cursor: "pointer" }} />
+                <span style={{ fontSize: "14px", fontWeight: consentVerified ? "600" : "500", color: consentVerified ? "#166534" : "#475569" }}>Patient Consent Verified</span>
+              </label>
+
+              <label style={{ display: "flex", alignItems: "center", gap: "12px", cursor: "pointer", background: recordingReady ? "#f0fdf4" : "#f8fafc", padding: "16px", borderRadius: "12px", border: "1px solid", borderColor: recordingReady ? "#bbf7d0" : "#e2e8f0", transition: "all 0.2s" }}>
+                <input type="checkbox" checked={recordingReady} onChange={(e) => setRecordingReady(e.target.checked)} style={{ width: "18px", height: "18px", cursor: "pointer" }} />
+                <span style={{ fontSize: "14px", fontWeight: recordingReady ? "600" : "500", color: recordingReady ? "#166534" : "#475569" }}>Recording Hardware Ready</span>
+              </label>
+            </div>
+
+            {showConsentError && (!consentVerified || !recordingReady) && (
+              <div style={{ marginBottom: "16px", fontSize: "12px", color: "#ef4444", background: "#fef2f2", padding: "8px 12px", borderRadius: "8px", fontWeight: "600" }}>
+                Please check all required boxes to proceed.
+              </div>
+            )}
+
+            <div style={{ display: "flex", gap: "12px" }}>
+              <button onClick={() => setShowConsentModal(false)} style={{ flex: 1, padding: "12px", borderRadius: "10px", border: "1px solid #e2e8f0", background: "white", color: "#475569", fontWeight: "600", cursor: "pointer" }}>Cancel</button>
+              <button
+                onClick={proceedToSession}
+                style={{ flex: 1, padding: "12px", borderRadius: "10px", border: "none", background: (consentVerified && recordingReady) ? "#3b82f6" : "#cbd5e1", color: "white", fontWeight: "600", cursor: (consentVerified && recordingReady) ? "pointer" : "not-allowed", transition: "all 0.2s" }}
+              >
+                Join Meet
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </motion.div>
   );
 }

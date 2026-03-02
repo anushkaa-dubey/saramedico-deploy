@@ -41,47 +41,36 @@ export default function HospitalDashboard() {
         urgency: "All"
     });
 
-    // useEffect(() => {
-    //     const loadData = async () => {
-    //         setLoading(true);
-    //         try {
-    //             const [apptData, statData, queueData] = await Promise.all([
-    //                 fetchHospitalAppointments(),
-    //                 fetchHospitalStats(),
-    //                 fetchReviewQueue()
-    //             ]);
-    //             setAppointments(apptData);
-    //             setStatsData(prev => ({ ...prev, ...statData }));
-    //             setReviewQueue(queueData);
-    //         } catch (err) {
-    //             console.error("Failed to load hospital dashboard data:", err);
-    //         } finally {
-    //             setLoading(false);
-    //         }
-    //     };
-    //     loadData();
-    // }, []);
-
-    // Set loading to false since we aren't fetching
     useEffect(() => {
-        setLoading(false);
-        // Mock some data for the review queue since API is commented out
-        setReviewQueue([
-            { id: 1, patient: "John Von", provider: "Dr. Sarah Wilson", urgency: "High", status: "Needs Review", department: "Cardiology" },
-            { id: 2, patient: "Alice Bob", provider: "Dr. Michael Chen", urgency: "Medium", status: "Processing", department: "Neurology" },
-            { id: 3, patient: "Jane Roe", provider: "Dr. Elena Rodriguez", urgency: "Low", status: "Draft Ready", department: "General" }
-        ]);
+        const loadData = async () => {
+            setLoading(true);
+            try {
+                const [apptData, statData, queueData] = await Promise.all([
+                    fetchHospitalAppointments(),
+                    fetchHospitalStats(),
+                    fetchReviewQueue()
+                ]);
+                setAppointments(apptData);
+                setStatsData(prev => ({ ...prev, ...statData }));
+                setReviewQueue(queueData);
+            } catch (err) {
+                console.error("Failed to load hospital dashboard data:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        loadData();
     }, []);
 
     const refreshMonthData = async () => {
-        // try {
-        //     const year = currentDate.getFullYear();
-        //     const month = currentDate.getMonth() + 1;
-        //     const data = await fetchCalendarMonth(year, month);
-        //     setMonthData(data);
-        // } catch (err) {
-        //     console.error("Failed to fetch calendar month data:", err);
-        // }
+        try {
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth() + 1;
+            const data = await fetchCalendarMonth(year, month);
+            setMonthData(data);
+        } catch (err) {
+            console.error("Failed to fetch calendar month data:", err);
+        }
     };
 
     useEffect(() => {
@@ -118,13 +107,13 @@ export default function HospitalDashboard() {
     };
 
     const handleDayClick = async (day) => {
-        // try {
-        //     const dateStr = `${currentYear}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-        //     const events = await fetchCalendarDay(dateStr);
-        //     setSelectedDayEvents(events);
-        // } catch (err) {
-        //     console.error("Failed to fetch calendar day data:", err);
-        // }
+        try {
+            const dateStr = `${currentYear}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            const events = await fetchCalendarDay(dateStr);
+            setSelectedDayEvents(events);
+        } catch (err) {
+            console.error("Failed to fetch calendar day data:", err);
+        }
     };
 
     // Availability logic based on real data
@@ -141,8 +130,8 @@ export default function HospitalDashboard() {
     const stats = [
         {
             label: "PENDING NOTES",
-            value: "7",
-            badge: "+3 Urgent",
+            value: statsData.notesPendingSignature || "0",
+            badge: `${statsData.transcriptionQueueStatus || 0} Urgent`,
             icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>,
             color: "#3b82f6",
             bgColor: "#eff6ff",
@@ -150,7 +139,7 @@ export default function HospitalDashboard() {
         },
         {
             label: "AVG COMPLETION",
-            value: "4m 12s",
+            value: statsData.averageNoteCompletionTime || "0 mins",
             badge: "-18s",
             badgeColor: "#10b981",
             badgeBg: "#f0fdf4",
@@ -322,52 +311,41 @@ export default function HospitalDashboard() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {encounters.map((row, i) => (
-                                        <tr key={`${row.name}-${i}`} style={{ borderBottom: i === encounters.length - 1 ? 'none' : '1px solid #f8fafc' }}>
+                                    {filteredQueue.length === 0 ? (
+                                        <tr><td colSpan="5" style={{ padding: '24px', textAlign: 'center', color: '#64748b' }}>No sessions found.</td></tr>
+                                    ) : filteredQueue.map((row, i) => (
+                                        <tr key={`${row.id}-${i}`} style={{ borderBottom: i === filteredQueue.length - 1 ? 'none' : '1px solid #f8fafc' }}>
                                             <td style={{ padding: '16px 24px' }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                                    <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', color: '#64748b', fontSize: '11px' }}>{row.name.split(' ').map(n => n[0]).join('')}</div>
+                                                    <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', color: '#64748b', fontSize: '11px' }}>{row.patient.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}</div>
                                                     <div>
-                                                        <div style={{ fontWeight: '800', color: '#1e293b', fontSize: '14px' }}>{row.name}</div>
-                                                        <div style={{ fontSize: '10px', color: '#94a3b8', fontWeight: '600' }}>{row.meta}</div>
+                                                        <div style={{ fontWeight: '800', color: '#1e293b', fontSize: '14px' }}>{row.patient}</div>
+                                                        <div style={{ fontSize: '10px', color: '#94a3b8', fontWeight: '600' }}>MRN: {row.mrn}</div>
                                                     </div>
                                                 </div>
                                             </td>
                                             <td style={{ padding: '16px' }}>
-                                                <div style={{ fontWeight: '800', color: '#1e293b', fontSize: '14px' }}>{row.complaint}</div>
-                                                <div style={{ fontSize: '10px', color: '#94a3b8', fontWeight: '600' }}>{row.complaintDetail}</div>
+                                                <div style={{ fontWeight: '800', color: '#1e293b', fontSize: '14px' }}>{row.provider}</div>
+                                                <div style={{ fontSize: '10px', color: '#94a3b8', fontWeight: '600' }}>Provider</div>
                                             </td>
-                                            <td style={{ padding: '16px', color: '#64748b', fontWeight: '600', fontSize: '13px' }}>{row.dos}</td>
+                                            <td style={{ padding: '16px', color: '#64748b', fontWeight: '600', fontSize: '13px' }}>{row.date}, {row.time}</td>
                                             <td style={{ padding: '16px' }}>
                                                 <span style={{
                                                     fontSize: '10px',
                                                     fontWeight: '800',
-                                                    color: row.status === 'NEEDS REVIEW' ? '#f59e0b' : row.status === 'RECORDING' ? '#359aff' : row.color,
-                                                    background: row.status === 'NEEDS REVIEW' ? '#fffbeb' : row.status === 'RECORDING' ? '#eff6ff' : `${row.color}10`,
+                                                    color: row.status === 'Needs Review' ? '#f59e0b' : row.status === 'In Progress' ? '#359aff' : '#10b981',
+                                                    background: row.status === 'Needs Review' ? '#fffbeb' : row.status === 'In Progress' ? '#eff6ff' : '#f0fdf4',
                                                     padding: '4px 12px',
                                                     borderRadius: '20px',
                                                     display: 'inline-flex',
                                                     alignItems: 'center',
-                                                    gap: '6px',
-                                                    border: row.status === 'NEEDS REVIEW' ? '1px solid #fef3c7' : row.status === 'RECORDING' ? '1px solid #dbeafe' : 'none'
+                                                    gap: '6px'
                                                 }}>
-                                                    {row.status === 'DRAFT READY' && <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: '#3b82f6' }} />}
-                                                    {row.status === 'RECORDING' && <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><path d="M23 4v6h-6" /><path d="M1 20v-6h6" /><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" /></svg>}
-                                                    {row.status}
+                                                    {row.status.toUpperCase()}
                                                 </span>
                                             </td>
                                             <td style={{ padding: '16px 24px', textAlign: 'right' }}>
-                                                {row.action === 'Review Now' ? (
-                                                    <button style={{ background: '#3b82f6', color: 'white', border: 'none', padding: '6px 16px', borderRadius: '6px', fontSize: '11px', fontWeight: '800', cursor: 'pointer' }}>Review Now</button>
-                                                ) : row.action === 'Edit' ? (
-                                                    <button style={{ background: 'white', border: '1px solid #e2e8f0', color: '#1e293b', padding: '6px 16px', borderRadius: '6px', fontSize: '11px', fontWeight: '800', cursor: 'pointer' }}>Edit</button>
-                                                ) : row.status === 'RECORDING' ? (
-                                                    <button style={{ background: '#f8fafc', border: '1px solid #f1f5f9', color: '#94a3b8', padding: '6px 16px', borderRadius: '6px', fontSize: '11px', fontWeight: '800', cursor: 'default' }}>In Visit</button>
-                                                ) : (
-                                                    <button style={{ background: 'transparent', border: 'none', color: '#94a3b8', padding: '8px', cursor: 'pointer' }}>
-                                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                                                    </button>
-                                                )}
+                                                <button style={{ background: 'white', border: '1px solid #e2e8f0', color: '#1e293b', padding: '6px 16px', borderRadius: '6px', fontSize: '11px', fontWeight: '800', cursor: 'pointer' }}>View</button>
                                             </td>
                                         </tr>
                                     ))}
@@ -389,55 +367,46 @@ export default function HospitalDashboard() {
                                 </div>
                             </div>
                             <div className={styles.scheduleListWrapper} style={{ display: 'flex', flexDirection: 'column', border: '1px solid #f1f5f9', borderRadius: '12px', overflow: 'hidden' }}>
-                                {[
-                                    { time: "09:00 AM", patient: "John Doe", status: "Completed", type: "Follow-up", completed: true },
-                                    { time: "10:30 AM", patient: "Jane Smith", status: "In Visit", tags: ["HTN", "Chest Pain"], badge: "NEW CONSULT", active: true },
-                                    { time: "11:45 AM", patient: "Robert Brown", status: "Upcoming", type: "Consultation" },
-                                    { time: "02:00 PM", patient: "Alice Li", status: "Upcoming", type: "Routine Check" }
-                                ].map((item, i) => (
-                                    <div key={`${item.patient}-${i}`} style={{ display: 'flex', borderBottom: i === 3 ? 'none' : '1px solid #f1f5f9', position: 'relative' }}>
-                                        {item.active && <div style={{ position: 'absolute', left: '0', top: '0', bottom: '0', width: '4px', background: '#3b82f6' }} />}
-                                        <div style={{ width: '80px', padding: '20px 16px', flexShrink: 0, textAlign: 'center', borderRight: '1px solid #f1f5f9' }}>
-                                            <div style={{ fontSize: 'var(--font-body)', fontWeight: '800', color: item.active ? '#3b82f6' : '#1e293b' }}>{item.time.split(' ')[0]}</div>
-                                            <div style={{ fontSize: 'var(--font-xs)', fontWeight: '700', color: '#94a3b8', marginTop: '2px' }}>{item.time.split(' ')[1]}</div>
-                                        </div>
-                                        <div style={{ flex: 1, padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                            <div>
-                                                <div style={{
-                                                    fontSize: 'var(--font-lg)',
-                                                    fontWeight: '700',
-                                                    color: item.completed ? '#cbd5e1' : '#1e293b',
-                                                    textDecoration: item.completed ? 'line-through' : 'none'
-                                                }}>
-                                                    {item.patient}
-                                                </div>
-                                                <div style={{ marginTop: '6px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                    {item.completed ? (
-                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: 'var(--font-sm)', color: '#94a3b8', fontWeight: '500' }}>
-                                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12" /></svg>
-                                                            Completed
-                                                        </div>
-                                                    ) : item.tags ? (
-                                                        <div style={{ display: 'flex', gap: '6px' }}>
-                                                            {item.tags.map((tag, idx) => (
-                                                                <span key={`${tag}-${idx}`} style={{ fontSize: 'var(--font-xs)', background: '#f1f5f9', color: '#64748b', padding: '2px 8px', borderRadius: '4px', fontWeight: '700' }}>{tag}</span>
-                                                            ))}
-                                                        </div>
-                                                    ) : (
-                                                        <span style={{ fontSize: 'var(--font-xs)', color: '#64748b', fontWeight: '500' }}>{item.status}</span>
-                                                    )}
-                                                </div>
+                                {appointments.length === 0 ? (
+                                    <div style={{ padding: '24px', textAlign: 'center', color: '#64748b' }}>No appointments today.</div>
+                                ) : appointments.slice(0, 5).map((item, i) => {
+                                    const timeParts = item.requested_date ? new Date(item.requested_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }).split(' ') : ["N/A", ""];
+                                    const isCompleted = item.status === 'completed';
+                                    const isActive = item.status === 'accepted';
+                                    const patientName = item.patientName || item.user?.full_name || "Unknown Patient";
+                                    return (
+                                        <div key={`${item.id}-${i}`} style={{ display: 'flex', borderBottom: i === Math.min(appointments.length, 5) - 1 ? 'none' : '1px solid #f1f5f9', position: 'relative' }}>
+                                            {isActive && <div style={{ position: 'absolute', left: '0', top: '0', bottom: '0', width: '4px', background: '#3b82f6' }} />}
+                                            <div style={{ width: '80px', padding: '20px 16px', flexShrink: 0, textAlign: 'center', borderRight: '1px solid #f1f5f9' }}>
+                                                <div style={{ fontSize: 'var(--font-body)', fontWeight: '800', color: isActive ? '#3b82f6' : '#1e293b' }}>{timeParts[0]}</div>
+                                                <div style={{ fontSize: 'var(--font-xs)', fontWeight: '700', color: '#94a3b8', marginTop: '2px' }}>{timeParts[1]}</div>
                                             </div>
-                                            {item.badge ? (
-                                                <div style={{ fontSize: 'var(--font-xs)', fontWeight: '800', color: '#3b82f6', background: '#eff6ff', padding: '4px 12px', borderRadius: '6px', border: '1px solid #dbeafe', textTransform: 'uppercase' }}>
-                                                    {item.badge}
+                                            <div style={{ flex: 1, padding: '16px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                <div>
+                                                    <div style={{
+                                                        fontSize: 'var(--font-lg)',
+                                                        fontWeight: '700',
+                                                        color: isCompleted ? '#cbd5e1' : '#1e293b',
+                                                        textDecoration: isCompleted ? 'line-through' : 'none'
+                                                    }}>
+                                                        {patientName}
+                                                    </div>
+                                                    <div style={{ marginTop: '6px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                        {isCompleted ? (
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: 'var(--font-sm)', color: '#94a3b8', fontWeight: '500' }}>
+                                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12" /></svg>
+                                                                Completed
+                                                            </div>
+                                                        ) : (
+                                                            <span style={{ fontSize: 'var(--font-xs)', color: '#64748b', fontWeight: '500', textTransform: 'capitalize' }}>{item.status}</span>
+                                                        )}
+                                                    </div>
                                                 </div>
-                                            ) : item.type ? (
-                                                <div style={{ fontSize: 'var(--font-xs)', background: '#f8fafc', color: item.completed ? '#cbd5e1' : '#94a3b8', padding: '6px 12px', borderRadius: '8px', fontWeight: '700' }}>{item.type}</div>
-                                            ) : null}
+                                                <div style={{ fontSize: 'var(--font-xs)', background: '#f8fafc', color: isCompleted ? '#cbd5e1' : '#94a3b8', padding: '6px 12px', borderRadius: '8px', fontWeight: '700' }}>{item.reason || "Consultation"}</div>
+                                            </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         </div>
                     </div>
