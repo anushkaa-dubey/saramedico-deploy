@@ -28,7 +28,7 @@ export default function StaffManagementPage() {
             <Topbar title="Staff Management" />
 
             <div className={styles.contentWrapper}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', flexWrap: 'wrap', gap: '16px' }}>
                     <div>
                         <h1 style={{ fontSize: '24px', fontWeight: '800', color: '#0f172a', margin: 0 }}>Staff Management</h1>
                         <p style={{ color: '#64748b', margin: '4px 0 0 0' }}>Manage hospital personnel, shifts, and department assignments.</p>
@@ -41,7 +41,7 @@ export default function StaffManagementPage() {
                     </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', marginBottom: '32px' }}>
+                <div className={styles.overviewSection} style={{ marginBottom: '32px' }}>
                     {stats.map((s, i) => (
                         <div key={i} style={{ background: '#ffffff', padding: '24px', borderRadius: '16px', border: '1px solid #f1f5f9' }}>
                             <div style={{ color: s.color, marginBottom: '12px' }}>{s.icon}</div>
@@ -52,7 +52,7 @@ export default function StaffManagementPage() {
                 </div>
 
                 <div className={styles.card} style={{ border: 'none', borderRadius: '16px', padding: '0', overflow: 'hidden' }}>
-                    <div style={{ padding: '24px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ padding: '24px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
                         <div style={{ position: 'relative', width: '300px' }}>
                             <input
                                 type="text"

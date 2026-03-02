@@ -26,7 +26,7 @@ export default function EmergencyDepartmentPage() {
             <Topbar title="Emergency Department (ER)" />
 
             <div className={styles.contentWrapper}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', flexWrap: 'wrap', gap: '16px' }}>
                     <div>
                         <h1 style={{ fontSize: '24px', fontWeight: '800', color: '#0f172a', margin: 0 }}>Emergency Department (ER)</h1>
                         <p style={{ color: '#64748b', margin: '4px 0 0 0' }}>Real-time triage, trauma management and emergency resource allocation.</p>
@@ -40,7 +40,7 @@ export default function EmergencyDepartmentPage() {
                     </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', marginBottom: '32px' }}>
+                <div className={styles.overviewSection} style={{ marginBottom: '32px' }}>
                     {stats.map((s, i) => (
                         <div key={i} className={styles.card}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

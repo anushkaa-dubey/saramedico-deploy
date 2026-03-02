@@ -14,7 +14,7 @@ export default function ApprovalQueuePage() {
             <Topbar title="Approval Queue" />
 
             <div className={styles.contentWrapper}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                         <h1 style={{ fontSize: '24px', fontWeight: '800', color: '#0f172a', margin: 0 }}>Structured Approval Queue</h1>
                         <span style={{
@@ -41,7 +41,7 @@ export default function ApprovalQueuePage() {
                 </div>
 
                 {/* Approval Stats */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', marginBottom: '32px' }}>
+                <div className={styles.overviewSection} style={{ marginBottom: '32px' }}>
                     {[
                         { label: "Pending Review", value: "14", color: "#f59e0b", icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg> },
                         { label: "High Urgency", value: "3", color: "#ef4444", icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg> },
@@ -60,7 +60,7 @@ export default function ApprovalQueuePage() {
 
                 <div className={styles.card} style={{ border: 'none', background: '#ffffff', padding: '0', borderRadius: '16px', overflow: 'hidden' }}>
                     <div style={{ padding: '24px', borderBottom: '1px solid #f1f5f9' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px', flexWrap: 'wrap' }}>
                             <div style={{ flex: 1, position: 'relative' }}>
                                 <svg style={{ position: 'absolute', left: '12px', top: '48%', transform: 'translateY(-50%)', color: '#94a3b8' }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                                 <input placeholder="Search Patient Name, MRN or Session ID" style={{ width: '100%', padding: '10px 12px 10px 40px', borderRadius: '10px', border: '1px solid #f1f5f9', fontSize: '13px', background: '#ffffff' }} />
