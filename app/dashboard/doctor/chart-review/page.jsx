@@ -8,6 +8,8 @@ import Timeline from "./components/Timeline";
 import styles from "./ChartReview.module.css";
 import { motion } from "framer-motion";
 import { fetchPatients, fetchProfile, fetchPatientDocuments, uploadPatientDocument } from "@/services/doctor";
+import { API_BASE_URL, getAuthHeaders } from "@/services/apiConfig";
+
 
 export default function ChartReviewPage() {
     const [selectedDocument, setSelectedDocument] = useState(null);
@@ -15,11 +17,12 @@ export default function ChartReviewPage() {
     const [showTimeline, setShowTimeline] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
 
-    // AI Integration State
     const [doctorId, setDoctorId] = useState(null);
     const [patientId, setPatientId] = useState(null);
+    const [patients, setPatients] = useState([]);
     const [documents, setDocuments] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [deleting, setDeleting] = useState(null);
 
     useEffect(() => {
         loadData();
@@ -27,14 +30,13 @@ export default function ChartReviewPage() {
 
     const loadData = async () => {
         try {
-            // 1. Fetch Doctor Profile
             const profile = await fetchProfile();
             setDoctorId(profile.id);
 
-            // 2. Fetch Patients & Select First
-            const patients = await fetchPatients();
-            if (patients && patients.length > 0) {
-                const firstPatientId = patients[0].id; // Use first patient by default for Chart Review context
+            const patientsList = await fetchPatients();
+            setPatients(patientsList || []);
+            if (patientsList && patientsList.length > 0) {
+                const firstPatientId = patientsList[0].id;
                 setPatientId(firstPatientId);
                 loadDocuments(firstPatientId);
             }
@@ -43,6 +45,13 @@ export default function ChartReviewPage() {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handlePatientChange = (e) => {
+        const newPatientId = e.target.value;
+        setPatientId(newPatientId);
+        setSelectedDocument(null);
+        loadDocuments(newPatientId);
     };
 
     const loadDocuments = async (pId) => {
@@ -57,13 +66,35 @@ export default function ChartReviewPage() {
 
     const [uploadStatus, setUploadStatus] = useState({ msg: "", type: "" });
 
+    const handleDeleteDocument = async (docId, e) => {
+        e.stopPropagation();
+        if (!confirm("Are you sure you want to delete this document? This cannot be undone.")) return;
+
+        setDeleting(docId);
+        try {
+            const response = await fetch(`${API_BASE_URL}/documents/${docId}`, {
+                method: "DELETE",
+                headers: getAuthHeaders(),
+            });
+            if (!response.ok && response.status !== 204) {
+                throw new Error(`Delete failed: ${response.status}`);
+            }
+            setDocuments((prev) => prev.filter((d) => d.id !== docId));
+        } catch (err) {
+            console.error("Delete error:", err);
+            alert("Failed to delete document. Please try again.");
+        } finally {
+            setDeleting(null);
+        }
+    };
+
     const handleFileUpload = async (e) => {
         e.preventDefault();
         const files = e.target.files || e.dataTransfer?.files;
         if (!files || files.length === 0) return;
 
         if (!patientId) {
-            alert("No patient context found. Please ensure a patient is selected.");
+            alert("Please select a patient before uploading.");
             return;
         }
 
@@ -76,9 +107,7 @@ export default function ChartReviewPage() {
             });
 
             setUploadStatus({ msg: "Upload Successful! Document processing started.", type: "success" });
-            // Refresh documents
             loadDocuments(patientId);
-
             setTimeout(() => setUploadStatus({ msg: "", type: "" }), 5000);
         } catch (err) {
             console.error("Upload failed:", err);
@@ -141,14 +170,38 @@ export default function ChartReviewPage() {
                         Upload and analyze medical documents with AI-powered insights
                     </p>
                 </div>
-                <button className={styles.uploadBtn} onClick={triggerFileInput}>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                        <polyline points="17 8 12 3 7 8" />
-                        <line x1="12" y1="3" x2="12" y2="15" />
-                    </svg>
-                    Upload Document
-                </button>
+                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                    {/* Patient Selector */}
+                    <select
+                        value={patientId || ""}
+                        onChange={handlePatientChange}
+                        style={{
+                            padding: "8px 14px",
+                            borderRadius: "8px",
+                            border: "1px solid #e2e8f0",
+                            fontSize: "14px",
+                            fontWeight: "500",
+                            background: "#fff",
+                            cursor: "pointer",
+                            minWidth: "200px"
+                        }}
+                    >
+                        {patients.length === 0 && <option value="">No patients found</option>}
+                        {patients.map((p) => (
+                            <option key={p.id} value={p.id}>
+                                {p.full_name || p.fullName || p.name || `Patient ${p.id.slice(0, 8)}`}
+                            </option>
+                        ))}
+                    </select>
+                    <button className={styles.uploadBtn} onClick={triggerFileInput}>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                            <polyline points="17 8 12 3 7 8" />
+                            <line x1="12" y1="3" x2="12" y2="15" />
+                        </svg>
+                        Upload Document
+                    </button>
+                </div>
             </div>
 
             {!selectedDocument ? (
@@ -163,6 +216,7 @@ export default function ChartReviewPage() {
                                 key={doc.id}
                                 className={styles.documentCard}
                                 onClick={() => setSelectedDocument(doc)}
+                                style={{ position: "relative" }}
                             >
                                 <div className={styles.docIcon}>
                                     <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -184,6 +238,41 @@ export default function ChartReviewPage() {
                                 <span className={`${styles.statusBadge} ${styles.analyzed}`}>
                                     Ready
                                 </span>
+                                {/* Delete Button */}
+                                <button
+                                    onClick={(e) => handleDeleteDocument(doc.id, e)}
+                                    disabled={deleting === doc.id}
+                                    title="Delete document"
+                                    style={{
+                                        position: "absolute",
+                                        top: "8px",
+                                        right: "8px",
+                                        background: deleting === doc.id ? "#ccc" : "#fee2e2",
+                                        border: "none",
+                                        borderRadius: "6px",
+                                        padding: "4px 8px",
+                                        cursor: deleting === doc.id ? "not-allowed" : "pointer",
+                                        color: "#dc2626",
+                                        fontSize: "12px",
+                                        fontWeight: "600",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: "4px",
+                                        opacity: deleting === doc.id ? 0.5 : 1,
+                                        zIndex: 2
+                                    }}
+                                >
+                                    {deleting === doc.id ? "..." : (
+                                        <>
+                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                                <polyline points="3 6 5 6 21 6" />
+                                                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                                                <path d="M10 11v6M14 11v6" />
+                                            </svg>
+                                            Delete
+                                        </>
+                                    )}
+                                </button>
                             </div>
                         ))}
                     </div>

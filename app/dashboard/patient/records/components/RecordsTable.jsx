@@ -33,7 +33,7 @@ export default function RecordsTable() {
       <div className={styles.tableContainer}>
         {records.length === 0 ? (
           <div style={{ padding: "40px", textAlign: "center", color: "#64748b" }}>
-            No medical records found. Upload your first document to get started.
+            No medical records found. Your doctor will upload any relevant documents here.
           </div>
         ) : (
           <table className={styles.table}>
@@ -50,16 +50,16 @@ export default function RecordsTable() {
             <tbody>
               {records.map((record) => (
                 <tr key={record.id}>
-                  <td>{new Date(record.upload_date).toLocaleDateString()}</td>
-                  <td>{record.title}</td>
-                  <td>{record.category?.replace("_", " ")}</td>
+                  <td>{new Date(record.uploaded_at || record.upload_date).toLocaleDateString()}</td>
+                  <td>{record.title || record.file_name}</td>
+                  <td>{record.category?.replace(/_/g, " ") || "—"}</td>
                   <td>
                     <span className={`${styles.status} ${styles.success}`}>
                       ● Available
                     </span>
                   </td>
                   <td className={styles.action}>
-                    <a href={record.url} target="_blank" rel="noopener noreferrer" style={{ color: "inherit", textDecoration: "none" }}>
+                    <a href={record.presigned_url || record.download_url || record.url} target="_blank" rel="noopener noreferrer" style={{ color: "inherit", textDecoration: "none" }}>
                       View Doc →
                     </a>
                   </td>

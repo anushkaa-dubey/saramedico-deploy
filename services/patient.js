@@ -77,28 +77,8 @@ export const updateAppointmentStatus = async (appointmentId, status) => {
  * =========================
  */
 
-/**
- * Upload medical record
- *  Endpoint: POST /api/v1/patient/medical-history
- */
-export const uploadMedicalRecord = async (formData) => {
-    const response = await fetch(
-        `${API_BASE_URL}/patient/medical-history`,
-        {
-            method: "POST",
-            headers: getAuthHeaders(true), // multipart
-            body: formData,
-        }
-    );
-    return handleResponse(response);
-};
-
-/**
- * Fetch medical records
- * Endpoint: GET /api/v1/patient/medical-history
- */
 export const fetchMedicalRecords = async () => {
-    const response = await fetch(`${API_BASE_URL}/patient/medical-history`, {
+    const response = await fetch(`${API_BASE_URL}/documents`, {
         headers: getAuthHeaders(),
     });
     const data = await handleResponse(response);
