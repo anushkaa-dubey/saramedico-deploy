@@ -340,7 +340,11 @@ export default function ChartReviewPage() {
 
                     <div className={styles.splitView}>
                         <div className={styles.viewerPanel}>
-                            <PDFViewer onPageChange={setCurrentPage} />
+                            <PDFViewer
+                                documentUrl={selectedDocument.presigned_url || selectedDocument.download_url || selectedDocument.url || null}
+                                documentName={selectedDocument.title || selectedDocument.file_name || "Document"}
+                                onPageChange={setCurrentPage}
+                            />
                         </div>
                         <div className={styles.sidePanel}>
                             {showTimeline ? (
