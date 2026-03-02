@@ -13,15 +13,17 @@ export default function AuditLogsPage() {
             <Topbar title="Audit Logs" />
 
             <div className={styles.contentWrapper}>
-                <div style={{ marginBottom: '32px' }}>
-                    <h1 style={{ fontSize: '24px', fontWeight: '800', color: '#0f172a', margin: 0 }}>Audit Logs</h1>
-                    <p style={{ color: '#64748b', margin: '4px 0 0 0' }}>Detailed activity logs for General Hospital enterprise network.</p>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', flexWrap: 'wrap', gap: '16px' }}>
+                    <div>
+                        <h1 style={{ fontSize: '24px', fontWeight: '800', color: '#0f172a', margin: 0 }}>Audit Logs</h1>
+                        <p style={{ color: '#64748b', margin: '4px 0 0 0' }}>Detailed activity logs for General Hospital enterprise network.</p>
+                    </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: '32px', alignItems: 'start' }}>
+                <div className={styles.dashboardGrid}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                         <div className={styles.card} style={{ padding: '0', borderRadius: '16px', border: 'none', overflow: 'hidden' }}>
-                            <div style={{ padding: '24px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div style={{ padding: '24px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
                                 <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#1e293b', margin: 0 }}>Recent Activities</h3>
                                 <button style={{ background: 'transparent', border: 'none', color: '#3b82f6', fontSize: '13px', fontWeight: '700', cursor: 'pointer' }}>View All</button>
                             </div>

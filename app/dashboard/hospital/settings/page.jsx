@@ -13,12 +13,14 @@ export default function SettingsPage() {
             <Topbar title="Invite Staff Member" />
 
             <div className={styles.contentWrapper}>
-                <div style={{ marginBottom: '32px' }}>
-                    <h1 style={{ fontSize: '24px', fontWeight: '800', color: '#0f172a', margin: 0 }}>Invite Staff Member</h1>
-                    <p style={{ color: '#64748b', margin: '4px 0 0 0' }}>Onboard a new medical professional to your department network with secure credential.</p>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', flexWrap: 'wrap', gap: '16px' }}>
+                    <div>
+                        <h1 style={{ fontSize: '24px', fontWeight: '800', color: '#0f172a', margin: 0 }}>Invite Staff Member</h1>
+                        <p style={{ color: '#64748b', margin: '4px 0 0 0' }}>Onboard a new medical professional to your department network with secure credential.</p>
+                    </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: '32px', alignItems: 'start' }}>
+                <div className={styles.dashboardGrid}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                         <div className={styles.card} style={{ padding: '32px', borderRadius: '16px', border: 'none' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '32px' }}>
@@ -28,7 +30,7 @@ export default function SettingsPage() {
                                 <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#1e293b' }}>Staff Details</h3>
                             </div>
 
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+                            <div className={styles.overviewSection} style={{ gap: '24px' }}>
                                 <div className={styles.formGroup}>
                                     <label style={{ fontSize: '11px', fontWeight: '800', color: '#94a3b8', marginBottom: '8px', display: 'block' }}>FULL NAME</label>
                                     <div style={{ position: 'relative' }}>

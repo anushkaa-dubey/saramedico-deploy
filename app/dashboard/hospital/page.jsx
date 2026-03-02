@@ -259,12 +259,12 @@ export default function HospitalDashboard() {
                     </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 280px', gap: '20px' }}>
+                <div className={styles.dashboardGrid}>
                     {/* Main Content Area */}
                     <div className={styles.leftColMain}>
-                        <div className={styles.overviewSection} style={{ gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '32px' }}>
+                        <div className={styles.overviewSection} style={{ marginBottom: '32px' }}>
                             {stats.map((s, i) => (
-                                <div key={i} className={styles.statCard} style={{ padding: '20px', borderRadius: '16px', border: '1px solid #f1f5f9', background: '#ffffff', minHeight: '120px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                                <div key={`${s.label}-${i}`} className={styles.statCard} style={{ padding: '20px', borderRadius: '16px', border: '1px solid #f1f5f9', background: '#ffffff', minHeight: '120px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                                         <div>
                                             <div style={{ fontSize: 'var(--font-label)', fontWeight: '800', color: '#94a3b8', letterSpacing: '0.05em', marginBottom: '8px' }}>{s.label}</div>
@@ -278,8 +278,8 @@ export default function HospitalDashboard() {
                                     </div>
                                     {s.tags ? (
                                         <div style={{ display: 'flex', gap: '4px', marginTop: '12px' }}>
-                                            {s.tags.map((tag, i) => (
-                                                <span key={i} style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '4px', background: '#f1f5f9', color: '#64748b', fontWeight: '700' }}>{tag}</span>
+                                            {s.tags.map((tag, idx) => (
+                                                <span key={`${tag}-${idx}`} style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '4px', background: '#f1f5f9', color: '#64748b', fontWeight: '700' }}>{tag}</span>
                                             ))}
                                         </div>
                                     ) : (
@@ -296,7 +296,7 @@ export default function HospitalDashboard() {
                                 <h2 style={{ fontSize: '18px', fontWeight: '800', color: '#1e293b', margin: 0 }}>My Sessions & Documentation</h2>
                                 <div style={{ display: 'flex', background: '#f1f5f9', padding: '4px', borderRadius: '10px', gap: '4px' }}>
                                     {['All Active', 'Drafts Ready', 'Pending Review', 'Signed'].map((tab, i) => (
-                                        <button key={i} style={{
+                                        <button key={`${tab}-${i}`} style={{
                                             padding: '6px 16px',
                                             borderRadius: '8px',
                                             border: 'none',
@@ -323,7 +323,7 @@ export default function HospitalDashboard() {
                                 </thead>
                                 <tbody>
                                     {encounters.map((row, i) => (
-                                        <tr key={i} style={{ borderBottom: i === encounters.length - 1 ? 'none' : '1px solid #f8fafc' }}>
+                                        <tr key={`${row.name}-${i}`} style={{ borderBottom: i === encounters.length - 1 ? 'none' : '1px solid #f8fafc' }}>
                                             <td style={{ padding: '16px 24px' }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                                     <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', color: '#64748b', fontSize: '11px' }}>{row.name.split(' ').map(n => n[0]).join('')}</div>
@@ -395,7 +395,7 @@ export default function HospitalDashboard() {
                                     { time: "11:45 AM", patient: "Robert Brown", status: "Upcoming", type: "Consultation" },
                                     { time: "02:00 PM", patient: "Alice Li", status: "Upcoming", type: "Routine Check" }
                                 ].map((item, i) => (
-                                    <div key={i} style={{ display: 'flex', borderBottom: i === 3 ? 'none' : '1px solid #f1f5f9', position: 'relative' }}>
+                                    <div key={`${item.patient}-${i}`} style={{ display: 'flex', borderBottom: i === 3 ? 'none' : '1px solid #f1f5f9', position: 'relative' }}>
                                         {item.active && <div style={{ position: 'absolute', left: '0', top: '0', bottom: '0', width: '4px', background: '#3b82f6' }} />}
                                         <div style={{ width: '80px', padding: '20px 16px', flexShrink: 0, textAlign: 'center', borderRight: '1px solid #f1f5f9' }}>
                                             <div style={{ fontSize: 'var(--font-body)', fontWeight: '800', color: item.active ? '#3b82f6' : '#1e293b' }}>{item.time.split(' ')[0]}</div>
@@ -419,8 +419,8 @@ export default function HospitalDashboard() {
                                                         </div>
                                                     ) : item.tags ? (
                                                         <div style={{ display: 'flex', gap: '6px' }}>
-                                                            {item.tags.map(tag => (
-                                                                <span key={tag} style={{ fontSize: 'var(--font-xs)', background: '#f1f5f9', color: '#64748b', padding: '2px 8px', borderRadius: '4px', fontWeight: '700' }}>{tag}</span>
+                                                            {item.tags.map((tag, idx) => (
+                                                                <span key={`${tag}-${idx}`} style={{ fontSize: 'var(--font-xs)', background: '#f1f5f9', color: '#64748b', padding: '2px 8px', borderRadius: '4px', fontWeight: '700' }}>{tag}</span>
                                                             ))}
                                                         </div>
                                                     ) : (
@@ -453,7 +453,7 @@ export default function HospitalDashboard() {
                                 </div>
                             </div>
                             <div className={styles.calendarGrid}>
-                                {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map(d => <div key={d} className={styles.dayLabel}>{d}</div>)}
+                                {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((d, i) => <div key={`${d}-${i}`} className={styles.dayLabel}>{d}</div>)}
                                 {daysInMonth.map(day => (
                                     <div
                                         key={day}
@@ -472,7 +472,7 @@ export default function HospitalDashboard() {
                                     { name: "Dr. Sarah Wilson", role: "Cardiology", status: "On-site" },
                                     { name: "Dr. Michael Chen", role: "Neurology", status: "Remote" }
                                 ].map((staff, i) => (
-                                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <div key={`${staff.name}-${i}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                         <div>
                                             <div style={{ fontSize: '12px', fontWeight: '700' }}>{staff.name}</div>
                                             <div style={{ fontSize: '10px', color: '#94a3b8' }}>{staff.role}</div>

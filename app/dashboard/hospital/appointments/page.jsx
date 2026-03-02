@@ -25,7 +25,7 @@ export default function AppointmentsPage() {
             <Topbar title={view === 'schedule' ? "Staff Schedule" : "Appointments Schedule"} />
 
             <div className={styles.contentWrapper}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', flexWrap: 'wrap', gap: '16px' }}>
                     <div>
                         <h1 style={{ fontSize: '24px', fontWeight: '800', color: '#0f172a', margin: 0 }}>
                             {view === 'schedule' ? "Schedule" : "Master Appointment Schedule"}
@@ -90,7 +90,7 @@ export default function AppointmentsPage() {
 
                 {view === 'list' ? (
                     <div className={styles.card} style={{ border: 'none', borderRadius: '16px', padding: '0', overflow: 'hidden' }}>
-                        <div style={{ padding: '24px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div style={{ padding: '24px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
                             <div style={{ fontWeight: '700', color: '#0f172a' }}>Tuesday, October 24, 2026</div>
                             <div style={{ display: 'flex', gap: '12px' }}>
                                 <select className={styles.outlineBtn} style={{ background: '#ffffff' }}><option>All Doctors</option></select>
@@ -126,7 +126,7 @@ export default function AppointmentsPage() {
                         </div>
                     </div>
                 ) : (
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: '32px' }}>
+                    <div className={styles.dashboardGrid}>
                         <div className={styles.card} style={{ border: 'none', borderRadius: '16px', padding: '24px' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>

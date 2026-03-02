@@ -48,10 +48,30 @@
     object-fit: contain;
 }
 
-.mobileToggleBtn,
-.mobileOverlay,
-.closeBtnHidden {
+.mobileToggleBtn {
     display: none;
+    position: fixed;
+    top: 16px;
+    left: 16px;
+    z-index: 1001;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.mobileOverlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(15, 23, 42, 0.3);
+    backdrop-filter: blur(4px);
+    z-index: 999;
 }
 
 
@@ -164,9 +184,9 @@
 
 .dashboardGrid {
     display: grid;
-    grid-template-columns: 1fr 340px;
+    grid-template-columns: 1fr 280px;
     gap: 24px;
-    padding: 24px 32px;
+    padding: 0;
     max-width: 1400px;
     margin: 0 auto;
     width: 100%;
@@ -198,17 +218,16 @@
     background: #ffffff;
     border-radius: 0;
     padding: 20px 16px;
-    margin-right: 0;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    transition: all 0.3s ease;
+    border-right: 1px solid #eef2f7;
+    transition: transform 0.3s ease;
+    z-index: 1000;
     height: 100vh;
     position: sticky;
     top: 0;
-    z-index: 100;
     overflow-y: auto;
-    border-right: 1px solid #eef2f7;
 }
 
 .logoRow {
@@ -1662,6 +1681,12 @@
     position: relative;
 }
 
+.overviewSection {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+}
+
 .legendList {
     display: flex;
     flex-direction: column;
@@ -1680,4 +1705,247 @@
     width: 12px;
     height: 12px;
     border-radius: 3px;
+}
+
+/* =============================================
+   TOPBAR — base styles for Topbar component
+   ============================================= */
+.topbar {
+    padding: 16px 24px;
+    background: #ffffff;
+    border-bottom: 1px solid #f1f5f9;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+}
+
+.search {
+    padding: 10px 40px 10px 14px;
+    border-radius: 10px;
+    border: 1px solid #f1f5f9;
+    background: #f8fafc;
+    outline: none;
+    font-family: inherit;
+}
+
+.topActions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.notificationBtn {
+    position: relative;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: #64748b;
+    padding: 8px;
+    border-radius: 8px;
+    transition: background 0.2s;
+}
+
+.notificationBtn:hover {
+    background: #f1f5f9;
+}
+
+.notificationBadge {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 8px;
+    height: 8px;
+    background: #ef4444;
+    border-radius: 50%;
+    border: 2px solid white;
+}
+
+.profile {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.profileInfo {
+    display: flex;
+    flex-direction: column;
+    text-align: right;
+}
+
+/* =============================================
+   MOBILE RESPONSIVENESS — media queries only
+   No desktop styles are changed above this line
+   ============================================= */
+
+/* ---------- Tablet & small laptop (≤1024px) ---------- */
+@media (max-width: 1024px) {
+
+    /* Sidebar becomes a fixed slide-in drawer */
+    .sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        height: 100vh;
+        transform: translateX(-100%);
+        box-shadow: none;
+    }
+
+    .sidebar.open {
+        transform: translateX(0);
+        box-shadow: 4px 0 20px rgba(0, 0, 0, 0.08);
+    }
+
+    /* Show hamburger button */
+    .mobileToggleBtn {
+        display: flex;
+    }
+
+    /* Show overlay when sidebar is open */
+    .mobileOverlay {
+        display: block;
+    }
+
+    /* Main content takes full width */
+    .main {
+        width: 100%;
+    }
+
+    /* Two-column dashboard grid → single column */
+    .dashboardGrid {
+        grid-template-columns: 1fr;
+    }
+
+    /* 4-col stats → 2 columns */
+    .overviewSection {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    /* Content wrapper less padding */
+    .contentWrapper {
+        padding: 16px 20px;
+    }
+
+    /* Topbar needs left space for hamburger */
+    .topbar {
+        padding-left: 64px;
+    }
+}
+
+/* ---------- Mobile (≤768px) ---------- */
+@media (max-width: 768px) {
+
+    /* Scale down font system */
+    .container {
+        --font-3xl: 22px;
+        --font-2xl: 18px;
+        --font-xl: 16px;
+        --font-lg: 14px;
+        --font-base: 13px;
+        --font-md: 12px;
+        --font-xs: 10px;
+    }
+
+    /* Content wrapper tighter padding */
+    .contentWrapper {
+        padding: 14px 16px;
+    }
+
+    /* Header stacks vertically */
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 16px;
+    }
+
+    .headerActions {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Tables become horizontally scrollable */
+    .activityTable {
+        display: block;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        white-space: nowrap;
+    }
+
+    /* Cards less padding */
+    .card {
+        padding: 16px;
+    }
+
+    /* Buttons slightly smaller */
+    .outlineBtn,
+    .primaryBtn {
+        height: 34px;
+        font-size: 12px;
+        padding: 0 12px;
+    }
+
+    /* Dashboard actions wrap */
+    .dashboardActions {
+        flex-wrap: wrap;
+    }
+
+    /* Pie chart smaller */
+    .pieWrapper {
+        width: 160px;
+        height: 160px;
+    }
+
+    /* Search bar responsive */
+    .search {
+        width: 100% !important;
+        max-width: 200px;
+    }
+
+    /* Hide profile text on mobile, show only avatar */
+    .profileInfo {
+        display: none;
+    }
+
+    /* Topbar tighter */
+    .topbar {
+        padding: 12px 16px 12px 64px;
+    }
+}
+
+/* ---------- Small phone (≤480px) ---------- */
+@media (max-width: 480px) {
+
+    /* Stats go single column */
+    .overviewSection {
+        grid-template-columns: 1fr;
+    }
+
+    /* Dashboard actions stack */
+    .dashboardActions {
+        flex-direction: column;
+    }
+
+    .primaryBtn,
+    .outlineBtn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    /* Content wrapper minimal padding */
+    .contentWrapper {
+        padding: 12px;
+    }
+
+    /* Logo smaller on mobile */
+    .logoRow img {
+        width: 100px !important;
+    }
+
+    /* Search bar even smaller */
+    .search {
+        max-width: 150px;
+        font-size: 12px !important;
+    }
 }
