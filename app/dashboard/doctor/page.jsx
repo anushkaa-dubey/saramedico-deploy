@@ -13,7 +13,7 @@ import { fetchAppointments, createConsultation, fetchProfile, fetchTasks, fetchP
 import { fetchQueueMetrics } from "@/services/consultation";
 import Link from "next/link";
 
-// import { fetchCalendarMonth, fetchCalendarDay, deleteCalendarEvent } from "@/services/calendar"; // Missing backend domain
+import { fetchCalendarMonth, fetchCalendarDay, deleteCalendarEvent } from "@/services/calendar";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -66,6 +66,12 @@ export default function DoctorDashboard() {
         fetchQueueMetrics().catch(() => ({ pending_review: 0, high_urgency: 0, cleared_today: 0, avg_wait_time_minutes: 0 })),
         fetchTeamMembers().catch(() => [])
       ]);
+      if (!profile) return;
+
+      if (profile.role !== "doctor") {
+        router.replace(`/dashboard/${profile.role}`);
+        return;
+      }
 
       const consultationsData = await import("@/services/consultation").then(m => m.fetchConsultations().catch(() => ({ consultations: [] })));
       const consultations = Array.isArray(consultationsData) ? consultationsData : (consultationsData?.consultations || consultationsData?.items || []);
@@ -146,14 +152,13 @@ export default function DoctorDashboard() {
     try {
       const dateStr = `${currentYear}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
       const events = await fetchCalendarDay(dateStr);
-      setSelectedDayEvents(events);
+      setSelectedDayEvents(events?.events || []);
     } catch (err) {
       console.error("Failed to fetch calendar day data:", err);
     }
   };
 
   const getDayAvailability = (day) => {
-    // Missing backend Calendar domain
     return "none";
   };
 
@@ -396,9 +401,11 @@ export default function DoctorDashboard() {
             <div className={styles.calendarGrid}>
               {daysInMonth.map(day => {
                 const isToday = isTodayMonth && day === todayDate;
-                const isBusy = [3, 12, 18, 24].includes(day);
-                const isVeryBusy = [5, 15].includes(day);
+                const dayInfo = monthData?.days?.find(d => d.day === day);
+                const eventCount = dayInfo?.event_count || 0;
 
+                const isBusy = eventCount > 0;
+                const isVeryBusy = eventCount >= 3; // edit as per requests , for testing made it very busy
                 return (
                   <div
                     key={day}

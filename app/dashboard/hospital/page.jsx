@@ -4,6 +4,7 @@ import styles from "./HospitalDashboard.module.css";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useState, useEffect, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { fetchHospitalAppointments, fetchHospitalStats, fetchReviewQueue } from "@/services/hospital";
 // import { fetchCalendarMonth, fetchCalendarDay, deleteCalendarEvent } from "@/services/calendar"; // Missing backend domain
 import { fetchProfile } from "@/services/doctor";
@@ -23,6 +24,7 @@ const itemVariants = {
 };
 
 export default function HospitalDashboard() {
+    const router = useRouter();
     const [currentDate, setCurrentDate] = useState(new Date());
     const [staffList, setStaffList] = useState([]);
     const [appointments, setAppointments] = useState([]);
@@ -35,7 +37,6 @@ export default function HospitalDashboard() {
     const [selectedDayEvents, setSelectedDayEvents] = useState(null);
     const [isAvailable, setIsAvailable] = useState(true);
     const [filters, setFilters] = useState({ department: "All", provider: "All", urgency: "All" });
-
     useEffect(() => {
         const loadData = async () => {
             setLoading(true);
@@ -44,24 +45,32 @@ export default function HospitalDashboard() {
                     fetchHospitalAppointments(),
                     fetchHospitalStats(),
                     fetchReviewQueue(),
-                    // fetchDashboardMetrics(),
                     fetchProfile(),
                     fetchDoctors()
                 ]);
+
+                if (!profileData) return;
+
+                if (profileData.role !== "hospital") {
+                    router.replace(`/dashboard/${profileData.role}`);
+                    return;
+                }
+
                 setAppointments(apptData);
                 setStatsData(prev => ({ ...prev, ...statData }));
                 setReviewQueue(queueData);
-                // setDashboardMetrics(metricsData);
                 setDoctorProfile(profileData);
                 setStaffList(doctorsData?.slice(0, 4) || []);
+
             } catch (err) {
                 console.error("Failed to load hospital dashboard data:", err);
             } finally {
                 setLoading(false);
             }
         };
+
         loadData();
-    }, []);
+    }, [router]);
 
     const refreshMonthData = async () => {
         try {

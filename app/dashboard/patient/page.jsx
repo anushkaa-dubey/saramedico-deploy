@@ -35,21 +35,53 @@ export default function PatientDashboard() {
   const router = useRouter();
   const [user, setUser] = useState(null);
 
+  // useEffect(() => {
+  //   const load = async () => {
+  //     try {
+  //       const profile = await fetchProfile();
+  //       setUser(profile);
+  //       if (profile) localStorage.setItem("user", JSON.stringify(profile));
+  //     } catch (err) {
+  //       const stored = localStorage.getItem("user");
+  //       if (stored) {
+  //         try { setUser(JSON.parse(stored)); } catch (_) { }
+  //       }
+  //     }
+  //   };
+  //   load();
+  // }, []);
   useEffect(() => {
     const load = async () => {
       try {
         const profile = await fetchProfile();
+
+        if (!profile) return;
+        if (profile.role !== "patient") {
+          router.push(`/dashboard/${profile.role}`);
+          return;
+        }
+
         setUser(profile);
-        if (profile) localStorage.setItem("user", JSON.stringify(profile));
+        localStorage.setItem("user", JSON.stringify(profile));
+
       } catch (err) {
         const stored = localStorage.getItem("user");
         if (stored) {
-          try { setUser(JSON.parse(stored)); } catch (_) { }
+          try {
+            const parsed = JSON.parse(stored);
+
+            if (parsed.role !== "patient") {
+              router.replace(`/dashboard/${profile.role}`); return;
+            }
+
+            setUser(parsed);
+          } catch (_) { }
         }
       }
     };
+
     load();
-  }, []);
+  }, [router]);
 
   const firstName = user?.full_name
     ? user.full_name.split(" ")[0]

@@ -9,9 +9,11 @@ import micIcon from "@/public/icons/mic_white.svg";
 import scheduleIcon from "@/public/icons/schedule.svg";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 // import { fetchCalendarMonth, fetchCalendarDay } from "@/services/calendar"; // Missing backend domain
 import { fetchAdminOverview, fetchAdminAuditLogs, fetchAuditLogs } from "@/services/admin";
 import { fetchProfile } from "@/services/doctor";
+
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -38,6 +40,8 @@ const itemVariants = {
 };
 
 export default function AdminDashboard() {
+  const router = useRouter();
+
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [searchFilter, setSearchFilter] = useState("All");
   const [adminUser, setAdminUser] = useState(null);
@@ -60,17 +64,27 @@ export default function AdminDashboard() {
           fetchAdminOverview(),
           fetchAdminAuditLogs({ limit: 5 }),
         ]);
+
+        if (!profile) return;
+
+        if (profile.role !== "admin") {
+          router.replace(`/dashboard/${profile.role}`);
+          return;
+        }
+
         setAdminUser(profile);
         setOverview(overviewData);
         setAuditLogs(logs || []);
+
       } catch (err) {
         console.error("AdminDashboard init error:", err);
       } finally {
         setLoadingOverview(false);
       }
     };
+
     init();
-  }, []);
+  }, [router]);
 
   useEffect(() => {
     const loadMonthData = async () => {

@@ -146,17 +146,15 @@ export const updateAppointmentStatus = async (appointmentId, status, notes = "")
 
 /**
  * Onboard/Invite a new patient (Doctor creating patient)
- * [STRUCTURAL FIX]: Using /doctor/onboard-patient as per backend recommendation
  */
 export const onboardPatient = async (patientData) => {
-    const response = await fetch(`${API_BASE_URL}/doctor/onboard-patient`, {
+    const response = await fetch(`${API_BASE_URL}/patients`, {
         method: "POST",
         headers: getAuthHeaders(),
         body: JSON.stringify(patientData),
     });
     return handleResponse(response);
 };
-
 /**
  * Fetch doctor's recent activity feed
  * Endpoint: GET /api/v1/doctor/activity

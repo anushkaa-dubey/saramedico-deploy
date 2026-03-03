@@ -24,7 +24,7 @@ The Doctor's dashboard is the core operational hub consisting of scheduling, doc
 - **Calendar & Scheduling**: 
   - Retrieves day agendas and monthly overviews via new Calendar endpoints (`GET /api/v1/calendar/day/{date}`, `GET /api/v1/calendar/month/{year}/{month}`).
   - Custom events are modifiable (`POST`, `PUT`, `DELETE` to `/api/v1/calendar/events`).
-  - Doctor approves patient requests via `POST /api/v1/appointments/{id}/approve` (which auto-generates Google Meet links).
+  - Doctor approves patient requests via `POST /api/v1/appointments/{id}/approve` (which auto-generates Zoom links).
 - **Document Management**:
   - Doctors use a **presigned URL** approach: first hitting `POST /api/v1/documents/upload-url`, successfully putting the file directly into MinIO (bypassing backend authorization headers on the secondary PUT request to prevent AWS signature mismatch errors), and finalizing via `POST /api/v1/documents/{id}/confirm`.
 - **AI Integration**:

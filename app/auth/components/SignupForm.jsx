@@ -139,13 +139,27 @@ export default function SignupForm() {
     setLoading(true);
 
     try {
+      // const payload = {
+      //   email: formData.email,
+      //   password: formData.password,
+      //   confirm_password: formData.confirm_password,
+      //   first_name: formData.first_name,
+      //   last_name: formData.last_name,
+      //   phone: formData.phone,
+      //   date_of_birth: formData.date_of_birth,
+      //   gender: formData.gender,
+      //   role: formData.role,
+      //   organization_name: formData.organization_name
+      // };
+      const cleanPhone = `+${formData.phone.replace(/\D/g, "")}`;
+
       const payload = {
         email: formData.email,
         password: formData.password,
         confirm_password: formData.confirm_password,
         first_name: formData.first_name,
         last_name: formData.last_name,
-        phone: formData.phone,
+        phone: cleanPhone,
         date_of_birth: formData.date_of_birth,
         gender: formData.gender,
         role: formData.role,
@@ -302,7 +316,11 @@ export default function SignupForm() {
           <PhoneInput
             country={"us"}
             value={formData.phone}
-            onChange={(phone) => handleInputChange("phone", phone)}
+            onChange={(phone, country) => {
+              const formattedPhone = phone.startsWith("+") ? phone : `+${phone}`;
+              handleInputChange("phone", formattedPhone);
+            }}
+
             inputProps={{
               id: 'phone',
               name: 'phone',

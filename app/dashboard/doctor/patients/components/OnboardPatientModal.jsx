@@ -38,20 +38,30 @@ export default function OnboardPatientModal({ isOpen, onClose, onSuccess }) {
         e.preventDefault();
         setLoading(true);
         setError("");
+
         try {
+            // const payload = {
+            //     first_name: formData.first_name,
+            //     last_name: formData.last_name,
+            //     fullName: `${formData.first_name} ${formData.last_name}`,
+            //     email: formData.email,
+            //     password: formData.password,
+            //     date_of_birth: formData.date_of_birth,
+            //     gender: formData.gender,
+            //     phone: formData.phone_number.startsWith("+") ? formData.phone_number : `+${formData.phone_number}`,
+            //     phone_number: formData.phone_number.startsWith("+") ? formData.phone_number : `+${formData.phone_number}`,
+            //     role: "patient"
+            // };
             const payload = {
-                first_name: formData.first_name,
-                last_name: formData.last_name,
                 fullName: `${formData.first_name} ${formData.last_name}`,
                 email: formData.email,
                 password: formData.password,
-                date_of_birth: formData.date_of_birth,
+                dateOfBirth: formData.date_of_birth,
                 gender: formData.gender,
-                phone: formData.phone_number.startsWith("+") ? formData.phone_number : `+${formData.phone_number}`,
-                phone_number: formData.phone_number.startsWith("+") ? formData.phone_number : `+${formData.phone_number}`,
-                role: "patient"
+                phoneNumber: formData.phone_number.startsWith("+")
+                    ? formData.phone_number
+                    : `+${formData.phone_number}`,
             };
-
             await onboardPatient(payload);
             setOnboardedData({ email: formData.email, password: formData.password });
             onSuccess();
