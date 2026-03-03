@@ -31,8 +31,18 @@ export default function VideoCallPage() {
         }
     };
 
+    // const handleJoinMeet = () => {
+    //     const link = appointment?.meet_link;
+    //     if (link) {
+    //         window.open(link, "_blank");
+    //     } else {
+    //         alert("Meeting link not available yet. Please wait for the doctor.");
+    //     }
+    // };
     const handleJoinMeet = () => {
-        const link = appointment?.meet_link;
+        const link =
+            appointment?.meet_link || appointment?.join_url;
+
         if (link) {
             window.open(link, "_blank");
         } else {

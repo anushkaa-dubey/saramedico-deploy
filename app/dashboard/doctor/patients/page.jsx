@@ -40,7 +40,7 @@ export default function Patients() {
             if (patientsData && patientsData.length > 0) {
                 const mappedPatients = patientsData.map(p => ({
                     id: p.id,
-                    name: p.name || p.full_name || "Unknown Patient",
+                    name: p.name || p.full_name,
                     status: p.statusTag || "Analysis Ready",
                     statusClass: "ready",
                     dob: p.dob || "N/A",
@@ -125,6 +125,8 @@ export default function Patients() {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
+            style={{ padding: '0 24px 24px 24px' }}
+
         >
             <Topbar />
 

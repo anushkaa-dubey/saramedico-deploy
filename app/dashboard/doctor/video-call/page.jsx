@@ -86,6 +86,7 @@ export default function DoctorVideoCallPage() {
         <div className={styles.sessionContainer}>
             <Topbar />
 
+            {/* ---  ---
             <section className={styles.patientInfoBar}>
                 <div className={styles.patientMain}>
                     <span className={styles.patientName}>{appointment?.patientName || appointment?.patient_name || "Benjamin Frank"}</span>
@@ -100,7 +101,6 @@ export default function DoctorVideoCallPage() {
             </section>
 
             <main className={styles.mainGrid}>
-                {/* LEFT COLUMN: VIDEO (GOOGLE MEET CARD) & CHAT */}
                 <div className={styles.leftColumn}>
                     <div className={styles.videoAreaWrapper}>
                         <div className={styles.meetJoinCard}>
@@ -116,7 +116,6 @@ export default function DoctorVideoCallPage() {
                             </button>
                         </div>
                     </div>
-                    {/* Chat remains (optional use) */}
                     <div className={styles.chatAreaWrapper}>
                         <div className={styles.emptyChat}>
                             <p>Internal clinical chat for record synchronization.</p>
@@ -124,7 +123,7 @@ export default function DoctorVideoCallPage() {
                     </div>
                 </div>
 
-                {/* RIGHT COLUMN: TRANSCRIPT, SOAP, ASSIST */}
+                {/* RIGHT COLUMN: TRANSCRIPT, SOAP, ASSIST *\/}
                 <div className={styles.rightColumn}>
                     <div className={styles.transcriptCard}>
                         <div className={styles.toolHeader}>
@@ -160,6 +159,103 @@ export default function DoctorVideoCallPage() {
                             <AssistPanel suggestedTags={suggestedTags} />
                         </div>
                     </div>
+                </div>
+            </main>
+            --- */}
+
+            <main style={{
+                flex: 1,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '40px',
+                background: '#f8fafc',
+                height: 'calc(100vh - 72px)'
+            }}>
+                <div style={{
+                    background: '#ffffff',
+                    padding: '48px 64px',
+                    borderRadius: '24px',
+                    boxShadow: '0 10px 40px rgba(0, 0, 0, 0.04)',
+                    border: '1px solid #eef2f7',
+                    textAlign: 'center',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: '24px',
+                    maxWidth: '480px',
+                    width: '100%'
+                }}>
+                    <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        width: '80px',
+                        height: '80px',
+                        background: '#eff6ff',
+                        borderRadius: '50%',
+                        marginBottom: '8px'
+                    }}>
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none">
+                            <path d="M15 8V16H5V8H15M16 6H4C3.45 6 3 6.45 3 7V17C3 17.55 3.45 18 4 18H16C16.55 18 17 17.55 17 17V13.5L21 17.5V6.5L17 10.5V7C17 6.45 16.55 6 16 6Z" fill="#3B82F6" />
+                        </svg>
+                    </div>
+
+                    <div>
+                        <h2 style={{ fontSize: '24px', fontWeight: '800', color: '#0f172a', margin: '0 0 12px' }}>
+                            Active Consultation
+                        </h2>
+                        <p style={{ fontSize: '15px', color: '#64748b', margin: 0, lineHeight: 1.5 }}>
+                            {appointment?.patientName || appointment?.patient_name ? `Session for: ${appointment?.patientName || appointment?.patient_name}` : "Launch the secure Google Meet session to begin your consultation."}
+                        </p>
+                    </div>
+
+                    <button
+                        onClick={handleJoinMeet}
+                        disabled={!appointment?.meet_link}
+                        style={{
+                            background: !appointment?.meet_link ? '#cbd5e1' : '#3b82f6',
+                            color: 'white',
+                            border: 'none',
+                            padding: '16px 32px',
+                            borderRadius: '12px',
+                            fontWeight: '700',
+                            fontSize: '16px',
+                            cursor: !appointment?.meet_link ? 'not-allowed' : 'pointer',
+                            transition: 'all 0.2sease',
+                            width: '100%',
+                            boxShadow: !appointment?.meet_link ? 'none' : '0 4px 12px rgba(59, 130, 246, 0.3)',
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            gap: '12px'
+                        }}
+                        onMouseOver={(e) => {
+                            if (appointment?.meet_link) {
+                                e.currentTarget.style.transform = 'translateY(-2px)'
+                                e.currentTarget.style.backgroundColor = '#2563eb'
+                            }
+                        }}
+                        onMouseOut={(e) => {
+                            if (appointment?.meet_link) {
+                                e.currentTarget.style.transform = 'translateY(0)'
+                                e.currentTarget.style.backgroundColor = '#3b82f6'
+                            }
+                        }}
+                    >
+                        {!appointment?.meet_link ? (
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                            </svg>
+                        ) : null}
+                        {appointment?.meet_link ? "Join Google Meet" : "Meeting Link Unavailable"}
+                    </button>
+                    {!appointment?.meet_link && (
+                        <p style={{ fontSize: '13px', color: '#ef4444', margin: 0, fontWeight: 500 }}>
+                            Waiting for the consultation meeting link to be generated.
+                        </p>
+                    )}
                 </div>
             </main>
         </div>

@@ -31,7 +31,6 @@ export default function RequestAppointment() {
             const data = await fetchDoctors();
             console.log("Fetched doctors raw data:", data);
 
-            // Defensive: ensure we have an array
             let doctorsArray = [];
             if (Array.isArray(data)) {
                 doctorsArray = data;

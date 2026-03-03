@@ -24,6 +24,12 @@ export const fetchAppointments = async () => {
     }
 };
 
+export const fetchMyConsultations = async () => {
+    const response = await fetch(`${API_BASE_URL}/consultations`, {
+        headers: getAuthHeaders(),
+    });
+    return handleResponse(response);
+};
 /**
  * Book new appointment
  *  Endpoint: POST /api/v1/appointments

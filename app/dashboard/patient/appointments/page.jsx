@@ -70,7 +70,7 @@ export default function AppointmentsPage() {
 
                 {error && <p style={{ color: "red", padding: "0 24px" }}>{error}</p>}
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 350px', gap: '24px', alignItems: 'start' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '24px', alignItems: 'start' }}>
                     <div className={styles.card}>
                         <div className={styles.cardHeader}>
                             <h3>Session Tracking</h3>

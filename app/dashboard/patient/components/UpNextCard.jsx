@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react";
 import styles from "../PatientDashboard.module.css";
 import { useRouter } from "next/navigation";
-// TODO: Uncomment when connecting backend
-import { fetchAppointments } from "@/services/patient";
+// import { fetchAppointments } from "@/services/patient";
+import { fetchConsultations } from "@/services/consultation";
 
 export default function UpNextCard() {
   const [nextAppointment, setNextAppointment] = useState(null);
@@ -21,34 +21,31 @@ export default function UpNextCard() {
   const loadNextAppointment = async () => {
     setLoading(true);
     try {
-      const appointments = await fetchAppointments();
+      const consultations = await fetchConsultations();
       const now = new Date();
 
-      // Get upcoming accepted appointments
-      const upcoming = appointments
-        .filter(apt => apt.status === 'accepted' && new Date(apt.requested_date) >= now)
-        .sort((a, b) => new Date(a.requested_date) - new Date(b.requested_date));
+      const upcoming = consultations
+        .filter(c => c.status === "scheduled" && new Date(c.scheduledAt) >= now)
+        .sort((a, b) => new Date(a.scheduledAt) - new Date(b.scheduledAt));
 
       if (upcoming.length > 0) {
-        const apt = upcoming[0];
-        const date = new Date(apt.requested_date);
+        const c = upcoming[0];
+        const date = new Date(c.scheduledAt);
+
         setNextAppointment({
-          id: apt.id,
-          title: apt.reason || "Medical Consultation",
-          time: date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }).split(' ')[0] || "--:--",
-          period: date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }).split(' ')[1] || "",
+          id: c.id,
+          title: "Medical Consultation",
+          time: date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           type: "Video Consultation",
-          doctor: apt.doctor_name || (apt.doctor && apt.doctor.full_name),
-          reason: apt.reason,
-          lastVisit: "N/A",
-          doctorImage: null,
-          join_url: apt.meet_link
+          doctor: c.doctorName,
+          reason: c.notes,
+          join_url: c.meet_link
         });
       } else {
         setNextAppointment(null);
       }
     } catch (error) {
-      console.error("Failed to load next appointment:", error);
+      console.error("Failed to load next consultation:", error);
     } finally {
       setLoading(false);
     }

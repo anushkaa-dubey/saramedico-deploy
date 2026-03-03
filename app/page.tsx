@@ -133,7 +133,7 @@ export default function Home() {
         helper: "Requires clinician review before final chart entry.",
 
         icon: <DocIcon />,
-        image: "/landing%20page%20images/intelligentOCR.jpg",
+        image: "/landing%20page%20images/OCR.jpg",
         reverse: false
       },
       {
@@ -1041,6 +1041,46 @@ export default function Home() {
         </div>
       </section>
 
+      <section id="security" className={styles.problemsSection}>
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className={styles.sectionHeader}
+          style={{ textAlign: 'center' }}
+        >
+          <h2 className={styles.sectionTitle}>Security & Compliance</h2>
+          <p className={styles.sectionSubtitle}>Enterprise-grade security trusted by healthcare providers.</p>
+        </motion.div>
+        <div className={styles.problemGrid} style={{ gridTemplateColumns: '1fr 1fr', gap: '32px', maxWidth: '1000px', margin: '0 auto' }}>
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            className={styles.problemCard}
+          >
+            <div className={styles.solutionIcon} style={{ background: '#f0f9ff', color: '#0ea5e9' }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
+            </div>
+            <h3 className={styles.cardTitle}>HIPAA Compliant</h3>
+            <p className={styles.cardDescription}>All patient data is encrypted in transit and at rest. We sign BAAs with covered entities and undergo regular security audits to ensure compliance.</p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            className={styles.problemCard}
+          >
+            <div className={styles.solutionIcon} style={{ background: '#f5f3ff', color: '#8b5cf6' }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4" /></svg>
+            </div>
+            <h3 className={styles.cardTitle}>Data Privacy</h3>
+            <p className={styles.cardDescription}>We never train public AI models on your PHI. Your data remains completely segregated, and auto-redaction features scrub sensitive identifiers before processing.</p>
+          </motion.div>
+        </div>
+      </section>
+
       {/* Merged Footer Section */}
       <section id="contact">
         <footer className={styles.mergedFooter}>
@@ -1132,11 +1172,11 @@ export default function Home() {
             >
               <h5>Legal</h5>
               <ul className={styles.footerLinks}>
-                <li><Link href="#">Privacy Policy</Link></li>
-                <li><Link href="#">Terms of Service</Link></li>
-                <li><Link href="#">BAA Request</Link></li>
-                <li><Link href="#">Accessibility</Link></li>
-                <li><Link href="#">Data Retention</Link></li>
+                <li><Link href="/privacy">Privacy Policy</Link></li>
+                {/* <li><Link href="/terms">Terms of Service</Link></li>
+                <li><Link href="#security">BAA Request</Link></li>
+                <li><Link href="/accessibility">Accessibility</Link></li>
+                <li><Link href="/retention">Data Retention</Link></li> */}
               </ul>
             </motion.div>
           </div>

@@ -32,6 +32,7 @@ export const updateConsultation = async (id, updates) => {
     });
     return handleResponse(response);
 };
+
 /**
  * Fetch aggregated metrics for the Structured Approval Queue dashboard cards.
  * Endpoint: GET /api/v1/consultations/queue/metrics
@@ -39,6 +40,18 @@ export const updateConsultation = async (id, updates) => {
 export const fetchQueueMetrics = async () => {
     const response = await fetch(`${API_BASE_URL}/consultations/queue/metrics`, {
         headers: getAuthHeaders(),
+    });
+    return handleResponse(response);
+};
+
+/**
+ * Create a new consultation (this will trigger Google Meet logic on backend)
+ */
+export const createConsultation = async (consultationData) => {
+    const response = await fetch(`${API_BASE_URL}/consultations`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(consultationData),
     });
     return handleResponse(response);
 };

@@ -13,6 +13,7 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { fetchProfile } from "@/services/patient";
+import { fetchConsultations } from "@/services/consultation";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -34,6 +35,7 @@ const itemVariants = {
 export default function PatientDashboard() {
   const router = useRouter();
   const [user, setUser] = useState(null);
+  const [consultations, setConsultations] = useState([]);
 
   // useEffect(() => {
   //   const load = async () => {
@@ -63,6 +65,8 @@ export default function PatientDashboard() {
 
         setUser(profile);
         localStorage.setItem("user", JSON.stringify(profile));
+        const cons = await fetchConsultations();
+        setConsultations(cons || []);
 
       } catch (err) {
         const stored = localStorage.getItem("user");
@@ -148,7 +152,8 @@ export default function PatientDashboard() {
           </div>
 
           <motion.div variants={itemVariants}>
-            <UpNextCard />
+            {/* <UpNextCard /> */}
+            <UpNextCard consultations={consultations} />
           </motion.div>
 
           {/* Mobile Title */}
@@ -158,7 +163,8 @@ export default function PatientDashboard() {
           </div>
 
           <motion.div variants={itemVariants}>
-            <RecentActivity />
+            {/* <RecentActivity /> */}
+            <RecentActivity consultations={consultations} />
           </motion.div>
         </div>
 

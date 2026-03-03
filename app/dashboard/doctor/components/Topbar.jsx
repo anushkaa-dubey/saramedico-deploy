@@ -29,20 +29,19 @@ export default function Topbar() {
     };
     getProfile();
   }, []);
+  const displayName =
+    user?.full_name
+      ? `Dr. ${user.full_name.split(" ")[0]}`
+      : user?.first_name
+        ? `Dr. ${user.first_name}`
+        : loading
+          ? "Loading..."
+          : "Doctor";
+  // const displayRole = user?.specialty || user?.role || "Doctor";
 
-  const displayName = user?.full_name
-    ? user.full_name
-    : user?.first_name
-      ? `Dr. ${user.first_name} ${user.last_name || ""}`
-      : loading
-        ? "Loading..."
-        : "Doctor";
-
-  const displayRole = user?.specialty || user?.role || "Doctor";
-
-  const initials = user?.full_name
-    ? user.full_name.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase()
-    : "DR";
+  // const initials = user?.full_name
+  //   ? user.full_name.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase()
+  //   : "DR";
 
   return (
     <div className={styles.topbar}>
@@ -61,9 +60,9 @@ export default function Topbar() {
             <span style={{ fontSize: "13px", fontWeight: "600", color: "#0f172a" }}>
               {displayName}
             </span>
-            <small style={{ color: "#94a3b8", fontSize: "12px" }}>{displayRole}</small>
+            {/* <small style={{ color: "#94a3b8", fontSize: "12px" }}>{displayRole}</small> */}
           </div>
-          <div
+          {/* <div
             className={styles.avatar}
             style={{
               backgroundColor: user?.avatar_url ? "transparent" : "#bfdbfe",
@@ -75,15 +74,17 @@ export default function Topbar() {
               fontSize: "12px",
               color: "#1e40af"
             }}
-          >
-            {user?.avatar_url ? (
-              <img src={user.avatar_url} alt="Profile" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-            ) : (
-              initials
-            )}
-          </div>
+          > */}
+          {/* {user?.avatar_url ? (
+            <img src={user.avatar_url} alt="Profile" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          ) 
+          // : (
+          //   initials
+          // )
+          } */}
         </div>
       </div>
     </div>
+    // </div >
   );
 }
