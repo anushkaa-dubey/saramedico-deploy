@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { fetchHospitalAppointments, fetchHospitalStats, fetchReviewQueue } from "@/services/hospital";
-// import { fetchCalendarMonth, fetchCalendarDay, deleteCalendarEvent } from "@/services/calendar"; // Missing backend domain
+import { fetchCalendarMonth, fetchCalendarDay, deleteCalendarEvent } from "@/services/calendar"; // Missing backend domain
 import { fetchProfile } from "@/services/doctor";
 import { fetchDoctors } from "@/services/patient";
 
@@ -126,10 +126,16 @@ export default function HospitalDashboard() {
         }
     };
 
-    // Availability logic based on real data
     const getDayAvailability = (day) => {
-        // Missing backend Calendar domain
-        return "none";
+        if (!monthData?.days) return "none";
+
+        const dayData = monthData.days.find(d => d.day === day);
+
+        if (!dayData || dayData.events_count === 0) return "available";
+
+        if (dayData.events_count >= 5) return "full";
+
+        return "partial";
     };
 
     const stats = [
@@ -414,8 +420,7 @@ export default function HospitalDashboard() {
                     </div>
 
                     {/* Right Side Column */}
-                    <div className={styles.rightColMain}>
-                        {/* Calendar Widget Hidden - Backend domain missing */}
+                    <div className={styles.rightColMain}>                    {/* Calendar Widget Hidden - Backend domain missing */}
                         {/* 
                         <div className={styles.calendarCard}>
                             ...
@@ -441,7 +446,7 @@ export default function HospitalDashboard() {
                     </div>
                 </div>
             </div>
-        </motion.div>
+        </motion.div >
     );
 }
 

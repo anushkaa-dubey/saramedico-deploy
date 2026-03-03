@@ -23,7 +23,6 @@ export default function Sidebar() {
         return pathname === path || pathname.startsWith(path + '/');
     };
 
-    // Mock logout
     const handleLogout = () => {
         router.push("/auth/login");
     };
