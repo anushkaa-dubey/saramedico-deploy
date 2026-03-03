@@ -1,25 +1,24 @@
 /**
  * API Configuration
  *
- * Centralized API base URL management.
- * - No hardcoded localhost in production
- * - Safe fallback for development
- * - Hard fail in production if env is missing
+ * IMPORTANT: The frontend ALWAYS uses a relative path (/api/v1) so that all
+ * requests are routed through Next.js's built-in reverse proxy (next.config.ts).
+ * This avoids CORS errors entirely — the browser only ever talks to localhost:3000,
+ * and Next.js proxies the request to the real backend on the server side.
+ *
+ * The NEXT_PUBLIC_API_URL env var is read by next.config.ts (server-side) to
+ * know where to forward the proxied requests. It is NOT used here.
  */
 
 const getApiBaseUrl = () => {
-    // Priority: Explicit env variable
-    const envUrl = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_BASE;
-
-    if (envUrl) return envUrl;
-
-    // Fallback for local development
-    if (process.env.NODE_ENV === "development") {
-        return "http://localhost:8000/api/v1";
+    // Always use relative path in the browser so requests go
+    // through the Next.js proxy → avoids CORS errors.
+    if (typeof window !== "undefined") {
+        return "/api/v1";
     }
 
-    // Default to relative path for production proxy/rewrites
-    return "/api/v1";
+    // Server-side (e.g. Next.js API routes): use the real backend URL
+    return process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
 };
 
 export const API_BASE_URL = getApiBaseUrl();

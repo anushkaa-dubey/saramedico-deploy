@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import styles from "./AIChat.module.css";
 import { doctorAIChat, patientAIChat, fetchPatientChatHistory, fetchDoctorChatHistory } from "@/services/ai";
+import { checkAIPermission, grantAIAccess } from "@/services/doctor";
 
 /**
  * AI Chat Component for Doctor-Patient Context
@@ -17,7 +18,18 @@ export default function PatientAIChat({ patientId, documentId = null, doctorId =
     const [conversationId, setConversationId] = useState(null);
     const [error, setError] = useState("");
     const [activeMode, setActiveMode] = useState("doctor"); // "doctor" | "patient"
+    const [aiAccess, setAiAccess] = useState(null); // null=checking, true=ok, false=denied
+    const [grantingAccess, setGrantingAccess] = useState(false);
     const messagesEndRef = useRef(null);
+
+    // Check AI permission whenever patient changes
+    useEffect(() => {
+        if (!patientId || !doctorId) return;
+        setAiAccess(null);
+        checkAIPermission(patientId).then(({ aiAccess: access }) => {
+            setAiAccess(access);
+        });
+    }, [patientId, doctorId]);
 
     // Reset conversation and messages when mode or patient changes
     useEffect(() => {
@@ -77,14 +89,34 @@ export default function PatientAIChat({ patientId, documentId = null, doctorId =
         scrollToBottom();
     }, [messages]);
 
+    const handleGrantAccess = async () => {
+        if (!doctorId) {
+            setError("Doctor profile not loaded. Cannot grant access.");
+            return;
+        }
+        setGrantingAccess(true);
+        try {
+            await grantAIAccess(patientId);
+            setAiAccess(true);
+            setError("");
+        } catch (err) {
+            setError(err.message || "Failed to grant AI access");
+        } finally {
+            setGrantingAccess(false);
+        }
+    };
+
     const handleSend = async () => {
         if (!input.trim() || isLoading) return;
+        // Block if still checking permissions or access is denied
+        if (aiAccess !== true) return;
 
         // If doctor mode, ensure doctorId is present
         if (activeMode === "doctor" && !doctorId) {
             setError("Doctor profile not loaded. Cannot send message.");
             return;
         }
+
 
         const userMessage = {
             id: Date.now(), // Use timestamp for unique ID locally
@@ -102,12 +134,9 @@ export default function PatientAIChat({ patientId, documentId = null, doctorId =
         try {
             const payload = {
                 patient_id: patientId,
-                query: currentInput
+                query: currentInput, // Backend expects 'query'
+                document_id: documentId || null
             };
-
-            if (documentId) {
-                payload.document_id = documentId;
-            }
 
             if (conversationId) {
                 payload.conversation_id = conversationId;
@@ -135,13 +164,25 @@ export default function PatientAIChat({ patientId, documentId = null, doctorId =
             setMessages(prev => [...prev, aiMessage]);
         } catch (err) {
             console.error("AI chat error:", err);
-            setError(err.message || "Failed to get AI response");
+
+            let parsedMessage = err.message || "Failed to get AI response";
+            try {
+                // Try to parse the backend JSON error format e.g. {"detail":"..."}
+                const errObj = JSON.parse(err.message);
+                if (errObj.detail) {
+                    parsedMessage = errObj.detail;
+                }
+            } catch (e) {
+                // Not JSON, use as is
+            }
+
+            setError(parsedMessage);
 
             // Add error message to chat
             const errorMessage = {
                 id: Date.now() + 2,
                 role: "assistant",
-                text: `Error: ${err.message || "Something went wrong"}`,
+                text: `Error: ${parsedMessage}`,
                 timestamp: new Date().toISOString(),
                 isError: true
             };
@@ -157,6 +198,65 @@ export default function PatientAIChat({ patientId, documentId = null, doctorId =
             handleSend();
         }
     };
+
+    // Show access denied UI when AI access is explicitly false
+    if (aiAccess === false) {
+        return (
+            <div className={styles.aiChat}>
+                <div className={styles.header}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                        <div className={styles.headerIcon}>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 className={styles.headerTitle}>AI Assistant</h3>
+                            <p className={styles.headerSubtitle}>Access Required</p>
+                        </div>
+                    </div>
+                </div>
+                <div style={{
+                    display: "flex", flexDirection: "column", alignItems: "center",
+                    justifyContent: "center", gap: "16px", padding: "40px 24px",
+                    textAlign: "center"
+                }}>
+                    <div style={{
+                        width: "56px", height: "56px", borderRadius: "50%",
+                        background: "rgba(244,67,54,0.1)", display: "flex",
+                        alignItems: "center", justifyContent: "center"
+                    }}>
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#d32f2f" strokeWidth="2">
+                            <circle cx="12" cy="12" r="10" />
+                            <line x1="12" y1="8" x2="12" y2="12" />
+                            <line x1="12" y1="16" x2="12.01" y2="16" />
+                        </svg>
+                    </div>
+                    <div>
+                        <p style={{ fontWeight: 600, color: "#d32f2f", marginBottom: "6px" }}>No AI Access</p>
+                        <p style={{ fontSize: "13px", color: "#666", maxWidth: "260px" }}>
+                            The patient has not granted AI access to their medical data. Grant access to enable AI chat.
+                        </p>
+                    </div>
+                    {error && (
+                        <p style={{ fontSize: "12px", color: "#d32f2f" }}>{error}</p>
+                    )}
+                    <button
+                        onClick={handleGrantAccess}
+                        disabled={grantingAccess}
+                        style={{
+                            padding: "10px 24px", borderRadius: "8px",
+                            background: grantingAccess ? "#ccc" : "#0081FE",
+                            color: "#fff", border: "none", cursor: grantingAccess ? "not-allowed" : "pointer",
+                            fontSize: "14px", fontWeight: 600
+                        }}
+                    >
+                        {grantingAccess ? "Granting Access..." : "Grant AI Access"}
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className={styles.aiChat}>

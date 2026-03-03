@@ -37,15 +37,30 @@ export const getDocumentStatus = async (documentId) => {
 };
 
 /**
- * Helper for text responses
+ * Helper for text responses — also parses JSON error bodies from FastAPI
  */
 const handleTextResponse = async (response) => {
     const text = await response.text();
     if (!response.ok) {
-        throw new Error(text || `Request failed with status ${response.status}`);
+        // Try to extract a clean error message from FastAPI JSON error body
+        let errorMessage = text;
+        try {
+            const errObj = JSON.parse(text);
+            if (typeof errObj?.detail === "string") {
+                errorMessage = errObj.detail;
+            } else if (Array.isArray(errObj?.detail)) {
+                errorMessage = errObj.detail.map(e => e.msg || e).join(", ");
+            } else if (errObj?.message) {
+                errorMessage = errObj.message;
+            }
+        } catch (e) {
+            // Not JSON, use raw text
+        }
+        throw new Error(errorMessage || `Request failed with status ${response.status}`);
     }
     return text;
 };
+
 
 /**
  * Doctor AI Chat

@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import styles from "./AIChat.module.css";
 import { doctorAIChat, fetchDoctorChatHistory } from "@/services/ai";
+import { checkAIPermission, grantAIAccess } from "@/services/doctor";
 
 export default function AIChat({ onCitationClick, patientId, doctorId, documentId }) {
     const [messages, setMessages] = useState([]);
@@ -10,6 +11,9 @@ export default function AIChat({ onCitationClick, patientId, doctorId, documentI
     const [isTyping, setIsTyping] = useState(false);
     const [conversationId, setConversationId] = useState(null);
     const messagesEndRef = useRef(null);
+    const [aiAccess, setAiAccess] = useState(null); // null=checking, true=ok, false=denied
+    const [grantingAccess, setGrantingAccess] = useState(false);
+    const [accessError, setAccessError] = useState("");
 
     const sampleQuestions = [
         "What are the key findings?",
@@ -17,6 +21,15 @@ export default function AIChat({ onCitationClick, patientId, doctorId, documentI
         "Summarize the patient's condition",
         "Extract all dates and events"
     ];
+
+    // Check AI permission whenever patient changes
+    useEffect(() => {
+        if (!patientId || !doctorId) return;
+        setAiAccess(null);
+        checkAIPermission(patientId).then(({ aiAccess: access }) => {
+            setAiAccess(access);
+        });
+    }, [patientId, doctorId]);
 
     useEffect(() => {
         loadChatHistory();
@@ -74,6 +87,8 @@ export default function AIChat({ onCitationClick, patientId, doctorId, documentI
     const handleSend = async (textInput = null) => {
         const query = textInput || input;
         if (!query.trim() || isTyping) return;
+        // Block if still checking permissions or if access is denied
+        if (aiAccess !== true) return;
 
         const userMessage = {
             id: Date.now(),
@@ -89,12 +104,9 @@ export default function AIChat({ onCitationClick, patientId, doctorId, documentI
         try {
             const payload = {
                 patient_id: patientId,
-                query: query
+                query: query, // Backend expects 'query'
+                document_id: documentId || null // Backend expects singular 'document_id'
             };
-
-            if (documentId) {
-                payload.document_id = documentId;
-            }
 
             if (conversationId) {
                 payload.conversation_id = conversationId;
@@ -131,9 +143,82 @@ export default function AIChat({ onCitationClick, patientId, doctorId, documentI
         }
     };
 
+    const handleGrantAccess = async () => {
+        if (!doctorId) {
+            setAccessError("Doctor profile not loaded.");
+            return;
+        }
+        setGrantingAccess(true);
+        try {
+            await grantAIAccess(patientId);
+            setAiAccess(true);
+            setAccessError("");
+        } catch (err) {
+            setAccessError(err.message || "Failed to grant AI access");
+        } finally {
+            setGrantingAccess(false);
+        }
+    };
+
     const handleQuestionClick = (question) => {
         handleSend(question);
     };
+
+    // Show access denied UI
+    if (aiAccess === false) {
+        return (
+            <div className={styles.aiChat}>
+                <div className={styles.header}>
+                    <div className={styles.headerIcon}>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 className={styles.headerTitle}>AI Assistant</h3>
+                        <p className={styles.headerSubtitle}>Access Required</p>
+                    </div>
+                </div>
+                <div style={{
+                    display: "flex", flexDirection: "column", alignItems: "center",
+                    justifyContent: "center", gap: "16px", padding: "40px 20px",
+                    textAlign: "center"
+                }}>
+                    <div style={{
+                        width: "52px", height: "52px", borderRadius: "50%",
+                        background: "rgba(244,67,54,0.1)", display: "flex",
+                        alignItems: "center", justifyContent: "center"
+                    }}>
+                        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#d32f2f" strokeWidth="2">
+                            <circle cx="12" cy="12" r="10" />
+                            <line x1="12" y1="8" x2="12" y2="12" />
+                            <line x1="12" y1="16" x2="12.01" y2="16" />
+                        </svg>
+                    </div>
+                    <div>
+                        <p style={{ fontWeight: 600, color: "#d32f2f", marginBottom: "6px", fontSize: "15px" }}>No AI Access</p>
+                        <p style={{ fontSize: "13px", color: "#666", maxWidth: "240px" }}>
+                            Patient has not granted AI access. Click below to enable AI chat for this patient.
+                        </p>
+                    </div>
+                    {accessError && <p style={{ fontSize: "12px", color: "#d32f2f" }}>{accessError}</p>}
+                    <button
+                        onClick={handleGrantAccess}
+                        disabled={grantingAccess}
+                        style={{
+                            padding: "10px 24px", borderRadius: "8px",
+                            background: grantingAccess ? "#ccc" : "#0081FE",
+                            color: "#fff", border: "none",
+                            cursor: grantingAccess ? "not-allowed" : "pointer",
+                            fontSize: "14px", fontWeight: 600
+                        }}
+                    >
+                        {grantingAccess ? "Granting Access..." : "Grant AI Access"}
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className={styles.aiChat}>

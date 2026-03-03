@@ -6,7 +6,7 @@ import DocumentsList from "./components/DocumentsList";
 import PatientAIChat from "./components/PatientAIChat";
 import styles from "./Patients.module.css";
 import { motion } from "framer-motion";
-import { fetchAppointments, fetchPatients, fetchProfile } from "@/services/doctor";
+import { fetchAppointments, fetchPatients, fetchDoctorProfile } from "@/services/doctor";
 import OnboardPatientModal from "./components/OnboardPatientModal";
 
 export default function Patients() {
@@ -24,7 +24,7 @@ export default function Patients() {
 
     const loadDoctorProfile = async () => {
         try {
-            const profile = await fetchProfile();
+            const profile = await fetchDoctorProfile();
             setDoctorId(profile.id);
         } catch (err) {
             console.error("Failed to fetch doctor profile:", err);

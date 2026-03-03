@@ -7,7 +7,7 @@ import AIChat from "./components/AIChat";
 import Timeline from "./components/Timeline";
 import styles from "./ChartReview.module.css";
 import { motion } from "framer-motion";
-import { fetchPatients, fetchProfile, fetchPatientDocuments, uploadPatientDocument } from "@/services/doctor";
+import { fetchPatients, fetchDoctorProfile, fetchPatientDocuments, uploadPatientDocument } from "@/services/doctor";
 import { API_BASE_URL, getAuthHeaders } from "@/services/apiConfig";
 
 
@@ -23,6 +23,7 @@ export default function ChartReviewPage() {
     const [documents, setDocuments] = useState([]);
     const [loading, setLoading] = useState(true);
     const [deleting, setDeleting] = useState(null);
+    const [uploading, setUploading] = useState(false);
 
     useEffect(() => {
         loadData();
@@ -30,7 +31,7 @@ export default function ChartReviewPage() {
 
     const loadData = async () => {
         try {
-            const profile = await fetchProfile();
+            const profile = await fetchDoctorProfile();
             setDoctorId(profile.id);
 
             const patientsList = await fetchPatients();
@@ -92,12 +93,14 @@ export default function ChartReviewPage() {
         e.preventDefault();
         const files = e.target.files || e.dataTransfer?.files;
         if (!files || files.length === 0) return;
+        if (uploading) return; // Prevent duplicate submissions
 
         if (!patientId) {
             alert("Please select a patient before uploading.");
             return;
         }
 
+        setUploading(true);
         setUploadStatus({ msg: "Uploading...", type: "" });
         try {
             const file = files[0];
@@ -106,6 +109,10 @@ export default function ChartReviewPage() {
                 category: "Chart Review"
             });
 
+            // Reset the file input so the same file can be re-uploaded if needed
+            const input = document.getElementById("docFileInput");
+            if (input) input.value = "";
+
             setUploadStatus({ msg: "Upload Successful! Document processing started.", type: "success" });
             loadDocuments(patientId);
             setTimeout(() => setUploadStatus({ msg: "", type: "" }), 5000);
@@ -113,6 +120,8 @@ export default function ChartReviewPage() {
             console.error("Upload failed:", err);
             setUploadStatus({ msg: `Upload failed: ${err.message}`, type: "error" });
             setTimeout(() => setUploadStatus({ msg: "", type: "" }), 8000);
+        } finally {
+            setUploading(false);
         }
     };
 

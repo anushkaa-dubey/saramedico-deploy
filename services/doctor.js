@@ -62,6 +62,45 @@ export const deleteTask = async (taskId) => {
 };
 
 /**
+ * Check if doctor has AI access to a patient's data
+ */
+export const checkAIPermission = async (patientId) => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/permissions/check?patient_id=${patientId}`, {
+            headers: getAuthHeaders(),
+        });
+        const data = await handleResponse(response);
+        return {
+            hasPermission: data.has_permission || false,
+            aiAccess: data.ai_access_permission || false,
+        };
+    } catch (err) {
+        console.error("checkAIPermission error:", err);
+        return { hasPermission: false, aiAccess: false };
+    }
+};
+
+
+/**
+ * Request AI access to a patient's data (Doctor initiating)
+ * Endpoint: POST /api/v1/permissions/request
+ */
+export const grantAIAccess = async (patientId) => {
+    const response = await fetch(`${API_BASE_URL}/permissions/request`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+            patient_id: patientId,
+            access_level: "read_analyze",
+            reason: "AI Chart Review and Analysis"
+        }),
+    });
+    return handleResponse(response);
+};
+
+
+
+/**
  * Fetch patient directory
  */
 export const fetchPatients = async () => {
@@ -91,7 +130,23 @@ export const fetchPatientDocuments = async (patientId) => {
     const response = await fetch(`${API_BASE_URL}/doctor/patients/${patientId}/documents`, {
         headers: getAuthHeaders(),
     });
-    return handleResponse(response);
+    const data = await handleResponse(response);
+
+    // Fix backend internal minio URLs (e.g. minio:9000) to point to our proxy.
+    // This allows the browser to load documents even if port 9000 is blocked.
+    if (Array.isArray(data)) {
+        return data.map(doc => {
+            const url = doc.presigned_url || doc.url || doc.download_url;
+            if (url && (url.includes('minio:9000') || url.includes(':9000'))) {
+                // Replace the entire host:port with our local proxy path
+                // Original: http://107.20.98.130:9000/bucket/file.pdf?params
+                // New: /api/storage/bucket/file.pdf?params
+                doc.presigned_url = url.replace(/^https?:\/\/[^/]+:9000\//, '/api/storage/');
+            }
+            return doc;
+        });
+    }
+    return data;
 };
 
 /**
@@ -251,7 +306,7 @@ export const fetchDashboardMetrics = async () => {
 };
 
 /**
- * Fetch logged-in doctor profile
+ * Fetch basic user profile
  */
 export const fetchProfile = async () => {
     const response = await fetch(`${API_BASE_URL}/auth/me`, {
@@ -261,19 +316,61 @@ export const fetchProfile = async () => {
 };
 
 /**
- * Upload a document for a patient
- * Endpoint: POST /api/v1/documents/upload
- * Payload: Multipart form-data with 'file', 'patient_id', 'metadata'
+ * Fetch doctor's profile and ensure we have their specific Doctor ID
  */
+export const fetchDoctorProfile = async () => {
+    try {
+        // Use the official 'doctor/me' endpoint from the Swagger docs
+        const response = await fetch(`${API_BASE_URL}/doctor/me`, {
+            headers: getAuthHeaders(),
+        });
+        const doctorData = await handleResponse(response);
+
+        // Return a merged object with the correct 'id' priority for AI permissions.
+        // We look for 'id' directly as per the DoctorProfileResponse schema.
+        return {
+            ...doctorData,
+            id: doctorData.id || doctorData.doctor_profile?.id
+        };
+    } catch (err) {
+        console.warn("fetchDoctorProfile from /doctor/me failed, trying /auth/me fallback:", err);
+        const user = await fetchProfile();
+        return {
+            ...user,
+            id: user.doctor_profile?.id || user.id
+        };
+    }
+};
+
+
+
+/**
+ * Detect MIME type from file extension when browser doesn't set file.type
+ */
+const getMimeType = (file) => {
+    if (file.type && file.type !== "application/octet-stream") return file.type;
+    const ext = file.name.split(".").pop()?.toLowerCase();
+    const map = {
+        pdf: "application/pdf",
+        jpg: "image/jpeg",
+        jpeg: "image/jpeg",
+        png: "image/png",
+        doc: "application/msword",
+        docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    };
+    return map[ext] || "application/octet-stream";
+};
+
 /**
  * Upload a document for a patient
  * Strategies:
- * 1. Presigned URL (Preferred): POST /upload-url -> PUT file -> POST /confirm
+ * 1. Presigned URL (Preferred): POST /upload-url -> PUT file directly to S3 -> POST /confirm
  * 2. Direct Multipart (Fallback): POST /upload
  */
 export const uploadPatientDocument = async (patientId, file, metadata) => {
-    try {
+    const fileType = getMimeType(file);
 
+    try {
         // Step 1: Request Presigned URL
         const initResponse = await fetch(`${API_BASE_URL}/documents/upload-url`, {
             method: "POST",
@@ -283,22 +380,34 @@ export const uploadPatientDocument = async (patientId, file, metadata) => {
             },
             body: JSON.stringify({
                 fileName: file.name,
-                fileType: file.type || "application/octet-stream",
+                fileType: fileType,
                 fileSize: file.size,
                 patientId: patientId,
-                ...metadata
             })
         });
 
         if (initResponse.ok) {
             const { uploadUrl, documentId } = await initResponse.json();
 
-            // Step 2: Upload payload to S3 (No auth headers, just the file)
-            const uploadResponse = await fetch(uploadUrl, {
+            // Fix docker-internal minio hostname → public AWS IP
+            let publicUploadUrl = uploadUrl;
+            if (uploadUrl && uploadUrl.includes("minio:")) {
+                publicUploadUrl = uploadUrl.replace("http://minio:", "http://107.20.98.130:");
+            }
+
+            // MinIO port 9000 is blocked on this network — fall through to direct upload
+            const isMinioPort9000 = publicUploadUrl && (
+                publicUploadUrl.includes(":9000/") || publicUploadUrl.includes(":9000?")
+            );
+            if (isMinioPort9000) {
+                console.warn("MinIO port 9000 is not reachable — skipping presigned URL, using direct upload.");
+                throw new Error("MinIO port 9000 blocked");
+            }
+
+            // Step 2: Upload file directly to S3/MinIO (no auth headers, just the file)
+            const uploadResponse = await fetch(publicUploadUrl, {
                 method: "PUT",
-                headers: {
-                    "Content-Type": file.type || "application/octet-stream"
-                },
+                headers: { "Content-Type": fileType },
                 body: file
             });
 
@@ -315,25 +424,23 @@ export const uploadPatientDocument = async (patientId, file, metadata) => {
 
             return handleResponse(confirmResponse);
         } else {
-            // If 404 or other error, throw to trigger fallback
             console.warn("Presigned URL endpoint not available or failed, falling back to direct upload.");
         }
     } catch (err) {
-        console.warn("Presigned upload flow error:", err);
+        console.warn("Presigned upload flow error:", err.message);
     }
 
     // Fallback: Direct Multipart Upload
+    // Backend schema: { file, patient_id, notes? } — 'notes' is a plain string, not JSON
     const formData = new FormData();
     formData.append("file", file);
     formData.append("patient_id", patientId);
-    if (metadata) {
-        formData.append("metadata", JSON.stringify(metadata));
+    if (metadata?.title) {
+        formData.append("notes", metadata.title);
     }
 
     const headers = getAuthHeaders();
-    if (headers["Content-Type"]) {
-        delete headers["Content-Type"];
-    }
+    delete headers["Content-Type"]; // Let browser set multipart boundary
 
     const response = await fetch(`${API_BASE_URL}/documents/upload`, {
         method: "POST",
@@ -342,6 +449,7 @@ export const uploadPatientDocument = async (patientId, file, metadata) => {
     });
     return handleResponse(response);
 };
+
 
 /**
  * Create a new consultation (Google Meet integrated)
