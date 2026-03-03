@@ -1,22 +1,33 @@
 "use client";
+import { useState, useEffect } from "react";
+import { fetchDoctors } from "@/services/patient";
+import { motion } from "framer-motion";
 import Topbar from "../components/Topbar";
 import styles from "../HospitalDashboard.module.css";
-import { motion } from "framer-motion";
-import Link from "next/link";
 
 export default function StaffManagementPage() {
-    const stats = [
-        { label: "Total Staff", value: "142", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-3-3.87"></path><path d="M9 21v-2a4 4 0 0 0-4-4H3a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>, color: "#359aff" },
-        { label: "On Shift", value: "32", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><polyline points="16 11 18 13 22 9"></polyline></svg>, color: "#10b981" },
-        { label: "On Leave", value: "8", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>, color: "#f59e0b" },
-        { label: "Medical Leave", value: "3", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>, color: "#ef4444" }
-    ];
+    const [staffList, setStaffList] = useState([]);
+    const [loading, setLoading] = useState(true);
 
-    const staffList = [
-        { name: "Dr. Sarah Jenkins", role: "Sr. Cardiologist", dept: "Cardiology", shift: "Day (08:00 - 16:00)", status: "On Duty", color: "#10b981" },
-        { name: "Dr. Emily Chen", role: "Resident Doctor", dept: "Emergency", shift: "Night (22:00 - 06:00)", status: "Off Duty", color: "#64748b" },
-        { name: "Mark Wilson", role: "Head Nurse", dept: "General Ward", shift: "Evening (14:00 - 22:00)", status: "On Duty", color: "#10b981" },
-        { name: "Dr. Michael Ross", role: "Pediatrician", dept: "Pediatrics", shift: "Day (08:00 - 16:00)", status: "On Leave", color: "#f59e0b" }
+    useEffect(() => {
+        const loadStaff = async () => {
+            try {
+                const results = await fetchDoctors();
+                setStaffList(results || []);
+            } catch (err) {
+                console.error("Failed to load staff:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        loadStaff();
+    }, []);
+
+    const stats = [
+        { label: "Total Staff", value: staffList.length, icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-3-3.87"></path><path d="M9 21v-2a4 4 0 0 0-4-4H3a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>, color: "#359aff" },
+        // { label: "On Shift", value: staffList.length > 0 ? Math.ceil(staffList.length * 0.4) : 0, icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><polyline points="16 11 18 13 22 9"></polyline></svg>, color: "#10b981" },
+        // { label: "On Leave", value: "0", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>, color: "#f59e0b" },
+        // { label: "Medical Leave", value: "0", icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>, color: "#ef4444" }
     ];
 
     return (
@@ -33,12 +44,6 @@ export default function StaffManagementPage() {
                         <h1 style={{ fontSize: '24px', fontWeight: '800', color: '#0f172a', margin: 0 }}>Staff Management</h1>
                         <p style={{ color: '#64748b', margin: '4px 0 0 0' }}>Manage hospital personnel, shifts, and department assignments.</p>
                     </div>
-                    <div className={styles.pageHeaderActions} style={{ display: 'flex', gap: '12px' }}>
-                        <button className={styles.outlineBtn} style={{ background: '#ffffff' }}>Export Roster</button>
-                        <Link href="/dashboard/hospital/settings" style={{ textDecoration: 'none' }}>
-                            <button className={styles.primaryBtn}>+ Add New Staff</button>
-                        </Link>
-                    </div>
                 </div>
 
                 <div className={styles.overviewSection} style={{ marginBottom: '32px' }}>
@@ -52,50 +57,41 @@ export default function StaffManagementPage() {
                 </div>
 
                 <div className={styles.card} style={{ border: 'none', borderRadius: '16px', padding: '0', overflow: 'hidden' }}>
-                    <div className={styles.filterButtonRow} style={{ padding: '24px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
-                        <div style={{ position: 'relative', width: '100%', maxWidth: '300px' }}>
-                            <input
-                                type="text"
-                                placeholder="Search staff name or role..."
-                                style={{ width: '100%', padding: '10px 10px 10px 36px', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '13px', outline: 'none' }}
-                            />
-                            <svg style={{ position: 'absolute', left: '10px', top: '48%', transform: 'translateY(-50%)', color: '#94a3b8' }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-                        </div>
-                        <div style={{ display: 'flex', gap: '12px' }}>
-                            <select className={styles.outlineBtn} style={{ background: '#ffffff', fontSize: '12px' }}><option>All Departments</option></select>
-                            <select className={styles.outlineBtn} style={{ background: '#ffffff', fontSize: '12px' }}><option>All Roles</option></select>
-                        </div>
-                    </div>
-
                     <div className={styles.tableScrollWrapper}>
                         <table className={styles.activityTable} style={{ fontSize: '13px' }}>
                             <thead>
                                 <tr className={styles.activityHeader}>
                                     <th style={{ padding: '16px 24px', whiteSpace: 'nowrap' }}>STAFF MEMBER</th>
-                                    <th style={{ whiteSpace: 'nowrap' }}>ROLE</th>
-                                    <th style={{ whiteSpace: 'nowrap' }}>DEPARTMENT</th>
-                                    <th style={{ whiteSpace: 'nowrap' }}>SHIFT</th>
+                                    <th style={{ whiteSpace: 'nowrap' }}>ROLE / SPECIALTY</th>
+                                    <th style={{ whiteSpace: 'nowrap' }}>EMAIL</th>
+                                    <th style={{ whiteSpace: 'nowrap' }}>PHONE</th>
                                     <th style={{ whiteSpace: 'nowrap' }}>STATUS</th>
                                     <th style={{ textAlign: 'right', paddingRight: '24px', whiteSpace: 'nowrap' }}>ACTIONS</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {staffList.map((s, i) => (
+                                {loading ? (
+                                    <tr><td colSpan="6" style={{ padding: '40px', textAlign: 'center', color: '#94a3b8' }}>Loading personnel directory...</td></tr>
+                                ) : staffList.length === 0 ? (
+                                    <tr><td colSpan="6" style={{ padding: '40px', textAlign: 'center', color: '#94a3b8' }}>No staff members currently registered.</td></tr>
+                                ) : staffList.map((s, i) => (
                                     <tr key={i} className={styles.activityRow}>
                                         <td style={{ padding: '16px 24px', whiteSpace: 'nowrap' }}>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                                <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#359aff15', color: '#359aff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', fontSize: '11px' }}>{s.name.split(' ').map(n => n[0]).join('')}</div>
-                                                <div style={{ fontWeight: '700' }}>{s.name}</div>
+                                                <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#359aff15', color: '#359aff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', fontSize: '11px' }}>
+                                                    {(s.full_name || "S").split(' ').map(n => n[0]).join('')}
+                                                </div>
+                                                <div style={{ fontWeight: '700' }}>{s.full_name}</div>
                                             </div>
                                         </td>
-                                        <td style={{ whiteSpace: 'nowrap' }}>{s.role}</td>
-                                        <td style={{ whiteSpace: 'nowrap' }}>{s.dept}</td>
-                                        <td style={{ whiteSpace: 'nowrap' }}>{s.shift}</td>
+                                        <td style={{ whiteSpace: 'nowrap' }}>{s.specialty || "Practitioner"}</td>
+                                        <td style={{ whiteSpace: 'nowrap' }}>{s.email || "N/A"}</td>
+                                        <td style={{ whiteSpace: 'nowrap' }}>{s.phone_number || "N/A"}</td>
                                         <td style={{ whiteSpace: 'nowrap' }}>
-                                            <span style={{ color: s.color, background: `${s.color}10`, padding: '4px 12px', borderRadius: '20px', fontWeight: '700', fontSize: '11px' }}>{s.status}</span>
+                                            <span style={{ color: '#10b981', background: `#10b98110`, padding: '4px 12px', borderRadius: '20px', fontWeight: '700', fontSize: '11px' }}>ACTIVE</span>
                                         </td>
                                         <td style={{ textAlign: 'right', paddingRight: '24px', whiteSpace: 'nowrap' }}>
-                                            <button className={styles.outlineBtn} style={{ height: '32px', fontSize: '12px' }}>Edit</button>
+                                            <button className={styles.outlineBtn} style={{ height: '32px', fontSize: '12px' }}>Manage</button>
                                         </td>
                                     </tr>
                                 ))}

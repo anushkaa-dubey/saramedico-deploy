@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import styles from "../DoctorDashboard.module.css";
 import logo from "@/public/logo.png";
-// Icons replaced with inline SVGs
 import SignoutModal from "../../../auth/components/SignoutModal";
 import { logoutUser } from "@/services/auth";
 

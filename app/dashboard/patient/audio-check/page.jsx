@@ -16,8 +16,8 @@ export default function AudioCheck() {
       <div className={styles.content}>
         <h1 className={styles.title}>Check your Audio</h1>
         <p className={styles.subtitle}>
-          To ensure accurate speech recognition, please provide a short,
-          de-identified audio recording for calibration.
+          {/* Voice calibration is temporarily disabled as AI speech features are handled server-side. */}
+          {/* Vocal health calibration is currently being integrated with our clinical backend. */}
         </p>
 
         <div className={styles.cardWrapper}>
@@ -27,7 +27,7 @@ export default function AudioCheck() {
             <label className={styles.label}>INPUT SOURCE</label>
             <div className={styles.inputBox}>
               <img src={micIcon.src} alt="Microphone" width="20" height="20" className={styles.iconPlaceholder} />
-              <span className={styles.inputText}>Macbook Pro Microphone</span>
+              {/* <span className={styles.inputText}>Macbook Pro Microphone</span> */}
             </div>
 
             <div className={styles.waveBox}>

@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import styles from "../PatientDashboard.module.css";
-import doctorImage from "@/public/icons/images/doctor_image.png";
 import { useRouter } from "next/navigation";
 // TODO: Uncomment when connecting backend
 import { fetchAppointments } from "@/services/patient";
@@ -36,14 +35,14 @@ export default function UpNextCard() {
         setNextAppointment({
           id: apt.id,
           title: apt.reason || "Medical Consultation",
-          time: date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }).split(' ')[0],
-          period: date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }).split(' ')[1],
+          time: date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }).split(' ')[0] || "--:--",
+          period: date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }).split(' ')[1] || "",
           type: "Video Consultation",
-          doctor: apt.doctor_name || (apt.doctor && apt.doctor.full_name) || "Dr. Sara",
-          reason: apt.reason || "General checkup",
+          doctor: apt.doctor_name || (apt.doctor && apt.doctor.full_name),
+          reason: apt.reason,
           lastVisit: "N/A",
-          doctorImage: doctorImage.src,
-          join_url: apt.join_url || apt.zoom_url
+          doctorImage: null,
+          join_url: apt.meet_link
         });
       } else {
         setNextAppointment(null);
@@ -73,15 +72,13 @@ export default function UpNextCard() {
 
   return (
     <div className={styles.upNextCard}>
-      {/* Blue Accent */}
       <div className={styles.upNextAccent}></div>
 
-      {/* Left Image */}
-      <img src={nextAppointment.doctorImage} alt={nextAppointment.doctor} className={styles.upNextImage} style={{ objectFit: "cover" }} />
+      {/* Left Image
+      <img src={nextAppointment.doctorImage} alt={nextAppointment.doctor} className={styles.upNextImage} style={{ objectFit: "cover" }} /> */}
 
       {/* Right Content */}
       <div className={styles.upNextContent}>
-        {/* Title + Time */}
         <div className={styles.upNextTop}>
           <div className={styles.upNextTitle}>{nextAppointment.title}</div>
           <div className={styles.upNextTime}>
@@ -90,13 +87,11 @@ export default function UpNextCard() {
           </div>
         </div>
 
-        {/* Tag + Doctor */}
         <div className={styles.upNextMeta}>
           <span className={styles.visitTag}>{nextAppointment.type}</span>
           <span>with {nextAppointment.doctor}</span>
         </div>
 
-        {/* Reason / Last Visit - Hidden on mobile via CSS */}
         <div className={styles.upNextInfo}>
           <div>
             <div className={styles.infoLabel}>REASON FOR VISIT</div>
@@ -108,15 +103,20 @@ export default function UpNextCard() {
           </div>
         </div>
 
-        {/* Actions */}
         <div className={styles.upNextActions}>
           <button
             className={styles.checkinBtn}
-            onClick={() => router.push("/dashboard/patient/video-call")}
+            onClick={() => {
+              if (nextAppointment.join_url) {
+                window.open(nextAppointment.join_url, "_blank");
+              } else {
+                router.push("/dashboard/patient/video-call");
+              }
+            }}
           >
             Join Session
           </button>
-          <button className={styles.detailsBtn}>Details</button>
+          <button className={styles.detailsBtn} onClick={() => router.push("/dashboard/patient/appointments")}>Details</button>
         </div>
       </div>
     </div >

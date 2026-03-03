@@ -4,11 +4,10 @@ import { useState, useEffect } from "react";
 import Topbar from "../components/Topbar";
 import styles from "../records/Records.module.css";
 import Image from "next/image";
-import benjaminImage from "@/public/icons/images/benjamin frank.png";
 import basic_information from "@/public/icons/basic_information.svg";
 import contact from "@/public/icons/contact.svg";
 import { motion } from "framer-motion";
-import { fetchProfile, updateProfile } from "@/services/patient";
+import { fetchProfile } from "@/services/patient";
 
 const containerVariants = {
     hidden: { opacity: 0 },
@@ -41,7 +40,7 @@ export default function ProfilePage() {
         email: "",
         mobilePhone: "",
         homePhone: "",
-        avatar: benjaminImage.src
+        // avatar: benjaminImage.src
     });
 
     useEffect(() => {

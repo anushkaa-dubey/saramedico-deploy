@@ -9,27 +9,66 @@ import manageIcon from "@/public/icons/manage.svg";
 import personIcon from "@/public/icons/person.svg";
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { fetchProfile } from "@/services/doctor";
+import { API_BASE_URL, getAuthHeaders } from "@/services/apiConfig";
 
 export default function EditUserPermissionsPage() {
     const params = useParams();
     const router = useRouter();
     const [selectedRole, setSelectedRole] = useState("Member");
     const [userData, setUserData] = useState({ name: "", email: "" });
+    const [adminUser, setAdminUser] = useState(null);
+    const [saving, setSaving] = useState(false);
 
-    // Mock data fetching based on ID
     useEffect(() => {
-        const users = [
-            { id: 1, name: "Dr. Smith Sara", email: "smith.sara@example.com", role: "Administrator" },
-            { id: 2, name: "Dr. Angel Batista", email: "batista.a@example.com", role: "Member" },
-            // ... other users
-        ];
+        // Fetch the admin's own profile for the topbar
+        fetchProfile()
+            .then(p => setAdminUser(p))
+            .catch(() => {
+                const s = localStorage.getItem("user");
+                if (s) try { setAdminUser(JSON.parse(s)); } catch (_) { }
+            });
 
-        const user = users.find(u => u.id === parseInt(params.id));
-        if (user) {
-            setUserData({ name: user.name, email: user.email });
-            setSelectedRole(user.role);
-        }
+        // Fetch the specific account to edit
+        const loadUser = async () => {
+            try {
+                const res = await fetch(`${API_BASE_URL}/admin/accounts/${params.id}`, {
+                    headers: getAuthHeaders(),
+                });
+                if (res.ok) {
+                    const user = await res.json();
+                    setUserData({ name: user.full_name || user.name || "", email: user.email || "" });
+                    setSelectedRole(user.role || "Member");
+                }
+            } catch (err) {
+                console.error("Failed to load user for edit:", err);
+            }
+        };
+        if (params.id) loadUser();
     }, [params.id]);
+
+    const adminName = adminUser?.full_name || adminUser?.first_name || "Admin";
+
+    const handleSave = async () => {
+        setSaving(true);
+        try {
+            const res = await fetch(`${API_BASE_URL}/admin/accounts/${params.id}`, {
+                method: "PATCH",
+                headers: getAuthHeaders(),
+                body: JSON.stringify({ role: selectedRole, full_name: userData.name }),
+            });
+            if (res.ok) {
+                alert("Permissions updated successfully!");
+                router.push("/dashboard/admin/manage-accounts");
+            } else {
+                alert("Failed to update — backend not connected.");
+            }
+        } catch (err) {
+            alert("Failed to update — backend not connected.");
+        } finally {
+            setSaving(false);
+        }
+    };
 
     return (
         <div className={styles.container}>
@@ -60,8 +99,8 @@ export default function EditUserPermissionsPage() {
 
                         <div className={styles.profile}>
                             <div className={styles.profileInfo}>
-                                <span>Dr. Sarah Smith</span>
-                                <small>Admin</small>
+                                <span>{adminName}</span>
+                                <small>{adminUser?.role || "Admin"}</small>
                             </div>
                             <div className={styles.avatar}></div>
                         </div>
@@ -177,12 +216,10 @@ export default function EditUserPermissionsPage() {
                             </Link>
                             <button
                                 className={styles.submitBtn}
-                                onClick={() => {
-                                    alert("Permissions updated successfully!");
-                                    router.push("/dashboard/admin/manage-accounts");
-                                }}
+                                onClick={handleSave}
+                                disabled={saving}
                             >
-                                Update Permissions
+                                {saving ? "Saving..." : "Update Permissions"}
                             </button>
                         </div>
                     </div>

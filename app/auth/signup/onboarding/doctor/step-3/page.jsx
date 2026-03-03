@@ -71,7 +71,8 @@ export default function DoctorOnboardingStep3() {
             <div className={styles.headerBlock}>
               <h1 className={styles.heading}>Check your Audio</h1>
               <p className={styles.subheading}>
-                To ensure accurate speech recognition, please provide a short, de-identified audio recording for calibration.
+                {/* To ensure accurate speech recognition, please provide a short, de-identified audio recording for calibration. */}
+                <span style={{ color: '#ef4444', fontWeight: 'bold' }}>Voice features are currently disabled.</span> Please continue to complete your profile.
               </p>
             </div>
 
@@ -88,8 +89,8 @@ export default function DoctorOnboardingStep3() {
                     <div className={styles.inputWrapper}>
                       <div className={styles.micIconPlaceholder}></div>
                       <select className={styles.selectInput} defaultValue="default">
-                        <option value="default">Macbook Pro Microphone</option>
-                        <option value="other">Other Microphone</option>
+                        {/* <option value="default">Macbook Pro Microphone</option> */}
+                        {/* <option value="other">Other Microphone</option> */}
                       </select>
                     </div>
 

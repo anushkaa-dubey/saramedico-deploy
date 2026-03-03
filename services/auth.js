@@ -40,21 +40,8 @@ export const loginUser = async (payload) => {
  * Logout user
  */
 export const logoutUser = async () => {
-    const token = localStorage.getItem("authToken");
-
-    if (token) {
-        try {
-            await fetch(`${API_BASE_URL}/auth/logout`, {
-                method: "POST",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-        } catch (err) {
-            console.warn("Logout API failed, clearing local session anyway");
-        }
-    }
-
+    // [DISCREPANCY FIX]: POST /auth/logout is missing in backend
+    // Clearing local session only until backend support is added
     localStorage.removeItem("authToken");
 };
 
@@ -88,15 +75,16 @@ export const getCurrentUser = async () => {
 
 /**
  * Request password reset link
+ * [DISCREPANCY FIX]: POST /auth/forgot-password is missing in backend
  */
-export const forgotPassword = async (payload) => {
-    const response = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-    });
-
-    return handleResponse(response);
-};
+// export const forgotPassword = async (payload) => {
+//     const response = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
+//         method: "POST",
+//         headers: {
+//             "Content-Type": "application/json",
+//         },
+//         body: JSON.stringify(payload),
+//     });
+//
+//     return handleResponse(response);
+// };

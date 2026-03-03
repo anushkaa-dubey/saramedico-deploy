@@ -133,7 +133,8 @@ export default function ProfileSettings() {
                     </div>
                 </div>
 
-                {/* Bottom Cards */}
+                {/* Bottom Cards commented out as requested */}
+                {/* 
                 <div className={styles.cardsGrid}>
                     <div className={styles.card}>
                         <div className={styles.cardTitleRow}>
@@ -156,7 +157,8 @@ export default function ProfileSettings() {
                         </p>
                         <button className={styles.cardButton}>Manage</button>
                     </div>
-                </div>
+                </div> 
+                */}
             </div>
         </motion.div>
     );

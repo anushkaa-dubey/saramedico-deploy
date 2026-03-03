@@ -1,11 +1,23 @@
 "use client";
 import styles from "../HospitalDashboard.module.css";
-import notificationIcon from "@/public/icons/notification.svg";
-import personIcon from "@/public/icons/person.svg";
 import { useState, useEffect } from "react";
+import { fetchProfile } from "@/services/doctor";
 
 export default function Topbar({ title, onSearch }) {
     const [searchTerm, setSearchTerm] = useState("");
+    const [user, setUser] = useState(null);
+
+    useEffect(() => {
+        const getProfile = async () => {
+            try {
+                const data = await fetchProfile();
+                setUser(data);
+            } catch (err) {
+                console.error("Failed to fetch profile in Topbar", err);
+            }
+        };
+        getProfile();
+    }, []);
 
     useEffect(() => {
         const delayDebounceFn = setTimeout(() => {
@@ -14,6 +26,8 @@ export default function Topbar({ title, onSearch }) {
 
         return () => clearTimeout(delayDebounceFn);
     }, [searchTerm, onSearch]);
+
+    const initials = user?.full_name ? user.full_name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : "HA";
 
     return (
         <header className={styles.topbar}>
@@ -40,10 +54,10 @@ export default function Topbar({ title, onSearch }) {
 
                     <div className={styles.profile}>
                         <div className={styles.profileInfo}>
-                            <span style={{ fontSize: '14px', fontWeight: '700', color: '#0f172a' }}>Hospital Admin</span>
-                            <span style={{ fontSize: '11px', color: '#64748b' }}>Superuser</span>
+                            <span style={{ fontSize: '14px', fontWeight: '700', color: '#0f172a' }}>{user?.full_name || "Hospital Admin"}</span>
+                            <span style={{ fontSize: '11px', color: '#64748b' }}>{user?.role || user?.specialty || "Superuser"}</span>
                         </div>
-                        <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#359aff', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '12px' }}>HA</div>
+                        <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#359aff', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '12px' }}>{initials}</div>
                     </div>
                 </div>
             </div>

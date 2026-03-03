@@ -259,7 +259,7 @@ graph TB
 6. **Appointments** (`appointment_id`, `meeting_id`):
    - Created by patient, approved by doctor
    - Can trigger automatic permission grants
-   - Flows into: Consultations, Zoom integration
+   - Flows into: Consultations, Google Meet integration
 
 7. **AI Processing** (`job_id`, `conversation_id`):
    - Requires: `document_id`, `patient_id`, `permission`

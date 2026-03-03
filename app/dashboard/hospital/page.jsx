@@ -5,7 +5,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useState, useEffect, useMemo } from "react";
 import { fetchHospitalAppointments, fetchHospitalStats, fetchReviewQueue } from "@/services/hospital";
-import { fetchCalendarMonth, fetchCalendarDay, deleteCalendarEvent } from "@/services/calendar";
+// import { fetchCalendarMonth, fetchCalendarDay, deleteCalendarEvent } from "@/services/calendar"; // Missing backend domain
+import { fetchProfile } from "@/services/doctor";
+import { fetchDoctors } from "@/services/patient";
 
 const containerVariants = {
     hidden: { opacity: 0 },
@@ -22,37 +24,36 @@ const itemVariants = {
 
 export default function HospitalDashboard() {
     const [currentDate, setCurrentDate] = useState(new Date());
+    const [staffList, setStaffList] = useState([]);
     const [appointments, setAppointments] = useState([]);
-    const [statsData, setStatsData] = useState({
-        notesPendingSignature: 14,
-        transcriptionQueueStatus: 8,
-        averageNoteCompletionTime: "4.2 hrs"
-    });
+    const [statsData, setStatsData] = useState({});
     const [reviewQueue, setReviewQueue] = useState([]);
+    // const [dashboardMetrics, setDashboardMetrics] = useState(null); // Missing backend endpoint /doctor/me/dashboard
+    const [doctorProfile, setDoctorProfile] = useState(null);
     const [loading, setLoading] = useState(true);
     const [monthData, setMonthData] = useState({});
     const [selectedDayEvents, setSelectedDayEvents] = useState(null);
     const [isAvailable, setIsAvailable] = useState(true);
-
-    // Filters for Review Queue
-    const [filters, setFilters] = useState({
-        department: "All",
-        provider: "All",
-        urgency: "All"
-    });
+    const [filters, setFilters] = useState({ department: "All", provider: "All", urgency: "All" });
 
     useEffect(() => {
         const loadData = async () => {
             setLoading(true);
             try {
-                const [apptData, statData, queueData] = await Promise.all([
+                const [apptData, statData, queueData, profileData, doctorsData] = await Promise.all([
                     fetchHospitalAppointments(),
                     fetchHospitalStats(),
-                    fetchReviewQueue()
+                    fetchReviewQueue(),
+                    // fetchDashboardMetrics(),
+                    fetchProfile(),
+                    fetchDoctors()
                 ]);
                 setAppointments(apptData);
                 setStatsData(prev => ({ ...prev, ...statData }));
                 setReviewQueue(queueData);
+                // setDashboardMetrics(metricsData);
+                setDoctorProfile(profileData);
+                setStaffList(doctorsData?.slice(0, 4) || []);
             } catch (err) {
                 console.error("Failed to load hospital dashboard data:", err);
             } finally {
@@ -118,12 +119,7 @@ export default function HospitalDashboard() {
 
     // Availability logic based on real data
     const getDayAvailability = (day) => {
-        const data = monthData[day];
-        if (!data) return "none";
-
-        const count = typeof data === 'number' ? data : (data.count || 0);
-        if (count >= 10) return "red"; // Fully booked
-        if (count > 0) return "green"; // Some availability
+        // Missing backend Calendar domain
         return "none";
     };
 
@@ -140,7 +136,7 @@ export default function HospitalDashboard() {
         {
             label: "AVG COMPLETION",
             value: statsData.averageNoteCompletionTime || "0 mins",
-            badge: "-18s",
+            badge: "Live",
             badgeColor: "#10b981",
             badgeBg: "#f0fdf4",
             icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>,
@@ -150,31 +146,25 @@ export default function HospitalDashboard() {
         },
         {
             label: "PATIENTS TODAY",
-            value: "12",
-            subValue: "/ 16 Scheduled",
+            value: statsData.patientsToday ?? "0",
+            subValue: "",
             icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle></svg>,
             color: "#10b981",
             bgColor: "#f0fdf4",
             lineColor: "#10b981"
         },
-        {
-            label: "UNSIGNED ORDERS",
-            value: "3",
-            tags: ["Lab Review", "Radiology"],
-            icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>,
-            color: "#64748b",
-            bgColor: "#f8fafc",
-            lineColor: "#e2e8f0"
-        }
+        // {
+        //     label: "UNSIGNED ORDERS",
+        //     value: "0", // Missing backend dashboard metrics
+        //     tags: ["System Check"],
+        //     icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>,
+        //     color: "#64748b",
+        //     bgColor: "#f8fafc",
+        //     lineColor: "#e2e8f0"
+        // }
     ];
 
-    const encounters = [
-        { name: "John Doe", meta: "M • 45yo", complaint: "Acute Chest Pain", complaintDetail: "Patient reports tightness...", dos: "Today, 09:00 AM", status: "DRAFT READY", color: "#3b82f6", action: "Review Now" },
-        { name: "Robert Brown", meta: "M • 62yo", complaint: "Palpitations", complaintDetail: "Intermittent flutter...", dos: "Yesterday, 4:30 PM", status: "NEEDS REVIEW", color: "#f59e0b", action: "Edit" },
-        { name: "Jane Smith", meta: "F • 34yo", complaint: "Hypertension", complaintDetail: "Current consult...", dos: "Today, 10:30 AM", status: "RECORDING", color: "#64748b", action: "In Visit" },
-        { name: "Alice Li", meta: "F • 28yo", complaint: "Annual Physical", complaintDetail: "Routine checkup...", dos: "Yesterday, 2:00 PM", status: "SIGNED", color: "#10b981", action: "View" },
-        { name: "Tom Wilson", meta: "M • 55yo", complaint: "Post-Op Followup", complaintDetail: "Surgical site...", dos: "Yesterday, 11:00 AM", status: "SIGNED", color: "#10b981", action: "View" }
-    ];
+    // encounters removed — table now uses filteredQueue from live API (reviewQueue from /consultations)
 
     const filteredQueue = useMemo(() => {
         return reviewQueue.filter(item => {
@@ -200,7 +190,10 @@ export default function HospitalDashboard() {
                 <div className={styles.dashboardHeaderRow} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                     <div>
                         <h1 style={{ fontSize: '22px', fontWeight: '800', color: '#0f172a', margin: 0 }}>Clinical Dashboard</h1>
-                        <p style={{ color: '#64748b', fontSize: '13px', margin: '2px 0 0 0' }}>Good morning, Dr. Mitchell. You have <span style={{ color: '#3b82f6', fontWeight: '700' }}>4 priority drafts</span> pending review.</p>
+                        <p style={{ color: '#64748b', fontSize: '13px', margin: '2px 0 0 0' }}>
+                            Good morning{doctorProfile?.full_name ? `, ${doctorProfile.full_name}` : ''}.
+                            Your clinical queue is clear.
+                        </p>
                     </div>
                     <div className={styles.dashboardHeaderActions} style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                         <div style={{ display: 'flex', background: '#f1f5f9', padding: '4px', borderRadius: '10px', alignItems: 'center', gap: '4px' }}>
@@ -362,7 +355,7 @@ export default function HospitalDashboard() {
                                 <h2 style={{ fontSize: '18px', fontWeight: '800', color: '#1e293b' }}>Today's Schedule</h2>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: '#64748b', fontWeight: '700' }}>
                                     <span style={{ cursor: 'pointer', padding: '4px' }}>‹</span>
-                                    <span>Oct 24, 2026</span>
+                                    <span>{new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
                                     <span style={{ cursor: 'pointer', padding: '4px' }}>›</span>
                                 </div>
                             </div>
@@ -413,40 +406,25 @@ export default function HospitalDashboard() {
 
                     {/* Right Side Column */}
                     <div className={styles.rightColMain}>
+                        {/* Calendar Widget Hidden - Backend domain missing */}
+                        {/* 
                         <div className={styles.calendarCard}>
-                            <div className={styles.calendarHeader} style={{ marginBottom: '12px' }}>
-                                <h3 style={{ fontSize: '14px', fontWeight: '800' }}>{currentMonthName} {currentYear}</h3>
-                                <div style={{ display: 'flex', gap: '4px' }}>
-                                    <button onClick={() => changeMonth(-1)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>‹</button>
-                                    <button onClick={() => changeMonth(1)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>›</button>
-                                </div>
-                            </div>
-                            <div className={styles.calendarGrid}>
-                                {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((d, i) => <div key={`${d}-${i}`} className={styles.dayLabel}>{d}</div>)}
-                                {daysInMonth.map(day => (
-                                    <div
-                                        key={day}
-                                        className={`${styles.day} ${isTodayMonth && day === todayDate ? styles.todayDay : ''}`}
-                                    >
-                                        {day}
-                                    </div>
-                                ))}
-                            </div>
+                            ...
                         </div>
+                        */}
 
                         <div className={styles.card} style={{ padding: '12px' }}>
                             <h3 style={{ fontSize: '13px', fontWeight: '800', marginBottom: '12px' }}>On-Duty Staff</h3>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                {[
-                                    { name: "Dr. Sarah Wilson", role: "Cardiology", status: "On-site" },
-                                    { name: "Dr. Michael Chen", role: "Neurology", status: "Remote" }
-                                ].map((staff, i) => (
-                                    <div key={`${staff.name}-${i}`} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                {staffList.length === 0 ? (
+                                    <div style={{ fontSize: '12px', color: '#94a3b8' }}>Loading on-duty staff...</div>
+                                ) : staffList.map((s, i) => (
+                                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                         <div>
-                                            <div style={{ fontSize: '12px', fontWeight: '700' }}>{staff.name}</div>
-                                            <div style={{ fontSize: '10px', color: '#94a3b8' }}>{staff.role}</div>
+                                            <div style={{ fontSize: '12px', fontWeight: '700' }}>{s.full_name}</div>
+                                            <div style={{ fontSize: '10px', color: '#94a3b8' }}>{s.specialty || s.role || 'Practitioner'}</div>
                                         </div>
-                                        <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: staff.status === 'On-site' ? '#10b981' : '#359aff' }} />
+                                        <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981' }} />
                                     </div>
                                 ))}
                             </div>

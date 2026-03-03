@@ -260,9 +260,11 @@
   align-items: center;
   justify-content: space-between;
   background: #ffffff;
+  height: 72px;
   position: sticky;
   top: 0;
   z-index: 100;
+  margin: 0;
 }
 
 .search {

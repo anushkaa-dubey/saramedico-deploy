@@ -1,20 +1,35 @@
-"use client";
-import Topbar from "../../components/Topbar";
-import styles from "../../HospitalDashboard.module.css";
-import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
+import { fetchReviewQueue, fetchHospitalStats } from "@/services/hospital";
 
 export default function EmergencyDepartmentPage() {
-    const stats = [
-        { label: "Active Trauma", value: "4", icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>, color: "#ef4444" },
-        { label: "Beds Available", value: "12/50", icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M2 20v-8a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v8"></path><path d="M4 10V4a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v6"></path><path d="M12 4v4"></path></svg>, color: "#3b82f6" },
-        { label: "Wait Time", value: "18m", icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>, color: "#f59e0b" },
-        { label: "Triage Queue", value: "9", icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>, color: "#10b981" }
-    ];
+    const [queue, setQueue] = useState([]);
+    const [hospitalStats, setHospitalStats] = useState({ notesPendingSignature: 0, transcriptionQueueStatus: 0, averageNoteCompletionTime: "0" });
+    const [loading, setLoading] = useState(true);
 
-    const emergencyCases = [
-        { id: "#TR-9021", patient: "Sarah Connor", condition: "Major Trauma", triage: "Level 1", status: "In Surgery", doc: "Dr. House" },
-        { id: "#TR-9025", patient: "John McClane", condition: "Deep Laceration", triage: "Level 2", status: "Triage", doc: "Dr. Grey" },
-        { id: "#TR-9028", patient: "Ellen Ripley", condition: "Respiratory Distress", triage: "Level 1", status: "Stabilizing", doc: "Dr. Strange" }
+    useEffect(() => {
+        const loadERData = async () => {
+            setLoading(true);
+            try {
+                const [queueData, statsData] = await Promise.all([
+                    fetchReviewQueue({ limit: 10 }),
+                    fetchHospitalStats()
+                ]);
+                setQueue(queueData || []);
+                setHospitalStats(statsData);
+            } catch (err) {
+                console.error("Failed to load ER data:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        loadERData();
+    }, []);
+
+    const stats = [
+        { label: "Pending Review", value: hospitalStats.notesPendingSignature, icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>, color: "#f59e0b" },
+        { label: "Latency", value: hospitalStats.averageNoteCompletionTime, icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>, color: "#3b82f6" },
+        { label: "High Urgency", value: hospitalStats.transcriptionQueueStatus, icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>, color: "#ef4444" },
+        { label: "System Status", value: "Live", icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg>, color: "#10b981" }
     ];
 
     return (
@@ -31,13 +46,6 @@ export default function EmergencyDepartmentPage() {
                         <h1 style={{ fontSize: '24px', fontWeight: '800', color: '#0f172a', margin: 0 }}>Emergency Department (ER)</h1>
                         <p style={{ color: '#64748b', margin: '4px 0 0 0' }}>Real-time triage, trauma management and emergency resource allocation.</p>
                     </div>
-                    <div className={styles.pageHeaderActions} style={{ display: 'flex', gap: '12px' }}>
-                        <button className={styles.primaryBtn} style={{ background: '#ef4444', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-                            CODE BLUE
-                        </button>
-                        <button className={styles.outlineBtn}>Resource Map</button>
-                    </div>
                 </div>
 
                 <div className={styles.overviewSection} style={{ marginBottom: '32px' }}>
@@ -53,42 +61,35 @@ export default function EmergencyDepartmentPage() {
                 </div>
 
                 <div className={styles.card}>
-                    <div className={styles.cardTitle}>Live Trauma & Triage Queue</div>
+                    <div className={styles.cardTitle}>Live Triage Queue</div>
                     <table className={styles.activityTable} style={{ marginTop: '20px' }}>
                         <thead>
                             <tr className={styles.activityHeader}>
                                 <th>PATIENT</th>
-                                <th>TRIAGE</th>
-                                <th>CONDITION</th>
-                                <th>ASSIGNED MD</th>
+                                <th>MRN</th>
+                                <th>PROVIDER</th>
                                 <th>STATUS</th>
                                 <th style={{ textAlign: 'right' }}>ACTIONS</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {emergencyCases.map((c, i) => (
+                            {loading ? (
+                                <tr><td colSpan="5" style={{ padding: '40px', textAlign: 'center', color: '#94a3b8' }}>Loading ER queue...</td></tr>
+                            ) : queue.length === 0 ? (
+                                <tr><td colSpan="5" style={{ padding: '40px', textAlign: 'center', color: '#94a3b8' }}>No active triage cases.</td></tr>
+                            ) : queue.map((c, i) => (
                                 <tr key={i} className={styles.activityRow}>
-                                    <td style={{ fontWeight: '700' }}>{c.patient} <span style={{ color: '#94a3b8', fontSize: '11px', fontWeight: '400' }}>{c.id}</span></td>
-                                    <td>
-                                        <span style={{
-                                            background: c.triage === 'Level 1' ? '#fee2e2' : '#fff7ed',
-                                            color: c.triage === 'Level 1' ? '#ef4444' : '#f59e0b',
-                                            padding: '2px 8px',
-                                            borderRadius: '4px',
-                                            fontWeight: '800',
-                                            fontSize: '10px'
-                                        }}>{c.triage}</span>
-                                    </td>
-                                    <td>{c.condition}</td>
-                                    <td>{c.doc}</td>
+                                    <td style={{ fontWeight: '700' }}>{c.patient}</td>
+                                    <td>{c.mrn}</td>
+                                    <td>{c.provider}</td>
                                     <td>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#359aff', animation: 'pulse 1.5s infinite' }} />
-                                            {c.status}
+                                            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#359aff' }} />
+                                            {c.status.toUpperCase()}
                                         </div>
                                     </td>
                                     <td style={{ textAlign: 'right' }}>
-                                        <button className={styles.outlineBtn} style={{ height: '28px', fontSize: '11px' }}>Open Chart</button>
+                                        <button className={styles.outlineBtn} style={{ height: '28px', fontSize: '11px' }}>Review</button>
                                     </td>
                                 </tr>
                             ))}
@@ -96,14 +97,6 @@ export default function EmergencyDepartmentPage() {
                     </table>
                 </div>
             </div>
-
-            <style jsx>{`
-                @keyframes pulse {
-                    0% { opacity: 1; }
-                    50% { opacity: 0.4; }
-                    100% { opacity: 1; }
-                }
-            `}</style>
         </motion.div>
     );
 }

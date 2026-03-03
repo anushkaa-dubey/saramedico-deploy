@@ -1,16 +1,30 @@
 "use client";
+import { useState, useEffect } from "react";
 import styles from "../AdminDashboard.module.css";
 import messagesIcon from "@/public/icons/messages.svg";
 import { motion } from "framer-motion";
+import { fetchCalendarDay } from "@/services/calendar";
 
 export default function AppointmentsManagement() {
-    const bookings = [
-        { time: "09:00 AM", patient: "John Doe", type: "Checkup", status: "Pending" },
-        { time: "10:30 AM", patient: "Jane Smith", type: "Follow-up", status: "Confirmed" },
-        { time: "02:00 PM", patient: "Robert Brown", type: "Consultation", status: "Pending" },
-        { time: "03:15 PM", patient: "Sarah Wilson", type: "Emergency", status: "Rescheduled" },
-        { time: "04:30 PM", patient: "Michael Scott", type: "General", status: "Confirmed" },
-    ];
+    const [appointments, setAppointments] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const loadToday = async () => {
+            setLoading(true);
+            try {
+                const todayStr = new Date().toISOString().split('T')[0];
+                const data = await fetchCalendarDay(todayStr);
+                // The API can return either an array or an object with an 'events' array
+                setAppointments(data?.events || (Array.isArray(data) ? data : []));
+            } catch (err) {
+                console.error("Failed to fetch appointments:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        loadToday();
+    }, []);
 
     const itemVariants = {
         hidden: { opacity: 0, y: 20 },
@@ -49,14 +63,18 @@ export default function AppointmentsManagement() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {bookings.map((b, i) => (
-                                        <tr key={i}>
-                                            <td>{b.time}</td>
-                                            <td>{b.patient}</td>
-                                            <td>{b.type}</td>
+                                    {loading ? (
+                                        <tr><td colSpan="5" style={{ textAlign: 'center', padding: '24px', color: '#64748b' }}>Loading appointments...</td></tr>
+                                    ) : appointments.length === 0 ? (
+                                        <tr><td colSpan="5" style={{ textAlign: 'center', padding: '24px', color: '#64748b' }}>Backend not connected — no appointments found.</td></tr>
+                                    ) : appointments.map((b, i) => (
+                                        <tr key={b.id || i}>
+                                            <td>{b.start_time ? new Date(b.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : (b.time || "N/A")}</td>
+                                            <td>{b.metadata?.patient_name || b.patient || b.title || "Consultation"}</td>
+                                            <td>{b.event_type || b.type || "Appointment"}</td>
                                             <td>
-                                                <span className={`${styles.statusBadge} ${styles[b.status.toLowerCase()]}`}>
-                                                    {b.status}
+                                                <span className={`${styles.statusBadge} ${styles[(b.status || b.metadata?.appointment_status || "pending").toLowerCase()]}`}>
+                                                    {b.status || b.metadata?.appointment_status || "Pending"}
                                                 </span>
                                             </td>
                                             <td className={styles.actionBtns}>

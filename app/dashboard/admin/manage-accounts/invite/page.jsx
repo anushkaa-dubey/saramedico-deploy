@@ -8,14 +8,56 @@ import searchIcon from "@/public/icons/search.svg";
 import lockIcon from "@/public/icons/lock.svg";
 import manageIcon from "@/public/icons/manage.svg";
 import personIcon from "@/public/icons/person.svg";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { fetchProfile } from "@/services/doctor";
+import { inviteTeamMember } from "@/services/admin";
+import { useRouter } from "next/navigation";
 
 export default function InviteTeamPage() {
-  const [selectedRole, setSelectedRole] = useState("Member");
+  const router = useRouter();
+  const [selectedRole, setSelectedRole] = useState("ADMINISTRATOR");
+  const [adminUser, setAdminUser] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  const [formData, setFormData] = useState({
+    full_name: "",
+    email: "",
+    department_id: "default", // Backend expectation
+    department_role: "staff"
+  });
+
+  useEffect(() => {
+    fetchProfile()
+      .then(p => setAdminUser(p))
+      .catch(() => { });
+  }, []);
+
+  const handleInvite = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+    setSuccess("");
+    try {
+      await inviteTeamMember({
+        ...formData,
+        role: selectedRole
+      });
+      setSuccess("Invitation sent successfully!");
+      setTimeout(() => router.push("/dashboard/admin/manage-accounts"), 2000);
+    } catch (err) {
+      setError(err.message || "Failed to send invitation. Backend not connected.");
+    } finally {
+      setLoading(true); // Keep loading state if redirecting
+    }
+  };
+
+  const adminName = adminUser?.full_name || adminUser?.first_name || "Admin";
   return (
     <div className={styles.container}>
       {/* Sidebar */}
-      
+
 
       {/* Main */}
       <main className={styles.main}>
@@ -45,8 +87,8 @@ export default function InviteTeamPage() {
 
             <div className={styles.profile}>
               <div className={styles.profileInfo}>
-                <span>Dr. Sarah Smith</span>
-                <small>Admin</small>
+                <span>{adminName}</span>
+                <small>{adminUser?.role || "Admin"}</small>
               </div>
               <div className={styles.avatar}></div>
             </div>
@@ -64,13 +106,18 @@ export default function InviteTeamPage() {
             </div>
 
             <div className={styles.formContent}>
-              {/* Form Fields */}
+              {error && <div style={{ color: "#ef4444", marginBottom: "12px", fontSize: "13px" }}>{error}</div>}
+              {success && <div style={{ color: "#10b981", marginBottom: "12px", fontSize: "13px" }}>{success}</div>}
+
               <div className={styles.formGroup}>
                 <label className={styles.label}>FULL NAME</label>
                 <input
                   type="text"
                   className={styles.input}
-                  placeholder="Your name"
+                  placeholder="Employee Name"
+                  value={formData.full_name}
+                  onChange={e => setFormData({ ...formData, full_name: e.target.value })}
+                  required
                 />
               </div>
 
@@ -79,7 +126,10 @@ export default function InviteTeamPage() {
                 <input
                   type="email"
                   className={styles.input}
-                  placeholder="drhospital@gmail.com"
+                  placeholder="user@example.com"
+                  value={formData.email}
+                  onChange={e => setFormData({ ...formData, email: e.target.value })}
+                  required
                 />
               </div>
             </div>
@@ -90,8 +140,8 @@ export default function InviteTeamPage() {
               <div className={styles.roleGrid}>
                 {/* Administrator */}
                 <div
-                  className={`${styles.roleCard} ${selectedRole === "Administrator" ? styles.roleCardActive : ""}`}
-                  onClick={() => setSelectedRole("Administrator")}
+                  className={`${styles.roleCard} ${selectedRole === "ADMINISTRATOR" ? styles.roleCardActive : ""}`}
+                  onClick={() => setSelectedRole("ADMINISTRATOR")}
                 >
                   <div className={styles.roleCardHeader}>
                     <div className={styles.roleIcon}>
@@ -111,8 +161,8 @@ export default function InviteTeamPage() {
 
                 {/* Member */}
                 <div
-                  className={`${styles.roleCard} ${selectedRole === "Member" ? styles.roleCardActive : ""}`}
-                  onClick={() => setSelectedRole("Member")}
+                  className={`${styles.roleCard} ${selectedRole === "STAFF" ? styles.roleCardActive : ""}`}
+                  onClick={() => setSelectedRole("STAFF")}
                 >
                   <div className={styles.roleCardHeader}>
                     <div className={styles.roleIcon}>
@@ -132,8 +182,8 @@ export default function InviteTeamPage() {
 
                 {/* Patient */}
                 <div
-                  className={`${styles.roleCard} ${selectedRole === "Patient" ? styles.roleCardActive : ""}`}
-                  onClick={() => setSelectedRole("Patient")}
+                  className={`${styles.roleCard} ${selectedRole === "PATIENT" ? styles.roleCardActive : ""}`}
+                  onClick={() => setSelectedRole("PATIENT")}
                 >
                   <div className={styles.roleCardHeader}>
                     <div className={styles.roleIcon}>
@@ -154,24 +204,25 @@ export default function InviteTeamPage() {
             </div>
 
             {/* Security Notice */}
+            {/* MFA Security Notice Commented Out */}
+            {/*
             <div className={styles.securityNotice}>
-              <div className={styles.noticeIcon}>ℹ</div>
-              <div>
-                <strong>Security Notice</strong>
-                <p>
-                  The user will receive an email to join the Team. The invitation
-                  link expired in 48hours. They will be required to set up
-                  Two-Factor Authentication (2FA) upon their first login.
-                </p>
-              </div>
+              ...
             </div>
+            */}
 
             {/* Modal Footer */}
             <div className={styles.modalFooter}>
               <Link href="/dashboard/admin/manage-accounts" className={styles.cancelBtn}>
                 Cancel
               </Link>
-              <button className={styles.submitBtn}>Save Invite</button>
+              <button
+                className={styles.submitBtn}
+                onClick={handleInvite}
+                disabled={loading}
+              >
+                {loading ? "Sending..." : "Save Invite"}
+              </button>
             </div>
           </div>
         </div>

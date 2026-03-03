@@ -84,7 +84,7 @@ get appointment
   }
 ]
 approve appointment:
-Doctor approves an appointment and generates a Zoom meeting.
+Doctor approves an appointment and generates a Google Meet meeting.
 
 Parameters
 Cancel

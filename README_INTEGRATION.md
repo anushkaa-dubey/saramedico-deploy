@@ -71,4 +71,4 @@ Where backend endpoints were available but missing clear UI entry points, we hav
 - **Frontend**: `npm run dev` (Port 3000)
 - **Backend**: `uvicorn app.main:app --reload` (Port 8000)
 
-*Note: Zoom/Google Meet integration is handled via server-side Zoom API hooks during appointment approval but is not part of the core frontend UI assets yet.*
+*Note: Google Meet integration is handled via server-side API hooks during appointment approval but is not part of the core frontend UI assets yet.*

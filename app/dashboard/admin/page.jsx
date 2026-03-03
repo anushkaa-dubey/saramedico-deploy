@@ -9,7 +9,9 @@ import micIcon from "@/public/icons/mic_white.svg";
 import scheduleIcon from "@/public/icons/schedule.svg";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { fetchCalendarMonth, fetchCalendarDay } from "@/services/calendar";
+// import { fetchCalendarMonth, fetchCalendarDay } from "@/services/calendar"; // Missing backend domain
+import { fetchAdminOverview, fetchAdminAuditLogs, fetchAuditLogs } from "@/services/admin";
+import { fetchProfile } from "@/services/doctor";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -38,21 +40,37 @@ const itemVariants = {
 export default function AdminDashboard() {
   const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [searchFilter, setSearchFilter] = useState("All");
+  const [adminUser, setAdminUser] = useState(null);
+  const [overview, setOverview] = useState(null);
+  const [auditLogs, setAuditLogs] = useState([]);
+  const [loadingOverview, setLoadingOverview] = useState(true);
+  const [topMatches, setTopMatches] = useState([]);
 
   const searchFilters = ["All", "Logins", "Exports", "Patient Data"];
-  const topMatches = [
-    { type: "doctor", name: "Dr. Smith Sara", icon: personIcon },
-    { type: "doctor", name: "Dr. Angel Batista", icon: personIcon },
-    { type: "document", name: "patient_data_report.pdf", icon: docIcon },
-  ];
-  const bookings = [
-    { time: "09:00 AM", patient: "John Doe", type: "Checkup", status: "Pending" },
-    { time: "10:30 AM", patient: "Jane Smith", type: "Follow-up", status: "Confirmed" },
-    { time: "02:00 PM", patient: "Robert Brown", type: "Consultation", status: "Pending" },
-  ];
+
   const [currentDate, setCurrentDate] = useState(new Date());
   const [monthData, setMonthData] = useState({});
   const [selectedDayEvents, setSelectedDayEvents] = useState(null);
+
+  useEffect(() => {
+    const init = async () => {
+      try {
+        const [profile, overviewData, logs] = await Promise.all([
+          fetchProfile(),
+          fetchAdminOverview(),
+          fetchAdminAuditLogs({ limit: 5 }),
+        ]);
+        setAdminUser(profile);
+        setOverview(overviewData);
+        setAuditLogs(logs || []);
+      } catch (err) {
+        console.error("AdminDashboard init error:", err);
+      } finally {
+        setLoadingOverview(false);
+      }
+    };
+    init();
+  }, []);
 
   useEffect(() => {
     const loadMonthData = async () => {
@@ -60,7 +78,6 @@ export default function AdminDashboard() {
         const year = currentDate.getFullYear();
         const month = currentDate.getMonth() + 1;
         const response = await fetchCalendarMonth(year, month);
-        // Map the days array into a dictionary { day: count }
         const mappedData = {};
         if (response && response.days) {
           response.days.forEach(d => {
@@ -76,14 +93,8 @@ export default function AdminDashboard() {
   }, [currentDate]);
 
   const handleDayClick = async (day) => {
-    try {
-      const dateStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-      const response = await fetchCalendarDay(dateStr);
-      // The service handleResponse returns the json directly, which for DayViewResponse has an 'events' array
-      setSelectedDayEvents(response.events || response || []);
-    } catch (err) {
-      console.error("Failed to fetch calendar day events:", err);
-    }
+    // Missing backend Calendar domain
+    return;
   };
 
   const changeMonth = (offset) => {
@@ -91,6 +102,16 @@ export default function AdminDashboard() {
     newDate.setMonth(newDate.getMonth() + offset);
     setCurrentDate(newDate);
   };
+
+  useEffect(() => {
+    // Missing backend Calendar domain
+    /*
+    const fetchToday = async () => {
+      ...
+    };
+    fetchToday();
+    */
+  }, []);
 
   const currentMonthName = currentDate.toLocaleString('default', { month: 'long' });
   const currentYear = currentDate.getFullYear();
@@ -106,32 +127,26 @@ export default function AdminDashboard() {
     return "green";
   };
 
-  useEffect(() => {
-    // Fetch today's events initially
-    const fetchToday = async () => {
-      try {
-        const todayStr = new Date().toISOString().split('T')[0];
-        const response = await fetchCalendarDay(todayStr);
-        setSelectedDayEvents(response.events || response || []);
-      } catch (err) {
-        console.error("Failed to fetch today's events:", err);
-      }
-    };
-    fetchToday();
-  }, []);
-
   const formatEventsForSchedule = (events) => {
-    if (!events || events.length === 0) return [];
-    return events.map(event => ({
-      time: new Date(event.start_time || event.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      patient: event.metadata?.patient_name || event.title || "Consultation",
-      type: event.event_type.charAt(0).toUpperCase() + event.event_type.slice(1),
-      status: event.metadata?.appointment_status || (event.event_type === 'appointment' ? 'Confirmed' : 'Active'),
-      zoomLink: event.metadata?.zoom_link
-    }));
+    return []; // Missing backend Calendar domain
   };
 
-  const displaySchedule = selectedDayEvents ? formatEventsForSchedule(selectedDayEvents) : bookings;
+  const displaySchedule = []; // SelectedDayEvents logic disabled
+
+  const adminName = adminUser?.full_name || "Admin";
+
+  // Derive summary card values from overview or calendar
+  const appointmentsToday = selectedDayEvents?.length ?? overview?.appointments_today ?? 0;
+  const pendingUploads = overview?.pending_uploads ?? overview?.pending_documents ?? "—";
+  const activeDoctors = overview?.active_doctors ?? overview?.doctors_count ?? "—";
+
+  const getActionColor = (action = "") => {
+    const a = action.toLowerCase();
+    if (a.includes("delete") || a.includes("remove") || a.includes("error")) return "#ef4444";
+    if (a.includes("update") || a.includes("edit") || a.includes("patch")) return "#f59e0b";
+    if (a.includes("create") || a.includes("post") || a.includes("register") || a.includes("login")) return "#10b981";
+    return "#3b82f6";
+  };
 
   return (
     <motion.div
@@ -165,12 +180,18 @@ export default function AdminDashboard() {
               </div>
               <div className={styles.matchesSection}>
                 <h4 className={styles.sectionTitle}>Top Matches</h4>
-                {topMatches.map((match, idx) => (
-                  <div key={idx} className={styles.matchItem}>
-                    <img src={match.icon.src} alt="" width="16" height="16" />
-                    <span>{match.name}</span>
+                {topMatches.length === 0 ? (
+                  <div style={{ padding: "8px 0", color: "#94a3b8", fontSize: "13px" }}>
+                    Backend not connected
                   </div>
-                ))}
+                ) : (
+                  topMatches.map((match, idx) => (
+                    <div key={idx} className={styles.matchItem}>
+                      <img src={personIcon.src} alt="" width="16" height="16" />
+                      <span>{match.name}</span>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           )}
@@ -183,19 +204,20 @@ export default function AdminDashboard() {
 
           <div className={styles.profile}>
             <div className={styles.profileInfo}>
-              <span>Dr. Sarah Smith</span>
-              <small>Admin</small>
+              <span style={{ fontWeight: '700', color: '#0f172a' }}>
+                {loadingOverview ? "Loading..." : adminName}
+              </span>
+              <small style={{ color: '#64748b' }}>{adminUser?.role || "Administrator"}</small>
             </div>
-            <div className={styles.avatar}></div>
           </div>
         </div>
       </motion.div>
 
       <motion.div className={styles.titleRow} variants={itemVariants}>
         <div>
-          <h2 className={styles.heading}>Dashboard Overview</h2>
+          <h2 className={styles.heading}>Clinic Overview</h2>
           <p className={styles.subtext}>
-            Welcome back, Sarah. Here's what's happening in your clinic today.
+            Welcome back, {adminName.split(' ')[0]}. Here's the latest system status.
           </p>
         </div>
 
@@ -212,8 +234,12 @@ export default function AdminDashboard() {
           </div>
           <div className={styles.summaryInfo}>
             <span className={styles.summaryLabel}>Appointments Today</span>
-            <h3 className={styles.summaryValue}>{selectedDayEvents ? selectedDayEvents.length : 42}</h3>
-            <span className={styles.summaryTrend} style={{ color: '#16a34a' }}>↑ 12% vs yesterday</span>
+            <h3 className={styles.summaryValue}>
+              {loadingOverview ? "..." : appointmentsToday}
+            </h3>
+            <span className={styles.summaryTrend} style={{ color: '#16a34a' }}>
+              {loadingOverview ? "Loading..." : (appointmentsToday === "—" ? "Backend not connected" : "Live Count")}
+            </span>
           </div>
         </div>
         <div className={styles.summaryCard}>
@@ -222,8 +248,12 @@ export default function AdminDashboard() {
           </div>
           <div className={styles.summaryInfo}>
             <span className={styles.summaryLabel}>Pending Uploads</span>
-            <h3 className={styles.summaryValue}>18</h3>
-            <span className={styles.summaryTrend} style={{ color: '#ea580c' }}>Requires Action</span>
+            <h3 className={styles.summaryValue}>
+              {loadingOverview ? "..." : pendingUploads}
+            </h3>
+            <span className={styles.summaryTrend} style={{ color: '#ea580c' }}>
+              {pendingUploads === "—" ? "Backend not connected" : "Requires Action"}
+            </span>
           </div>
         </div>
         <div className={styles.summaryCard}>
@@ -232,52 +262,30 @@ export default function AdminDashboard() {
           </div>
           <div className={styles.summaryInfo}>
             <span className={styles.summaryLabel}>Active Doctors</span>
-            <h3 className={styles.summaryValue}>12</h3>
-            <span className={styles.summaryTrend} style={{ color: '#16a34a' }}>All on duty</span>
+            <h3 className={styles.summaryValue}>
+              {loadingOverview ? "..." : activeDoctors}
+            </h3>
+            <span className={styles.summaryTrend} style={{ color: '#16a34a' }}>
+              {activeDoctors === "—" ? "Backend not connected" : "All on duty"}
+            </span>
           </div>
         </div>
       </motion.div>
 
       <section className={styles.dashboardGrid}>
         <div className={styles.leftCol}>
+          {/* Schedule Hidden - Backend Calendar domain missing */}
+          {/*
           <motion.div className={styles.card} variants={itemVariants}>
-            <div className={styles.cardHeader}>
-              <h3>{selectedDayEvents ? "Events for Selected Day" : "Today's Schedule"}</h3>
-              {selectedDayEvents && <span onClick={() => setSelectedDayEvents(null)} style={{ cursor: 'pointer', fontSize: '12px', color: '#666' }}>Reset to Today</span>}
-              <Link href="/dashboard/admin/appointments" className={styles.link}>View All</Link>
-            </div>
-            <div className={styles.scheduleList}>
-              {displaySchedule.map((booking, idx) => (
-                <div key={idx} className={styles.scheduleItem}>
-                  <div className={styles.timeLine}>
-                    <span className={styles.timeText}>{booking.time}</span>
-                    <div className={styles.timeDot}></div>
-                  </div>
-                  <div className={styles.scheduleContent}>
-                    <div className={styles.scheduleInfo}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <strong>{booking.patient}</strong>
-                        {booking.zoomLink && <a href={booking.zoomLink} target="_blank" style={{ fontSize: '10px', color: '#359aff', fontWeight: 'bold' }}>JOIN ZOOM</a>}
-                      </div>
-                      <span>{booking.type}</span>
-                    </div>
-                    <span className={`${styles.statusBadge} ${styles[booking.status.toLowerCase()] || styles.pending}`}>
-                      {booking.status}
-                    </span>
-                  </div>
-                </div>
-              ))}
-              {displaySchedule.length === 0 && (
-                <div style={{ padding: '20px', textAlign: 'center', color: '#64748b' }}>No events found.</div>
-              )}
-            </div>
+            ...
           </motion.div>
+          */}
 
-          {/* Activity Table */}
+          {/* Activity Table — from real audit logs */}
           <motion.div className={styles.card} variants={itemVariants}>
             <div className={styles.cardHeader}>
               <h3>Recent Activity</h3>
-              <span className={styles.link}>View Logs</span>
+              <Link href="/dashboard/hospital/audit-logs" className={styles.link}>View Logs</Link>
             </div>
             <table className={styles.table}>
               <thead>
@@ -289,28 +297,34 @@ export default function AdminDashboard() {
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td>
-                    <div className={styles.userCell}>
-                      <div className={styles.avatarSmall}></div>
-                      John Von
-                    </div>
-                  </td>
-                  <td>Viewed Lab Results</td>
-                  <td>Today, 9:15 AM</td>
-                  <td><span className={styles.success}>Completed</span></td>
-                </tr>
-                <tr>
-                  <td>
-                    <div className={styles.userCell}>
-                      <div className={styles.avatarSmall}></div>
-                      Sarah Miller
-                    </div>
-                  </td>
-                  <td>Uploaded Records</td>
-                  <td>Today, 8:45 AM</td>
-                  <td><span className={styles.warning}>Processing</span></td>
-                </tr>
+                {auditLogs.length === 0 ? (
+                  <tr>
+                    <td colSpan="4" style={{ padding: '20px', textAlign: 'center', color: '#94a3b8' }}>
+                      {loadingOverview ? "Loading..." : "Backend not connected — no audit logs."}
+                    </td>
+                  </tr>
+                ) : (
+                  auditLogs.slice(0, 5).map((log, i) => (
+                    <tr key={log.id || i}>
+                      <td>
+                        <div className={styles.userCell}>
+                          <div className={styles.avatarSmall}></div>
+                          {log.user_id || log.user_email || "System"}
+                        </div>
+                      </td>
+                      <td>{log.action || log.event || "—"}</td>
+                      <td>{log.timestamp ? new Date(log.timestamp).toLocaleString() : "—"}</td>
+                      <td>
+                        <span
+                          className={styles.success}
+                          style={{ color: getActionColor(log.action || "") }}
+                        >
+                          {log.status || "Completed"}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </motion.div>
@@ -318,62 +332,36 @@ export default function AdminDashboard() {
 
         <div className={styles.rightCol}>
           {/* Calendar Widget */}
+          {/* Calendar Widget Hidden - Backend domain missing */}
+          {/*
           <motion.div className={styles.card} variants={itemVariants}>
-            <div className={styles.calendarHeader}>
-              <h3>Calendar</h3>
-              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                <span style={{ fontSize: '14px', fontWeight: '600' }}>{currentMonthName} {currentYear}</span>
-                <div style={{ display: 'flex', gap: '4px' }}>
-                  <button onClick={() => changeMonth(-1)} className={styles.iconBtn} style={{ padding: '2px 6px', fontSize: '12px' }}>‹</button>
-                  <button onClick={() => changeMonth(1)} className={styles.iconBtn} style={{ padding: '2px 6px', fontSize: '12px' }}>›</button>
-                </div>
-              </div>
-            </div>
-            <div className={styles.calendarWidget}>
-              <div className={styles.calendarGrid}>
-                {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(d => <span key={d} className={styles.calDayHead}>{d}</span>)}
-                {daysInMonth.map((day) => {
-                  const availability = getDayAvailability(day);
-                  const isToday = isTodayMonth && day === todayDate;
-
-                  return (
-                    <div
-                      key={day}
-                      onClick={() => handleDayClick(day)}
-                      style={{ cursor: 'pointer' }}
-                      className={`${styles.calDay} ${isToday ? styles.calToday : ''} ${availability !== 'none' ? styles.calHasEvent : ''}`}
-                    >
-                      {day}
-                      {availability !== 'none' && (
-                        <div style={{
-                          width: '4px',
-                          height: '4px',
-                          borderRadius: '50%',
-                          background: availability === 'red' ? '#ef4444' : '#22c55e',
-                          position: 'absolute',
-                          bottom: '4px'
-                        }}></div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
+            ...
           </motion.div>
+          */}
 
+          {/* System Alerts from Overview */}
           <motion.div className={`${styles.card} ${styles.alertCard}`} variants={itemVariants}>
             <h3>System Alerts</h3>
             <div className={styles.alertList}>
-              <div className={styles.alert}>
-                <strong>Database Backup</strong>
-                <p>Successful backup at 04:00 AM</p>
-                <span>5h ago</span>
-              </div>
-              <div className={styles.alert}>
-                <strong>New Staff Onboarded</strong>
-                <p>Dr. Angel Batista updated profile</p>
-                <span>1h ago</span>
-              </div>
+              {loadingOverview ? (
+                <div className={styles.alert}>
+                  <strong>Loading alerts...</strong>
+                </div>
+              ) : overview?.alerts?.length > 0 ? (
+                overview.alerts.slice(0, 3).map((alert, i) => (
+                  <div key={i} className={styles.alert}>
+                    <strong>{alert.title || alert.type || "System Alert"}</strong>
+                    <p>{alert.message || alert.description || "—"}</p>
+                    <span>{alert.time || alert.created_at ? new Date(alert.created_at || alert.time).toLocaleString() : "—"}</span>
+                  </div>
+                ))
+              ) : (
+                <div className={styles.alert}>
+                  <strong>Backend not connected</strong>
+                  <p>System alert data is unavailable.</p>
+                  <span>—</span>
+                </div>
+              )}
             </div>
           </motion.div>
         </div>

@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { fetchAppointments, fetchDoctors } from "@/services/patient";
+import CalendarView from "../components/CalendarView";
 
 export default function AppointmentsPage() {
     const router = useRouter();
@@ -57,8 +58,8 @@ export default function AppointmentsPage() {
             <section className={styles.wrapper}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
                     <div>
-                        <h2 style={{ fontSize: '24px', fontWeight: '700', color: '#0f172a' }}>My Appointments</h2>
-                        <p style={{ color: '#64748b' }}>Check your appointment status and history.</p>
+                        <h2 style={{ fontSize: '24px', fontWeight: '700', color: '#0f172a' }}>Personal Health Workspace</h2>
+                        <p style={{ color: '#64748b' }}>Manage your appointments, track status, and join sessions.</p>
                     </div>
                     <Link href="/dashboard/patient/appointments/request">
                         <button className={styles.requestCTA} style={{ background: "linear-gradient(90deg, #359AFF, #9CCDFF)", border: "none", color: "white", padding: "10px 20px", fontWeight: "600", borderRadius: "10px", cursor: "pointer", textDecoration: "none", display: "inline-block" }}>
@@ -69,85 +70,97 @@ export default function AppointmentsPage() {
 
                 {error && <p style={{ color: "red", padding: "0 24px" }}>{error}</p>}
 
-                <div className={styles.card}>
-                    <div className={styles.cardHeader}>
-                        <h3>Appointment Status</h3>
-                    </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) 350px', gap: '24px', alignItems: 'start' }}>
+                    <div className={styles.card}>
+                        <div className={styles.cardHeader}>
+                            <h3>Session Tracking</h3>
+                        </div>
 
-                    {loading ? (
-                        <div style={{ padding: '40px', textAlign: 'center' }}>Loading appointments...</div>
-                    ) : appointments.length === 0 ? (
-                        <div style={{ padding: '40px', textAlign: 'center' }}>You have no appointment requests.</div>
-                    ) : (
-                        <div className={styles.tableContainer}>
-                            <table className={styles.table}>
-                                <thead>
-                                    <tr>
-                                        <th>DOCTOR</th>
-                                        <th>DATE & TIME</th>
-                                        <th>STATUS</th>
-                                        <th>NOTES</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {appointments.map((apt) => (
-                                        <tr key={apt.id}>
-                                            <td>
-                                                {apt.doctor_name ||
-                                                    (apt.doctor && (apt.doctor.full_name || `Dr. ${apt.doctor.first_name} ${apt.doctor.last_name}`)) ||
-                                                    doctorsMap[apt.doctor_id] ||
-                                                    "Unknown Doctor"}
-                                            </td>
-                                            <td>{new Date(apt.requested_date).toLocaleString()}</td>
-                                            <td>
-                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                                    <span
-                                                        style={{
-                                                            padding: '4px 8px',
-                                                            borderRadius: '4px',
-                                                            fontSize: '12px',
-                                                            fontWeight: '600',
-                                                            background: apt.status === 'accepted' ? '#dcfce7' :
-                                                                apt.status === 'declined' ? '#fee2e2' : '#fef9c3',
-                                                            color: apt.status === 'accepted' ? '#166534' :
-                                                                apt.status === 'declined' ? '#991b1b' : '#854d0e',
-                                                            width: 'fit-content'
-                                                        }}
-                                                    >
-                                                        {apt.status.toUpperCase()}
-                                                    </span>
-                                                    {apt.status === 'accepted' && (
-                                                        <button
-                                                            onClick={() => router.push("/dashboard/patient/video-call")}
+                        {loading ? (
+                            <div style={{ padding: '40px', textAlign: 'center' }}>Loading appointments...</div>
+                        ) : appointments.length === 0 ? (
+                            <div style={{ padding: '40px', textAlign: 'center' }}>You have no appointment requests.</div>
+                        ) : (
+                            <div className={styles.tableContainer}>
+                                <table className={styles.table}>
+                                    <thead>
+                                        <tr>
+                                            <th>DOCTOR</th>
+                                            <th>DATE & TIME</th>
+                                            <th>STATUS</th>
+                                            <th>NOTES</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {appointments.map((apt) => (
+                                            <tr key={apt.id}>
+                                                <td>
+                                                    {apt.doctor_name ||
+                                                        (apt.doctor && (apt.doctor.full_name || `Dr. ${apt.doctor.first_name} ${apt.doctor.last_name}`)) ||
+                                                        doctorsMap[apt.doctor_id] ||
+                                                        "Unknown Doctor"}
+                                                </td>
+                                                <td>{new Date(apt.requested_date).toLocaleString()}</td>
+                                                <td>
+                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                                        <span
                                                             style={{
-                                                                display: "flex",
-                                                                alignItems: "center",
-                                                                justifyContent: "center",
-                                                                padding: "6px 12px",
-                                                                background: "#3b82f6",
-                                                                color: "white",
-                                                                border: "none",
-                                                                borderRadius: "6px",
-                                                                fontSize: "12px",
-                                                                fontWeight: "bold",
-                                                                cursor: "pointer",
-                                                                marginTop: "4px"
+                                                                padding: '4px 8px',
+                                                                borderRadius: '4px',
+                                                                fontSize: '12px',
+                                                                fontWeight: '600',
+                                                                background: apt.status === 'accepted' ? '#dcfce7' :
+                                                                    apt.status === 'declined' ? '#fee2e2' : '#fef9c3',
+                                                                color: apt.status === 'accepted' ? '#166534' :
+                                                                    apt.status === 'declined' ? '#991b1b' : '#854d0e',
+                                                                width: 'fit-content'
                                                             }}
                                                         >
-                                                            Join Meeting
-                                                        </button>
-                                                    )}
-                                                </div>
-                                            </td>
-                                            <td style={{ fontSize: '14px', color: '#64748b' }}>
-                                                {apt.doctor_notes || apt.reason || "No notes yet"}
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
+                                                            {apt.status ? apt.status.toUpperCase() : "PENDING"}
+                                                        </span>
+                                                        {apt.status === 'accepted' && (
+                                                            <button
+                                                                onClick={() => {
+                                                                    const link = apt.meet_link || apt.join_url;
+                                                                    if (link) {
+                                                                        window.open(link, "_blank");
+                                                                    } else {
+                                                                        router.push("/dashboard/patient/video-call");
+                                                                    }
+                                                                }}
+                                                                style={{
+                                                                    display: "flex",
+                                                                    alignItems: "center",
+                                                                    justifyContent: "center",
+                                                                    padding: "6px 12px",
+                                                                    background: "#3b82f6",
+                                                                    color: "white",
+                                                                    border: "none",
+                                                                    borderRadius: "6px",
+                                                                    fontSize: "12px",
+                                                                    fontWeight: "bold",
+                                                                    cursor: "pointer",
+                                                                    marginTop: "4px"
+                                                                }}
+                                                            >
+                                                                Join Meeting
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                </td>
+                                                <td style={{ fontSize: '14px', color: '#64748b' }}>
+                                                    {apt.doctor_notes || apt.reason || "No notes yet"}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Calendar View Hidden - Backend domain missing */}
+                    {/* <CalendarView appointments={appointments} /> */}
                 </div>
             </section>
         </motion.div>

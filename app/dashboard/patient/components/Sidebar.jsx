@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import styles from "../PatientDashboard.module.css";
 import logo from "@/public/logo2.svg";
-// Icons replaced with inline SVGs as requested
 import SignoutModal from "../../../auth/components/SignoutModal";
 import { logoutUser } from "@/services/auth";
 import { useRouter } from "next/navigation";
@@ -23,13 +22,11 @@ export default function Sidebar() {
 
   const isActive = (path) => pathname === path;
 
-  // State for mobile sidebar toggle
   const [isOpen, setIsOpen] = useState(false);
 
 
   return (
     <>
-      {/* Mobile Toggle Button - Visible only on mobile */}
       {!isOpen && (
         <button
           className={styles.mobileToggleBtn}
@@ -40,7 +37,6 @@ export default function Sidebar() {
         </button>
       )}
 
-      {/* Overlay to close on click outside (optional but good UX) */}
       {isOpen && (
         <div
           className={styles.mobileOverlay}
@@ -54,7 +50,6 @@ export default function Sidebar() {
             <div className={styles.iconPlaceholder}>
               <img src={logo.src} alt="Logo" />
             </div>
-            {/* Optional: Close button inside sidebar for mobile */}
             <button
               className={styles.closeBtnHidden}
               onClick={() => setIsOpen(false)}

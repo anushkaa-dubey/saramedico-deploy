@@ -104,16 +104,16 @@ export const fetchProfile = async () => {
 
 /**
  * Update profile
- * Endpoint: PATCH /api/v1/auth/me
+ * [DISCREPANCY FIX]: PATCH /api/v1/auth/me is missing in backend
  */
-export const updateProfile = async (updates) => {
-    const response = await fetch(`${API_BASE_URL}/auth/me`, {
-        method: "PATCH",
-        headers: getAuthHeaders(),
-        body: JSON.stringify(updates),
-    });
-    return handleResponse(response);
-};
+// export const updateProfile = async (updates) => {
+//     const response = await fetch(`${API_BASE_URL}/auth/me`, {
+//         method: "PATCH",
+//         headers: getAuthHeaders(),
+//         body: JSON.stringify(updates),
+//     });
+//     return handleResponse(response);
+// };
 
 /**
  * =========================

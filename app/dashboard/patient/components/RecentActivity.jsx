@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
 import { fetchAppointments } from "@/services/patient";
 import styles from "../PatientDashboard.module.css";
+import { useRouter } from "next/navigation";
 
 export default function RecentActivity() {
+  const router = useRouter();
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -27,13 +29,15 @@ export default function RecentActivity() {
     <div className={styles.card}>
       <div className={styles.cardTitle}>
         <span>Recent Activity</span>
-        <span style={{ color: "#2563eb", fontSize: "12px", cursor: "pointer" }}>
+        <span
+          style={{ color: "#2563eb", fontSize: "12px", cursor: "pointer" }}
+          onClick={() => router.push("/dashboard/patient/appointments")}
+        >
           View All
         </span>
       </div>
 
       <div className={styles.activityTableContainer}>
-        {/* Header Row */}
         <div className={styles.tableHeaderRow}>
           <div>DOCTOR</div>
           <div>ACTIVITY</div>
@@ -50,7 +54,7 @@ export default function RecentActivity() {
                 <td>
                   <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                     <div className={styles.avatarSmall}></div>
-                    <span>{item.doctor_name || "Dr. Sara"}</span>
+                    <span>{item.doctor_name || item.doctor?.full_name || "Doctor"}</span>
                   </div>
                 </td>
                 <td>{item.reason || "Consultation"}</td>
@@ -73,7 +77,7 @@ export default function RecentActivity() {
             <div className={styles.doctorInfo}>
               <div className={styles.avatarCircle}></div>
               <div>
-                <span className={styles.docName}>{item.doctor_name || "Dr. Sara"}</span>
+                <span className={styles.docName}>{item.doctor_name || item.doctor?.full_name || "Doctor"}</span>
                 <span className={styles.visitMeta}>{new Date(item.requested_date).toLocaleDateString()} • {item.reason}</span>
               </div>
             </div>

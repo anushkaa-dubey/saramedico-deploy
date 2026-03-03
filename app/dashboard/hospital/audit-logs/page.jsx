@@ -1,92 +1,131 @@
 "use client";
+import { useState, useEffect } from "react";
 import Topbar from "../components/Topbar";
 import styles from "../HospitalDashboard.module.css";
 import { motion } from "framer-motion";
+import { fetchAuditLogs } from "@/services/hospital";
 
 export default function AuditLogsPage() {
+    const [logs, setLogs] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
+
+    const loadLogs = async () => {
+        setLoading(true);
+        setError("");
+        try {
+            const data = await fetchAuditLogs();
+            setLogs(data || []);
+        } catch (err) {
+            console.error("Failed to load audit logs:", err);
+            setError("Could not retrieve system logs. Please check your permissions.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        loadLogs();
+    }, []);
+
+    const getActionColor = (action = "") => {
+        const a = action.toLowerCase();
+        if (a.includes("delete") || a.includes("remove") || a.includes("error")) return "#ef4444";
+        if (a.includes("update") || a.includes("edit") || a.includes("patch")) return "#f59e0b";
+        if (a.includes("create") || a.includes("post") || a.includes("register")) return "#10b981";
+        return "#3b82f6"; // Access/View
+    };
+
     return (
         <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             style={{ display: 'flex', flexDirection: 'column', background: 'transparent', padding: 0, minHeight: '100%' }}
         >
-            <Topbar title="Audit Logs" />
+            <Topbar title="System Audit Trail" />
 
             <div className={styles.contentWrapper}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', flexWrap: 'wrap', gap: '16px' }}>
                     <div>
-                        <h1 style={{ fontSize: '24px', fontWeight: '800', color: '#0f172a', margin: 0 }}>Audit Logs</h1>
-                        <p style={{ color: '#64748b', margin: '4px 0 0 0' }}>Detailed activity logs for General Hospital enterprise network.</p>
+                        <h1 style={{ fontSize: '24px', fontWeight: '800', color: '#0f172a', margin: 0 }}>Enterprise Security Audit</h1>
+                        <p style={{ color: '#64748b', margin: '4px 0 0 0' }}>Real-time immutable activity logs for the hospital enterprise network.</p>
                     </div>
+                    <button
+                        onClick={loadLogs}
+                        disabled={loading}
+                        style={{
+                            background: '#ffffff',
+                            border: '1px solid #e2e8f0',
+                            padding: '8px 16px',
+                            borderRadius: '10px',
+                            fontSize: '13px',
+                            fontWeight: '700',
+                            color: '#1e293b',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px'
+                        }}
+                    >
+                        <svg className={loading ? styles.loadingSpinner : ""} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M23 4v6h-6"></path><path d="M1 20v-6h6"></path><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                        {loading ? "Refreshing..." : "Refresh Logs"}
+                    </button>
                 </div>
 
-                <div className={styles.dashboardGrid}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                        <div className={styles.card} style={{ padding: '0', borderRadius: '16px', border: 'none', overflow: 'hidden' }}>
-                            <div style={{ padding: '24px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
-                                <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#1e293b', margin: 0 }}>Recent Activities</h3>
-                                <button style={{ background: 'transparent', border: 'none', color: '#3b82f6', fontSize: '13px', fontWeight: '700', cursor: 'pointer' }}>View All</button>
-                            </div>
+                {error && (
+                    <div style={{ padding: '16px', background: '#fef2f2', color: '#991b1b', borderRadius: '12px', border: '1px solid #fee2e2', marginBottom: '24px', fontSize: '14px', fontWeight: '600' }}>
+                        {error}
+                    </div>
+                )}
 
-                            <table className={styles.activityTable} style={{ fontSize: '13px' }}>
-                                <thead>
-                                    <tr className={styles.activityHeader} style={{ background: '#f8fafc' }}>
-                                        <th style={{ padding: '16px 24px', color: '#94a3b8', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' }}>TIMESTAMP</th>
-                                        <th style={{ color: '#94a3b8', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' }}>USER</th>
-                                        <th style={{ color: '#94a3b8', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' }}>ACTION</th>
-                                        <th style={{ color: '#94a3b8', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' }}>DEPARTMENT</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {Array.from({ length: 8 }).map((_, i) => (
-                                        <tr key={i} className={styles.activityRow} style={{ borderBottom: '1px solid #f8fafc' }}>
-                                            <td style={{ padding: '20px 24px', color: '#64748b', fontWeight: '500' }}>TODAY, 11:42 AM</td>
-                                            <td style={{ color: '#1e293b', fontWeight: '600' }}>Dr. Rex Hex</td>
-                                            <td style={{ color: '#64748b', fontWeight: '500' }}>{i === 0 ? "PHI Record Accessed" : "Role Permission Updated"}</td>
-                                            <td style={{ color: '#64748b', fontWeight: '500' }}>Cardiology</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
+                <div className={styles.card} style={{ padding: '0', borderRadius: '16px', border: 'none', overflow: 'hidden', background: '#ffffff' }}>
+                    <div style={{ padding: '24px', borderBottom: '1px solid #f1f5f9' }}>
+                        <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#1e293b', margin: 0 }}>Access & Activity Logs</h3>
                     </div>
 
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                        <div className={styles.card} style={{ padding: '24px', borderRadius: '16px', border: 'none' }}>
-                            <div style={{ fontSize: '12px', fontWeight: '800', color: '#94a3b8', marginBottom: '16px' }}>Statistics</div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                                <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: '#eff6ff', color: '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
-                                </div>
-                                <div>
-                                    <div style={{ fontSize: '28px', fontWeight: '800', color: '#1e293b' }}>72</div>
-                                    <div style={{ fontSize: '11px', fontWeight: '700', color: '#94a3b8' }}>TOTAL STAFF MEMBERS</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className={styles.card} style={{ padding: '24px', borderRadius: '16px', border: 'none' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                                <div style={{ fontSize: '12px', fontWeight: '800', color: '#94a3b8' }}>Pending Invites</div>
-                                <button style={{ background: 'transparent', border: 'none', color: '#3b82f6', fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}>View All</button>
-                            </div>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                                {[1, 2].map(i => (
-                                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                            <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: '#f1f5f9', color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /></svg>
-                                            </div>
-                                            <div>
-                                                <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b' }}>Robert Yep</div>
-                                                <div style={{ fontSize: '11px', color: '#94a3b8' }}>robert.yep@mail.com</div>
-                                            </div>
-                                        </div>
-                                        <div style={{ fontSize: '9px', fontWeight: '800', color: '#f59e0b', background: '#fffbeb', padding: '4px 8px', borderRadius: '4px', border: '1px solid #fef3c7' }}>PENDING</div>
-                                    </div>
+                    <div style={{ overflowX: 'auto' }}>
+                        <table className={styles.activityTable} style={{ fontSize: '13px', width: '100%' }}>
+                            <thead>
+                                <tr className={styles.activityHeader} style={{ background: '#f8fafc' }}>
+                                    <th style={{ padding: '16px 24px', color: '#94a3b8', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', textAlign: 'left' }}>TIMESTAMP</th>
+                                    <th style={{ color: '#94a3b8', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', textAlign: 'left' }}>USER (ID/EMAIL)</th>
+                                    <th style={{ color: '#94a3b8', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', textAlign: 'left' }}>ACTION</th>
+                                    <th style={{ color: '#94a3b8', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', textAlign: 'left' }}>IP ORIGIN</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {loading && logs.length === 0 ? (
+                                    <tr><td colSpan="4" style={{ padding: '40px', textAlign: 'center', color: '#94a3b8' }}>Loading secure logs...</td></tr>
+                                ) : logs.length === 0 ? (
+                                    <tr><td colSpan="4" style={{ padding: '40px', textAlign: 'center', color: '#94a3b8' }}>No activity records found in the current period.</td></tr>
+                                ) : logs.map((log, i) => (
+                                    <tr key={log.id || i} className={styles.activityRow} style={{ borderBottom: '1px solid #f8fafc' }}>
+                                        <td style={{ padding: '20px 24px', color: '#64748b', fontWeight: '500' }}>
+                                            {new Date(log.timestamp).toLocaleString()}
+                                        </td>
+                                        <td style={{ color: '#1e293b', fontWeight: '700' }}>
+                                            {log.user_id || log.user_email || "System/Public"}
+                                        </td>
+                                        <td>
+                                            <span style={{
+                                                color: getActionColor(log.action),
+                                                fontWeight: '800',
+                                                fontSize: '11px',
+                                                background: `${getActionColor(log.action)}10`,
+                                                padding: '4px 10px',
+                                                borderRadius: '20px',
+                                                textTransform: 'uppercase'
+                                            }}>
+                                                {log.action}
+                                            </span>
+                                        </td>
+                                        <td style={{ color: '#64748b', fontWeight: '600', fontFamily: 'monospace' }}>
+                                            {log.metadata?.ip_address || log.ip_address || "Internal"}
+                                        </td>
+                                    </tr>
                                 ))}
-                            </div>
-                        </div>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>

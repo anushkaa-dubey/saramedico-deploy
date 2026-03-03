@@ -89,12 +89,6 @@ export default function SettingsSidebar() {
                         >
                             ←
                         </button>
-                        <button
-                            className={styles.closeBtnHidden}
-                            onClick={() => setIsOpen(false)}
-                        >
-                            ✖
-                        </button>
                     </div>
 
                     <div className={styles.navGroup}>

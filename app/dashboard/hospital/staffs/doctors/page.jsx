@@ -2,32 +2,57 @@
 import Topbar from "../../components/Topbar";
 import styles from "../../HospitalDashboard.module.css";
 import { motion } from "framer-motion";
-
-const doctors = [
-    { id: 1, name: "Dr. Sarah Smith", specialty: "Cardiology", patients: 120, status: "Active", shift: "Day" },
-    { id: 2, name: "Dr. James Wilson", specialty: "Neurology", patients: 85, status: "On Leave", shift: "Night" },
-    { id: 3, name: "Dr. Emily Chen", specialty: "Pediatrics", patients: 200, status: "Active", shift: "Day" },
-    { id: 4, name: "Dr. Michael Brown", specialty: "Orthopedics", patients: 95, status: "Active", shift: "Day" },
-    { id: 5, name: "Dr. Lisa Taylor", specialty: "Dermatology", patients: 150, status: "Active", shift: "Night" },
-];
+import { useState, useEffect } from "react";
+import { fetchDepartmentStaff, fetchOrganizationMembers } from "@/services/hospital";
 
 export default function DoctorsPage() {
+    const [doctors, setDoctors] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
+
+    useEffect(() => {
+        const load = async () => {
+            setLoading(true);
+            try {
+                const data = await fetchDepartmentStaff({ role: "doctor" });
+                if (data && data.length > 0) {
+                    setDoctors(data);
+                } else {
+                    const members = await fetchOrganizationMembers();
+                    setDoctors(members.filter(m => m.role === "doctor" || m.specialty));
+                }
+            } catch (err) {
+                console.error("Failed to load doctors:", err);
+                setError("Backend not connected — doctor list unavailable.");
+            } finally {
+                setLoading(false);
+            }
+        };
+        load();
+    }, []);
+
     return (
         <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            style={{ display: 'flex', flexDirection: 'column', background: 'transparent', padding: 0, minHeight: '100%' }}
+            style={{ display: "flex", flexDirection: "column", background: "transparent", padding: 0, minHeight: "100%" }}
         >
             <Topbar title="Doctors Management" />
 
             <div className={styles.contentWrapper}>
                 <div className={styles.card}>
                     <div className={styles.cardTitle}>
-                        <span style={{ fontSize: '18px', fontWeight: '700' }}>Doctors Directory</span>
+                        <span style={{ fontSize: "18px", fontWeight: "700" }}>Doctors Directory</span>
                         <button className={styles.primaryBtn}>+ Add New Doctor</button>
                     </div>
 
-                    <div className={styles.activityTableContainer} style={{ marginTop: '20px' }}>
+                    {error && (
+                        <div style={{ padding: "12px", background: "#fef2f2", color: "#b91c1c", borderRadius: "8px", margin: "16px 0", fontSize: "13px" }}>
+                            {error}
+                        </div>
+                    )}
+
+                    <div className={styles.activityTableContainer} style={{ marginTop: "20px" }}>
                         <div className={styles.tableScrollWrapper}>
                             <table className={styles.activityTable}>
                                 <thead>
@@ -37,23 +62,27 @@ export default function DoctorsPage() {
                                         <th>PATIENTS</th>
                                         <th>SHIFT</th>
                                         <th>STATUS</th>
-                                        <th style={{ textAlign: 'right' }}>ACTION</th>
+                                        <th style={{ textAlign: "right" }}>ACTION</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {doctors.map(doc => (
-                                        <tr key={doc.id} className={styles.activityRow}>
-                                            <td style={{ fontWeight: '700', whiteSpace: 'nowrap' }}>{doc.name}</td>
-                                            <td style={{ color: '#64748b', whiteSpace: 'nowrap' }}>{doc.specialty}</td>
-                                            <td>{doc.patients}</td>
-                                            <td>{doc.shift}</td>
+                                    {loading ? (
+                                        <tr><td colSpan="6" style={{ padding: "32px", textAlign: "center", color: "#94a3b8" }}>Loading doctors...</td></tr>
+                                    ) : doctors.length === 0 ? (
+                                        <tr><td colSpan="6" style={{ padding: "32px", textAlign: "center", color: "#94a3b8" }}>Backend not connected — no doctors found.</td></tr>
+                                    ) : doctors.map((doc, i) => (
+                                        <tr key={doc.id || i} className={styles.activityRow}>
+                                            <td style={{ fontWeight: "700", whiteSpace: "nowrap" }}>{doc.full_name || doc.name || "—"}</td>
+                                            <td style={{ color: "#64748b", whiteSpace: "nowrap" }}>{doc.specialty || doc.department || "General"}</td>
+                                            <td>{doc.patient_count ?? "—"}</td>
+                                            <td>{doc.shift || "Day"}</td>
                                             <td>
-                                                <span className={doc.status === 'Active' ? styles.statusCompleted : styles.statusReview} style={{ whiteSpace: 'nowrap' }}>
-                                                    {doc.status}
+                                                <span className={doc.is_active !== false ? styles.statusCompleted : styles.statusReview} style={{ whiteSpace: "nowrap" }}>
+                                                    {doc.status || (doc.is_active !== false ? "Active" : "Inactive")}
                                                 </span>
                                             </td>
-                                            <td style={{ textAlign: 'right' }}>
-                                                <button style={{ background: 'none', border: 'none', color: '#359aff', cursor: 'pointer', fontWeight: '700' }}>Manage</button>
+                                            <td style={{ textAlign: "right" }}>
+                                                <button style={{ background: "none", border: "none", color: "#359aff", cursor: "pointer", fontWeight: "700" }}>Manage</button>
                                             </td>
                                         </tr>
                                     ))}

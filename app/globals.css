@@ -46,7 +46,7 @@ section[id] {
 
 .auth-right {
   width: 62%;
-  background: linear-gradient(180deg, #0d1b2a, #0c1424);
+  background: linear-gradient(180deg, #f5f5f5, #e5ecfa);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -167,7 +167,6 @@ input:focus {
   display: inline-block;
 }
 
-/* 2FA / OTP Page Styles */
 .auth-2fa-container {
   min-height: 100vh;
   background: #f1f5f9;
@@ -254,25 +253,19 @@ input:focus {
     padding: 32px 24px;
   }
 
-  /* Hide the illustrative right side on mobile to focus on the task */
   .auth-right {
     display: none;
   }
 
-  /* Adjust 2FA card for small screens */
   .auth-2fa-card {
     padding: 24px 20px;
     box-shadow: none;
-    /* Cleaner on mobile */
     background: transparent;
-    /* Merge with background or keep white? generic mobile pattern often simplifies */
     background: #fff;
-    /* Keep white card for now */
   }
 
   .otp-input {
     width: 38px;
-    /* Slightly smaller OTP inputs */
     height: 38px;
   }
 }

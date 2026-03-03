@@ -1,22 +1,54 @@
 "use client";
+import { useState, useEffect } from "react";
 import Topbar from "../components/Topbar";
 import styles from "../HospitalDashboard.module.css";
 import { motion } from "framer-motion";
+import { fetchOrganizationMembers } from "@/services/hospital";
+import { fetchDoctors } from "@/services/patient";
 
 export default function DepartmentsPage() {
+    const [stats, setStats] = useState({
+        totalDepts: 14,
+        totalDoctors: 0,
+        staffMembers: 0,
+        capacity: "85%"
+    });
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const loadData = async () => {
+            try {
+                const [members, doctors] = await Promise.all([
+                    fetchOrganizationMembers(),
+                    fetchDoctors()
+                ]);
+                setStats(prev => ({
+                    ...prev,
+                    staffMembers: members.length || 0,
+                    totalDoctors: doctors.length || 0
+                }));
+            } catch (err) {
+                console.error("Failed to load department stats:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        loadData();
+    }, []);
+
     const departments = [
-        { name: "Cardiology", doctors: 12, patients: 45, employees: 30, beds: 25, color: "#3b82f6" },
-        { name: "Neurology", doctors: 8, patients: 28, employees: 22, beds: 15, color: "#8b5cf6" },
-        { name: "Pediatrics", doctors: 10, patients: 52, employees: 35, beds: 30, color: "#10b981" },
-        { name: "General Surgery", doctors: 15, patients: 60, employees: 45, beds: 40, color: "#f59e0b" },
-        { name: "Emergency", doctors: 20, patients: 85, employees: 55, beds: 50, color: "#ef4444" },
+        { name: "Cardiology", capacity: "90%", wait: "12m", status: "Active", patients: 45, color: "#3b82f6", doctors: 12, employees: 30, beds: 25 },
+        { name: "Neurology", capacity: "75%", wait: "18m", status: "Active", patients: 28, color: "#8b5cf6", doctors: 8, employees: 22, beds: 15 },
+        { name: "Pediatrics", capacity: "95%", wait: "5m", status: "Active", patients: 52, color: "#10b981", doctors: 10, employees: 35, beds: 30 },
+        { name: "Radiology", capacity: "40%", wait: "45m", status: "Delayed", patients: 15, color: "#f59e0b", doctors: 5, employees: 12, beds: 0 },
+        { name: "Emergency", capacity: "100%", wait: "2m", status: "Critical", patients: 85, color: "#ef4444", doctors: 20, employees: 55, beds: 50 },
     ];
 
     const statsGroup = [
-        { label: "Total Departments", value: "14", color: "#3b82f6" },
-        { label: "Total Doctors", value: "128", color: "#10b981" },
-        { label: "Staff Members", value: "342", color: "#8b5cf6" },
-        { label: "Patient Capacity", value: "85%", color: "#f59e0b" },
+        { label: "Total Departments", value: stats.totalDepts, color: "#3b82f6" },
+        { label: "Total Doctors", value: stats.totalDoctors || (loading ? "..." : "Backend Error"), color: "#10b981" },
+        { label: "Staff Members", value: stats.staffMembers || (loading ? "..." : "Backend Error"), color: "#8b5cf6" },
+        { label: "Patient Capacity", value: stats.capacity, color: "#f59e0b" },
     ];
 
     return (
@@ -57,8 +89,8 @@ export default function DepartmentsPage() {
                                     <td style={{ fontWeight: '500', color: '#64748b', whiteSpace: 'nowrap' }}>{dept.wait}</td>
                                     <td>
                                         <span style={{
-                                            background: i === 3 ? '#fff1f2' : '#ecfdf5',
-                                            color: i === 3 ? '#e11d48' : '#059669',
+                                            background: dept.status === 'Delayed' || dept.status === 'Critical' ? '#fff1f2' : '#ecfdf5',
+                                            color: dept.status === 'Delayed' || dept.status === 'Critical' ? '#e11d48' : '#059669',
                                             padding: '4px 10px',
                                             borderRadius: '6px',
                                             fontSize: '11px',

@@ -35,7 +35,7 @@ graph TB
     Create_Consult["4. POST /consultations<br/>Request: ConsultationCreate<br/>📤 Authorization: Bearer token<br/>📤 patientId (from step 3)<br/>📤 doctorId (from doctor user)<br/>📤 scheduledAt, duration<br/>📤 consultationType, meetingLink<br/>📤 aiSummaryEnabled (optional)<br/>📥 ConsultationResponse"]
     Create_Consult --> |consultation.id ✓<br/>meetingId ✓<br/>status=scheduled|Consultation_Record
     
-    Consultation_Record{{"📋 Consultation Created<br/>id (UUID)<br/>patientId<br/>doctorId<br/>meetingId (if Zoom)<br/>status: scheduled<br/>aiStatus: pending"}}
+    Consultation_Record{{"📋 Consultation Created<br/>id (UUID)<br/>patientId<br/>doctorId<br/>meetingId (if Meet)<br/>status: scheduled<br/>aiStatus: pending"}}
     
     %% Phase 4: Consultation Operations
     Consultation_Record --> |consultation_id|Consult_Ops
@@ -154,7 +154,7 @@ stateDiagram-v2
   "scheduledAt": "ISO8601",      // Required: future datetime
   "duration": 30,                // Required: minutes
   "consultationType": "video",   // Required: "video", "audio", "in_person"
-  "meetingLink": "https://...",  // Optional: auto-generated for Zoom
+  "meetingLink": "https://...",  // Optional: auto-generated for Google Meet
   "notes": "Initial notes",      // Optional
   "aiSummaryEnabled": true       // Optional: default false
 }
@@ -180,8 +180,8 @@ stateDiagram-v2
   "duration": 30,
   "consultationType": "video",
   "status": "scheduled",         // scheduled, in_progress, completed, cancelled, rescheduled
-  "meetingId": "zoom-meeting-id",
-  "meetingLink": "https://zoom.us/...",
+  "meetingId": "meet-meeting-id",
+  "meetingLink": "https://meet.google.com/...",
   "notes": "Patient history reviewed",
   "actualStartTime": "2024-01-15T10:05:00Z",
   "actualEndTime": "2024-01-15T10:35:00Z",
@@ -224,9 +224,9 @@ stateDiagram-v2
    - `completed` → Summary available in `aiSummary` field
    - `failed` → Processing error
 
-### Meeting Integration (Zoom)
+### Meeting Integration (Google Meet)
 - If `consultationType: "video"` and no `meetingLink` provided:
-  - Backend auto-generates Zoom meeting
+  - Backend auto-generates Google Meet link
   - Returns `meetingId` and `meetingLink`
 - For in-person consultations, `meetingLink` is null
 
@@ -291,7 +291,7 @@ curl -X POST http://localhost:8000/api/v1/consultations \
     "notes": "Initial consultation for cardiac checkup",
     "aiSummaryEnabled": true
   }'
-# Response: {"id": "consult-uuid", "meetingLink": "https://zoom.us/...", ...}
+# Response: {"id": "consult-uuid", "meetingLink": "https://meet.google.com/...", ...}
 # Save: CONSULT_ID="consult-uuid"
 
 # Step 5: Get Consultation Details
@@ -392,6 +392,6 @@ Can create/view consultations
 3. **Set actualEndTime** when completing
 4. **Enable AI summary** for automated documentation
 5. **Use query filters** to avoid fetching all consultations
-6. **Handle Zoom integration** - check meetingLink before launching
+6. **Handle Google Meet integration** - check meetingLink before launching
 7. **Implement optimistic locking** to prevent concurrent updates
 8. **Log all status changes** for audit trail

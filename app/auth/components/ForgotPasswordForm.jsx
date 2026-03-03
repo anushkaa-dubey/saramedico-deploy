@@ -18,8 +18,10 @@ export default function ForgotPasswordForm() {
         setError("");
 
         try {
-            await forgotPassword({ email });
-            setMessage("If an account exists, a reset link has been sent.");
+            // [DISCREPANCY FIX]: POST /auth/forgot-password is missing in backend
+            // await forgotPassword({ email });
+            setError("Password reset is currently disabled. Please contact support.");
+            // setMessage("If an account exists, a reset link has been sent.");
         } catch (err) {
             console.error(err);
             setError(err.message || "Something went wrong. Please try again.");

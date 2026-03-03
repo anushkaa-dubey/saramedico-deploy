@@ -12,19 +12,20 @@ export default function CardiologyDepartmentPage() {
         transcriptionQueueStatus: "8",
         averageNoteCompletionTime: "4.2 hrs"
     });
-    const [queueData, setQueueData] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const [staffList, setStaffList] = useState([]);
 
     useEffect(() => {
         const loadPageData = async () => {
             setIsLoading(true);
             try {
-                const [stats, queue] = await Promise.all([
+                const [stats, queue, doctors] = await Promise.all([
                     fetchHospitalStats(),
-                    fetchReviewQueue({ limit: 5 })
+                    fetchReviewQueue({ limit: 5 }),
+                    fetchDoctors()
                 ]);
                 setRealStats(stats);
                 setQueueData(queue);
+                setStaffList(doctors.slice(0, 5));
             } catch (err) {
                 console.error("Failed to load cardiology data:", err);
             } finally {
@@ -47,12 +48,10 @@ export default function CardiologyDepartmentPage() {
         {
             label: "TRANSCRIPTION QUEUE STATUS",
             value: realStats.transcriptionQueueStatus,
-            subtext: "Processing",
             badge: "Real-time",
             icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 20v-6M9 20v-4M15 20v-8M18 20v-10M6 20v-2"></path></svg>,
             color: "#94a3b8",
             badgeColor: "#10b981",
-            isWave: true
         },
         {
             label: "AVG NOTE COMPLETION TIME",
@@ -64,8 +63,8 @@ export default function CardiologyDepartmentPage() {
         },
         {
             label: "TOTAL DOCTORS ONLINE",
-            value: "32",
-            badge: "+2 active",
+            value: staffList.length || stats[0]?.value || "...",
+            badge: "Active",
             icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>,
             color: "#94a3b8",
             badgeColor: "#10b981"
@@ -144,9 +143,6 @@ export default function CardiologyDepartmentPage() {
                                 <h1 style={{ fontSize: '24px', fontWeight: '800', color: '#0f172a', margin: 0 }}>Approval Queue</h1>
                                 <p style={{ color: '#64748b', margin: '4px 0 0 0' }}>Review clinical sessions for AI documentation.</p>
                             </div>
-                            <div className={styles.pageHeaderActions} style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                                <button className={styles.primaryBtn} style={{ background: '#3b82f6', color: 'white', border: 'none', padding: '0 24px', fontWeight: '700' }}>Schedule</button>
-                            </div>
                         </div>
 
                         <div className={styles.overviewSection} style={{ marginBottom: '32px' }}>
@@ -169,36 +165,28 @@ export default function CardiologyDepartmentPage() {
                         <div className={styles.card}>
                             <div className={styles.cardTitle}>{selectedDayEvents ? `Events for ${currentMonthName} ${selectedDayEvents[0]?.start_time?.split('T')[0]?.split('-')[2] || ''}` : 'Review Queue'}</div>
                             {selectedDayEvents && <div onClick={() => setSelectedDayEvents(null)} style={{ cursor: 'pointer', fontSize: '12px', color: '#3b82f6', marginBottom: '8px' }}>← Back to Queue</div>}
-                            <div className={styles.filterButtonRow} style={{ display: 'flex', gap: '8px', marginTop: '16px', marginBottom: '16px' }}>
-                                <div style={{ flex: 1, position: 'relative' }}>
-                                    <input placeholder="Search..." style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid #f1f5f9', fontSize: '13px' }} />
-                                </div>
-                                <button className={styles.outlineBtn} style={{ height: '36px' }}>Filters</button>
-                            </div>
 
                             <div className={styles.tableScrollWrapper}>
                                 <table className={styles.activityTable}>
                                     <thead>
                                         <tr className={styles.activityHeader}>
                                             <th style={{ whiteSpace: 'nowrap' }}>PATIENT</th>
-                                            <th style={{ whiteSpace: 'nowrap' }}>SESSION ID</th>
-                                            <th style={{ whiteSpace: 'nowrap' }}>URGENCY</th>
-                                            <th style={{ whiteSpace: 'nowrap' }}>DATE/TIME</th>
+                                            <th style={{ whiteSpace: 'nowrap' }}>TIMESTAMP</th>
                                             <th style={{ whiteSpace: 'nowrap' }}>PROVIDER</th>
                                             <th style={{ whiteSpace: 'nowrap' }}>STATUS</th>
                                             <th style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>ACTIONS</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {(selectedDayEvents || queueData).map((row, i) => (
+                                        {isLoading ? (
+                                            <tr><td colSpan="5" style={{ padding: '30px', textAlign: 'center', color: '#94a3b8' }}>Loading queue...</td></tr>
+                                        ) : (selectedDayEvents || queueData).length === 0 ? (
+                                            <tr><td colSpan="5" style={{ padding: '30px', textAlign: 'center', color: '#94a3b8' }}>No sessions available.</td></tr>
+                                        ) : (selectedDayEvents || queueData).map((row, i) => (
                                             <tr key={i} className={styles.activityRow}>
                                                 <td style={{ whiteSpace: 'nowrap' }}>
                                                     <div style={{ fontWeight: '800', color: '#1e293b' }}>{row.patient || row.metadata?.patient_name || row.title}</div>
                                                     <div style={{ fontSize: '11px', color: '#94a3b8' }}>{row.mrn || row.metadata?.patient_mrn || "#MRN-1022"}</div>
-                                                </td>
-                                                <td style={{ fontSize: '12px', fontWeight: '500', color: '#64748b', whiteSpace: 'nowrap' }}>{row.id?.substring(0, 8) || "#SESS-8842"}</td>
-                                                <td style={{ whiteSpace: 'nowrap' }}>
-                                                    <span style={{ fontSize: '10px', fontWeight: '800', color: row.urgencyColor || '#3b82f6', background: `${row.urgencyColor || '#3b82f6'}15`, padding: '2px 8px', borderRadius: '4px' }}>{row.urgency || 'Normal'}</span>
                                                 </td>
                                                 <td style={{ whiteSpace: 'nowrap' }}>
                                                     <div style={{ fontSize: '13px', fontWeight: '700', color: '#475569' }}>{row.time || (row.start_time ? new Date(row.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '09:41 AM')}</div>
@@ -206,14 +194,14 @@ export default function CardiologyDepartmentPage() {
                                                 </td>
                                                 <td style={{ whiteSpace: 'nowrap' }}>
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                        <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: '700', color: '#64748b' }}>{(row.prov || row.metadata?.doctor_name || 'S')[0]}</div>
-                                                        <span style={{ fontSize: '13px', fontWeight: '600', color: '#475569' }}>{row.prov || row.metadata?.doctor_name || 'Dr. Sarah Wilson'}</span>
+                                                        <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: '700', color: '#64748b' }}>{(row.prov || row.provider || row.metadata?.doctor_name || 'S')[0]}</div>
+                                                        <span style={{ fontSize: '13px', fontWeight: '600', color: '#475569' }}>{row.prov || row.provider || row.metadata?.doctor_name || 'Staff Member'}</span>
                                                     </div>
                                                 </td>
                                                 <td style={{ whiteSpace: 'nowrap' }}>
-                                                    <span style={{ color: row.color || '#ef4444', background: `${row.color || '#ef4444'}15`, padding: '4px 12px', borderRadius: '20px', fontWeight: '700', fontSize: '11px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                                                        <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: row.color || '#ef4444' }} />
-                                                        {row.status || row.metadata?.appointment_status || 'Needs Review'}
+                                                    <span style={{ color: row.color || '#3b82f6', background: `${row.color || '#3b82f6'}15`, padding: '4px 12px', borderRadius: '20px', fontWeight: '700', fontSize: '11px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+                                                        <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: row.color || '#3b82f6' }} />
+                                                        {(row.status || row.metadata?.appointment_status || 'Needs Review').toUpperCase()}
                                                     </span>
                                                 </td>
                                                 <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
@@ -259,30 +247,16 @@ export default function CardiologyDepartmentPage() {
                         </div>
 
                         <div className={styles.card} style={{ marginBottom: '24px' }}>
-                            <div className={styles.cardTitle}>On-Duty Staff</div>
+                            <div className={styles.cardTitle}>Department Staff</div>
                             <div style={{ marginTop: '16px' }}>
-                                {[
-                                    { name: "Dr. Sarah Wilson", status: "Active", color: "#10b981" },
-                                    { name: "Dr. Michael Chen", status: "Away", color: "#f59e0b" }
-                                ].map((s, i) => (
-                                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', borderBottom: i === 1 ? 'none' : '1px solid #f1f5f9' }}>
-                                        <div style={{ fontSize: '13px', fontWeight: '600' }}>{s.name}</div>
-                                        <div style={{ fontSize: '10px', color: s.color, fontWeight: '800' }}>{s.status}</div>
+                                {staffList.length === 0 ? (
+                                    <div style={{ fontSize: '12px', color: '#94a3b8' }}>No staff listed for this dept.</div>
+                                ) : staffList.map((s, i) => (
+                                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', borderBottom: i === staffList.length - 1 ? 'none' : '1px solid #f1f5f9' }}>
+                                        <div style={{ fontSize: '13px', fontWeight: '600' }}>{s.full_name}</div>
+                                        <div style={{ fontSize: '10px', color: '#10b981', fontWeight: '800' }}>ACTIVE</div>
                                     </div>
                                 ))}
-                            </div>
-                        </div>
-
-                        <div className={styles.card}>
-                            <div className={styles.cardTitle}>Ward Capacity</div>
-                            <div style={{ marginTop: '16px' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                                    <span style={{ fontSize: '12px', fontWeight: '700' }}>ICU Capacity</span>
-                                    <span style={{ fontSize: '12px', fontWeight: '700', color: '#ef4444' }}>92%</span>
-                                </div>
-                                <div style={{ height: '6px', background: '#f1f5f9', borderRadius: '3px' }}>
-                                    <div style={{ width: '92%', height: '100%', background: '#ef4444', borderRadius: '3px' }} />
-                                </div>
                             </div>
                         </div>
                     </div>

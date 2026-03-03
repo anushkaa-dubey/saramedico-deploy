@@ -88,6 +88,29 @@ export default function Patients() {
         }
     };
 
+    const [visits, setVisits] = useState([]);
+    const [loadingVisits, setLoadingVisits] = useState(false);
+
+    useEffect(() => {
+        if (selectedId) {
+            loadVisits(selectedId);
+        }
+    }, [selectedId]);
+
+    const loadVisits = async (pId) => {
+        setLoadingVisits(true);
+        try {
+            const { fetchConsultations } = await import("@/services/consultation");
+            const data = await fetchConsultations({ patient_id: pId });
+            setVisits(data.consultations || data.items || (Array.isArray(data) ? data : []));
+        } catch (err) {
+            console.error("Failed to fetch visits:", err);
+            setVisits([]);
+        } finally {
+            setLoadingVisits(false);
+        }
+    };
+
     const [searchTerm, setSearchTerm] = useState("");
 
     const filteredPatients = patientsList.filter(p =>
@@ -144,9 +167,9 @@ export default function Patients() {
                     </div>
 
                     {loading ? (
-                        <div style={{ padding: '20px', textAlign: 'center' }}>Loading patients...</div>
+                        <div style={{ padding: '20px', textAlign: 'center', color: '#64748b' }}>Loading patients...</div>
                     ) : filteredPatients.length === 0 ? (
-                        <div style={{ padding: '20px', textAlign: 'center' }}>No patients found matching "{searchTerm}"</div>
+                        <div style={{ padding: '20px', textAlign: 'center', color: '#64748b' }}>Backend not connected — no patients found.</div>
                     ) : (
                         filteredPatients.map((patient) => (
                             <div
@@ -227,38 +250,32 @@ export default function Patients() {
                                 <div>
                                     <div className={styles.sectionHeader}>
                                         <h3 className={styles.sectionTitle}>Recent Visits</h3>
-                                        {/* <Link href="/dashboard/doctor/live-consult">
-                                            <button className={styles.newVisitBtn}>+ New Visit</button>
-                                        </Link> */}
                                     </div>
 
                                     <div className={styles.visitList}>
-                                        <div className={styles.visitCard}>
-                                            <div className={styles.visitDateRow}>
-                                                <span className={styles.visitDate}>Oct 24, 2024</span>
-                                                <span className={styles.visitArrow}>›</span>
-                                            </div>
-                                            <span className={styles.visitType}>FOLLOW UP</span>
-                                            <p className={styles.visitNotes}>
-                                                Patient reports improvement in daily migraines. Medication adherence is good. Discussed side effects...
-                                            </p>
-                                            <Link href="/dashboard/doctor/patients/soap" style={{ textDecoration: 'none' }}>
-                                                <button className={styles.soapBtn}>
-                                                    View SOAP Note
-                                                </button>
-                                            </Link>
-                                        </div>
-
-                                        <div className={styles.visitCard}>
-                                            <div className={styles.visitDateRow}>
-                                                <span className={styles.visitDate}>Oct 12, 2024</span>
-                                                <span className={styles.visitArrow}>›</span>
-                                            </div>
-                                            <span className={styles.visitType}>FOLLOW UP</span>
-                                            <p className={styles.visitNotes}>
-                                                Patient reports improvement in daily migraines. Medication adherence is good. Discussed side effects...
-                                            </p>
-                                        </div>
+                                        {loadingVisits ? (
+                                            <div style={{ padding: '20px', textAlign: 'center', color: '#64748b' }}>Loading visits...</div>
+                                        ) : visits.length === 0 ? (
+                                            <div style={{ padding: '20px', textAlign: 'center', color: '#64748b' }}>Backend not connected — no clinical records found.</div>
+                                        ) : (
+                                            visits.map((visit, idx) => (
+                                                <div key={visit.id || idx} className={styles.visitCard}>
+                                                    <div className={styles.visitDateRow}>
+                                                        <span className={styles.visitDate}>{new Date(visit.scheduledAt || visit.date).toLocaleDateString()}</span>
+                                                        <span className={styles.visitArrow}>›</span>
+                                                    </div>
+                                                    <span className={styles.visitType}>{visit.visit_state || "CONSULTATION"}</span>
+                                                    <p className={styles.visitNotes}>
+                                                        {visit.summary || visit.reason || "Patient encounter session recorded and processed."}
+                                                    </p>
+                                                    <Link href={`/dashboard/doctor/patients/soap?id=${visit.id}`} style={{ textDecoration: 'none' }}>
+                                                        <button className={styles.soapBtn}>
+                                                            View SOAP Note
+                                                        </button>
+                                                    </Link>
+                                                </div>
+                                            ))
+                                        )}
                                     </div>
                                 </div>
                             ) : activeTab === 'documents' ? (

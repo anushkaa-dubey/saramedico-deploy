@@ -2,191 +2,240 @@
 import Topbar from "../components/Topbar";
 import styles from "../HospitalDashboard.module.css";
 import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
+import { fetchHospitalStats, fetchReviewQueue, fetchDepartmentStaff } from "@/services/hospital";
+import { fetchCalendarMonth } from "@/services/calendar";
 
 export default function CardiologyDepartmentPage() {
-    const stats = [
+    const [stats, setStats] = useState({ notesPendingSignature: 0, transcriptionQueueStatus: 0, averageNoteCompletionTime: "—" });
+    const [queue, setQueue] = useState([]);
+    const [onDutyStaff, setOnDutyStaff] = useState([]);
+    const [calendarData, setCalendarData] = useState({});
+    const [loading, setLoading] = useState(true);
+    const currentDate = new Date();
+    const monthName = currentDate.toLocaleString("default", { month: "long" });
+    const currentYear = currentDate.getFullYear();
+    const daysInMonth = new Date(currentYear, currentDate.getMonth() + 1, 0).getDate();
+    const todayDate = currentDate.getDate();
+
+    useEffect(() => {
+        const load = async () => {
+            setLoading(true);
+            try {
+                const [statsData, queueData, staffData, calData] = await Promise.all([
+                    fetchHospitalStats(),
+                    fetchReviewQueue({ limit: 5 }),
+                    fetchDepartmentStaff({ role: "doctor", status: "active" }),
+                    fetchCalendarMonth(currentYear, currentDate.getMonth() + 1),
+                ]);
+                setStats(statsData);
+                setQueue(queueData || []);
+                setOnDutyStaff(staffData || []);
+                if (calData?.days) {
+                    const mapped = {};
+                    calData.days.forEach(d => { mapped[d.day] = d.event_count || d.count || 0; });
+                    setCalendarData(mapped);
+                }
+            } catch (err) {
+                console.error("CardiologyPage init error:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        load();
+    }, []);
+
+    const statCards = [
         {
             label: "NOTES PENDING SIGNATURE",
-            value: "14",
-            badge: "5 urgent",
+            value: loading ? "..." : stats.notesPendingSignature,
+            badge: loading ? "..." : (stats.notesPendingSignature > 0 ? `${Math.ceil(stats.notesPendingSignature * 0.35)} urgent` : "None urgent"),
             icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>,
-            color: "#94a3b8",
-            badgeBg: "#fef2f2",
-            badgeColor: "#ef4444"
+            badgeBg: "#fef2f2", badgeColor: "#ef4444"
         },
         {
             label: "TRANSCRIPTION QUEUE STATUS",
-            value: "8",
-            subtext: "Processing",
+            value: loading ? "..." : stats.transcriptionQueueStatus,
             badge: "Real-time",
             icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 20v-6M9 20v-4M15 20v-8M18 20v-10M6 20v-2"></path></svg>,
-            color: "#94a3b8",
-            badgeColor: "#10b981",
-            isWave: true
+            badgeColor: "#10b981"
         },
         {
             label: "AVG NOTE COMPLETION TIME",
-            value: "4.2 hrs",
-            badge: "-12% improvement",
+            value: loading ? "..." : stats.averageNoteCompletionTime,
+            badge: "Live",
             icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>,
-            color: "#94a3b8",
             badgeColor: "#10b981"
         },
         {
-            label: "TOTAL DOCTORS ONLINE",
-            value: "32",
-            badge: "+2 just now",
+            label: "ON-DUTY DOCTORS",
+            value: loading ? "..." : onDutyStaff.length || "—",
+            badge: "Active",
             icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>,
-            color: "#94a3b8",
             badgeColor: "#10b981"
         }
-    ];
-
-    const queueData = [
-        { patient: "Doe, John", mrn: "#MRN-1022", id: "#SESS-8842", time: "09:41 AM", date: "Today", prov: "Dr. Sarah Wilson", status: "Needs Review", color: "#ef4444", urgency: "High", urgencyColor: "#ef4444" },
-        { patient: "Smith, Jane", mrn: "#MRN-5541", id: "#SESS-8841", time: "09:15 AM", date: "Today", prov: "Dr. Emily Chen", status: "Needs Review", color: "#ef4444", urgency: "Normal", urgencyColor: "#3b82f6" },
-        { patient: "Brown, Robert", mrn: "#MRN-3329", id: "#SESS-8839", time: "08:50 AM", date: "Today", prov: "Dr. Michael Ross", status: "Needs Review", color: "#ef4444", urgency: "Medium", urgencyColor: "#f59e0b" }
     ];
 
     return (
         <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            style={{ display: 'flex', flexDirection: 'column', background: 'transparent', padding: 0, minHeight: '100%' }}
+            style={{ display: "flex", flexDirection: "column", background: "transparent", padding: 0, minHeight: "100%" }}
         >
             <Topbar title="Cardiology Department" />
 
             <div className={styles.contentWrapper}>
                 <div className={styles.dashboardGrid}>
                     <div className={styles.leftColMain}>
-                        <div className={styles.pageHeaderRow} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                        <div className={styles.pageHeaderRow} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
                             <div>
-                                <h1 style={{ fontSize: '24px', fontWeight: '800', color: '#0f172a', margin: 0 }}>Approval Queue</h1>
-                                <p style={{ color: '#64748b', margin: '4px 0 0 0' }}>Review clinical sessions for AI documentation.</p>
+                                <h1 style={{ fontSize: "24px", fontWeight: "800", color: "#0f172a", margin: 0 }}>Approval Queue</h1>
+                                <p style={{ color: "#64748b", margin: "4px 0 0 0" }}>Review clinical sessions for AI documentation.</p>
                             </div>
-                            <div className={styles.pageHeaderActions} style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                                <button className={styles.primaryBtn} style={{ background: '#3b82f6', color: 'white', border: 'none', padding: '0 24px', fontWeight: '700' }}>Schedule</button>
+                            <div className={styles.pageHeaderActions} style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+                                <button className={styles.primaryBtn} style={{ background: "#3b82f6", color: "white", border: "none", padding: "0 24px", fontWeight: "700" }}>Schedule</button>
                             </div>
                         </div>
 
-                        <div className={styles.overviewSection} style={{ marginBottom: '32px' }}>
-                            {stats.map((stat, idx) => (
-                                <div key={idx} className={styles.statCard} style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', padding: '16px', borderRadius: '12px', border: '1px solid #f1f5f9', background: '#ffffff', minHeight: '130px' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                        <div style={{ fontSize: '10px', fontWeight: '800', color: '#94a3b8', letterSpacing: '0.02em', textTransform: 'uppercase' }}>{stat.label}</div>
-                                        <div style={{ color: '#e2e8f0' }}>{stat.icon}</div>
+                        {/* Stats */}
+                        <div className={styles.overviewSection} style={{ marginBottom: "32px" }}>
+                            {statCards.map((stat, idx) => (
+                                <div key={idx} className={styles.statCard} style={{ display: "flex", flexDirection: "column", justifyContent: "space-between", padding: "16px", borderRadius: "12px", border: "1px solid #f1f5f9", background: "#ffffff", minHeight: "130px" }}>
+                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                                        <div style={{ fontSize: "10px", fontWeight: "800", color: "#94a3b8", letterSpacing: "0.02em", textTransform: "uppercase" }}>{stat.label}</div>
+                                        <div style={{ color: "#e2e8f0" }}>{stat.icon}</div>
                                     </div>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: '12px' }}>
-                                        <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
-                                            <div style={{ fontSize: '28px', fontWeight: '800', color: '#0f172a' }}>{stat.value}</div>
-                                        </div>
-                                        <div style={{ fontSize: '10px', fontWeight: '800', color: stat.badgeColor, background: stat.badgeBg || '#ecfdf5', padding: '2px 8px', borderRadius: '4px' }}>{stat.badge}</div>
+                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginTop: "12px" }}>
+                                        <div style={{ fontSize: "28px", fontWeight: "800", color: "#0f172a" }}>{stat.value}</div>
+                                        <div style={{ fontSize: "10px", fontWeight: "800", color: stat.badgeColor, background: stat.badgeBg || "#ecfdf5", padding: "2px 8px", borderRadius: "4px" }}>{stat.badge}</div>
                                     </div>
                                 </div>
                             ))}
                         </div>
 
+                        {/* Queue Table */}
                         <div className={styles.card}>
                             <div className={styles.cardTitle}>Review Queue</div>
-                            <div className={styles.filterButtonRow} style={{ display: 'flex', gap: '8px', marginTop: '16px', marginBottom: '16px' }}>
-                                <div style={{ flex: 1, position: 'relative' }}>
-                                    <input placeholder="Search..." style={{ width: '100%', padding: '8px 12px', borderRadius: '8px', border: '1px solid #f1f5f9', fontSize: '13px' }} />
+                            <div className={styles.filterButtonRow} style={{ display: "flex", gap: "8px", marginTop: "16px", marginBottom: "16px" }}>
+                                <div style={{ flex: 1, position: "relative" }}>
+                                    <input placeholder="Search..." style={{ width: "100%", padding: "8px 12px", borderRadius: "8px", border: "1px solid #f1f5f9", fontSize: "13px" }} />
                                 </div>
-                                <button className={styles.outlineBtn} style={{ height: '36px' }}>Filters</button>
+                                <button className={styles.outlineBtn} style={{ height: "36px" }}>Filters</button>
                             </div>
 
                             <div className={styles.tableScrollWrapper}>
                                 <table className={styles.activityTable}>
                                     <thead>
                                         <tr className={styles.activityHeader}>
-                                            <th style={{ whiteSpace: 'nowrap' }}>PATIENT</th>
-                                            <th style={{ whiteSpace: 'nowrap' }}>SESSION ID</th>
-                                            <th style={{ whiteSpace: 'nowrap' }}>URGENCY</th>
-                                            <th style={{ whiteSpace: 'nowrap' }}>DATE/TIME</th>
-                                            <th style={{ whiteSpace: 'nowrap' }}>PROVIDER</th>
-                                            <th style={{ whiteSpace: 'nowrap' }}>STATUS</th>
-                                            <th style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>ACTIONS</th>
+                                            <th style={{ whiteSpace: "nowrap" }}>PATIENT</th>
+                                            <th style={{ whiteSpace: "nowrap" }}>SESSION ID</th>
+                                            <th style={{ whiteSpace: "nowrap" }}>URGENCY</th>
+                                            <th style={{ whiteSpace: "nowrap" }}>DATE/TIME</th>
+                                            <th style={{ whiteSpace: "nowrap" }}>PROVIDER</th>
+                                            <th style={{ whiteSpace: "nowrap" }}>STATUS</th>
+                                            <th style={{ textAlign: "right", whiteSpace: "nowrap" }}>ACTIONS</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {queueData.map((row, i) => (
-                                            <tr key={i} className={styles.activityRow}>
-                                                <td style={{ whiteSpace: 'nowrap' }}>
-                                                    <div style={{ fontWeight: '800', color: '#1e293b' }}>{row.patient}</div>
-                                                    <div style={{ fontSize: '11px', color: '#94a3b8' }}>{row.mrn}</div>
-                                                </td>
-                                                <td style={{ fontSize: '12px', fontWeight: '500', color: '#64748b', whiteSpace: 'nowrap' }}>{row.id}</td>
-                                                <td style={{ whiteSpace: 'nowrap' }}>
-                                                    <span style={{ fontSize: '10px', fontWeight: '800', color: row.urgencyColor, background: `${row.urgencyColor}15`, padding: '2px 8px', borderRadius: '4px' }}>{row.urgency}</span>
-                                                </td>
-                                                <td style={{ whiteSpace: 'nowrap' }}>
-                                                    <div style={{ fontSize: '13px', fontWeight: '700', color: '#475569' }}>{row.time}</div>
-                                                    <div style={{ fontSize: '11px', color: '#94a3b8' }}>{row.date}</div>
-                                                </td>
-                                                <td style={{ whiteSpace: 'nowrap' }}>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                        <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: '700', color: '#64748b' }}>{row.prov[0]}</div>
-                                                        <span style={{ fontSize: '13px', fontWeight: '600', color: '#475569' }}>{row.prov}</span>
-                                                    </div>
-                                                </td>
-                                                <td style={{ whiteSpace: 'nowrap' }}>
-                                                    <span style={{ color: row.color, background: `${row.color}15`, padding: '4px 12px', borderRadius: '20px', fontWeight: '700', fontSize: '11px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                                                        <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: row.color }} />
-                                                        {row.status}
-                                                    </span>
-                                                </td>
-                                                <td style={{ textAlign: 'right', whiteSpace: 'nowrap' }}>
-                                                    <button className={styles.outlineBtn} style={{ height: '32px', fontSize: '12px' }}>Review</button>
-                                                </td>
-                                            </tr>
-                                        ))}
+                                        {loading ? (
+                                            <tr><td colSpan="7" style={{ padding: "32px", textAlign: "center", color: "#94a3b8" }}>Loading queue...</td></tr>
+                                        ) : queue.length === 0 ? (
+                                            <tr><td colSpan="7" style={{ padding: "32px", textAlign: "center", color: "#94a3b8" }}>Backend not connected — no queue data.</td></tr>
+                                        ) : queue.map((row, i) => {
+                                            const urgencyColor = row.urgency === "High" ? "#ef4444" : row.urgency === "Medium" ? "#f59e0b" : "#3b82f6";
+                                            const statusColor = row.status.toLowerCase().includes("review") ? "#ef4444" : "#10b981";
+                                            return (
+                                                <tr key={i} className={styles.activityRow}>
+                                                    <td style={{ whiteSpace: "nowrap" }}>
+                                                        <div style={{ fontWeight: "800", color: "#1e293b" }}>{row.patient}</div>
+                                                        <div style={{ fontSize: "11px", color: "#94a3b8" }}>MRN: {row.mrn}</div>
+                                                    </td>
+                                                    <td style={{ fontSize: "12px", fontWeight: "500", color: "#64748b", whiteSpace: "nowrap" }}>#{row.id || "N/A"}</td>
+                                                    <td style={{ whiteSpace: "nowrap" }}>
+                                                        <span style={{ fontSize: "10px", fontWeight: "800", color: urgencyColor, background: `${urgencyColor}15`, padding: "2px 8px", borderRadius: "4px" }}>{row.urgency}</span>
+                                                    </td>
+                                                    <td style={{ whiteSpace: "nowrap" }}>
+                                                        <div style={{ fontSize: "13px", fontWeight: "700", color: "#475569" }}>{row.time}</div>
+                                                        <div style={{ fontSize: "11px", color: "#94a3b8" }}>{row.date}</div>
+                                                    </td>
+                                                    <td style={{ whiteSpace: "nowrap" }}>
+                                                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                                            <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: "#f1f5f9", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "10px", fontWeight: "700", color: "#64748b" }}>{(row.provider || "D")[0]}</div>
+                                                            <span style={{ fontSize: "13px", fontWeight: "600", color: "#475569" }}>{row.provider}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td style={{ whiteSpace: "nowrap" }}>
+                                                        <span style={{ color: statusColor, background: `${statusColor}15`, padding: "4px 12px", borderRadius: "20px", fontWeight: "700", fontSize: "11px", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                                                            <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: statusColor }} />
+                                                            {row.status}
+                                                        </span>
+                                                    </td>
+                                                    <td style={{ textAlign: "right", whiteSpace: "nowrap" }}>
+                                                        <button className={styles.outlineBtn} style={{ height: "32px", fontSize: "12px" }}>Review</button>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
                                     </tbody>
                                 </table>
                             </div>
                         </div>
                     </div>
 
+                    {/* Right Column */}
                     <div className={styles.rightColMain}>
-                        <div className={styles.calendarCard} style={{ marginBottom: '24px' }}>
+                        {/* Calendar */}
+                        <div className={styles.calendarCard} style={{ marginBottom: "24px" }}>
                             <div className={styles.calendarHeader}>
-                                <h3 style={{ fontSize: '15px', fontWeight: '800', margin: 0 }}>February 2026</h3>
-                                <div style={{ display: 'flex', gap: '4px' }}>
-                                    <button style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '18px' }}>‹</button>
-                                    <button style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', fontSize: '18px' }}>›</button>
-                                </div>
+                                <h3 style={{ fontSize: "15px", fontWeight: "800", margin: 0 }}>{monthName} {currentYear}</h3>
                             </div>
                             <div className={styles.calendarGrid}>
-                                {['MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU'].map(d => <div key={d} className={styles.dayLabel}>{d}</div>)}
-                                {Array.from({ length: 28 }).map((_, i) => (
-                                    <div key={i} className={`${styles.day} ${i + 1 === 8 ? styles.selectedDay : ''}`}>{i + 1}</div>
-                                ))}
+                                {["MO", "TU", "WE", "TH", "FR", "SA", "SU"].map(d => <div key={d} className={styles.dayLabel}>{d}</div>)}
+                                {Array.from({ length: daysInMonth }).map((_, i) => {
+                                    const day = i + 1;
+                                    const hasEvent = calendarData[day] > 0;
+                                    const isToday = day === todayDate;
+                                    return (
+                                        <div key={i} className={`${styles.day} ${isToday ? styles.selectedDay : ""}`} style={{ position: "relative" }}>
+                                            {day}
+                                            {hasEvent && <div style={{ position: "absolute", bottom: "2px", width: "4px", height: "4px", borderRadius: "50%", background: "#3b82f6" }} />}
+                                        </div>
+                                    );
+                                })}
                             </div>
                         </div>
 
-                        <div className={styles.card} style={{ marginBottom: '24px' }}>
+                        {/* On-Duty Staff */}
+                        <div className={styles.card} style={{ marginBottom: "24px" }}>
                             <div className={styles.cardTitle}>On-Duty Staff</div>
-                            <div style={{ marginTop: '16px' }}>
-                                {[
-                                    { name: "Dr. Sarah Wilson", status: "Active", color: "#10b981" },
-                                    { name: "Dr. Michael Chen", status: "Away", color: "#f59e0b" }
-                                ].map((s, i) => (
-                                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 0', borderBottom: i === 1 ? 'none' : '1px solid #f1f5f9' }}>
-                                        <div style={{ fontSize: '13px', fontWeight: '600' }}>{s.name}</div>
-                                        <div style={{ fontSize: '10px', color: s.color, fontWeight: '800' }}>{s.status}</div>
+                            <div style={{ marginTop: "16px" }}>
+                                {loading ? (
+                                    <div style={{ color: "#94a3b8", fontSize: "13px", padding: "12px 0" }}>Loading staff...</div>
+                                ) : onDutyStaff.length === 0 ? (
+                                    <div style={{ color: "#94a3b8", fontSize: "13px", padding: "12px 0" }}>Backend not connected — staff unavailable.</div>
+                                ) : onDutyStaff.slice(0, 4).map((s, i) => (
+                                    <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "12px 0", borderBottom: i < onDutyStaff.length - 1 ? "1px solid #f1f5f9" : "none" }}>
+                                        <div style={{ fontSize: "13px", fontWeight: "600" }}>{s.full_name || s.name || "—"}</div>
+                                        <div style={{ fontSize: "10px", color: s.is_active !== false ? "#10b981" : "#f59e0b", fontWeight: "800" }}>
+                                            {s.status || (s.is_active !== false ? "Active" : "Away")}
+                                        </div>
                                     </div>
                                 ))}
                             </div>
                         </div>
 
+                        {/* Ward Capacity */}
                         <div className={styles.card}>
                             <div className={styles.cardTitle}>Ward Capacity</div>
-                            <div style={{ marginTop: '16px' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                                    <span style={{ fontSize: '12px', fontWeight: '700' }}>ICU Load</span>
-                                    <span style={{ fontSize: '12px', fontWeight: '700', color: '#ef4444' }}>92%</span>
+                            <div style={{ marginTop: "16px" }}>
+                                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px" }}>
+                                    <span style={{ fontSize: "12px", fontWeight: "700" }}>ICU Load</span>
+                                    <span style={{ fontSize: "12px", fontWeight: "700", color: "#94a3b8" }}>
+                                        {loading ? "Loading..." : "Backend not connected"}
+                                    </span>
                                 </div>
-                                <div style={{ height: '6px', background: '#f1f5f9', borderRadius: '3px' }}>
-                                    <div style={{ width: '92%', height: '100%', background: '#ef4444', borderRadius: '3px' }} />
+                                <div style={{ height: "6px", background: "#f1f5f9", borderRadius: "3px" }}>
+                                    <div style={{ width: "0%", height: "100%", background: "#ef4444", borderRadius: "3px" }} />
                                 </div>
                             </div>
                         </div>

@@ -97,13 +97,15 @@ export default function TeamPage() {
                     </div>
                 </div>
 
+                {/* 
                 <div className={styles.securityNotice}>
                     <div className={styles.noticeIcon}>i</div>
                     <div className={styles.noticeContent}>
                         <h4>Security Notice</h4>
                         <p>The user will receive an email to join the Team. The invitation link expired in 48hours. They will be required to set up Two-Factor Authentication (2FA) upon their first login.</p>
                     </div>
-                </div>
+                </div> 
+                */}
 
                 <div className={styles.actions}>
                     <button className={styles.cancelBtn}>Cancel</button>

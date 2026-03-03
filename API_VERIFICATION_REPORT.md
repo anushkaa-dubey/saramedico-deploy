@@ -97,7 +97,7 @@ This report verifies the SaraMedico frontend implementation against the document
 | Endpoint | Method | Implementation | Status |
 |----------|--------|----------------|--------|
 | `/appointments` | POST | ✅ Patient: `patient.js` | ✓ |
-| `/appointments/:id/approve` | POST | ✅ Doctor: `doctor.js:approveAppointment()` | ✓ Generates Zoom |
+| `/appointments/:id/approve` | POST | ✅ Doctor: `doctor.js:approveAppointment()` | ✓ Generates Google Meet link |
 | `/appointments/:id/status` | PATCH | ✅ Both: `doctor.js`, `patient.js` | ✓ |
 | `/appointments/patient-appointments` | GET | ✅ `patient.js:fetchAppointments()` | ✓ |
 | `/doctor/appointments` | GET | ✅ `doctor.js:fetchAppointments()` | ✓ |

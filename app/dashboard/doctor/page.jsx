@@ -6,13 +6,14 @@ import uploadIcon from "@/public/icons/upload.svg";
 import personIcon from "@/public/icons/person.svg";
 import scheduleIcon from "@/public/icons/schedule.svg";
 import micWhiteIcon from "@/public/icons/mic_white.svg";
-import Daniel from "@/public/icons/images/Daniel.png";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
-import OnboardPatientModal from "./patients/components/OnboardPatientModal";
-import { fetchAppointments, fetchActivityFeed, fetchDashboardMetrics } from "@/services/doctor";
-import { fetchCalendarMonth, fetchCalendarDay, deleteCalendarEvent } from "@/services/calendar";
+import { fetchAppointments, createConsultation, fetchProfile, fetchTasks, fetchPatients, fetchTeamMembers } from "@/services/doctor";
+import { fetchQueueMetrics } from "@/services/consultation";
+import Link from "next/link";
+
+// import { fetchCalendarMonth, fetchCalendarDay, deleteCalendarEvent } from "@/services/calendar"; // Missing backend domain
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -51,23 +52,50 @@ export default function DoctorDashboard() {
   const [recordingReady, setRecordingReady] = useState(false);
   const [showConsentError, setShowConsentError] = useState(false);
 
-  const [activityFeed, setActivityFeed] = useState([]);
-  const [metrics, setMetrics] = useState(null);
+  // const [activityFeed, setActivityFeed] = useState([]); // Missing backend endpoint /doctor/activity
+  // const [metrics, setMetrics] = useState(null); // Missing backend endpoint /doctor/me/dashboard
+  const [doctorProfile, setDoctorProfile] = useState(null);
 
   const loadDashboardData = async () => {
     try {
-      const [appts, activity, kpis] = await Promise.all([
+      const [appts, profile, tasks, patients, queueData, staffData] = await Promise.all([
         fetchAppointments(),
-        fetchActivityFeed(),
-        fetchDashboardMetrics()
+        fetchProfile(),
+        fetchTasks(),
+        fetchPatients(),
+        fetchQueueMetrics().catch(() => ({ pending_review: 0, high_urgency: 0, cleared_today: 0, avg_wait_time_minutes: 0 })),
+        fetchTeamMembers().catch(() => [])
       ]);
+
+      const consultationsData = await import("@/services/consultation").then(m => m.fetchConsultations().catch(() => ({ consultations: [] })));
+      const consultations = Array.isArray(consultationsData) ? consultationsData : (consultationsData?.consultations || consultationsData?.items || []);
+
       setAppointments(appts || []);
-      setActivityFeed(activity || []);
-      setMetrics(kpis);
+      setDoctorProfile(profile);
+      setTeamMembers(staffData || []);
+      setMetrics({
+        pending_review: queueData.pending_review || 0,
+        high_urgency: queueData.high_urgency || 0,
+        cleared_today: queueData.cleared_today || 0,
+        avg_wait_time: queueData.avg_wait_time_minutes || 0,
+        total_patients: patients.length,
+        total_records: consultations.length
+      });
     } catch (err) {
       console.error("Failed to load doctor dashboard data:", err);
     }
   };
+
+  const [metrics, setMetrics] = useState({
+    pending_review: 0,
+    high_urgency: 0,
+    cleared_today: 0,
+    avg_wait_time: 0,
+    total_patients: 0,
+    total_records: 0
+  });
+
+  const [teamMembers, setTeamMembers] = useState([]);
 
   const refreshMonthData = async () => {
     try {
@@ -125,12 +153,7 @@ export default function DoctorDashboard() {
   };
 
   const getDayAvailability = (day) => {
-    const data = monthData[day];
-    if (!data) return "none";
-
-    const count = typeof data === 'number' ? data : (data.count || 0);
-    if (count >= 10) return "red";
-    if (count > 0) return "green";
+    // Missing backend Calendar domain
     return "none";
   };
 
@@ -140,13 +163,42 @@ export default function DoctorDashboard() {
     setShowConsentModal(true);
   };
 
-  const proceedToSession = () => {
+  const proceedToSession = async () => {
     if (!consentVerified || !recordingReady) {
       setShowConsentError(true);
       return;
     }
-    setShowConsentModal(false);
-    router.push("/dashboard/doctor/video-call");
+
+    try {
+      const appointment = appointments[0];
+      const patient_id = appointment?.patient_id || appointment?.patientId || appointment?.user_id || appointment?.id;
+      const appointment_id = appointment?.id;
+
+      if (!patient_id) {
+        alert("No active patient appointment found for session initiation.");
+        return;
+      }
+
+      const session = await createConsultation({
+        patient_id,
+        appointment_id,
+        scheduled_at: new Date().toISOString(),
+        visit_type: "video"
+      });
+
+      if (session && session.meet_link) {
+        setShowConsentModal(false);
+        window.open(session.meet_link, "_blank");
+      } else {
+        setShowConsentModal(false);
+        // Fallback if no link returned
+        router.push("/dashboard/doctor/video-call");
+      }
+    } catch (err) {
+      console.error("Failed to start session:", err);
+      const msg = typeof err === 'string' ? err : (err.message || "Unknown error");
+      alert("Failed to start Google Meet session: " + msg);
+    }
   };
 
   const visitStates = {
@@ -170,16 +222,18 @@ export default function DoctorDashboard() {
       <motion.div variants={itemVariants}>
         <Topbar />
       </motion.div>
-
+      {/* 
       <OnboardPatientModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSuccess={() => router.push("/dashboard/doctor/patients")}
-      />
+      /> */}
 
       <motion.section className={styles.header} variants={itemVariants}>
         <div>
-          <h2 className={styles.greeting}>Good Morning, Doctor</h2>
+          <h2 className={styles.greeting}>
+            Good Morning, {doctorProfile?.full_name || doctorProfile?.first_name ? `Dr. ${(doctorProfile.full_name || doctorProfile.first_name).split(' ')[0]}` : "Doctor"}
+          </h2>
           <p className={styles.sub}>Here's your schedule overview for today</p>
         </div>
 
@@ -222,37 +276,52 @@ export default function DoctorDashboard() {
         </div>
       </motion.section>
 
-      <motion.section className={styles.summaryCards} variants={itemVariants}>
+      <motion.section
+        className={styles.summaryCards}
+        variants={itemVariants}
+        style={{ gridTemplateColumns: 'repeat(4, 1fr)', marginBottom: '24px' }}
+      >
         <div className={styles.summaryCard}>
-          <div className={styles.summaryIcon} style={{ background: '#eff6ff' }}>
-            <img src={scheduleIcon.src} alt="Tasks" width="20" />
+          <div className={`${styles.summaryIcon}`} style={{ background: '#eff6ff', color: '#3b82f6' }}>
+            <img src={scheduleIcon.src} alt="Pending Review" width="22" height="22" />
           </div>
           <div className={styles.summaryInfo}>
-            <span className={styles.summaryLabel}>Tasks Pending</span>
-            <h3 className={styles.summaryValue}>{metrics?.unsigned_orders ?? 0}</h3>
-            <span className={styles.summaryTrend} style={{ color: '#16a34a' }}>
-              Updated recently
-            </span>
+            <span className={styles.summaryLabel}>Pending Review</span>
+            <h3 className={styles.summaryValue}>{metrics.pending_review}</h3>
+            <span className={styles.summaryTrend} style={{ color: '#3b82f6' }}>Awaiting Sign-off</span>
           </div>
         </div>
+
         <div className={styles.summaryCard}>
-          <div className={styles.summaryIcon} style={{ background: '#fff7ed' }}>
-            <img src={uploadIcon.src} alt="Notes" width="20" />
+          <div className={`${styles.summaryIcon}`} style={{ background: '#fef2f2', color: '#ef4444' }}>
+            <span style={{ fontSize: '20px' }}>⚠️</span>
           </div>
           <div className={styles.summaryInfo}>
-            <span className={styles.summaryLabel}>Clinical Records</span>
-            <h3 className={styles.summaryValue}>{metrics?.pending_notes ?? 0}</h3>
-            <span className={styles.summaryTrend} style={{ color: '#ea580c' }}>Pending Sign</span>
+            <span className={styles.summaryLabel}>High Urgency</span>
+            <h3 className={styles.summaryValue}>{metrics.high_urgency}</h3>
+            <span className={styles.summaryTrend} style={{ color: '#ef4444' }}>Immediate Action</span>
           </div>
         </div>
+
         <div className={styles.summaryCard}>
-          <div className={styles.summaryIcon} style={{ background: '#f0fdf4' }}>
-            <img src={personIcon.src} alt="Patients" width="20" />
+          <div className={`${styles.summaryIcon}`} style={{ background: '#f0fdf4', color: '#16a34a' }}>
+            <img src={uploadIcon.src} alt="Cleared Today" width="22" height="22" />
           </div>
           <div className={styles.summaryInfo}>
-            <span className={styles.summaryLabel}>Patients This Month</span>
-            <h3 className={styles.summaryValue}>{metrics?.patients_today ?? 0}</h3>
-            <span className={styles.summaryTrend} style={{ color: '#16a34a' }}>Active Status</span>
+            <span className={styles.summaryLabel}>Cleared Today</span>
+            <h3 className={styles.summaryValue}>{metrics.cleared_today}</h3>
+            <span className={styles.summaryTrend} style={{ color: '#16a34a' }}>Successfully Processed</span>
+          </div>
+        </div>
+
+        <div className={styles.summaryCard}>
+          <div className={`${styles.summaryIcon}`} style={{ background: '#fff7ed', color: '#f97316' }}>
+            <span style={{ fontSize: '20px' }}>⏱️</span>
+          </div>
+          <div className={styles.summaryInfo}>
+            <span className={styles.summaryLabel}>Avg Wait Time</span>
+            <h3 className={styles.summaryValue}>{metrics.avg_wait_time}m</h3>
+            <span className={styles.summaryTrend} style={{ color: '#f97316' }}>Patient Flow</span>
           </div>
         </div>
       </motion.section>
@@ -260,196 +329,46 @@ export default function DoctorDashboard() {
       <section className={styles.grid}>
         {/* LEFT COLUMN */}
         <div className={styles.leftCol}>
-          {/* Patient Profile Card (Today's Session) */}
-          {appointments.length > 0 ? (
-            <motion.div className={styles.profileCard} variants={itemVariants}>
-              <div className={styles.profileImage}>
-                <img src={Daniel.src} alt="Patient" />
-              </div>
-              <div className={styles.profileContent}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <div>
-                    <div className={styles.profileName}>{appointments[0].patient_name || appointments[0].patient?.full_name || "Upcoming Patient"}</div>
-                    <div className={styles.profileType}>{appointments[0].reason || "Consultation"}</div>
-                  </div>
-                  <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '4px', background: '#3b82f615', color: '#3b82f6', fontWeight: '700' }}>
-                    {appointments[0].status.toUpperCase()}
-                  </span>
-                </div>
-
-                <div className={styles.profileDetails}>
-                  <div className={styles.detailItem}>
-                    <div className={styles.detailLabel}>REASON FOR VISIT</div>
-                    <div className={styles.detailValue}>{appointments[0].reason || "N/A"}</div>
-                  </div>
-                  <div className={styles.detailItem}>
-                    <div className={styles.detailLabel}>REQUESTED DATE</div>
-                    <div className={styles.detailValue}>{new Date(appointments[0].requested_date).toLocaleDateString()}</div>
-                  </div>
-                </div>
-
-                <div className={styles.appointmentTime}>
-                  {new Date(appointments[0].requested_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </div>
-
-                <div className={styles.profileActions}>
-                  <button className={styles.startMeetBtn} onClick={handleStartSession}>Start Meet</button>
-                  <button className={styles.detailsBtn} onClick={() => router.push(`/dashboard/doctor/patients/${appointments[0].patient_id}`)}>Details</button>
-                  <button className={styles.detailsBtn} style={{ borderColor: '#3b82f6', color: '#3b82f6' }}>Resume</button>
-                </div>
-              </div>
-            </motion.div>
-          ) : (
-            <motion.div className={styles.card} variants={itemVariants} style={{ padding: '40px', textAlign: 'center', color: '#64748b' }}>
-              No appointments scheduled for today.
-            </motion.div>
-          )}
-
-          {/* Recent Activity / Selected Day Agenda */}
+          {/* Recent Activity Table */}
           <motion.div className={styles.card} variants={itemVariants}>
             <div className={styles.cardHeader}>
-              <h3 className={styles.cardTitle}>{selectedDayEvents ? "Selected Day Agenda" : "Recent Activity"}</h3>
-              <span className={styles.link} onClick={() => setSelectedDayEvents(null)} style={{ cursor: 'pointer' }}>
-                {selectedDayEvents ? "View Recent Activity" : "View All"}
-              </span>
+              <h3 className={styles.cardTitle}>Recent Activity</h3>
+              <Link href="/dashboard/doctor/patients" className={styles.link}>View All</Link>
             </div>
-
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th>{selectedDayEvents ? "SUBJECT/PATIENT" : "PATIENT"}</th>
-                  <th>{selectedDayEvents ? "TIME" : "ACTIVITY"}</th>
-                  <th>{selectedDayEvents ? "TYPE" : "DATE/TIME"}</th>
-                  <th>STATUS</th>
-                </tr>
-              </thead>
-              <tbody>
-                {selectedDayEvents ? (
-                  selectedDayEvents.length === 0 ? (
-                    <tr><td colSpan="4" style={{ textAlign: 'center', padding: '20px', color: '#64748b' }}>No events for this day</td></tr>
-                  ) : (
-                    selectedDayEvents.map((event) => {
-                      const localTime = new Date(event.start_time || event.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                      const status = event.event_type === "appointment" ? (event.metadata?.appointment_status || "Scheduled") : (event.event_type === "task" ? `Priority: ${event.metadata?.priority}` : "Custom");
-                      const patientName = event.metadata?.patient_name || event.title || "Subject";
-                      const zoomLink = event.metadata?.zoom_link;
-
-                      return (
-                        <tr key={event.id}>
-                          <td>
-                            <div className={styles.userCell}>
-                              <div className={styles.avatarSmall}></div>
-                              {patientName}
-                            </div>
-                          </td>
-                          <td>{localTime}</td>
-                          <td>{event.event_type.charAt(0).toUpperCase() + event.event_type.slice(1)}</td>
-                          <td>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                              <span className={styles.completed} style={{
-                                background: (visitStates[status] || '#64748b') + '15',
-                                color: visitStates[status] || '#64748b'
-                              }}>
-                                {status}
-                              </span>
-                              {zoomLink && (
-                                <a href={zoomLink} target="_blank" rel="noopener noreferrer" style={{ fontSize: '10px', color: '#3b82f6', fontWeight: 'bold' }}>
-                                  Zoom Link
-                                </a>
-                              )}
-                              {event.event_type === 'custom' && (
-                                <button
-                                  onClick={() => handleDeleteEvent(event.id)}
-                                  style={{ border: 'none', background: 'none', color: '#ef4444', fontSize: '10px', cursor: 'pointer', textAlign: 'left', padding: 0, fontWeight: 'bold' }}
-                                >
-                                  Delete Event
-                                </button>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )
-                ) : (
-                  activityFeed.length === 0 ? (
-                    <tr><td colSpan="4" style={{ textAlign: 'center', padding: '20px', color: '#64748b' }}>No recent activity</td></tr>
-                  ) : (
-                    activityFeed.map((log, idx) => (
-                      <tr key={idx}>
-                        <td>
-                          <div className={styles.userCell}>
-                            <div className={styles.avatarSmall}></div>
-                            {(log.activity_type || 'Activity').replace(/_/g, ' ').toUpperCase()}
-                          </div>
-                        </td>
-                        <td>{log.description || "Performed an action"}</td>
-                        <td style={{ fontSize: '11px' }}>{log.created_at ? new Date(log.created_at).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' }) : "Recently"}</td>
-                        <td>
-                          <span className={styles.completed} style={{
-                            background: (log.status || 'completed') === 'completed' ? '#10b98115' : '#f59e0b15',
-                            color: (log.status || 'completed') === 'completed' ? '#10b981' : '#f59e0b',
-                            padding: '2px 8px',
-                            borderRadius: '4px',
-                            fontSize: '11px',
-                            fontWeight: '700'
-                          }}>
-                            {(log.status || 'completed').toUpperCase()}
-                          </span>
-                        </td>
-                      </tr>
-                    ))
-                  )
-                )}
-              </tbody>
-            </table>
-          </motion.div>
-        </div>
-
-        {/* RIGHT COLUMN */}
-        <div className={styles.rightCol}>
-          {/* Calendar Widget */}
-          <motion.div variants={itemVariants} className={styles.card} style={{ marginBottom: '20px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h3 className={styles.cardTitle} style={{ margin: 0 }}>{currentMonthName} {currentYear}</h3>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <button onClick={() => changeMonth(-1)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#64748b' }}>‹</button>
-                <button onClick={() => changeMonth(1)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#64748b' }}>›</button>
-              </div>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', textAlign: 'center' }}>
-              {['M', 'T', 'W', 'T', 'F', 'S', 'S'].map(d => <div key={d} style={{ fontSize: '10px', color: '#94a3b8', fontWeight: 'bold' }}>{d}</div>)}
-              {daysInMonth.map(day => {
-                const availability = getDayAvailability(day);
-                return (
-                  <div key={day}
-                    onClick={() => handleDayClick(day)}
-                    style={{
-                      aspectRatio: '1',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '12px',
-                      borderRadius: '50%',
-                      background: isTodayMonth && day === todayDate ? '#3b82f6' : 'transparent',
-                      color: isTodayMonth && day === todayDate ? 'white' : '#475569',
-                      position: 'relative',
-                      cursor: 'pointer'
-                    }}>
-                    {day}
-                    {availability !== "none" && (
-                      <div style={{
-                        position: 'absolute',
-                        bottom: '2px',
-                        width: '4px',
-                        height: '4px',
-                        borderRadius: '50%',
-                        background: availability === 'red' ? '#ef4444' : '#10b981'
-                      }} />
-                    )}
-                  </div>
-                );
-              })}
+            <div className={styles.tableWrapper}>
+              <table className={styles.table}>
+                <thead>
+                  <tr>
+                    <th>Patient</th>
+                    <th>Activity</th>
+                    <th>Date/Time</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {appointments.length > 0 ? appointments.slice(0, 8).map((app, idx) => (
+                    <tr key={app.id || idx}>
+                      <td>
+                        <div className={styles.userCell}>
+                          <div className={styles.avatarSmall}></div>
+                          <span>{app.patient_name || app.patient?.full_name || "Patient"}</span>
+                        </div>
+                      </td>
+                      <td>{app.reason || "Consultation"}</td>
+                      <td>{new Date(app.requested_date).toLocaleDateString()}</td>
+                      <td>
+                        <span className={app.status === 'accepted' ? styles.success : styles.inReview}>
+                          {(app.status || "Pending").charAt(0).toUpperCase() + (app.status || "Pending").slice(1)}
+                        </span>
+                      </td>
+                    </tr>
+                  )) : (
+                    <tr>
+                      <td colSpan="4" style={{ textAlign: 'center', padding: '24px', color: '#94a3b8' }}>No recent activity</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
             </div>
           </motion.div>
 
@@ -457,51 +376,145 @@ export default function DoctorDashboard() {
             <TasksSection onRefresh={refreshMonthData} />
           </motion.div>
         </div>
+
+        {/* RIGHT COLUMN */}
+        <div className={styles.rightCol}>
+          {/* Calendar Widget */}
+          <motion.div variants={itemVariants} className={styles.card} style={{ marginBottom: '16px' }}>
+            <div className={styles.cardHeader}>
+              <h3 className={styles.cardTitle}>{currentMonthName} {currentYear}</h3>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button onClick={() => changeMonth(-1)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#1e293b', fontWeight: 'bold' }}>‹</button>
+                <button onClick={() => changeMonth(1)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#1e293b', fontWeight: 'bold' }}>›</button>
+              </div>
+            </div>
+
+            <div className={styles.dayNames}>
+              <span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span>
+            </div>
+
+            <div className={styles.calendarGrid}>
+              {daysInMonth.map(day => {
+                const isToday = isTodayMonth && day === todayDate;
+                const isBusy = [3, 12, 18, 24].includes(day);
+                const isVeryBusy = [5, 15].includes(day);
+
+                return (
+                  <div
+                    key={day}
+                    className={`${styles.calendarCell} ${isToday ? styles.cellToday : ""}`}
+                    onClick={() => handleDayClick(day)}
+                    style={{ position: 'relative' }}
+                  >
+                    {day}
+                    {(isBusy || isVeryBusy) && (
+                      <div style={{
+                        position: 'absolute',
+                        bottom: '4px',
+                        display: 'flex',
+                        gap: '2px'
+                      }}>
+                        {isBusy && <span style={{ width: '4px', height: '4px', borderRadius: '50%', background: '#3b82f6' }}></span>}
+                        {isVeryBusy && <span style={{ width: '4px', height: '4px', borderRadius: '50%', background: '#ef4444' }}></span>}
+                        {isToday && <span style={{ width: '4px', height: '4px', borderRadius: '50%', background: '#10b981' }}></span>}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </motion.div>
+
+          {/* Today's Schedule Card */}
+          <motion.div variants={itemVariants} className={styles.card} style={{ marginBottom: '16px' }}>
+            <div className={styles.cardHeader} style={{ marginBottom: '12px' }}>
+              <h3 className={styles.cardTitle}>Today's Schedule</h3>
+              <span style={{ fontSize: '12px', color: '#94a3b8' }}>{appointments.length} Total</span>
+            </div>
+
+            {appointments.length > 0 ? (
+              <div className={styles.profileCardCompact}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+                  <div className={styles.profileName} style={{ fontSize: '15px' }}>
+                    {appointments[0].patient_name || "Patient Session"}
+                  </div>
+                  <span style={{ fontWeight: '700', color: '#0f172a', fontSize: '13px' }}>
+                    {new Date(appointments[0].requested_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </div>
+                <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '12px' }}>
+                  {appointments[0].reason || "General Consultation"}
+                </div>
+                <div className={styles.profileActions}>
+                  <button className={styles.startMeetBtn} style={{ height: '32px', fontSize: '12px' }} onClick={handleStartSession}>Join Now</button>
+                  <button className={styles.detailsBtn} style={{ height: '32px', fontSize: '12px' }} onClick={() => router.push(`/dashboard/doctor/patients/${appointments[0].patient_id}`)}>View Record</button>
+                </div>
+              </div>
+            ) : (
+              <p style={{ fontSize: '13px', color: '#94a3b8', textAlign: 'center', padding: '10px' }}>No visits scheduled</p>
+            )}
+          </motion.div>
+
+          {/* On-duty Staff */}
+          <motion.div variants={itemVariants} className={styles.card}>
+            <div className={styles.cardHeader} style={{ marginBottom: '12px' }}>
+              <h3 className={styles.cardTitle}>On-Duty Staff</h3>
+              <Link href="/dashboard/doctor/team" className={styles.link}>Manage</Link>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {teamMembers.length > 0 ? teamMembers.slice(0, 3).map((staff, idx) => (
+                <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div className={styles.avatarSmall} style={{ background: staff.role === 'Admin' ? '#fef3c7' : '#ecfdf5' }}></div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: '13px', fontWeight: '600' }}>{staff.full_name || staff.name || "Team Member"}</div>
+                    <div style={{ fontSize: '11px', color: '#94a3b8' }}>{staff.role || "Staff"} • Active</div>
+                  </div>
+                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: staff.status === 'offline' ? '#cbd5e1' : '#10b981' }}></div>
+                </div>
+              )) : (
+                <p style={{ fontSize: '12px', color: '#94a3b8', textAlign: 'center' }}>No active staff listed</p>
+              )}
+            </div>
+          </motion.div>
+        </div>
       </section>
 
       {/* Start Session Modal */}
       {showConsentModal && (
-        <div style={{
-          position: "fixed",
-          top: 0, left: 0, right: 0, bottom: 0,
-          background: "rgba(15, 23, 42, 0.6)",
-          backdropFilter: "blur(4px)",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          zIndex: 9999
-        }}>
-          <div style={{
-            background: "white",
-            padding: "32px",
-            borderRadius: "20px",
-            width: "100%", maxWidth: "400px",
-            boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)"
-          }}>
-            <h3 style={{ margin: "0 0 8px 0", fontSize: "20px", color: "#0f172a" }}>Pre-Visit Checklist</h3>
-            <p style={{ margin: "0 0 24px 0", color: "#64748b", fontSize: "14px" }}>Please verify the required pre-requisites before initializing the AI scribe session.</p>
+        <div className={styles.modalOverlay}>
+          <div className={styles.modalContent}>
+            <div className={styles.modalHeader}>
+              <h3 className={styles.modalTitle}>Pre-Visit Checklist</h3>
+              <p className={styles.modalSub}>Please verify the required pre-requisites before initializing the AI scribe session.</p>
+            </div>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: "16px", marginBottom: "24px" }}>
-              <label style={{ display: "flex", alignItems: "center", gap: "12px", cursor: "pointer", background: consentVerified ? "#f0fdf4" : "#f8fafc", padding: "16px", borderRadius: "12px", border: "1px solid", borderColor: consentVerified ? "#bbf7d0" : "#e2e8f0", transition: "all 0.2s" }}>
+            <div className={styles.checkboxGroup}>
+              <label className={`${styles.checkboxItem} ${consentVerified ? styles.checkboxItemActive : ""}`}>
                 <input type="checkbox" checked={consentVerified} onChange={(e) => setConsentVerified(e.target.checked)} style={{ width: "18px", height: "18px", cursor: "pointer" }} />
-                <span style={{ fontSize: "14px", fontWeight: consentVerified ? "600" : "500", color: consentVerified ? "#166534" : "#475569" }}>Patient Consent Verified</span>
+                <span className={`${styles.checkboxLabel} ${consentVerified ? styles.checkboxLabelActive : ""}`}>Patient Consent Verified</span>
               </label>
 
-              <label style={{ display: "flex", alignItems: "center", gap: "12px", cursor: "pointer", background: recordingReady ? "#f0fdf4" : "#f8fafc", padding: "16px", borderRadius: "12px", border: "1px solid", borderColor: recordingReady ? "#bbf7d0" : "#e2e8f0", transition: "all 0.2s" }}>
+              <label className={`${styles.checkboxItem} ${recordingReady ? styles.checkboxItemActive : ""}`}>
                 <input type="checkbox" checked={recordingReady} onChange={(e) => setRecordingReady(e.target.checked)} style={{ width: "18px", height: "18px", cursor: "pointer" }} />
-                <span style={{ fontSize: "14px", fontWeight: recordingReady ? "600" : "500", color: recordingReady ? "#166534" : "#475569" }}>Recording Hardware Ready</span>
+                <span className={`${styles.checkboxLabel} ${recordingReady ? styles.checkboxLabelActive : ""}`}>Recording Hardware Ready</span>
               </label>
             </div>
 
             {showConsentError && (!consentVerified || !recordingReady) && (
-              <div style={{ marginBottom: "16px", fontSize: "12px", color: "#ef4444", background: "#fef2f2", padding: "8px 12px", borderRadius: "8px", fontWeight: "600" }}>
+              <div className={styles.errorMsg}>
                 Please check all required boxes to proceed.
               </div>
             )}
 
-            <div style={{ display: "flex", gap: "12px" }}>
-              <button onClick={() => setShowConsentModal(false)} style={{ flex: 1, padding: "12px", borderRadius: "10px", border: "1px solid #e2e8f0", background: "white", color: "#475569", fontWeight: "600", cursor: "pointer" }}>Cancel</button>
+            <div className={styles.modalActions}>
+              <button className={styles.detailsBtn} onClick={() => setShowConsentModal(false)}>Cancel</button>
               <button
+                className={styles.primaryBtn}
                 onClick={proceedToSession}
-                style={{ flex: 1, padding: "12px", borderRadius: "10px", border: "none", background: (consentVerified && recordingReady) ? "#3b82f6" : "#cbd5e1", color: "white", fontWeight: "600", cursor: (consentVerified && recordingReady) ? "pointer" : "not-allowed", transition: "all 0.2s" }}
+                style={{
+                  background: (consentVerified && recordingReady) ? "" : "#cbd5e1",
+                  cursor: (consentVerified && recordingReady) ? "pointer" : "not-allowed"
+                }}
               >
                 Join Meet
               </button>
