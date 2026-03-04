@@ -21,12 +21,21 @@ export default function UpNextCard() {
   const loadNextAppointment = async () => {
     setLoading(true);
     try {
-      const consultations = await fetchConsultations();
+      const raw = await fetchConsultations();
+      // Backend returns paginated object { items: [...] } OR a plain array
+      const consultations = Array.isArray(raw) ? raw : (raw?.items || raw?.data || raw?.consultations || []);
       const now = new Date();
 
       const upcoming = consultations
-        .filter(c => c.status === "scheduled" && new Date(c.scheduledAt) >= now)
-        .sort((a, b) => new Date(a.scheduledAt) - new Date(b.scheduledAt));
+        .filter(c => {
+          const at = c.scheduledAt || c.scheduled_at || c.appointment_time;
+          return (c.status === "scheduled" || c.status === "accepted") && at && new Date(at) >= now;
+        })
+        .sort((a, b) => {
+          const aAt = a.scheduledAt || a.scheduled_at || a.appointment_time;
+          const bAt = b.scheduledAt || b.scheduled_at || b.appointment_time;
+          return new Date(aAt) - new Date(bAt);
+        });
 
       if (upcoming.length > 0) {
         const c = upcoming[0];

@@ -357,7 +357,7 @@ export default function Home() {
       <nav className={`${styles.navbar} ${scrolled ? styles.navbarScrolled : ""}`}>
         <div className={styles.navbarContainer}>
           <Link href="/" className={styles.logo}>
-            <Image src="/logo-icon.svg" alt="SaraMedico" width={64} height={64} className={styles.logoIcon} />
+            <Image src="/logo-icon.svg" alt="SaraMedico" width={64} height={64} className={styles.logoIcon} priority />
           </Link>
 
           <div className={styles.navLinks}>

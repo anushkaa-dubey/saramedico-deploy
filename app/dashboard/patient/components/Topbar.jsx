@@ -4,6 +4,7 @@ import styles from "../PatientDashboard.module.css";
 import Link from "next/link";
 import notificationIcon from "@/public/icons/notification.svg";
 import { fetchProfile } from "@/services/patient";
+import AccessRequestsPanel from "./AccessRequestsPanel";
 
 export default function Topbar() {
   const [user, setUser] = useState(null);
@@ -48,10 +49,7 @@ export default function Topbar() {
       />
 
       <div className={styles.topActions}>
-        <button className={styles.notificationBtn}>
-          <img src={notificationIcon.src} alt="Notifications" width="20" height="20" />
-          <span className={styles.notificationBadge}></span>
-        </button>
+        <AccessRequestsPanel notificationIconSrc={notificationIcon.src} />
         <Link href="/dashboard/patient/profile" className={styles.profile} style={{ textDecoration: "none", cursor: "pointer" }}>
           <div className={styles.profileInfo}>
             <span style={{ fontSize: "13px", fontWeight: "600", color: "#0f172a" }}>

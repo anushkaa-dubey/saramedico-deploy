@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import styles from "./AIChat.module.css";
 import { doctorAIChat, fetchDoctorChatHistory } from "@/services/ai";
-import { checkAIPermission, grantAIAccess } from "@/services/doctor";
+import { checkAIPermission, requestAIAccess } from "@/services/doctor";
 
 export default function AIChat({ onCitationClick, patientId, doctorId, documentId }) {
     const [messages, setMessages] = useState([]);
@@ -14,6 +14,7 @@ export default function AIChat({ onCitationClick, patientId, doctorId, documentI
     const [aiAccess, setAiAccess] = useState(null); // null=checking, true=ok, false=denied
     const [grantingAccess, setGrantingAccess] = useState(false);
     const [accessError, setAccessError] = useState("");
+    const [requestSent, setRequestSent] = useState(false);
 
     const sampleQuestions = [
         "What are the key findings?",
@@ -131,13 +132,27 @@ export default function AIChat({ onCitationClick, patientId, doctorId, documentI
             setMessages(prev => [...prev, aiResponse]);
         } catch (err) {
             console.error("AI chat error:", err);
-            const errorMsg = {
-                id: Date.now() + 1,
-                role: "assistant",
-                text: `Error: ${err.message || "Something went wrong"}`,
-                citations: []
-            };
-            setMessages(prev => [...prev, errorMsg]);
+            // If backend returns 403 (no AI access), reset the UI to the access-request screen.
+            // This handles the case where /permissions/check and /doctor/ai/chat/doctor disagree.
+            const isAccessDenied = err.message?.includes('403') ||
+                err.message?.toLowerCase().includes('no ai access') ||
+                err.message?.toLowerCase().includes('permission denied') ||
+                err.message?.toLowerCase().includes('no access');
+
+            if (isAccessDenied) {
+                // Remove the user's message we just added and show the access request UI
+                setMessages(prev => prev.filter(m => m.id !== userMessage.id));
+                setAiAccess(false);
+                setRequestSent(false);
+            } else {
+                const errorMsg = {
+                    id: Date.now() + 1,
+                    role: "assistant",
+                    text: `Error: ${err.message || "Something went wrong"}`,
+                    citations: []
+                };
+                setMessages(prev => [...prev, errorMsg]);
+            }
         } finally {
             setIsTyping(false);
         }
@@ -149,12 +164,19 @@ export default function AIChat({ onCitationClick, patientId, doctorId, documentI
             return;
         }
         setGrantingAccess(true);
+        setAccessError("");
         try {
-            await grantAIAccess(patientId);
-            setAiAccess(true);
-            setAccessError("");
+            await requestAIAccess(patientId);
+            // Access request sent — patient must approve.
+            // We don't set aiAccess=true here since it's still pending.
+            setRequestSent(true);
         } catch (err) {
-            setAccessError(err.message || "Failed to grant AI access");
+            // 409 = request already exists, treat as success
+            if (err.message?.includes('409') || err.message?.toLowerCase().includes('already')) {
+                setRequestSent(true);
+            } else {
+                setAccessError(err.message || "Failed to send access request");
+            }
         } finally {
             setGrantingAccess(false);
         }
@@ -184,37 +206,59 @@ export default function AIChat({ onCitationClick, patientId, doctorId, documentI
                     justifyContent: "center", gap: "16px", padding: "40px 20px",
                     textAlign: "center"
                 }}>
-                    <div style={{
-                        width: "52px", height: "52px", borderRadius: "50%",
-                        background: "rgba(244,67,54,0.1)", display: "flex",
-                        alignItems: "center", justifyContent: "center"
-                    }}>
-                        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#d32f2f" strokeWidth="2">
-                            <circle cx="12" cy="12" r="10" />
-                            <line x1="12" y1="8" x2="12" y2="12" />
-                            <line x1="12" y1="16" x2="12.01" y2="16" />
-                        </svg>
-                    </div>
-                    <div>
-                        <p style={{ fontWeight: 600, color: "#d32f2f", marginBottom: "6px", fontSize: "15px" }}>No AI Access</p>
-                        <p style={{ fontSize: "13px", color: "#666", maxWidth: "240px" }}>
-                            Patient has not granted AI access. Click below to enable AI chat for this patient.
-                        </p>
-                    </div>
-                    {accessError && <p style={{ fontSize: "12px", color: "#d32f2f" }}>{accessError}</p>}
-                    <button
-                        onClick={handleGrantAccess}
-                        disabled={grantingAccess}
-                        style={{
-                            padding: "10px 24px", borderRadius: "8px",
-                            background: grantingAccess ? "#ccc" : "#0081FE",
-                            color: "#fff", border: "none",
-                            cursor: grantingAccess ? "not-allowed" : "pointer",
-                            fontSize: "14px", fontWeight: 600
-                        }}
-                    >
-                        {grantingAccess ? "Granting Access..." : "Grant AI Access"}
-                    </button>
+                    {requestSent ? (
+                        <>
+                            <div style={{
+                                width: "52px", height: "52px", borderRadius: "50%",
+                                background: "rgba(34,197,94,0.1)", display: "flex",
+                                alignItems: "center", justifyContent: "center"
+                            }}>
+                                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2">
+                                    <path d="M20 6L9 17L4 12" />
+                                </svg>
+                            </div>
+                            <div>
+                                <p style={{ fontWeight: 600, color: "#16a34a", marginBottom: "6px", fontSize: "15px" }}>Request Sent!</p>
+                                <p style={{ fontSize: "13px", color: "#666", maxWidth: "260px" }}>
+                                    An access request has been sent to the patient. AI chat will be available once they approve it.
+                                </p>
+                            </div>
+                        </>
+                    ) : (
+                        <>
+                            <div style={{
+                                width: "52px", height: "52px", borderRadius: "50%",
+                                background: "rgba(244,67,54,0.1)", display: "flex",
+                                alignItems: "center", justifyContent: "center"
+                            }}>
+                                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#d32f2f" strokeWidth="2">
+                                    <circle cx="12" cy="12" r="10" />
+                                    <line x1="12" y1="8" x2="12" y2="12" />
+                                    <line x1="12" y1="16" x2="12.01" y2="16" />
+                                </svg>
+                            </div>
+                            <div>
+                                <p style={{ fontWeight: 600, color: "#d32f2f", marginBottom: "6px", fontSize: "15px" }}>No AI Access</p>
+                                <p style={{ fontSize: "13px", color: "#666", maxWidth: "260px" }}>
+                                    You don&apos;t have AI access for this patient&apos;s data. Click below to send an access request — the patient will need to approve it.
+                                </p>
+                            </div>
+                            {accessError && <p style={{ fontSize: "12px", color: "#d32f2f" }}>{accessError}</p>}
+                            <button
+                                onClick={handleGrantAccess}
+                                disabled={grantingAccess}
+                                style={{
+                                    padding: "10px 24px", borderRadius: "8px",
+                                    background: grantingAccess ? "#ccc" : "#0081FE",
+                                    color: "#fff", border: "none",
+                                    cursor: grantingAccess ? "not-allowed" : "pointer",
+                                    fontSize: "14px", fontWeight: 600
+                                }}
+                            >
+                                {grantingAccess ? "Sending Request..." : "Request AI Access"}
+                            </button>
+                        </>
+                    )}
                 </div>
             </div>
         );

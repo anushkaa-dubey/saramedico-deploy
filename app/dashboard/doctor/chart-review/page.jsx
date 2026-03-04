@@ -7,7 +7,7 @@ import AIChat from "./components/AIChat";
 import Timeline from "./components/Timeline";
 import styles from "./ChartReview.module.css";
 import { motion } from "framer-motion";
-import { fetchPatients, fetchDoctorProfile, fetchPatientDocuments, uploadPatientDocument } from "@/services/doctor";
+import { fetchPatients, fetchDoctorProfile, fetchPatientDocuments, uploadPatientDocument, fetchDocumentDetails } from "@/services/doctor";
 import { API_BASE_URL, getAuthHeaders } from "@/services/apiConfig";
 
 
@@ -155,6 +155,19 @@ export default function ChartReviewPage() {
         console.log(`Jumping to page ${page} from timeline`);
     };
 
+    const handleSelectDocument = async (doc) => {
+        setSelectedDocument(doc); // Optimistic UI update
+        try {
+            const fullDoc = await fetchDocumentDetails(doc.id);
+            if (fullDoc) {
+                // Ensure we get the properly formatted downloadUrl from the API
+                setSelectedDocument(prev => prev && prev.id === fullDoc.id ? { ...prev, ...fullDoc } : prev);
+            }
+        } catch (err) {
+            console.error("Failed to load full document details:", err);
+        }
+    };
+
     return (
         <motion.div
             initial={{ opacity: 0 }}
@@ -224,7 +237,7 @@ export default function ChartReviewPage() {
                             <div
                                 key={doc.id}
                                 className={styles.documentCard}
-                                onClick={() => setSelectedDocument(doc)}
+                                onClick={() => handleSelectDocument(doc)}
                                 style={{ position: "relative" }}
                             >
                                 <div className={styles.docIcon}>
@@ -350,8 +363,8 @@ export default function ChartReviewPage() {
                     <div className={styles.splitView}>
                         <div className={styles.viewerPanel}>
                             <PDFViewer
-                                documentUrl={selectedDocument.presigned_url || selectedDocument.download_url || selectedDocument.url || null}
-                                documentName={selectedDocument.title || selectedDocument.file_name || "Document"}
+                                documentUrl={selectedDocument.downloadUrl || selectedDocument.download_url || selectedDocument.presigned_url || selectedDocument.url || null}
+                                documentName={selectedDocument.title || selectedDocument.file_name || selectedDocument.fileName || "Document"}
                                 onPageChange={setCurrentPage}
                             />
                         </div>

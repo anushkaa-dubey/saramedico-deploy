@@ -70,9 +70,16 @@ export const checkAIPermission = async (patientId) => {
             headers: getAuthHeaders(),
         });
         const data = await handleResponse(response);
+        // Use has_permission as the primary gate for aiAccess.
+        // ai_access_permission may not be set even on valid grants (e.g. auto-grants).
+        // The backend AI endpoint enforces its own stricter check — if it 403s,
+        // AIChat.jsx will reset aiAccess to false and show the Request Access UI.
+        const hasActiveGrant = data.has_permission || false;
+        const hasAiFlag = data.ai_access_permission || false;
         return {
-            hasPermission: data.has_permission || false,
-            aiAccess: data.ai_access_permission || false,
+            hasPermission: hasActiveGrant,
+            // Allow attempt if either general permission or AI flag is true
+            aiAccess: hasActiveGrant || hasAiFlag,
         };
     } catch (err) {
         console.error("checkAIPermission error:", err);
@@ -82,21 +89,25 @@ export const checkAIPermission = async (patientId) => {
 
 
 /**
- * Request AI access to a patient's data (Doctor initiating)
+ * Request AI access to a patient's data as a Doctor.
+ * The PATIENT must then approve via their app.
  * Endpoint: POST /api/v1/permissions/request
  */
-export const grantAIAccess = async (patientId) => {
+export const requestAIAccess = async (patientId) => {
     const response = await fetch(`${API_BASE_URL}/permissions/request`, {
         method: "POST",
         headers: getAuthHeaders(),
         body: JSON.stringify({
             patient_id: patientId,
-            access_level: "read_analyze",
-            reason: "AI Chart Review and Analysis"
+            reason: "AI Chart Review and Analysis",
+            expiry_days: 90
         }),
     });
     return handleResponse(response);
 };
+
+// Keep old name as alias for backward compatibility
+export const grantAIAccess = requestAIAccess;
 
 
 
@@ -132,21 +143,48 @@ export const fetchPatientDocuments = async (patientId) => {
     });
     const data = await handleResponse(response);
 
-    // Fix backend internal minio URLs (e.g. minio:9000) to point to our proxy.
-    // This allows the browser to load documents even if port 9000 is blocked.
+    // Fix backend internal minio/docker URLs (minio:9000 or host:9000)
+    // Rewrite to public AWS IP:9000 so browsers can access them directly.
+    const BACKEND_HOST = process.env.NEXT_PUBLIC_API_URL
+        ? new URL(process.env.NEXT_PUBLIC_API_URL).hostname
+        : '107.20.98.130';
     if (Array.isArray(data)) {
         return data.map(doc => {
             const url = doc.presigned_url || doc.url || doc.download_url;
             if (url && (url.includes('minio:9000') || url.includes(':9000'))) {
-                // Replace the entire host:port with our local proxy path
-                // Original: http://107.20.98.130:9000/bucket/file.pdf?params
-                // New: /api/storage/bucket/file.pdf?params
-                doc.presigned_url = url.replace(/^https?:\/\/[^/]+:9000\//, '/api/storage/');
+                // Rewrite docker-internal hostname to public AWS IP
+                // minio:9000 → 107.20.98.130:9000
+                doc.presigned_url = url
+                    .replace(/^https?:\/\/minio:9000\//, `http://${BACKEND_HOST}:9000/`)
+                    .replace(/^https?:\/\/[^/]+:9000\//, `http://${BACKEND_HOST}:9000/`);
             }
             return doc;
         });
     }
     return data;
+};
+
+/**
+ * Fetch a single document by ID to get full details including downloadUrl
+ * Endpoint: GET /api/v1/documents/{document_id}
+ */
+export const fetchDocumentDetails = async (documentId) => {
+    const response = await fetch(`${API_BASE_URL}/documents/${documentId}`, {
+        headers: getAuthHeaders(),
+    });
+    const doc = await handleResponse(response);
+
+    // Fix docker-internal minio URLs → public AWS IP:9000
+    const BACKEND_HOST = process.env.NEXT_PUBLIC_API_URL
+        ? new URL(process.env.NEXT_PUBLIC_API_URL).hostname
+        : '107.20.98.130';
+    const url = doc.downloadUrl || doc.download_url || doc.presigned_url || doc.url;
+    if (url && (url.includes('minio:9000') || url.includes(':9000'))) {
+        doc.downloadUrl = url
+            .replace(/^https?:\/\/minio:9000\//, `http://${BACKEND_HOST}:9000/`)
+            .replace(/^https?:\/\/[^/]+:9000\//, `http://${BACKEND_HOST}:9000/`);
+    }
+    return doc;
 };
 
 /**

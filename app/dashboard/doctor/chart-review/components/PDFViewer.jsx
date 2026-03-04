@@ -21,6 +21,8 @@ export default function PDFViewer({ documentUrl, documentName, onPageChange }) {
         }
     };
 
+    const isImage = documentUrl?.match(/\.(jpeg|jpg|png|gif|webp)(\?.*)?$/i) || documentName?.match(/\.(jpeg|jpg|png|gif|webp)$/i);
+
     return (
         <div className={styles.pdfViewer}>
             {/* Toolbar */}
@@ -64,20 +66,35 @@ export default function PDFViewer({ documentUrl, documentName, onPageChange }) {
             {/* Document Area */}
             <div className={styles.canvasContainer} style={{ overflow: "auto" }}>
                 {documentUrl ? (
-                    <div style={{ transform: `scale(${zoom / 100})`, transformOrigin: "top center", transition: "transform 0.2s ease" }}>
-                        <iframe
-                            src={documentUrl}
-                            title={documentName || "Document Viewer"}
-                            style={{
-                                width: "calc(100vw - 720px)",
-                                minWidth: "500px",
-                                height: "calc(100vh - 180px)",
-                                border: "none",
-                                background: "#fff",
-                                borderRadius: "8px",
-                                boxShadow: "0 2px 8px rgba(0,0,0,0.12)"
-                            }}
-                        />
+                    <div style={{ transform: `scale(${zoom / 100})`, transformOrigin: "top center", transition: "transform 0.2s ease", width: "100%", height: "100%", display: "flex", justifyContent: "center" }}>
+                        {isImage ? (
+                            <img
+                                src={documentUrl}
+                                alt={documentName || "Document"}
+                                style={{
+                                    maxWidth: "100%",
+                                    maxHeight: "calc(100vh - 180px)",
+                                    objectFit: "contain",
+                                    borderRadius: "8px",
+                                    boxShadow: "0 2px 8px rgba(0,0,0,0.12)"
+                                }}
+                            />
+                        ) : (
+                            <iframe
+                                src={documentUrl}
+                                title={documentName || "Document Viewer"}
+                                style={{
+                                    width: "100%",
+                                    minWidth: "500px",
+                                    maxWidth: "800px",
+                                    height: "calc(100vh - 180px)",
+                                    border: "none",
+                                    background: "#fff",
+                                    borderRadius: "8px",
+                                    boxShadow: "0 2px 8px rgba(0,0,0,0.12)"
+                                }}
+                            />
+                        )}
                     </div>
                 ) : (
                     <div style={{

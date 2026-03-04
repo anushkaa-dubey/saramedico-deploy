@@ -150,3 +150,61 @@ export const fetchDoctors = async (filters = {}) => {
         return [];
     }
 };
+
+/**
+ * =========================
+ * PERMISSIONS (Patient side)
+ * =========================
+ */
+
+/**
+ * Fetch pending doctor access requests for the logged-in patient
+ * Endpoint: GET /api/v1/permissions/check  (we call with patient's own token — backend infers patient_id)
+ * Returns list of pending grants where patient needs to respond
+ */
+export const fetchPendingAccessRequests = async () => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/permissions/check`, {
+            headers: getAuthHeaders(),
+        });
+        const data = await handleResponse(response);
+        // Backend may return an array of grants or a single object.
+        if (Array.isArray(data)) return data.filter(g => g.status === "pending");
+        // If single object (one doctor), wrap in array if pending
+        if (data && data.status === "pending") return [data];
+        return [];
+    } catch (err) {
+        console.error("fetchPendingAccessRequests error:", err);
+        return [];
+    }
+};
+
+/**
+ * Grant a doctor access to the patient's data (with optional AI access)
+ * Endpoint: POST /api/v1/permissions/grant-doctor-access
+ */
+export const grantDoctorAccess = async (doctorId, aiAccess = true) => {
+    const response = await fetch(`${API_BASE_URL}/permissions/grant-doctor-access`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+            doctor_id: doctorId,
+            ai_access_permission: aiAccess,
+        }),
+    });
+    return handleResponse(response);
+};
+
+/**
+ * Revoke a doctor's access
+ * Endpoint: DELETE /api/v1/permissions/revoke-doctor-access
+ */
+export const revokeDoctorAccess = async (doctorId) => {
+    const response = await fetch(`${API_BASE_URL}/permissions/revoke-doctor-access`, {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ doctor_id: doctorId }),
+    });
+    if (response.status === 204) return true;
+    return handleResponse(response);
+};

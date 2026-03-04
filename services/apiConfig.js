@@ -11,14 +11,13 @@
  */
 
 const getApiBaseUrl = () => {
-    // Always use relative path in the browser so requests go
-    // through the Next.js proxy → avoids CORS errors.
-    if (typeof window !== "undefined") {
-        return "/api/v1";
+    // Override local proxy since the Dev environment container 
+    // does not have IPv4 access to connect to the AWS instance.
+    // By returning the direct URL, the user's browser makes the request itself.
+    if (typeof process !== "undefined" && process.env.NEXT_PUBLIC_API_URL) {
+        return process.env.NEXT_PUBLIC_API_URL;
     }
-
-    // Server-side (e.g. Next.js API routes): use the real backend URL
-    return process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+    return "http://107.20.98.130:8000/api/v1";
 };
 
 export const API_BASE_URL = getApiBaseUrl();
