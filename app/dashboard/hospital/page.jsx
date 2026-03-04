@@ -420,7 +420,7 @@ export default function HospitalDashboard() {
                     </div>
 
                     {/* Right Side Column */}
-                    <div className={styles.rightColMain}>                    {/* Calendar Widget Hidden - Backend domain missing */}
+                    <div className={styles.rightColMain}>
                         {/* 
                         <div className={styles.calendarCard}>
                             ...
@@ -450,5 +450,4 @@ export default function HospitalDashboard() {
     );
 }
 
-// Helper formatting removed as no longer used in this view
 
