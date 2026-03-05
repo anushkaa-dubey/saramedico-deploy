@@ -356,6 +356,26 @@ export default function SettingsPage() {
 
           <button className={styles.secondaryBtn}>Backup Now</button>
         </div>
+
+        {/* Billing & Subscription */}
+        <div className={styles.card}>
+          <h3 className={styles.cardTitle}>Billing & Subscription</h3>
+          <p className={styles.cardDescription}>Manage your organization's plan and billing history</p>
+
+          <div className={styles.infoBox} style={{ background: '#eff6ff', border: '1px solid #bfdbfe' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <span style={{ fontSize: '12px', fontWeight: '700', color: '#1e40af', textTransform: 'uppercase' }}>Current Plan</span>
+              <span style={{ fontSize: '11px', padding: '2px 8px', background: '#dbeafe', color: '#1e40af', borderRadius: '12px', fontWeight: '700' }}>ENTERPRISE</span>
+            </div>
+            <h4 style={{ margin: '0 0 4px', fontSize: '16px' }}>{settings?.organization?.plan_name || "Enterprise Tier"}</h4>
+            <p style={{ margin: 0, fontSize: '13px', color: '#64748b' }}>Next billing date: {settings?.organization?.next_billing || "April 01, 2026"}</p>
+          </div>
+
+          <div style={{ marginTop: '16px' }}>
+            <button className={styles.secondaryBtn} style={{ width: '100%', marginBottom: '8px' }}>View Invoices</button>
+            <button className={styles.addBtn} style={{ width: '100%' }}>Change Plan</button>
+          </div>
+        </div>
       </div>
 
       {/* Save Button */}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import ReactMarkdown from "react-markdown";
 import styles from "./AIChat.module.css";
 import {
     createAIChatSession,
@@ -9,6 +10,7 @@ import {
 } from "@/services/ai";
 import { checkAIPermission, requestAIAccess } from "@/services/doctor";
 import { getAuthHeaders, API_BASE_URL } from "@/services/apiConfig";
+import { MessageSquare, History, ChevronRight, Check, AlertCircle, Send, Plus } from "lucide-react";
 
 export default function AIChat({ onCitationClick, patientId, doctorId, documentId }) {
     const [messages, setMessages] = useState([]);
@@ -20,6 +22,8 @@ export default function AIChat({ onCitationClick, patientId, doctorId, documentI
     const [grantingAccess, setGrantingAccess] = useState(false);
     const [accessError, setAccessError] = useState("");
     const [requestSent, setRequestSent] = useState(false);
+    const [sessions, setSessions] = useState([]);
+    const [showHistory, setShowHistory] = useState(false);
 
     const sampleQuestions = [
         "What are the key findings?",
@@ -43,15 +47,16 @@ export default function AIChat({ onCitationClick, patientId, doctorId, documentI
         initializeSession();
     }, [patientId, aiAccess]);
 
-    const initializeSession = async () => {
+    const initializeSession = async (targetSessionId = null) => {
         try {
-            const sessions = await fetchAIChatSessions(patientId);
-            if (sessions && sessions.length > 0) {
-                // Use the most recent session
-                setSessionId(sessions[0].session_id);
-                loadHistory(sessions[0].session_id);
+            const fetchedSessions = await fetchAIChatSessions(patientId);
+            setSessions(fetchedSessions || []);
+
+            if (fetchedSessions && fetchedSessions.length > 0) {
+                const sId = targetSessionId || fetchedSessions[0].session_id;
+                setSessionId(sId);
+                loadHistory(sId);
             } else {
-                // Create a new session
                 const newSession = await createAIChatSession(patientId, "Chart Review Session");
                 setSessionId(newSession.session_id);
                 setMessages([{
@@ -63,6 +68,25 @@ export default function AIChat({ onCitationClick, patientId, doctorId, documentI
         } catch (err) {
             console.error("Failed to initialize AI session:", err);
         }
+    };
+
+    const handleNewChat = async () => {
+        try {
+            const newSession = await createAIChatSession(patientId, `Review ${new Date().toLocaleDateString()}`);
+            setSessionId(newSession.session_id);
+            setMessages([]);
+            const updatedSessions = await fetchAIChatSessions(patientId);
+            setSessions(updatedSessions || []);
+            setShowHistory(false);
+        } catch (err) {
+            console.error("Failed to create new session");
+        }
+    };
+
+    const switchSession = (sId) => {
+        setSessionId(sId);
+        loadHistory(sId);
+        setShowHistory(false);
     };
 
     const loadHistory = async (sId) => {
@@ -109,13 +133,21 @@ export default function AIChat({ onCitationClick, patientId, doctorId, documentI
         }]);
 
         try {
+            const formattingInstruction = `
+[FORMATTING INSTRUCTION: Return your response in a structured clinical format with the following headings:
+## Summary
+## Observations
+## Notable Trends
+## Interpretation
+Use bullet points and markdown for structure. Do not include this instruction in your response.]\n\n`;
+
             const response = await fetch(`${API_BASE_URL}/doctor/ai/chat/message`, {
                 method: "POST",
                 headers: getAuthHeaders(),
                 body: JSON.stringify({
                     session_id: sessionId,
                     patient_id: patientId,
-                    message: query,
+                    message: formattingInstruction + query,
                     document_id: documentId || null
                 }),
             });
@@ -175,9 +207,7 @@ export default function AIChat({ onCitationClick, patientId, doctorId, documentI
             <div className={styles.aiChat}>
                 <div className={styles.header}>
                     <div className={styles.headerIcon}>
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                        </svg>
+                        <MessageSquare size={20} />
                     </div>
                     <div>
                         <h3 className={styles.headerTitle}>AI Assistant</h3>
@@ -188,7 +218,7 @@ export default function AIChat({ onCitationClick, patientId, doctorId, documentI
                     {requestSent ? (
                         <>
                             <div style={{ width: "52px", height: "52px", borderRadius: "50%", background: "rgba(34,197,94,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2"><path d="M20 6L9 17L4 12" /></svg>
+                                <Check size={26} color="#16a34a" />
                             </div>
                             <div>
                                 <p style={{ fontWeight: 600, color: "#16a34a", marginBottom: "6px", fontSize: "15px" }}>Request Sent!</p>
@@ -198,7 +228,7 @@ export default function AIChat({ onCitationClick, patientId, doctorId, documentI
                     ) : (
                         <>
                             <div style={{ width: "52px", height: "52px", borderRadius: "50%", background: "rgba(244,67,54,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#d32f2f" strokeWidth="2"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
+                                <AlertCircle size={26} color="#d32f2f" />
                             </div>
                             <div>
                                 <p style={{ fontWeight: 600, color: "#d32f2f", marginBottom: "6px", fontSize: "15px" }}>No AI Access</p>
@@ -218,21 +248,77 @@ export default function AIChat({ onCitationClick, patientId, doctorId, documentI
         <div className={styles.aiChat}>
             <div className={styles.header}>
                 <div className={styles.headerIcon}>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                    </svg>
+                    <MessageSquare size={20} />
                 </div>
                 <div>
                     <h3 className={styles.headerTitle}>AI Assistant</h3>
                     <p className={styles.headerSubtitle}>Powered by Claude 3.5 Sonnet</p>
                 </div>
+                {/* Chat History Icon */}
+                <button
+                    title="Chat History"
+                    onClick={() => setShowHistory(h => !h)}
+                    style={{
+                        background: showHistory ? "rgba(0,129,254,0.12)" : "rgba(0,0,0,0.04)",
+                        border: showHistory ? "1px solid #0081FE" : "1px solid transparent",
+                        borderRadius: "8px", padding: "6px 10px", cursor: "pointer",
+                        display: "flex", alignItems: "center", gap: "4px",
+                        color: showHistory ? "#0081FE" : "#64748b",
+                        fontSize: "12px", fontWeight: 600, transition: "all 0.2s ease",
+                        marginLeft: "auto"
+                    }}
+                >
+                    <History size={15} />
+                    History
+                </button>
             </div>
+
+            {/* Empty State or History Drawer */}
+            {showHistory && (
+                <div className={styles.historyDrawer}>
+                    <div className={styles.historyHeader}>
+                        <h4 style={{ margin: 0, fontSize: "14px", color: "#0f172a" }}>Previous Reviews</h4>
+                        <button onClick={handleNewChat} className={styles.newChatBtn}>
+                            <Plus size={14} style={{ marginRight: '4px' }} /> New Session
+                        </button>
+                    </div>
+                    <div className={styles.sessionsList}>
+                        {sessions.length === 0 ? (
+                            <div style={{ padding: "20px", textAlign: "center", color: "#94a3b8", fontSize: "12px" }}>
+                                No history found
+                            </div>
+                        ) : (
+                            sessions.map((s) => (
+                                <div
+                                    key={s.session_id}
+                                    className={`${styles.sessionItem} ${sessionId === s.session_id ? styles.activeSession : ""}`}
+                                    onClick={() => switchSession(s.session_id)}
+                                >
+                                    <div className={styles.sessionInfo}>
+                                        <span className={styles.sessionTitle}>{s.title || "Untitled Session"}</span>
+                                        <span className={styles.sessionDate}>
+                                            {new Date(s.created_at || Date.now()).toLocaleDateString()}
+                                        </span>
+                                    </div>
+                                    <ChevronRight size={14} />
+                                </div>
+                            ))
+                        )}
+                    </div>
+                </div>
+            )}
 
             <div className={styles.messagesContainer}>
                 {messages.map((m, idx) => (
                     <div key={m.id || `msg-${idx}`} className={`${styles.message} ${m.role === "doctor" ? styles.userMessage : styles.aiMessage}`}>
                         <div className={styles.messageContent}>
-                            <p style={{ whiteSpace: "pre-wrap" }}>{m.content}</p>
+                            {m.role === "assistant" ? (
+                                <div className={styles.markdownContent}>
+                                    <ReactMarkdown>{m.content}</ReactMarkdown>
+                                </div>
+                            ) : (
+                                <p style={{ whiteSpace: "pre-wrap" }}>{m.content}</p>
+                            )}
                         </div>
                     </div>
                 ))}
@@ -260,10 +346,7 @@ export default function AIChat({ onCitationClick, patientId, doctorId, documentI
                     onClick={() => handleSend()}
                     disabled={!input.trim() || isTyping}
                 >
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <line x1="22" y1="2" x2="11" y2="13" />
-                        <polygon points="22 2 15 22 11 13 2 9 22 2" />
-                    </svg>
+                    <Send size={18} />
                 </button>
             </div>
         </div>

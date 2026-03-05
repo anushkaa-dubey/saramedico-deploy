@@ -236,7 +236,7 @@ export default function DoctorVideoCallPage() {
 
                     {appointment?.id && (
                         <button
-                            onClick={() => router.push(`/dashboard/doctor/patients/soap?id=${appointment.id}`)}
+                            onClick={() => router.push(`/dashboard/doctor/patients/soap?consultationId=${appointment.id}`)}
                             style={{
                                 background: 'white',
                                 color: '#0f172a',

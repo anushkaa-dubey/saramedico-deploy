@@ -36,6 +36,7 @@ export default function PatientDashboard() {
   const router = useRouter();
   const [user, setUser] = useState(null);
   const [consultations, setConsultations] = useState([]);
+  const [formattedDate, setFormattedDate] = useState("");
 
   /** Maps any backend role string to a safe dashboard path */
   const roleToDashboard = (role) => {
@@ -80,6 +81,13 @@ export default function PatientDashboard() {
         const list = Array.isArray(cons) ? cons : (cons?.consultations || []);
         setConsultations(list);
 
+        setFormattedDate(new Date().toLocaleDateString("en-US", {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        }));
+
       } catch (err) {
         const stored = localStorage.getItem("user");
         if (stored) {
@@ -119,13 +127,7 @@ export default function PatientDashboard() {
         <div>
           <h2 className={styles.greeting}>Good Morning, {firstName}</h2>
           <p className={styles.sub}>
-            Today's{" "}
-            {new Date().toLocaleDateString("en-US", {
-              weekday: "long",
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            })}
+            Today's {formattedDate}
           </p>
         </div>
 

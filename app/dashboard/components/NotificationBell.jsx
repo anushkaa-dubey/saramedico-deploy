@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import { API_BASE_URL, getAuthHeaders } from "@/services/apiConfig";
 import { useRouter } from "next/navigation";
+import { Bell, ShieldCheck, Check, X } from "lucide-react";
 
 /**
  * Approve a doctor's access request (Patient action).
@@ -141,11 +142,39 @@ export default function NotificationBell() {
     const handleApprove = async (notif) => {
         setProcessingId(notif.id);
         try {
-            // doctor_id may be in notif.data, notif.doctor_id, or notif.metadata
-            const doctorId = notif.doctor_id || notif.data?.doctor_id || notif.metadata?.doctor_id;
-            if (!doctorId) throw new Error("Doctor ID not found in notification");
+            // 1. Get patient ID from /auth/me
+            const profRes = await fetch(`${API_BASE_URL}/auth/me`, {
+                headers: getAuthHeaders(),
+            });
+            if (!profRes.ok) throw new Error("Failed to fetch profile");
+            const profile = await profRes.json();
+            const patientId = profile.id;
+
+            // 2. Fetch permissions to find the doctor_id
+            const permRes = await fetch(`${API_BASE_URL}/permissions/check?patient_id=${patientId}`, {
+                headers: getAuthHeaders(),
+            });
+            if (!permRes.ok) throw new Error("Failed to fetch pending requests");
+            const data = await permRes.json();
+
+            // Extract doctor_id. Match by name if possible, else take first pending.
+            const pendingRequests = Array.isArray(data)
+                ? data.filter(g => g.status === "pending")
+                : (data.status === "pending" ? [data] : []);
+
+            if (pendingRequests.length === 0) throw new Error("No pending requests found for this patient.");
+
+            const matchingReq = pendingRequests.find(req => {
+                const docName = req.doctor_name || req.doctorName;
+                return docName && notif.message.toLowerCase().includes(docName.toLowerCase());
+            }) || pendingRequests[0];
+
+            const doctorId = matchingReq.doctor_id || matchingReq.doctorId;
+            if (!doctorId) throw new Error("Doctor ID not found in permission records");
+
             await approveAccessRequest(doctorId);
-            // Mark the notification as read after action
+
+            // 3. Mark the notification as read after action
             await fetch(`${API_BASE_URL}/notifications/${notif.id}/read`, {
                 method: "PATCH",
                 headers: getAuthHeaders(),
@@ -154,6 +183,7 @@ export default function NotificationBell() {
             setUnreadCount((prev) => Math.max(0, prev - 1));
         } catch (err) {
             console.error("Approve failed:", err);
+            alert(err.message || "Failed to approve access request.");
         } finally {
             setProcessingId(null);
         }
@@ -165,9 +195,38 @@ export default function NotificationBell() {
     const handleDeny = async (notif) => {
         setProcessingId(notif.id);
         try {
-            const doctorId = notif.doctor_id || notif.data?.doctor_id || notif.metadata?.doctor_id;
-            if (!doctorId) throw new Error("Doctor ID not found in notification");
+            // 1. Get patient ID
+            const profRes = await fetch(`${API_BASE_URL}/auth/me`, {
+                headers: getAuthHeaders(),
+            });
+            if (!profRes.ok) throw new Error("Failed to fetch profile");
+            const profile = await profRes.json();
+            const patientId = profile.id;
+
+            // 2. Fetch permissions
+            const permRes = await fetch(`${API_BASE_URL}/permissions/check?patient_id=${patientId}`, {
+                headers: getAuthHeaders(),
+            });
+            if (!permRes.ok) throw new Error("Failed to fetch pending requests");
+            const data = await permRes.json();
+
+            const pendingRequests = Array.isArray(data)
+                ? data.filter(g => g.status === "pending")
+                : (data.status === "pending" ? [data] : []);
+
+            if (pendingRequests.length === 0) throw new Error("No pending requests found.");
+
+            const matchingReq = pendingRequests.find(req => {
+                const docName = req.doctor_name || req.doctorName;
+                return docName && notif.message.toLowerCase().includes(docName.toLowerCase());
+            }) || pendingRequests[0];
+
+            const doctorId = matchingReq.doctor_id || matchingReq.doctorId;
+            if (!doctorId) throw new Error("Doctor ID not found in records");
+
             await denyAccessRequest(doctorId);
+
+            // 3. Mark Read
             await fetch(`${API_BASE_URL}/notifications/${notif.id}/read`, {
                 method: "PATCH",
                 headers: getAuthHeaders(),
@@ -176,6 +235,7 @@ export default function NotificationBell() {
             setUnreadCount((prev) => Math.max(0, prev - 1));
         } catch (err) {
             console.error("Deny failed:", err);
+            alert(err.message || "Failed to deny access request.");
         } finally {
             setProcessingId(null);
         }
@@ -205,9 +265,7 @@ export default function NotificationBell() {
                             background: "#eff6ff", display: "flex", alignItems: "center",
                             justifyContent: "center", flexShrink: 0, marginTop: "2px"
                         }}>
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2">
-                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                            </svg>
+                            <ShieldCheck size={16} color="#3b82f6" />
                         </div>
                     )}
                     <div style={{ flex: 1 }}>
@@ -239,7 +297,7 @@ export default function NotificationBell() {
                                         transition: "opacity 0.2s",
                                     }}
                                 >
-                                    {isProcessing ? "..." : "✓ Approve"}
+                                    {isProcessing ? "..." : <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}><Check size={14} /> Approve</span>}
                                 </button>
                                 <button
                                     onClick={(e) => { e.stopPropagation(); handleDeny(notif); }}
@@ -258,7 +316,7 @@ export default function NotificationBell() {
                                         transition: "opacity 0.2s",
                                     }}
                                 >
-                                    {isProcessing ? "..." : "✗ Deny"}
+                                    {isProcessing ? "..." : <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px' }}><X size={14} /> Deny</span>}
                                 </button>
                             </div>
                         )}
@@ -281,10 +339,7 @@ export default function NotificationBell() {
                     padding: "8px",
                 }}
             >
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
-                    <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-                </svg>
+                <Bell size={24} color="#64748b" />
                 {unreadCount > 0 && (
                     <span
                         style={{

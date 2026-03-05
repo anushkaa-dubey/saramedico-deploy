@@ -10,9 +10,10 @@ import scheduleIcon from "@/public/icons/schedule.svg";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
-// import { fetchCalendarMonth, fetchCalendarDay } from "@/services/calendar"; // Missing backend domain
+import { fetchCalendarMonth, fetchCalendarDay } from "@/services/calendar";
 import { fetchAdminOverview, fetchAdminAuditLogs, fetchAuditLogs } from "@/services/admin";
 import { fetchProfile, searchDoctors, searchDoctorDirectory } from "@/services/doctor";
+import { ChevronLeft, ChevronRight, Plus, User, FileText, Activity, AlertCircle } from "lucide-react";
 
 
 const containerVariants = {
@@ -54,7 +55,8 @@ export default function AdminDashboard() {
 
   const searchFilters = ["All", "Doctors Directory", "Internal Doctors"];
 
-  const [currentDate, setCurrentDate] = useState(new Date());
+  const [currentDate, setCurrentDate] = useState(null);
+  const [isMounted, setIsMounted] = useState(false);
   const [monthData, setMonthData] = useState({});
   const [selectedDayEvents, setSelectedDayEvents] = useState(null);
 
@@ -90,6 +92,8 @@ export default function AdminDashboard() {
     };
 
     init();
+    setIsMounted(true);
+    setCurrentDate(new Date());
   }, [router]);
 
   useEffect(() => {
@@ -139,8 +143,15 @@ export default function AdminDashboard() {
   }, [searchQuery, searchFilter]);
 
   const handleDayClick = async (day) => {
-    // Missing backend Calendar domain
-    return;
+    const selectedDate = new Date(currentYear, currentDate.getMonth(), day);
+    const dateStr = selectedDate.toISOString().split('T')[0];
+    try {
+      const response = await fetchCalendarDay(dateStr);
+      setSelectedDayEvents(response?.events || []);
+    } catch (err) {
+      console.error("Failed to fetch day events:", err);
+      setSelectedDayEvents([]);
+    }
   };
 
   const changeMonth = (offset) => {
@@ -150,14 +161,19 @@ export default function AdminDashboard() {
   };
 
   useEffect(() => {
-    // Missing backend Calendar domain
-    /*
     const fetchToday = async () => {
-      ...
+      const today = new Date().toISOString().split('T')[0];
+      try {
+        const response = await fetchCalendarDay(today);
+        setSelectedDayEvents(response?.events || []);
+      } catch (err) {
+        console.error("Init today events error:", err);
+      }
     };
-    fetchToday();
-    */
-  }, []);
+    if (isMounted) fetchToday();
+  }, [isMounted]);
+
+  if (!currentDate) return null;
 
   const currentMonthName = currentDate.toLocaleString('default', { month: 'long' });
   const currentYear = currentDate.getFullYear();
@@ -174,10 +190,16 @@ export default function AdminDashboard() {
   };
 
   const formatEventsForSchedule = (events) => {
-    return []; // Missing backend Calendar domain
+    if (!events) return [];
+    return events.map(ev => ({
+      time: ev.start_time ? new Date(ev.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "All Day",
+      title: ev.title || "Untitled Event",
+      type: ev.event_type || "meeting",
+      color: ev.color || "#3b82f6"
+    })).sort((a, b) => a.time.localeCompare(b.time));
   };
 
-  const displaySchedule = []; // SelectedDayEvents logic disabled
+  const displaySchedule = formatEventsForSchedule(selectedDayEvents || []);
 
   const adminName = adminUser?.full_name || "Admin";
 
@@ -201,226 +223,271 @@ export default function AdminDashboard() {
       variants={containerVariants}
       style={{ width: "100%" }}
     >
-      <motion.div variants={itemVariants} className={styles.topbar}>
-        <div className={styles.searchWrapper}>
-          <img src={searchIcon.src} alt="Search" className={styles.searchIcon} />
-          <input
-            className={styles.search}
-            placeholder="Search doctors..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onFocus={() => setIsSearchFocused(true)}
-            onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
-          />
+      {!isMounted ? null : (
+        <>
+          <motion.div variants={itemVariants} className={styles.topbar}>
+            <div className={styles.searchWrapper}>
+              <img src={searchIcon.src} alt="Search" className={styles.searchIcon} />
+              <input
+                className={styles.search}
+                placeholder="Search doctors..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onFocus={() => setIsSearchFocused(true)}
+                onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
+              />
 
-          {isSearchFocused && (
-            <div className={styles.searchDropdown}>
-              <div className={styles.filterRow}>
-                {searchFilters.map(filter => (
-                  <button
-                    key={filter}
-                    className={`${styles.filterBtn} ${searchFilter === filter ? styles.filterBtnActive : ""}`}
-                    onClick={() => setSearchFilter(filter)}
-                  >
-                    {filter}
-                  </button>
-                ))}
-              </div>
-              <div className={styles.matchesSection}>
-                <h4 className={styles.sectionTitle}>Top Matches</h4>
-                {isSearching ? (
-                  <div style={{ padding: "8px 0", color: "#94a3b8", fontSize: "13px" }}>
-                    Searching...
+              {isSearchFocused && (
+                <div className={styles.searchDropdown}>
+                  <div className={styles.filterRow}>
+                    {searchFilters.map(filter => (
+                      <button
+                        key={filter}
+                        className={`${styles.filterBtn} ${searchFilter === filter ? styles.filterBtnActive : ""}`}
+                        onClick={() => setSearchFilter(filter)}
+                      >
+                        {filter}
+                      </button>
+                    ))}
                   </div>
-                ) : topMatches.length === 0 ? (
-                  <div style={{ padding: "8px 0", color: "#94a3b8", fontSize: "13px" }}>
-                    {searchQuery ? "No doctors found." : "Type to search..."}
-                  </div>
-                ) : (
-                  topMatches.map((match, idx) => (
-                    <Link key={idx} href={`/dashboard/admin/doctors/${match.id}`} className={styles.matchItem} style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
-                      <img src={match.photo_url || personIcon.src} alt="" width="24" height="24" style={{ borderRadius: '50%', objectFit: 'cover' }} />
-                      <div style={{ display: 'flex', flexDirection: 'column', color: '#0f172a' }}>
-                        <span>{match.name || match.full_name || "Doctor"}</span>
-                        <span style={{ fontSize: '11px', color: '#64748b' }}>{match.specialty || "General Physician"}</span>
+                  <div className={styles.matchesSection}>
+                    <h4 className={styles.sectionTitle}>Top Matches</h4>
+                    {isSearching ? (
+                      <div style={{ padding: "8px 0", color: "#94a3b8", fontSize: "13px" }}>
+                        Searching...
                       </div>
-                    </Link>
-                  ))
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-
-        <div className={styles.topActions}>
-          {/* <button className={styles.iconBtn}>
-            <img src={notificationIcon.src} alt="Notifications" width="20" height="20" />
-          </button> */}
-
-          <div className={styles.profile}>
-            <div className={styles.profileInfo}>
-              <span style={{ fontWeight: '700', color: '#0f172a' }}>
-                {loadingOverview ? "Loading..." : adminName}
-              </span>
-              <small style={{ color: '#64748b' }}>{adminUser?.role || "Administrator"}</small>
-            </div>
-          </div>
-        </div>
-      </motion.div>
-
-      <motion.div className={styles.titleRow} variants={itemVariants}>
-        <div>
-          <h2 className={styles.heading}>Clinic Overview</h2>
-          <p className={styles.subtext}>
-            Welcome back, {adminName.split(' ')[0]}. Here&apos;s the latest system status.
-          </p>
-        </div>
-
-        <Link href="/dashboard/admin/manage-accounts/invite" className={styles.inviteBtn}>
-          <img src={micIcon.src} alt="Mic" width="16" height="16" />
-          Invite User
-        </Link>
-      </motion.div>
-
-      <motion.div className={styles.summaryCards} variants={itemVariants}>
-        <div className={styles.summaryCard}>
-          <div className={styles.summaryIcon} style={{ background: '#eff6ff' }}>
-            <img src={scheduleIcon.src} alt="" width="20" />
-          </div>
-          <div className={styles.summaryInfo}>
-            <span className={styles.summaryLabel}>Appointments Today</span>
-            <h3 className={styles.summaryValue}>
-              {loadingOverview ? "..." : appointmentsToday}
-            </h3>
-            <span className={styles.summaryTrend} style={{ color: '#16a34a' }}>
-              {loadingOverview ? "Loading..." : (appointmentsToday === "—" ? "Backend not connected" : "Live Count")}
-            </span>
-          </div>
-        </div>
-        <div className={styles.summaryCard}>
-          <div className={styles.summaryIcon} style={{ background: '#fff7ed' }}>
-            <img src={docIcon.src} alt="" width="20" />
-          </div>
-          <div className={styles.summaryInfo}>
-            <span className={styles.summaryLabel}>Pending Uploads</span>
-            <h3 className={styles.summaryValue}>
-              {loadingOverview ? "..." : pendingUploads}
-            </h3>
-            <span className={styles.summaryTrend} style={{ color: '#ea580c' }}>
-              {pendingUploads === "—" ? "Backend not connected" : "Requires Action"}
-            </span>
-          </div>
-        </div>
-        <div className={styles.summaryCard}>
-          <div className={styles.summaryIcon} style={{ background: '#f0fdf4' }}>
-            <img src={personIcon.src} alt="" width="20" />
-          </div>
-          <div className={styles.summaryInfo}>
-            <span className={styles.summaryLabel}>Active Doctors</span>
-            <h3 className={styles.summaryValue}>
-              {loadingOverview ? "..." : activeDoctors}
-            </h3>
-            <span className={styles.summaryTrend} style={{ color: '#16a34a' }}>
-              {activeDoctors === "—" ? "Backend not connected" : "All on duty"}
-            </span>
-          </div>
-        </div>
-      </motion.div>
-
-      <section className={styles.dashboardGrid}>
-        <div className={styles.leftCol}>
-          {/* Schedule Hidden - Backend Calendar domain missing */}
-          {/*
-          <motion.div className={styles.card} variants={itemVariants}>
-            ...
-          </motion.div>
-          */}
-
-          {/* Activity Table — from real audit logs */}
-          <motion.div className={styles.card} variants={itemVariants}>
-            <div className={styles.cardHeader}>
-              <h3>Recent Activity</h3>
-              <Link href="/dashboard/hospital/audit-logs" className={styles.link}>View Logs</Link>
-            </div>
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th>USER</th>
-                  <th>EVENT</th>
-                  <th>DATE/TIME</th>
-                  <th>STATUS</th>
-                </tr>
-              </thead>
-              <tbody>
-                {auditLogs.length === 0 ? (
-                  <tr>
-                    <td colSpan="4" style={{ padding: '20px', textAlign: 'center', color: '#94a3b8' }}>
-                      {loadingOverview ? "Loading..." : "Backend not connected — no audit logs."}
-                    </td>
-                  </tr>
-                ) : (
-                  auditLogs.slice(0, 5).map((log, i) => (
-                    <tr key={log.id || i}>
-                      <td>
-                        <div className={styles.userCell}>
-                          <div className={styles.avatarSmall}></div>
-                          {log.user_id || log.user_email || "System"}
-                        </div>
-                      </td>
-                      <td>{log.action || log.event || "—"}</td>
-                      <td>{log.timestamp ? new Date(log.timestamp).toLocaleString() : "—"}</td>
-                      <td>
-                        <span
-                          className={styles.success}
-                          style={{ color: getActionColor(log.action || "") }}
-                        >
-                          {log.status || "Completed"}
-                        </span>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </motion.div>
-        </div>
-
-        <div className={styles.rightCol}>
-          {/* Calendar Widget */}
-          {/* Calendar Widget Hidden - Backend domain missing */}
-          {/*
-          <motion.div className={styles.card} variants={itemVariants}>
-            ...
-          </motion.div>
-          */}
-
-          {/* System Alerts from Overview */}
-          <motion.div className={`${styles.card} ${styles.alertCard}`} variants={itemVariants}>
-            <h3>System Alerts</h3>
-            <div className={styles.alertList}>
-              {loadingOverview ? (
-                <div className={styles.alert}>
-                  <strong>Loading alerts...</strong>
-                </div>
-              ) : overview?.alerts?.length > 0 ? (
-                overview.alerts.slice(0, 3).map((alert, i) => (
-                  <div key={i} className={styles.alert}>
-                    <strong>{alert.title || alert.type || "System Alert"}</strong>
-                    <p>{alert.message || alert.description || "—"}</p>
-                    <span>{alert.time || alert.created_at ? new Date(alert.created_at || alert.time).toLocaleString() : "—"}</span>
+                    ) : topMatches.length === 0 ? (
+                      <div style={{ padding: "8px 0", color: "#94a3b8", fontSize: "13px" }}>
+                        {searchQuery ? "No doctors found." : "Type to search..."}
+                      </div>
+                    ) : (
+                      topMatches.map((match, idx) => (
+                        <Link key={idx} href={`/dashboard/admin/doctors/${match.id}`} className={styles.matchItem} style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
+                          <img src={match.photo_url || personIcon.src} alt="" width="24" height="24" style={{ borderRadius: '50%', objectFit: 'cover' }} />
+                          <div style={{ display: 'flex', flexDirection: 'column', color: '#0f172a' }}>
+                            <span>{match.name || match.full_name || "Doctor"}</span>
+                            <span style={{ fontSize: '11px', color: '#64748b' }}>{match.specialty || "General Physician"}</span>
+                          </div>
+                        </Link>
+                      ))
+                    )}
                   </div>
-                ))
-              ) : (
-                <div className={styles.alert}>
-                  <strong>Backend not connected</strong>
-                  <p>System alert data is unavailable.</p>
-                  <span>—</span>
                 </div>
               )}
             </div>
+
+            <div className={styles.topActions}>
+              <div className={styles.profile}>
+                <div className={styles.profileInfo}>
+                  <span style={{ fontWeight: '700', color: '#0f172a' }}>
+                    {loadingOverview ? "Loading..." : adminName}
+                  </span>
+                  <small style={{ color: '#64748b' }}>{adminUser?.role || "Administrator"}</small>
+                </div>
+              </div>
+            </div>
           </motion.div>
-        </div>
-      </section>
+
+          <motion.div className={styles.titleRow} variants={itemVariants}>
+            <div>
+              <h2 className={styles.heading}>Clinic Overview</h2>
+              <p className={styles.subtext}>
+                Welcome back, {adminName.split(' ')[0]}. Here&apos;s the latest system status.
+              </p>
+            </div>
+
+            <Link href="/dashboard/admin/manage-accounts/invite" className={styles.inviteBtn}>
+              <img src={micIcon.src} alt="Mic" width="16" height="16" />
+              Invite User
+            </Link>
+          </motion.div>
+
+          <motion.div className={styles.summaryCards} variants={itemVariants}>
+            <div className={styles.summaryCard}>
+              <div className={styles.summaryIcon} style={{ background: '#eff6ff' }}>
+                <img src={personIcon.src} alt="" width="20" />
+              </div>
+              <div className={styles.summaryInfo}>
+                <span className={styles.summaryLabel}>Active Staff</span>
+                <h3 className={styles.summaryValue}>
+                  {loadingOverview ? "..." : (overview?.doctors_count || activeDoctors)}
+                </h3>
+                <span className={styles.summaryTrend} style={{ color: '#16a34a' }}>
+                  {activeDoctors === "—" ? "Backend not connected" : "Verified Accounts"}
+                </span>
+              </div>
+            </div>
+            <div className={styles.summaryCard}>
+              <div className={styles.summaryIcon} style={{ background: '#fef2f2' }}>
+                <img src={micIcon.src} alt="" width="20" />
+              </div>
+              <div className={styles.summaryInfo}>
+                <span className={styles.summaryLabel}>Total Consultations</span>
+                <h3 className={styles.summaryValue}>
+                  {loadingOverview ? "..." : (overview?.consultations_count || "—")}
+                </h3>
+                <span className={styles.summaryTrend} style={{ color: '#3b82f6' }}>
+                  {overview?.consultations_count === undefined ? "Backend not connected" : "Record History"}
+                </span>
+              </div>
+            </div>
+            <div className={styles.summaryCard}>
+              <div className={styles.summaryIcon} style={{ background: '#f0fdf4' }}>
+                <img src={docIcon.src} alt="" width="20" />
+              </div>
+              <div className={styles.summaryInfo}>
+                <span className={styles.summaryLabel}>Organization status</span>
+                <h3 className={styles.summaryValue}>
+                  {loadingOverview ? "..." : (overview?.organization?.status || "Active")}
+                </h3>
+                <span className={styles.summaryTrend} style={{ color: '#16a34a' }}>
+                  {overview?.organization?.name || "Verified Enterprise"}
+                </span>
+              </div>
+            </div>
+          </motion.div>
+
+          <section className={styles.dashboardGrid}>
+            <div className={styles.leftCol}>
+              <motion.div className={styles.card} variants={itemVariants} style={{ marginBottom: '20px' }}>
+                <div className={styles.cardHeader}>
+                  <h3>Today&apos;s Schedule</h3>
+                  <span className={styles.link}>{displaySchedule.length} tasks scheduled</span>
+                </div>
+                <div className={styles.scheduleList}>
+                  {displaySchedule.length === 0 ? (
+                    <div style={{ padding: '20px', textAlign: 'center', color: '#94a3b8', fontSize: '13px' }}>
+                      No appointments or tasks scheduled for today.
+                    </div>
+                  ) : (
+                    displaySchedule.map((item, idx) => (
+                      <div key={idx} className={styles.scheduleItem}>
+                        <div className={styles.timeLine}>
+                          <span className={styles.timeText}>{item.time}</span>
+                          <div className={styles.timeDot} style={{ background: item.color }}></div>
+                        </div>
+                        <div className={styles.scheduleContent}>
+                          <div className={styles.scheduleInfo}>
+                            <strong>{item.title}</strong>
+                            <span>{item.type.toUpperCase()}</span>
+                          </div>
+                          <img src={scheduleIcon.src} alt="" width="14" style={{ opacity: 0.4 }} />
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </motion.div>
+
+              <motion.div className={styles.card} variants={itemVariants}>
+                <div className={styles.cardHeader}>
+                  <h3>Recent Activity</h3>
+                  <Link href="/dashboard/admin/audit-logs" className={styles.link}>View Logs</Link>
+                </div>
+                <table className={styles.table}>
+                  <thead>
+                    <tr>
+                      <th>USER</th>
+                      <th>EVENT</th>
+                      <th>DATE/TIME</th>
+                      <th>STATUS</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {auditLogs.length === 0 ? (
+                      <tr>
+                        <td colSpan="4" style={{ padding: '20px', textAlign: 'center', color: '#94a3b8' }}>
+                          {loadingOverview ? "Loading..." : "Backend not connected — no audit logs."}
+                        </td>
+                      </tr>
+                    ) : (
+                      auditLogs.slice(0, 5).map((log, i) => (
+                        <tr key={log.id || i}>
+                          <td>
+                            <div className={styles.userCell}>
+                              <div className={styles.avatarSmall}></div>
+                              {log.user_id || log.user_email || "System"}
+                            </div>
+                          </td>
+                          <td>{log.action || log.event || "—"}</td>
+                          <td>{log.timestamp ? new Date(log.timestamp).toLocaleString() : "—"}</td>
+                          <td>
+                            <span
+                              className={styles.success}
+                              style={{ color: getActionColor(log.action || "") }}
+                            >
+                              {log.status || "Completed"}
+                            </span>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </motion.div>
+            </div>
+
+            <div className={styles.rightCol}>
+              <motion.div className={styles.card} variants={itemVariants} style={{ marginBottom: '20px' }}>
+                <div className={styles.calendarHeader}>
+                  <h3>{currentMonthName} {currentYear}</h3>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button onClick={() => changeMonth(-1)} className={styles.iconBtn} style={{ width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <ChevronLeft size={16} />
+                    </button>
+                    <button onClick={() => changeMonth(1)} className={styles.iconBtn} style={{ width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <ChevronRight size={16} />
+                    </button>
+                  </div>
+                </div>
+                <div className={styles.calendarGrid}>
+                  {["S", "M", "T", "W", "T", "F", "S"].map(d => (
+                    <div key={d} className={styles.calDayHead}>{d}</div>
+                  ))}
+                  {daysInMonth.map(d => {
+                    const status = getDayAvailability(d);
+                    const isToday = isTodayMonth && d === todayDate;
+                    return (
+                      <div
+                        key={d}
+                        onClick={() => handleDayClick(d)}
+                        className={`${styles.calDay} ${isToday ? styles.calToday : ""} ${status !== "none" ? styles.calHasEvent : ""}`}
+                      >
+                        {d}
+                      </div>
+                    );
+                  })}
+                </div>
+              </motion.div>
+
+              <motion.div className={`${styles.card} ${styles.alertCard}`} variants={itemVariants}>
+                <h3>System Alerts</h3>
+                <div className={styles.alertList}>
+                  {loadingOverview ? (
+                    <div className={styles.alert}>
+                      <strong>Loading alerts...</strong>
+                    </div>
+                  ) : overview?.alerts?.length > 0 ? (
+                    overview.alerts.slice(0, 3).map((alert, i) => (
+                      <div key={i} className={styles.alert}>
+                        <strong>{alert.title || alert.type || "System Alert"}</strong>
+                        <p>{alert.message || alert.description || "—"}</p>
+                        <span>{alert.time || alert.created_at ? new Date(alert.created_at || alert.time).toLocaleString() : "—"}</span>
+                      </div>
+                    ))
+                  ) : (
+                    <div className={styles.alert}>
+                      <strong>Backend not connected</strong>
+                      <p>System alert data is unavailable.</p>
+                      <span>—</span>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            </div>
+          </section>
+        </>
+      )}
     </motion.div>
   );
 }

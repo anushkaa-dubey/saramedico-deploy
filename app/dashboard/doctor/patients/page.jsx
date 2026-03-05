@@ -373,7 +373,7 @@ function PatientsContent() {
                                                     <p className={styles.visitNotes}>
                                                         {visit.chiefComplaint || visit.chief_complaint || visit.summary || visit.reason || "Patient encounter session recorded and processed."}
                                                     </p>
-                                                    <Link href={`/dashboard/doctor/patients/soap?id=${visit.id}`} style={{ textDecoration: 'none' }}>
+                                                    <Link href={`/dashboard/doctor/patients/soap?consultationId=${visit.id}`} style={{ textDecoration: 'none' }}>
                                                         <button className={styles.soapBtn}>
                                                             View SOAP Note
                                                         </button>

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import styles from "../HospitalDashboard.module.css";
 import logo from "@/public/logo2.svg";
+import { LayoutDashboard, ClipboardList, Calendar, Users, Menu, LogOut } from "lucide-react";
 
 // Icons
 // import dashboardIcon from "@/public/icons/dashboard.svg"; // For Doctors
@@ -29,24 +30,16 @@ export default function Sidebar() {
 
     const navItems = [
         {
-            label: "Dashboard", path: "/dashboard/hospital", icon: (
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /></svg>
-            )
+            label: "Dashboard", path: "/dashboard/hospital", icon: <LayoutDashboard size={18} />
         },
         {
-            label: "Approval Queue", path: "/dashboard/hospital/approval-queue", icon: (
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-            )
+            label: "Approval Queue", path: "/dashboard/hospital/approval-queue", icon: <ClipboardList size={18} />
         },
         {
-            label: "Appointments", path: "/dashboard/hospital/appointments", icon: (
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" /></svg>
-            )
+            label: "Appointments", path: "/dashboard/hospital/appointments", icon: <Calendar size={18} />
         },
         {
-            label: "Patients", path: "/dashboard/hospital/patients", icon: (
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
-            )
+            label: "Patients", path: "/dashboard/hospital/patients", icon: <Users size={18} />
         }
     ];
 
@@ -61,7 +54,7 @@ export default function Sidebar() {
                     aria-label="Toggle Menu"
                     style={{ background: 'white', border: '1px solid #e2e8f0' }}
                 >
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                    <Menu size={20} color="#64748b" />
                 </button>
             )}
 
@@ -149,7 +142,7 @@ export default function Sidebar() {
                             className={`${styles.navItem} ${pathname.includes('staff-management') ? styles.active : ""}`}
                             onClick={() => setIsOpen(false)}
                         >
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
+                            <Users size={20} />
                             Staff Management
                         </Link>
 
@@ -179,9 +172,9 @@ export default function Sidebar() {
                 <button
                     className={styles.logoutBtn}
                     onClick={handleLogout}
-                    style={{ margin: '0 12px 24px', width: 'calc(100% - 24px)', background: 'transparent', border: '1px solid #e2e8f0', color: '#64748b' }}
+                    style={{ margin: '0 12px 24px', width: 'calc(100% - 24px)', background: 'transparent', border: '1px solid #e2e8f0', color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                 >
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginRight: '10px' }}><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>
+                    <LogOut size={18} style={{ marginRight: '10px' }} />
                     Logout
                 </button>
             </aside>

@@ -96,7 +96,7 @@ export default function ManageAccountsPage() {
 
       {/* Title */}
       <div className={styles.headingSection}>
-        <h2 className={styles.heading}>Account Management</h2>
+        <h2 className={styles.heading}>Team Management</h2>
       </div>
 
       {/* Search Row + Invite */}

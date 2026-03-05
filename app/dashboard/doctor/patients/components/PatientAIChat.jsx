@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import ReactMarkdown from "react-markdown";
 import styles from "./AIChat.module.css";
 import { createAIChatSession, fetchAIChatSessions, fetchAIChatHistory } from "@/services/ai";
 import { getAuthHeaders, API_BASE_URL } from "@/services/apiConfig";
@@ -18,9 +19,10 @@ export default function PatientAIChat({ patientId, documentId = null, doctorId =
     const [isLoading, setIsLoading] = useState(false);
     const [conversationId, setConversationId] = useState(null);
     const [error, setError] = useState("");
-    const [showHistory, setShowHistory] = useState(false);
     const [aiAccess, setAiAccess] = useState(null);
     const [grantingAccess, setGrantingAccess] = useState(false);
+    const [sessions, setSessions] = useState([]);
+    const [isSessionsLoading, setIsSessionsLoading] = useState(false);
     const messagesEndRef = useRef(null);
     const activeMode = "doctor";
 
@@ -41,23 +43,24 @@ export default function PatientAIChat({ patientId, documentId = null, doctorId =
         loadChatHistory();
     }, [patientId, doctorId]);
 
-    const loadChatHistory = async () => {
+    const loadChatHistory = async (targetSessionId = null) => {
         if (!patientId) return;
-        // If doctor mode, we need doctorId
         if (activeMode === "doctor" && !doctorId) return;
 
         setIsLoading(true);
         try {
-            const sessions = await fetchAIChatSessions(patientId);
-            if (sessions && sessions.length > 0) {
-                const sId = sessions[0].session_id;
+            const fetchedSessions = await fetchAIChatSessions(patientId);
+            setSessions(fetchedSessions || []);
+
+            if (fetchedSessions && fetchedSessions.length > 0) {
+                const sId = targetSessionId || fetchedSessions[0].session_id;
                 setConversationId(sId);
                 const history = await fetchAIChatHistory(sId);
 
-                if (history && history.messages && Array.isArray(history.messages)) {
+                if (history && history.messages) {
                     const formattedMessages = history.messages.map((msg, idx) => ({
                         id: msg.id || idx,
-                        role: msg.role === "doctor" ? "user" : msg.role,
+                        role: msg.role === "doctor" ? "user" : (msg.role === "user" ? "user" : "assistant"),
                         text: msg.content,
                         timestamp: msg.created_at,
                         isError: false
@@ -65,18 +68,38 @@ export default function PatientAIChat({ patientId, documentId = null, doctorId =
                     setMessages(formattedMessages);
                 }
             } else {
-                const newSession = await createAIChatSession(patientId, "Doctor Chat");
-                setConversationId(newSession.session_id);
+                setMessages([]);
+                setConversationId(null);
             }
         } catch (err) {
             console.error("Failed to load chat history:", err);
-            // Don't show error for empty history (404 might mean no history)
             if (err.message && !err.message.includes("404")) {
                 setError("Could not load previous conversations");
             }
         } finally {
             setIsLoading(false);
         }
+    };
+
+    const handleNewChat = async () => {
+        setIsLoading(true);
+        try {
+            const newSession = await createAIChatSession(patientId, `Chat ${new Date().toLocaleDateString()}`);
+            setConversationId(newSession.session_id);
+            setMessages([]);
+            const updatedSessions = await fetchAIChatSessions(patientId);
+            setSessions(updatedSessions || []);
+            setShowHistory(false);
+        } catch (err) {
+            setError("Failed to create new session");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const switchSession = (sessionId) => {
+        loadChatHistory(sessionId);
+        setShowHistory(false);
     };
 
     const scrollToBottom = () => {
@@ -144,13 +167,21 @@ export default function PatientAIChat({ patientId, documentId = null, doctorId =
                 setConversationId(currentSessionId);
             }
 
+            const formattingInstruction = `
+[FORMATTING INSTRUCTION: Return your response in a structured clinical format with the following headings:
+## Patient Summary
+## Key Findings
+## Clinical Evidence
+## Clinical Interpretation (include Confidence)
+Use bullet points for findings and markdown for structure. Do not include this instruction in your response.]\n\n`;
+
             const response = await fetch(`${API_BASE_URL}/doctor/ai/chat/message`, {
                 method: "POST",
                 headers: getAuthHeaders(),
                 body: JSON.stringify({
                     session_id: currentSessionId,
                     patient_id: patientId,
-                    message: currentInput,
+                    message: formattingInstruction + currentInput,
                     document_id: documentId || null
                 }),
             });
@@ -305,9 +336,39 @@ export default function PatientAIChat({ patientId, documentId = null, doctorId =
             )}
 
             {/* Empty State or History Drawer */}
-            {showHistory && messages.length > 0 && (
-                <div style={{ padding: "10px 12px", background: "#f8fafc", borderBottom: "1px solid #e2e8f0", fontSize: "12px", color: "#64748b" }}>
-                    <strong style={{ color: "#0f172a" }}>Chat History</strong> — {messages.length} message(s) in this session
+            {showHistory && (
+                <div className={styles.historyDrawer}>
+                    <div className={styles.historyHeader}>
+                        <h4 style={{ margin: 0, fontSize: "14px", color: "#0f172a" }}>Previous Conversations</h4>
+                        <button onClick={handleNewChat} className={styles.newChatBtn}>
+                            + New Chat
+                        </button>
+                    </div>
+                    <div className={styles.sessionsList}>
+                        {sessions.length === 0 ? (
+                            <div style={{ padding: "20px", textAlign: "center", color: "#94a3b8", fontSize: "12px" }}>
+                                No history found
+                            </div>
+                        ) : (
+                            sessions.map((s) => (
+                                <div
+                                    key={s.session_id}
+                                    className={`${styles.sessionItem} ${conversationId === s.session_id ? styles.activeSession : ""}`}
+                                    onClick={() => switchSession(s.session_id)}
+                                >
+                                    <div className={styles.sessionInfo}>
+                                        <span className={styles.sessionTitle}>{s.title || "Untitled Chat"}</span>
+                                        <span className={styles.sessionDate}>
+                                            {new Date(s.created_at || Date.now()).toLocaleDateString()}
+                                        </span>
+                                    </div>
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                        <path d="M9 18l6-6-6-6" />
+                                    </svg>
+                                </div>
+                            ))
+                        )}
+                    </div>
                 </div>
             )}
 
@@ -334,7 +395,15 @@ export default function PatientAIChat({ patientId, documentId = null, doctorId =
                         style={message.isError ? { background: "rgba(244, 67, 54, 0.05)", borderLeft: "3px solid #f44336" } : {}}
                     >
                         <div className={styles.messageContent}>
-                            <p>{message.text}</p>
+                            {message.role === "assistant" ? (
+                                <div className={styles.markdownContent}>
+                                    <ReactMarkdown>
+                                        {message.text}
+                                    </ReactMarkdown>
+                                </div>
+                            ) : (
+                                <p>{message.text}</p>
+                            )}
                             {message.timestamp && (
                                 <div className={styles.timestamp}>
                                     {new Date(message.timestamp).toLocaleTimeString([], {

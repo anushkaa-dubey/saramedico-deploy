@@ -11,7 +11,7 @@ const MAX_POLL_ATTEMPTS = 40;   // ~4 minutes max
 
 export default function SoapNotesPage() {
     const searchParams = useSearchParams();
-    const id = searchParams.get("id");
+    const consultationId = searchParams.get("consultationId");
 
     const [consultation, setConsultation] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -27,12 +27,12 @@ export default function SoapNotesPage() {
 
     // ── Load consultation on mount ──────────────────────────────────────────
     useEffect(() => {
-        if (!id) {
+        if (!consultationId) {
             setLoading(false);
-            setError("No consultation ID provided in the URL.");
+            setError("No consultation selected. Please open the SOAP note from a valid appointment.");
             return;
         }
-        fetchConsultationById(id)
+        fetchConsultationById(consultationId)
             .then((data) => {
                 setConsultation(data);
                 // If SOAP is already completed, fetch it immediately
@@ -46,7 +46,7 @@ export default function SoapNotesPage() {
                 setError("Could not load consultation. " + (err.message || ""));
             })
             .finally(() => setLoading(false));
-    }, [id]);
+    }, [consultationId]);
 
     // ── Cleanup polling on unmount ──────────────────────────────────────────
     useEffect(() => () => clearInterval(pollTimerRef.current), []);
@@ -84,11 +84,11 @@ export default function SoapNotesPage() {
 
     // ── Mark consultation complete → trigger AI ─────────────────────────────
     const handleMarkComplete = async () => {
-        if (!id || marking) return;
+        if (!consultationId || marking) return;
         setMarking(true);
         try {
-            await markConsultationComplete(id);
-            startPolling(id);
+            await markConsultationComplete(consultationId);
+            startPolling(consultationId);
         } catch (err) {
             console.error("Mark complete failed:", err);
             setSoapStatus("error");
@@ -100,7 +100,7 @@ export default function SoapNotesPage() {
     // ── Retry polling manually ──────────────────────────────────────────────
     const handleRetryPoll = () => {
         clearInterval(pollTimerRef.current);
-        if (id) startPolling(id);
+        if (consultationId) startPolling(consultationId);
     };
 
     // ── Render states ───────────────────────────────────────────────────────
@@ -127,8 +127,14 @@ export default function SoapNotesPage() {
         <>
             <Topbar />
             <div style={{ padding: "60px 40px", textAlign: "center", color: "#64748b" }}>
-                <h2>Encounter Not Found</h2>
-                <p>No consultation record found for ID: <code>{id}</code></p>
+                <h2>Consultation Not Found</h2>
+                <p>No consultation record found for ID: <code>{consultationId}</code></p>
+                <button
+                    onClick={() => window.history.back()}
+                    style={{ marginTop: "16px", padding: "8px 20px", background: "#f1f5f9", border: "1px solid #e2e8f0", borderRadius: "8px", cursor: "pointer" }}
+                >
+                    Go Back
+                </button>
             </div>
         </>
     );
@@ -326,7 +332,7 @@ export default function SoapNotesPage() {
                             <span className={styles.infoTitle}>Record ID</span>
                         </div>
                         <p className={styles.infoText} style={{ fontFamily: "monospace", wordBreak: "break-all" }}>
-                            {consultation.id || id}
+                            {consultation.id || consultationId}
                         </p>
                     </div>
 
