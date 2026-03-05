@@ -17,7 +17,8 @@ const getApiBaseUrl = () => {
     if (typeof process !== "undefined" && process.env.NEXT_PUBLIC_API_URL) {
         return process.env.NEXT_PUBLIC_API_URL;
     }
-    return "http://107.20.98.130:8000/api/v1";
+    // return "http://107.20.98.130:8000/api/v1";
+    return "http://localhost:8000/api/v1";
 };
 
 export const API_BASE_URL = getApiBaseUrl();

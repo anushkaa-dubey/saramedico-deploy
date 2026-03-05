@@ -18,6 +18,50 @@ export const fetchTasks = async () => {
 };
 
 /**
+ * Search Doctors
+ * Endpoint: GET /api/v1/doctors/search
+ */
+export const searchDoctors = async (params = {}) => {
+    try {
+        const query = new URLSearchParams();
+        if (params.query) query.append('query', params.query);
+        if (params.specialty) query.append('specialty', params.specialty);
+        const url = `${API_BASE_URL}/doctors/search${query.toString() ? `?${query.toString()}` : ''}`;
+
+        const response = await fetch(url, {
+            headers: getAuthHeaders(),
+        });
+        const data = await handleResponse(response);
+        return data?.results || [];
+    } catch (err) {
+        console.error("searchDoctors error:", err);
+        return [];
+    }
+};
+
+/**
+ * Search Global Doctor Directory
+ * Endpoint: GET /api/v1/doctors/directory
+ */
+export const searchDoctorDirectory = async (params = {}) => {
+    try {
+        const query = new URLSearchParams();
+        if (params.query) query.append('query', params.query);
+        if (params.specialty) query.append('specialty', params.specialty);
+        const url = `${API_BASE_URL}/doctors/directory${query.toString() ? `?${query.toString()}` : ''}`;
+
+        const response = await fetch(url, {
+            headers: getAuthHeaders(),
+        });
+        const data = await handleResponse(response);
+        return data?.results || [];
+    } catch (err) {
+        console.error("searchDoctorDirectory error:", err);
+        return [];
+    }
+};
+
+/**
  * Add a new task
  * Endpoint: POST /api/v1/doctor/tasks
  */
@@ -270,9 +314,15 @@ export const onboardPatient = async (patientData) => {
         headers: getAuthHeaders(),
         body: JSON.stringify(patientData),
     });
-    return handleResponse(response);
-};
-/**
+
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+        throw data;   // throw backend error message
+    }
+
+    return data;
+};/**
  * Fetch doctor's recent activity feed
  * Endpoint: GET /api/v1/doctor/activity
  */

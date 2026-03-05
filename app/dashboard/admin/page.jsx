@@ -12,7 +12,7 @@ import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 // import { fetchCalendarMonth, fetchCalendarDay } from "@/services/calendar"; // Missing backend domain
 import { fetchAdminOverview, fetchAdminAuditLogs, fetchAuditLogs } from "@/services/admin";
-import { fetchProfile } from "@/services/doctor";
+import { fetchProfile, searchDoctors, searchDoctorDirectory } from "@/services/doctor";
 
 
 const containerVariants = {
@@ -48,9 +48,11 @@ export default function AdminDashboard() {
   const [overview, setOverview] = useState(null);
   const [auditLogs, setAuditLogs] = useState([]);
   const [loadingOverview, setLoadingOverview] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
   const [topMatches, setTopMatches] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
 
-  const searchFilters = ["All", "Logins", "Exports", "Patient Data"];
+  const searchFilters = ["All", "Doctors Directory", "Internal Doctors"];
 
   const [currentDate, setCurrentDate] = useState(new Date());
   const [monthData, setMonthData] = useState({});
@@ -105,6 +107,32 @@ export default function AdminDashboard() {
     };
     loadMonthData();
   }, [currentDate]);
+
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setTopMatches([]);
+      return;
+    }
+    const debounceSearch = setTimeout(async () => {
+      setIsSearching(true);
+      try {
+        let results = [];
+        if (searchFilter === "Doctors Directory") {
+          results = await searchDoctorDirectory({ query: searchQuery });
+        } else {
+          // Default to internal doctors search
+          results = await searchDoctors({ query: searchQuery });
+        }
+        setTopMatches(results || []);
+      } catch (error) {
+        console.error("Search failed:", error);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 400);
+
+    return () => clearTimeout(debounceSearch);
+  }, [searchQuery, searchFilter]);
 
   const handleDayClick = async (day) => {
     // Missing backend Calendar domain
@@ -174,7 +202,9 @@ export default function AdminDashboard() {
           <img src={searchIcon.src} alt="Search" className={styles.searchIcon} />
           <input
             className={styles.search}
-            placeholder="Search filters, matches..."
+            placeholder="Search doctors..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
             onFocus={() => setIsSearchFocused(true)}
             onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
           />
@@ -194,16 +224,23 @@ export default function AdminDashboard() {
               </div>
               <div className={styles.matchesSection}>
                 <h4 className={styles.sectionTitle}>Top Matches</h4>
-                {topMatches.length === 0 ? (
+                {isSearching ? (
                   <div style={{ padding: "8px 0", color: "#94a3b8", fontSize: "13px" }}>
-                    Backend not connected
+                    Searching...
+                  </div>
+                ) : topMatches.length === 0 ? (
+                  <div style={{ padding: "8px 0", color: "#94a3b8", fontSize: "13px" }}>
+                    {searchQuery ? "No doctors found." : "Type to search..."}
                   </div>
                 ) : (
                   topMatches.map((match, idx) => (
-                    <div key={idx} className={styles.matchItem}>
-                      <img src={personIcon.src} alt="" width="16" height="16" />
-                      <span>{match.name}</span>
-                    </div>
+                    <Link key={idx} href={`/dashboard/admin/doctors/${match.id}`} className={styles.matchItem} style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
+                      <img src={match.photo_url || personIcon.src} alt="" width="24" height="24" style={{ borderRadius: '50%', objectFit: 'cover' }} />
+                      <div style={{ display: 'flex', flexDirection: 'column', color: '#0f172a' }}>
+                        <span>{match.name || match.full_name || "Doctor"}</span>
+                        <span style={{ fontSize: '11px', color: '#64748b' }}>{match.specialty || "General Physician"}</span>
+                      </div>
+                    </Link>
                   ))
                 )}
               </div>
@@ -231,7 +268,7 @@ export default function AdminDashboard() {
         <div>
           <h2 className={styles.heading}>Clinic Overview</h2>
           <p className={styles.subtext}>
-            Welcome back, {adminName.split(' ')[0]}. Here's the latest system status.
+            Welcome back, {adminName.split(' ')[0]}. Here&apos;s the latest system status.
           </p>
         </div>
 
