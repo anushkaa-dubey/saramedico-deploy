@@ -33,6 +33,11 @@ export const loginUser = async (payload) => {
         localStorage.setItem("authToken", data.access_token || data.token);
     }
 
+    // Store refresh token if available
+    if (data.refresh_token) {
+        localStorage.setItem("refreshToken", data.refresh_token);
+    }
+
     return data;
 };
 
@@ -40,9 +45,25 @@ export const loginUser = async (payload) => {
  * Logout user
  */
 export const logoutUser = async () => {
-    // [DISCREPANCY FIX]: POST /auth/logout is missing in backend
-    // Clearing local session only until backend support is added
-    localStorage.removeItem("authToken");
+    try {
+        const refreshToken = localStorage.getItem("refreshToken");
+        if (refreshToken) {
+            // Send request to backend to invalidate token
+            await fetch(`${API_BASE_URL}/auth/logout`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ refresh_token: refreshToken }),
+            });
+        }
+    } catch (err) {
+        console.error("Logout API failed:", err);
+    } finally {
+        // Clear local session state entirely
+        localStorage.removeItem("authToken");
+        localStorage.removeItem("refreshToken");
+    }
 };
 
 /**
@@ -75,16 +96,15 @@ export const getCurrentUser = async () => {
 
 /**
  * Request password reset link
- * [DISCREPANCY FIX]: POST /auth/forgot-password is missing in backend
  */
-// export const forgotPassword = async (payload) => {
-//     const response = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
-//         method: "POST",
-//         headers: {
-//             "Content-Type": "application/json",
-//         },
-//         body: JSON.stringify(payload),
-//     });
-//
-//     return handleResponse(response);
-// };
+export const forgotPassword = async (payload) => {
+    const response = await fetch(`${API_BASE_URL}/auth/forgot-password`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+    });
+
+    return handleResponse(response);
+};

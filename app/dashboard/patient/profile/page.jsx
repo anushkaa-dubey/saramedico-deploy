@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Topbar from "../components/Topbar";
 import styles from "../records/Records.module.css";
 import Image from "next/image";
@@ -8,6 +8,8 @@ import basic_information from "@/public/icons/basic_information.svg";
 import contact from "@/public/icons/contact.svg";
 import { motion } from "framer-motion";
 import { fetchProfile } from "@/services/patient";
+import PhoneInput from "react-phone-input-2";
+import "react-phone-input-2/lib/style.css";
 
 const containerVariants = {
     hidden: { opacity: 0 },
@@ -26,9 +28,8 @@ const itemVariants = {
 };
 
 export default function ProfilePage() {
-    const [isEditingBasic, setIsEditingBasic] = useState(false);
-    const [isEditingContact, setIsEditingContact] = useState(false);
     const [loading, setLoading] = useState(false);
+    const fileInputRef = useRef(null);
 
     // Profile data state
     const [profileData, setProfileData] = useState({
@@ -40,30 +41,27 @@ export default function ProfilePage() {
         email: "",
         mobilePhone: "",
         homePhone: "",
-        // avatar: benjaminImage.src
+        avatar: ""
     });
 
     useEffect(() => {
         loadProfile();
     }, []);
 
-    /**
-     * Load user profile from backend
-     */
     const loadProfile = async () => {
         setLoading(true);
         try {
             const data = await fetchProfile();
             setProfileData({
-                firstName: data.first_name || "",
-                lastName: data.last_name || "",
+                firstName: data.first_name || data.fullName?.split(" ")[0] || "",
+                lastName: data.last_name || data.fullName?.split(" ").slice(1).join(" ") || "",
                 mrn: data.mrn || "N/A",
-                dateOfBirth: data.dob || "N/A",
+                dateOfBirth: data.dateOfBirth || data.dob || "",
                 ssn: data.ssn || "***-**-****",
                 email: data.email || "",
-                mobilePhone: data.phone || "",
-                homePhone: data.home_phone || "",
-                avatar: data.avatar_url || benjaminImage.src
+                mobilePhone: data.phoneNumber || data.phone || "",
+                homePhone: data.homePhone || data.home_phone || "",
+                avatar: data.avatar || data.avatar_url || ""
             });
         } catch (error) {
             console.error("Failed to load profile:", error);
@@ -72,56 +70,13 @@ export default function ProfilePage() {
         }
     };
 
-    /**
-     * Save basic information
-     */
-    const handleSaveBasic = async () => {
-        if (!isEditingBasic) {
-            setIsEditingBasic(true);
-            return;
+    const handleAvatarUpload = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const tempUrl = URL.createObjectURL(file);
+            setProfileData(prev => ({ ...prev, avatar: tempUrl }));
+            // Add backend upload functionality here if needed
         }
-
-        try {
-            await updateProfile({
-                first_name: profileData.firstName,
-                last_name: profileData.lastName,
-                dob: profileData.dateOfBirth
-            });
-
-            setIsEditingBasic(false);
-            alert("Basic information updated successfully!");
-        } catch (error) {
-            console.error("Failed to update basic info:", error);
-            alert("Failed to update information");
-        }
-    };
-
-    /**
-     * Save contact details
-     */
-    const handleSaveContact = async () => {
-        if (!isEditingContact) {
-            setIsEditingContact(true);
-            return;
-        }
-
-        try {
-            await updateProfile({
-                email: profileData.email,
-                phone: profileData.mobilePhone,
-                home_phone: profileData.homePhone
-            });
-
-            setIsEditingContact(false);
-            alert("Contact details updated successfully!");
-        } catch (error) {
-            console.error("Failed to update contact details:", error);
-            alert("Failed to update information");
-        }
-    };
-
-    const handleInputChange = (field, value) => {
-        setProfileData(prev => ({ ...prev, [field]: value }));
     };
 
     return (
@@ -143,8 +98,23 @@ export default function ProfilePage() {
                 <motion.div className={styles.detailsCard} variants={itemVariants}>
                     {/* Left Avatar */}
                     <div className={styles.avatarSection}>
-                        <div style={{ width: '80px', height: '80px', background: '#359aff', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '32px', fontWeight: 'bold' }}>
-                            {profileData.firstName[0]}{profileData.lastName[0]}
+                        <div
+                            style={{ width: '80px', height: '80px', background: '#359aff', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: '32px', fontWeight: 'bold', overflow: 'hidden', cursor: 'pointer', position: 'relative' }}
+                            onClick={() => fileInputRef.current?.click()}
+                            title="Click to upload profile picture"
+                        >
+                            {profileData.avatar ? (
+                                <img src={profileData.avatar} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            ) : (
+                                (profileData.firstName || profileData.lastName) ? `${profileData.firstName?.[0] || ''}${profileData.lastName?.[0] || ''}`.toUpperCase() : "P"
+                            )}
+                            <input
+                                type="file"
+                                ref={fileInputRef}
+                                style={{ display: 'none' }}
+                                accept="image/*"
+                                onChange={handleAvatarUpload}
+                            />
                         </div>
                         <h3 className={styles.profileName}>{profileData.firstName} {profileData.lastName}</h3>
                         <span className={styles.mrn}>MRN: {profileData.mrn}</span>
@@ -157,9 +127,6 @@ export default function ProfilePage() {
                             <span className={styles.sectionTitle}>
                                 <Image src={basic_information} alt="Basic Information" /> Basic Information
                             </span>
-                            <button className={styles.editBtn} onClick={handleSaveBasic}>
-                                {isEditingBasic ? "Save" : "Edit"}
-                            </button>
                         </div>
 
                         <div className={styles.formGrid}>
@@ -169,8 +136,7 @@ export default function ProfilePage() {
                                     type="text"
                                     className={styles.input}
                                     value={profileData.firstName}
-                                    onChange={(e) => handleInputChange("firstName", e.target.value)}
-                                    readOnly={!isEditingBasic}
+                                    readOnly={true}
                                 />
                             </div>
                             <div className={styles.formGroup}>
@@ -179,18 +145,16 @@ export default function ProfilePage() {
                                     type="text"
                                     className={styles.input}
                                     value={profileData.lastName}
-                                    onChange={(e) => handleInputChange("lastName", e.target.value)}
-                                    readOnly={!isEditingBasic}
+                                    readOnly={true}
                                 />
                             </div>
                             <div className={styles.formGroup}>
                                 <label className={styles.label}>DATE OF BIRTH</label>
                                 <input
-                                    type="text"
+                                    type="date"
                                     className={styles.input}
                                     value={profileData.dateOfBirth}
-                                    onChange={(e) => handleInputChange("dateOfBirth", e.target.value)}
-                                    readOnly={!isEditingBasic}
+                                    readOnly={true}
                                 />
                             </div>
                             <div className={styles.formGroup}>
@@ -199,8 +163,7 @@ export default function ProfilePage() {
                                     type="text"
                                     className={styles.input}
                                     value={profileData.ssn}
-                                    onChange={(e) => handleInputChange("ssn", e.target.value)}
-                                    readOnly={!isEditingBasic}
+                                    readOnly={true}
                                 />
                             </div>
                         </div>
@@ -210,12 +173,6 @@ export default function ProfilePage() {
                             <span className={styles.sectionTitle}>
                                 <Image src={contact} alt="Contact Information" />Contact Details
                             </span>
-                            <button
-                                className={styles.editBtn}
-                                onClick={handleSaveContact}
-                            >
-                                {isEditingContact ? "Save" : "Edit"}
-                            </button>
                         </div>
 
                         <div className={styles.formGrid}>
@@ -225,29 +182,49 @@ export default function ProfilePage() {
                                     type="email"
                                     className={styles.input}
                                     value={profileData.email}
-                                    onChange={(e) => handleInputChange("email", e.target.value)}
-                                    readOnly={!isEditingContact}
+                                    readOnly={true}
                                 />
                             </div>
                             <div className={styles.formGroup}>
                                 <label className={styles.label}>MOBILE PHONE</label>
-                                <input
-                                    type="tel"
-                                    className={styles.input}
+                                <PhoneInput
+                                    country={"in"}
                                     value={profileData.mobilePhone}
-                                    onChange={(e) => handleInputChange("mobilePhone", e.target.value)}
-                                    readOnly={!isEditingContact}
+                                    disabled={true}
+                                    inputStyle={{
+                                        width: "100%",
+                                        height: "44px",
+                                        borderRadius: "8px",
+                                        border: "1px solid #e2e8f0",
+                                        backgroundColor: "#f8fafc",
+                                        color: "#64748b"
+                                    }}
+                                    buttonStyle={{
+                                        border: "1px solid #e2e8f0",
+                                        borderRadius: "8px 0 0 8px",
+                                        backgroundColor: "#f8fafc"
+                                    }}
                                 />
                             </div>
                             <div className={styles.formGroup}>
                                 <label className={styles.label}>HOME PHONE</label>
-                                <input
-                                    type="tel"
-                                    className={styles.input}
+                                <PhoneInput
+                                    country={"in"}
                                     value={profileData.homePhone}
-                                    onChange={(e) => handleInputChange("homePhone", e.target.value)}
-                                    placeholder="Add home phone"
-                                    readOnly={!isEditingContact}
+                                    disabled={true}
+                                    inputStyle={{
+                                        width: "100%",
+                                        height: "44px",
+                                        borderRadius: "8px",
+                                        border: "1px solid #e2e8f0",
+                                        backgroundColor: "#f8fafc",
+                                        color: "#64748b"
+                                    }}
+                                    buttonStyle={{
+                                        border: "1px solid #e2e8f0",
+                                        borderRadius: "8px 0 0 8px",
+                                        backgroundColor: "#f8fafc"
+                                    }}
                                 />
                             </div>
                         </div>

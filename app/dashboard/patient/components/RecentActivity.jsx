@@ -3,16 +3,23 @@ import { fetchAppointments } from "@/services/patient";
 import styles from "../PatientDashboard.module.css";
 import { useRouter } from "next/navigation";
 
-export default function RecentActivity() {
+export default function RecentActivity({ consultations }) {
   const router = useRouter();
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // If consultations are passed from parent, use them; otherwise fetch
+    if (consultations !== undefined) {
+      // Map consultations to activity shape
+      const mapped = (Array.isArray(consultations) ? consultations : []).slice(0, 3);
+      setActivities(mapped);
+      setLoading(false);
+      return;
+    }
     const loadActivities = async () => {
       try {
         const data = await fetchAppointments();
-        // Show last 3 appointments for dashboard
         setActivities(data.slice(0, 3));
       } catch (err) {
         console.error("Failed to load patient activities:", err);
@@ -21,14 +28,14 @@ export default function RecentActivity() {
       }
     };
     loadActivities();
-  }, []);
+  }, [consultations]);
 
   if (loading) return <div className={styles.card}><p>Loading activity...</p></div>;
 
   return (
     <div className={styles.card}>
       <div className={styles.cardTitle}>
-        <span>Recent Activity</span>
+        <span>Recent Visits</span>
         <span
           style={{ color: "#2563eb", fontSize: "12px", cursor: "pointer" }}
           onClick={() => router.push("/dashboard/patient/appointments")}
@@ -54,14 +61,21 @@ export default function RecentActivity() {
                 <td>
                   <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                     <div className={styles.avatarSmall}></div>
-                    <span>{item.doctor_name || item.doctor?.full_name || "Doctor"}</span>
+                    <span>{item.doctorName || item.doctor_name || item.doctor?.full_name || "Doctor"}</span>
                   </div>
                 </td>
-                <td>{item.reason || "Consultation"}</td>
-                <td style={{ color: "#64748b" }}>{new Date(item.requested_date).toLocaleDateString()}</td>
+                <td>{item.chiefComplaint || item.chief_complaint || item.reason || "Consultation"}</td>
+                <td style={{ color: "#64748b" }}>
+                  {(() => {
+                    const d = item.scheduledAt || item.scheduled_at || item.appointment_time || item.requested_date;
+                    return d ? new Date(d).toLocaleDateString() : "—";
+                  })()}
+                </td>
                 <td>
-                  <span className={item.status === 'accepted' ? styles.statusCompleted : styles.statusReview}>
-                    {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
+                  <span className={(item.visitState === 'scheduled' || item.status === 'accepted' || item.status === 'scheduled') ? styles.statusCompleted : styles.statusReview}>
+                    {(item.visitState || item.status)
+                      ? (item.visitState || item.status).charAt(0).toUpperCase() + (item.visitState || item.status).slice(1)
+                      : "—"}
                   </span>
                 </td>
               </tr>
@@ -77,12 +91,14 @@ export default function RecentActivity() {
             <div className={styles.doctorInfo}>
               <div className={styles.avatarCircle}></div>
               <div>
-                <span className={styles.docName}>{item.doctor_name || item.doctor?.full_name || "Doctor"}</span>
-                <span className={styles.visitMeta}>{new Date(item.requested_date).toLocaleDateString()} • {item.reason}</span>
+                <span className={styles.docName}>{item.doctorName || item.doctor_name || item.doctor?.full_name || "Doctor"}</span>
+                <span className={styles.visitMeta}>
+                  {(() => { const d = item.scheduledAt || item.scheduled_at || item.requested_date; return d ? new Date(d).toLocaleDateString() : "—"; })()} • {item.chiefComplaint || item.chief_complaint || item.reason || "Consultation"}
+                </span>
               </div>
             </div>
-            <span className={`${styles.statusBadge} ${item.status === 'accepted' ? styles.ready : styles.pending}`}>
-              {item.status}
+            <span className={`${styles.statusBadge} ${(item.visitState === 'scheduled' || item.status === 'accepted' || item.status === 'scheduled') ? styles.ready : styles.pending}`}>
+              {item.visitState || item.status || "—"}
             </span>
           </div>
         ))}

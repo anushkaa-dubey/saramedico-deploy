@@ -7,14 +7,15 @@ import lock from "@/public/icons/lock.svg";
 import notification from "@/public/icons/notification.svg";
 import mfa from "@/public/icons/MFA.svg";
 import { motion } from "framer-motion";
-import { fetchProfile, updateDoctorProfile } from "@/services/doctor";
+import { fetchDoctorProfile, updateDoctorProfile } from "@/services/doctor";
 
 export default function ProfileSettings() {
     const [profile, setProfile] = useState({
         full_name: "",
         email: "",
         credentials: "",
-        specialty: ""
+        specialty: "",
+        license_number: ""
     });
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
@@ -22,13 +23,14 @@ export default function ProfileSettings() {
     useEffect(() => {
         const getProfile = async () => {
             try {
-                const data = await fetchProfile();
+                const data = await fetchDoctorProfile();
                 if (data) {
                     setProfile({
-                        full_name: data.full_name || "",
+                        full_name: data.full_name || data.fullName || "",
                         email: data.email || "",
                         credentials: data.credentials || "",
-                        specialty: data.specialty || ""
+                        specialty: data.specialty || "",
+                        license_number: data.license_number || data.licenseNumber || ""
                     });
                 }
             } catch (err) {
@@ -50,7 +52,8 @@ export default function ProfileSettings() {
             await updateDoctorProfile({
                 full_name: profile.full_name,
                 specialty: profile.specialty,
-                credentials: profile.credentials
+                credentials: profile.credentials,
+                license_number: profile.license_number
             });
             alert("Profile updated successfully!");
         } catch (err) {
@@ -71,20 +74,10 @@ export default function ProfileSettings() {
         >
             {/* Topbar */}
             <div className={styles.topbar}>
-                <input
+                {/* <input
                     className={styles.search}
                     placeholder="Search settings, reports, notes..."
-                />
-                <div className={styles.topActions}>
-                    <button className={styles.iconBtn}><Image src={notification.src} alt="Notification" width={18} height={18} /> </button>
-                    <div className={styles.profile}>
-                        <div className={styles.avatar}></div>
-                        <div>
-                            <strong>{profile.full_name || "Doctor"}</strong>
-                            <p>{profile.specialty || "Specialty"}</p>
-                        </div>
-                    </div>
-                </div>
+                /> */}
             </div>
 
             {/* Header */}
@@ -99,9 +92,9 @@ export default function ProfileSettings() {
             <div className={styles.content}>
                 {/* Profile Card */}
                 <div className={styles.profileCard}>
-                    <h2 className={styles.profileCardTitle}>My Profile</h2>
+                    {/* <h2 className={styles.profileCardTitle}>My Profile</h2> */}
                     <div className={styles.profileCardContent}>
-                        <div className={styles.profileAvatar}></div>
+                        {/* <div className={styles.profileAvatar}></div> */}
                         <div className={styles.profileInfo}>
                             <h3>{profile.full_name || "Doctor"}</h3>
                             <p>{profile.credentials}{profile.credentials && profile.specialty ? ', ' : ''}{profile.specialty ? profile.specialty.toUpperCase() : ""}</p>
@@ -124,6 +117,10 @@ export default function ProfileSettings() {
                         <div className={styles.formField}>
                             <label className={styles.label}>SPECIALTY</label>
                             <input className={styles.input} name="specialty" placeholder="Cardiology" value={profile.specialty} onChange={handleChange} />
+                        </div>
+                        <div className={styles.formField}>
+                            <label className={styles.label}>LICENSE NUMBER</label>
+                            <input className={styles.input} name="license_number" placeholder="LIC-123456" value={profile.license_number} onChange={handleChange} />
                         </div>
                     </div>
 

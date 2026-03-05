@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import styles from "./AssistPanel.module.css";
+import { Tag, Activity, Search, Plus, Check, X } from "lucide-react";
 
 export default function AssistPanel({ suggestedTags = [], onTagAdd }) {
     const [searchQuery, setSearchQuery] = useState("");
@@ -36,13 +37,10 @@ export default function AssistPanel({ suggestedTags = [], onTagAdd }) {
             <div className={styles.section}>
                 <div className={styles.sectionHeader}>
                     <h4 className={styles.sectionTitle}>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
-                            <line x1="7" y1="7" x2="7.01" y2="7" />
-                        </svg>
+                        <Tag size={16} />
                         Clinical Tags
                     </h4>
-                    <button className={styles.addBtn}>+ Add</button>
+                    <button className={styles.addBtn}><Plus size={14} /> Add</button>
                 </div>
 
                 <div className={styles.tagsContainer}>
@@ -52,9 +50,9 @@ export default function AssistPanel({ suggestedTags = [], onTagAdd }) {
                             className={`${styles.tag} ${styles[`tag${(idx % 3) + 1}`]}`}
                             onClick={() => handleTagClick(tag)}
                         >
-                            <span className={styles.tagDot}>•</span>
+                            <span className={styles.tagDot}></span>
                             {tag}
-                            <button className={styles.tagRemove}>×</button>
+                            <button className={styles.tagRemove}><X size={12} /></button>
                         </span>
                     ))}
                 </div>
@@ -68,18 +66,13 @@ export default function AssistPanel({ suggestedTags = [], onTagAdd }) {
             <div className={styles.section}>
                 <div className={styles.sectionHeader}>
                     <h4 className={styles.sectionTitle}>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
-                        </svg>
+                        <Activity size={16} />
                         Home Remedies
                     </h4>
                 </div>
 
                 <div className={styles.searchBox}>
-                    <svg className={styles.searchIcon} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <circle cx="11" cy="11" r="8" />
-                        <path d="m21 21-4.35-4.35" />
-                    </svg>
+                    <Search className={styles.searchIcon} size={14} />
                     <input
                         type="text"
                         placeholder="Search remedies..."
@@ -97,10 +90,7 @@ export default function AssistPanel({ suggestedTags = [], onTagAdd }) {
                                 <span className={styles.remedyCategory}>{remedy.category}</span>
                             </div>
                             <button className={styles.addRemedyBtn}>
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <line x1="12" y1="5" x2="12" y2="19" />
-                                    <line x1="5" y1="12" x2="19" y2="12" />
-                                </svg>
+                                <Plus size={14} />
                             </button>
                         </div>
                     ))}
@@ -111,10 +101,7 @@ export default function AssistPanel({ suggestedTags = [], onTagAdd }) {
             <div className={styles.section}>
                 <div className={styles.sectionHeader}>
                     <h4 className={styles.sectionTitle}>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <polyline points="9 11 12 14 22 4" />
-                            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
-                        </svg>
+                        <Check size={16} />
                         Billing Codes
                     </h4>
                 </div>

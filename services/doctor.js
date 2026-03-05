@@ -134,6 +134,30 @@ export const fetchPatientProfile = async (patientId) => {
 };
 
 /**
+ * Fetch a single patient as a doctor
+ * Endpoint: GET /api/v1/doctor/patients/{patient_id}
+ */
+export const fetchPatientForDoctor = async (patientId) => {
+    const response = await fetch(`${API_BASE_URL}/doctor/patients/${patientId}`, {
+        headers: getAuthHeaders(),
+    });
+    return handleResponse(response);
+};
+
+/**
+ * Update a patient's details as a doctor
+ * Endpoint: PUT /api/v1/doctor/patients/{patient_id}
+ */
+export const updatePatientForDoctor = async (patientId, patientData) => {
+    const response = await fetch(`${API_BASE_URL}/doctor/patients/${patientId}`, {
+        method: "PUT",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(patientData),
+    });
+    return handleResponse(response);
+};
+
+/**
  * Fetch patient medical documents (with permission)
  * Endpoint: GET /api/v1/doctor/patients/{patient_id}/documents
  */

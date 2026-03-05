@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import styles from "../PatientDashboard.module.css";
 import Link from "next/link";
-import notificationIcon from "@/public/icons/notification.svg";
+// import notificationIcon from "@/public/icons/notification.svg";
 import { fetchProfile } from "@/services/patient";
 import AccessRequestsPanel from "./AccessRequestsPanel";
 
@@ -49,7 +49,7 @@ export default function Topbar() {
       />
 
       <div className={styles.topActions}>
-        <AccessRequestsPanel notificationIconSrc={notificationIcon.src} />
+        {/* <AccessRequestsPanel notificationIconSrc={notificationIcon.src} /> */}
         <Link href="/dashboard/patient/profile" className={styles.profile} style={{ textDecoration: "none", cursor: "pointer" }}>
           <div className={styles.profileInfo}>
             <span style={{ fontSize: "13px", fontWeight: "600", color: "#0f172a" }}>

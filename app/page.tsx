@@ -233,7 +233,6 @@ export default function Home() {
     },
     {
       question: "Is Saramedico HIPAA compliant?",
-      // Updated copy
       answer: "Yes. Saramedico supports HIPAA-aligned workflows and offers BAA for eligible plans. We are fully committed to data security and compliance."
     },
     {
@@ -294,7 +293,6 @@ export default function Home() {
     },
     {
       question: "Do you offer a free trial?",
-      // Ensure specific copy: "14-day free trial"
       answer: "Yes. A 14-day free trial is available for Premium plans."
     },
     {
@@ -417,7 +415,6 @@ export default function Home() {
             animate={{ opacity: 1, y: 0 }}
             className={styles.badge}
           >
-            {/* Neutral Trust Badge */}
             <span style={{ fontWeight: 500, fontSize: '13px', letterSpacing: '0.02em', color: '#4cc9f0' }}>
               HIPAA-ready &nbsp;•&nbsp; BAA Available &nbsp;•&nbsp; Audit Logs
             </span>
@@ -433,7 +430,6 @@ export default function Home() {
             <span className={styles.heroTitleHighlight}>Modern Medical</span> Practice.
           </motion.h1>
 
-          {/* Concrete Sub-headline */}
           <motion.p
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -466,7 +462,6 @@ export default function Home() {
             </Link>
           </motion.div>
 
-          {/* Trust Micro-lines */}
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -700,7 +695,6 @@ export default function Home() {
                       <h2 className={styles.sectionTitle}>{f.title}</h2>
                       <p className={styles.cardDescription} style={{ fontSize: '18px', margin: '24px 0' }}>{f.description}</p>
 
-                      {/* Compliance Helper */}
                       {f.helper && <p style={{ fontSize: '13px', color: '#64748b', fontStyle: 'italic', marginBottom: '24px' }}>{f.helper}</p>}
 
                       <ul className={styles.featureList}>
@@ -1081,7 +1075,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Merged Footer Section */}
       <section id="contact">
         <footer className={styles.mergedFooter}>
           <motion.div
@@ -1119,7 +1112,6 @@ export default function Home() {
               <div className={styles.socials}>
                 <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className={styles.socialLink}>LN</a>
               </div>
-              {/* Global Medical Disclaimer */}
               <p style={{ fontSize: '11px', color: '#64748b', marginTop: '24px', lineHeight: '1.4' }}>
                 Disclaimer: Not for emergency use. Saramedico is a documentation aid, not a medical device. Does not provide medical advice.
               </p>

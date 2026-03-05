@@ -129,16 +129,17 @@ export default function AppointmentsPage() {
                                                                     }
                                                                 }}
                                                                 style={{
-                                                                    display: "flex",
+                                                                    display: "inline-flex",
                                                                     alignItems: "center",
                                                                     justifyContent: "center",
-                                                                    padding: "6px 12px",
-                                                                    background: "#3b82f6",
+                                                                    padding: "6px 14px",
+                                                                    width: "fit-content",
+                                                                    background: "#82c0ff",
                                                                     color: "white",
                                                                     border: "none",
                                                                     borderRadius: "6px",
                                                                     fontSize: "12px",
-                                                                    fontWeight: "bold",
+                                                                    fontWeight: "600",
                                                                     cursor: "pointer",
                                                                     marginTop: "4px"
                                                                 }}

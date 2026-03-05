@@ -66,7 +66,9 @@ export default function PatientDashboard() {
         setUser(profile);
         localStorage.setItem("user", JSON.stringify(profile));
         const cons = await fetchConsultations();
-        setConsultations(cons || []);
+        // API returns { consultations: [...], total: N }
+        const list = Array.isArray(cons) ? cons : (cons?.consultations || []);
+        setConsultations(list);
 
       } catch (err) {
         const stored = localStorage.getItem("user");
@@ -155,12 +157,6 @@ export default function PatientDashboard() {
             {/* <UpNextCard /> */}
             <UpNextCard consultations={consultations} />
           </motion.div>
-
-          {/* Mobile Title */}
-          <div className={styles.mobileOnly} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "24px", marginBottom: "8px" }}>
-            <span style={{ fontWeight: "700", fontSize: "16px", color: "#1e293b" }}>Recent Visits</span>
-            <Link href="/dashboard/patient/appointments" style={{ color: "#2563eb", fontSize: "13px", fontWeight: "600", textDecoration: "none" }}>View All</Link>
-          </div>
 
           <motion.div variants={itemVariants}>
             {/* <RecentActivity /> */}

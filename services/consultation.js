@@ -1,5 +1,6 @@
 import { API_BASE_URL, getAuthHeaders, handleResponse } from "./apiConfig";
 
+
 /**
  * Fetch a single consultation by ID
  */

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import styles from "../DoctorDashboard.module.css";
+import { X } from "lucide-react";
 // TODO: Uncomment when connecting backend
 import { fetchTasks as fetchTasksAPI, addTask as addTaskAPI, updateTask as updateTaskAPI, deleteTask as deleteTaskAPI } from "@/services/doctor";
 
@@ -145,10 +146,10 @@ export default function TasksSection(props) {
               </div>
               <button
                 onClick={() => handleDeleteTask(task.id)}
-                style={{ background: "none", border: "none", color: "#94a3b8", cursor: "pointer", fontSize: "18px" }}
+                style={{ background: "none", border: "none", color: "#94a3b8", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}
                 title="Delete task"
               >
-                ×
+                <X size={16} />
               </button>
             </div>
           ))

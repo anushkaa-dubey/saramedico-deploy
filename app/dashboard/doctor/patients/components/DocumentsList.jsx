@@ -1,42 +1,56 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import styles from "./DocumentsList.module.css";
-import { useRouter } from "next/navigation";
-import { fetchPatientDocuments, uploadPatientDocument } from "@/services/doctor";
-import { processDocumentWithAI, analyzeDocument, getDocumentStatus } from "@/services/ai";
+import { fetchPatientDocuments, uploadPatientDocument, fetchDocumentDetails } from "@/services/doctor";
+import { processDocumentWithAI, getDocumentStatus } from "@/services/ai";
+
+const FILE_ICONS = {
+    pdf: { color: "#ef4444", bg: "#fef2f2", icon: "📄" },
+    doc: { color: "#2563eb", bg: "#eff6ff", icon: "📝" },
+    docx: { color: "#2563eb", bg: "#eff6ff", icon: "📝" },
+    dicom: { color: "#7c3aed", bg: "#f5f3ff", icon: "🩻" },
+    png: { color: "#16a34a", bg: "#f0fdf4", icon: "🖼️" },
+    jpg: { color: "#16a34a", bg: "#f0fdf4", icon: "🖼️" },
+    jpeg: { color: "#16a34a", bg: "#f0fdf4", icon: "🖼️" },
+    webp: { color: "#16a34a", bg: "#f0fdf4", icon: "🖼️" },
+};
+
+function getExt(doc) {
+    const name = doc.file_name || doc.title || doc.presigned_url || doc.url || "";
+    const match = name.match(/\.([a-zA-Z0-9]+)(?:\?|$)/);
+    return match ? match[1].toLowerCase() : "file";
+}
 
 export default function DocumentsList({ patientId }) {
-    const router = useRouter();
     const [documents, setDocuments] = useState([]);
     const [loading, setLoading] = useState(true);
     const [uploading, setUploading] = useState(false);
     const [error, setError] = useState("");
     const [processingDoc, setProcessingDoc] = useState(null);
-    const [processResult, setProcessResult] = useState(null);
-    const pollingIntervalRef = useRef(null);
+    const [processResults, setProcessResults] = useState({}); // per-doc status
+    const [fileInputKey, setFileInputKey] = useState(0); // force re-mount to prevent duplicate events
+    const pollingRefs = useRef({});
 
     useEffect(() => {
         if (patientId) loadDocuments();
-
-        // Cleanup function for unmount
         return () => {
-            if (pollingIntervalRef.current) {
-                clearInterval(pollingIntervalRef.current);
-            }
+            // Cleanup all polling intervals on unmount
+            Object.values(pollingRefs.current).forEach(id => clearInterval(id));
         };
     }, [patientId]);
 
-    const loadDocuments = async () => {
+    const loadDocuments = useCallback(async () => {
         if (!patientId) return;
         setLoading(true);
         setError("");
         try {
             const data = await fetchPatientDocuments(patientId);
-            setDocuments(data);
+            const list = Array.isArray(data) ? data : (data?.documents || data?.records || []);
+            setDocuments(list);
         } catch (err) {
             console.error("fetchPatientDocuments error:", err);
-            if (err.message.includes("403") || err.message.toLowerCase().includes("unauthorized") || err.message.toLowerCase().includes("permission")) {
+            if (err.message?.includes("403") || err.message?.toLowerCase().includes("permission") || err.message?.toLowerCase().includes("unauthorized")) {
                 setError("Patient has not granted permission to view medical records. Once granted, documents will appear here.");
             } else {
                 setError(err.message || "Error fetching documents. Please try again.");
@@ -44,89 +58,131 @@ export default function DocumentsList({ patientId }) {
         } finally {
             setLoading(false);
         }
-    };
+    }, [patientId]);
 
     const handleFileUpload = async (e) => {
-        const file = e.target.files[0];
+        const file = e.target.files?.[0];
         if (!file) return;
 
         setUploading(true);
         setError("");
         try {
-            // Using title as filename for now, category as medical_record
             await uploadPatientDocument(patientId, file, { title: file.name, category: "medical_record" });
-            // Refresh list on success
             await loadDocuments();
         } catch (err) {
             console.error("Upload error:", err);
             setError(err.message || "Failed to upload document");
         } finally {
             setUploading(false);
-            // Reset input
-            e.target.value = null;
+            // Reset by changing key — forces the input to remount and clears selection
+            setFileInputKey(prev => prev + 1);
         }
     };
 
     const handleProcessWithAI = async (documentId) => {
+        if (processingDoc === documentId) return;
         setProcessingDoc(documentId);
-        setProcessResult(null);
+        setProcessResults(prev => ({ ...prev, [documentId]: { status: "processing" } }));
         setError("");
 
-        try {
-            // Step 1: Trigger AI Analysis
-            const result = await processDocumentWithAI({
-                patient_id: patientId,
-                document_id: documentId
-            });
-            setProcessResult({
-                documentId,
-                status: result.status || "processing"
-            });
+        // Clear any existing poll for this doc
+        if (pollingRefs.current[documentId]) {
+            clearInterval(pollingRefs.current[documentId]);
+            delete pollingRefs.current[documentId];
+        }
 
-            // Step 2: Poll for status
+        try {
+            await processDocumentWithAI({ patient_id: patientId, document_id: documentId });
+
+            // Poll for completion — max 60 seconds (20 polls × 3s)
+            let pollCount = 0;
+            const MAX_POLLS = 20;
+
             const intervalId = setInterval(async () => {
+                pollCount++;
                 try {
                     const statusData = await getDocumentStatus(documentId);
-                    setProcessResult({
-                        documentId,
-                        status: statusData.status || "processing",
-                        details: statusData.message || ""
-                    });
+                    const status = statusData.status || statusData.processing_status || "processing";
+                    setProcessResults(prev => ({
+                        ...prev,
+                        [documentId]: { status, details: statusData.message || "" }
+                    }));
 
-                    if (statusData.status === "completed" || statusData.status === "indexed" || statusData.status === "failed") {
-                        clearInterval(pollingIntervalRef.current);
-                        pollingIntervalRef.current = null; // Clear ref
+                    const isDone = ["completed", "indexed", "failed", "processed"].includes(status);
+                    if (isDone || pollCount >= MAX_POLLS) {
+                        clearInterval(pollingRefs.current[documentId]);
+                        delete pollingRefs.current[documentId];
                         setProcessingDoc(null);
-                        // Refresh documents to show updated status/data if any
-                        loadDocuments();
+                        if (isDone) loadDocuments();
+                        if (pollCount >= MAX_POLLS && !isDone) {
+                            setProcessResults(prev => ({
+                                ...prev,
+                                [documentId]: { status: "timeout", details: "Processing is taking longer than expected." }
+                            }));
+                        }
                     }
-                } catch (err) {
-                    console.error("Polling error:", err);
-                    clearInterval(pollingIntervalRef.current);
-                    pollingIntervalRef.current = null; // Clear ref
+                } catch (pollErr) {
+                    console.error("Polling error:", pollErr);
+                    clearInterval(pollingRefs.current[documentId]);
+                    delete pollingRefs.current[documentId];
                     setProcessingDoc(null);
-                    setError("Failed to get analysis status");
+                    setProcessResults(prev => ({ ...prev, [documentId]: { status: "failed", details: "Could not get status." } }));
                 }
-            }, 3000); // Poll every 3 seconds
+            }, 3000);
 
-            pollingIntervalRef.current = intervalId; // Store the interval ID in the ref
+            pollingRefs.current[documentId] = intervalId;
 
         } catch (err) {
             console.error("AI processing error:", err);
             setError(err.message || "Failed to process document with AI");
             setProcessingDoc(null);
-            if (pollingIntervalRef.current) {
-                clearInterval(pollingIntervalRef.current);
-                pollingIntervalRef.current = null;
-            }
+            setProcessResults(prev => ({ ...prev, [documentId]: { status: "failed", details: err.message } }));
         }
     };
 
-    const handleOpenDocument = (url) => {
-        if (url) window.open(url, "_blank");
+    const handleOpenDocument = async (doc) => {
+        // Try presigned_url, then downloadUrl, then fetch document details
+        let url = doc.presigned_url || doc.downloadUrl || doc.download_url || doc.url || doc.file_url;
+        if (!url && doc.id) {
+            try {
+                const details = await fetchDocumentDetails(doc.id);
+                url = details.downloadUrl || details.presigned_url || details.url;
+            } catch (e) {
+                console.error("fetchDocumentDetails error:", e);
+            }
+        }
+        if (url) {
+            window.open(url, "_blank", "noopener,noreferrer");
+        } else {
+            alert("Document URL is not available. Please try again later.");
+        }
     };
 
-    if (loading && !documents.length) return <div style={{ padding: "20px" }}>Loading documents...</div>;
+    const getStatusBadge = (docId) => {
+        const r = processResults[docId];
+        if (!r) return null;
+        const statusMap = {
+            processing: { bg: "#fef9c3", color: "#854d0e", label: "⏳ Processing..." },
+            completed: { bg: "#dcfce7", color: "#166534", label: "✓ Complete" },
+            indexed: { bg: "#dcfce7", color: "#166534", label: "✓ Indexed" },
+            processed: { bg: "#dcfce7", color: "#166534", label: "✓ Processed" },
+            failed: { bg: "#fee2e2", color: "#991b1b", label: "✗ Failed" },
+            timeout: { bg: "#fef3c7", color: "#92400e", label: "⌛ Timed Out" },
+        };
+        const s = statusMap[r.status] || { bg: "#f1f5f9", color: "#64748b", label: r.status };
+        return (
+            <span style={{
+                padding: "3px 8px", borderRadius: "6px", fontSize: "11px",
+                fontWeight: 600, background: s.bg, color: s.color,
+                display: "inline-block", marginTop: "4px"
+            }}>
+                {s.label}
+                {r.details && <span style={{ marginLeft: "4px", opacity: 0.7 }}>{r.details}</span>}
+            </span>
+        );
+    };
+
+    if (loading && !documents.length) return <div style={{ padding: "20px", color: "#64748b" }}>Loading documents...</div>;
 
     return (
         <div className={styles.documentsList}>
@@ -134,27 +190,22 @@ export default function DocumentsList({ patientId }) {
                 <h3 className={styles.title}>Patient Documents</h3>
                 <div className={styles.actions}>
                     <input
+                        key={fileInputKey}
                         type="file"
                         id="doc-upload"
                         style={{ display: "none" }}
                         onChange={handleFileUpload}
                         disabled={uploading}
+                        accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.webp,.dicom,.dcm,.txt"
                     />
                     <label
                         htmlFor="doc-upload"
                         style={{
-                            background: "#359AFF",
-                            color: "white",
-                            padding: "8px 16px",
-                            borderRadius: "8px",
-                            cursor: uploading ? "not-allowed" : "pointer",
-                            fontSize: "14px",
-                            fontWeight: "600",
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "8px",
-                            opacity: uploading ? 0.7 : 1,
-                            transition: "all 0.2s ease"
+                            background: "#359AFF", color: "white", padding: "8px 16px",
+                            borderRadius: "8px", cursor: uploading ? "not-allowed" : "pointer",
+                            fontSize: "14px", fontWeight: "600", display: "flex", alignItems: "center",
+                            gap: "8px", opacity: uploading ? 0.7 : 1, transition: "all 0.2s ease",
+                            userSelect: "none"
                         }}
                     >
                         {uploading ? (
@@ -173,78 +224,102 @@ export default function DocumentsList({ patientId }) {
                 </div>
             </div>
 
-            {error && <div style={{ padding: "12px", color: "red", background: "#fee2e2", borderRadius: "8px", margin: "12px 0", fontSize: "14px" }}>{error}</div>}
-
-            {processResult && (
-                <div style={{
-                    padding: "12px",
-                    margin: "12px 0",
-                    background: processResult.status === 'failed' ? "rgba(239, 68, 68, 0.1)" : "rgba(76, 175, 80, 0.1)",
-                    border: `1px solid ${processResult.status === 'failed' ? "rgba(239, 68, 68, 0.3)" : "rgba(76, 175, 80, 0.3)"}`,
-                    borderRadius: "8px",
-                    fontSize: "14px"
-                }}>
-                    <strong>{['completed', 'indexed'].includes(processResult.status) ? '✓ Processing Complete' : processResult.status === 'failed' ? '❌ Processing Failed' : '⏳ AI Processing...'}</strong>
-                    <div style={{ marginTop: "4px" }}>Status: <code style={{ textTransform: 'capitalize' }}>{processResult.status}</code></div>
-                    {processResult.details && <div style={{ marginTop: "2px", opacity: 0.8 }}>{processResult.details}</div>}
+            {error && (
+                <div style={{ padding: "12px", color: "#991b1b", background: "#fee2e2", borderRadius: "8px", margin: "12px 0", fontSize: "14px" }}>
+                    {error}
                 </div>
             )}
 
             <div className={styles.grid}>
                 {documents.length === 0 ? (
-                    <p style={{ color: "#64748b", fontStyle: "italic", padding: "20px" }}>No documents found for this patient.</p>
+                    <p style={{ color: "#64748b", fontStyle: "italic", padding: "20px" }}>
+                        No documents found for this patient.
+                    </p>
                 ) : (
-                    documents.map((doc) => (
-                        <div key={doc.id} className={styles.card}>
-                            <div className={styles.iconWrapper}>
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                                    <polyline points="14 2 14 8 20 8" />
-                                </svg>
-                            </div>
-                            <div className={styles.info}>
-                                <h4 className={styles.docName}>{doc.title || doc.file_name}</h4>
-                                <div className={styles.meta}>
-                                    <span>{doc.category?.replace("_", " ")}</span>
-                                    <span>•</span>
-                                    <span>{new Date(doc.uploaded_at || doc.upload_date).toLocaleDateString()}</span>
+                    documents.map((doc) => {
+                        const ext = getExt(doc);
+                        const iconCfg = FILE_ICONS[ext] || { color: "#64748b", bg: "#f8fafc", icon: "📁" };
+                        const result = processResults[doc.id];
+                        const isProcessing = processingDoc === doc.id;
+                        const isCompleted = result && ["completed", "indexed", "processed"].includes(result.status);
+
+                        return (
+                            <div key={doc.id} className={styles.card}>
+                                {/* File type icon */}
+                                <div className={styles.iconWrapper} style={{ background: iconCfg.bg, color: iconCfg.color }}>
+                                    <span style={{ fontSize: "18px" }}>{iconCfg.icon}</span>
+                                    <span style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.5px", marginTop: "2px" }}>
+                                        {ext.toUpperCase()}
+                                    </span>
+                                </div>
+
+                                <div className={styles.info}>
+                                    <h4 className={styles.docName}>{doc.title || doc.file_name || "Untitled"}</h4>
+                                    <div className={styles.meta}>
+                                        <span>{doc.category?.replace(/_/g, " ") || ext}</span>
+                                        {(doc.uploaded_at || doc.upload_date || doc.created_at) && (
+                                            <>
+                                                <span>•</span>
+                                                <span>{new Date(doc.uploaded_at || doc.upload_date || doc.created_at).toLocaleDateString()}</span>
+                                            </>
+                                        )}
+                                    </div>
+                                    {getStatusBadge(doc.id)}
+                                </div>
+
+                                <div style={{ display: "flex", flexDirection: "column", gap: "6px", alignItems: "flex-end" }}>
+                                    {/* Process with AI button */}
+                                    {!isCompleted && (
+                                        <button
+                                            className={styles.aiProcessBtn}
+                                            onClick={(e) => { e.stopPropagation(); handleProcessWithAI(doc.id); }}
+                                            disabled={isProcessing}
+                                            style={{
+                                                padding: "6px 10px",
+                                                background: isProcessing ? "#e2e8f0" : "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                                                color: isProcessing ? "#94a3b8" : "#fff",
+                                                border: "none", borderRadius: "6px",
+                                                cursor: isProcessing ? "not-allowed" : "pointer",
+                                                fontSize: "12px", fontWeight: "600",
+                                                transition: "all 0.2s ease", whiteSpace: "nowrap"
+                                            }}
+                                        >
+                                            {isProcessing ? (
+                                                <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ animation: "spin 1s linear infinite" }}>
+                                                        <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                                                    </svg>
+                                                    Processing...
+                                                </span>
+                                            ) : "Process with AI"}
+                                        </button>
+                                    )}
+                                    {isCompleted && (
+                                        <span style={{ fontSize: "12px", color: "#16a34a", fontWeight: 600 }}>✓ AI Processed</span>
+                                    )}
+
+                                    {/* View document button */}
+                                    <button
+                                        onClick={() => handleOpenDocument(doc)}
+                                        style={{
+                                            padding: "6px 10px", background: "#f1f5f9", color: "#2563eb",
+                                            border: "1px solid #e2e8f0", borderRadius: "6px",
+                                            cursor: "pointer", fontSize: "12px", fontWeight: "600",
+                                            transition: "all 0.2s ease", whiteSpace: "nowrap"
+                                        }}
+                                    >
+                                        View →
+                                    </button>
                                 </div>
                             </div>
-                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                                <button
-                                    className={styles.aiProcessBtn}
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleProcessWithAI(doc.id);
-                                    }}
-                                    disabled={processingDoc === doc.id}
-                                    style={{
-                                        padding: '6px 12px',
-                                        background: processingDoc === doc.id ? '#ccc' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                                        color: '#fff',
-                                        border: 'none',
-                                        borderRadius: '6px',
-                                        cursor: processingDoc === doc.id ? 'not-allowed' : 'pointer',
-                                        fontSize: '13px',
-                                        fontWeight: '500',
-                                        transition: 'all 0.2s ease',
-                                        opacity: processingDoc === doc.id ? 0.6 : 1
-                                    }}
-                                >
-                                    {processingDoc === doc.id ? 'Processing...' : 'Process with AI'}
-                                </button>
-                                <div
-                                    className={`${styles.status} ${styles.analyzed}`}
-                                    onClick={() => handleOpenDocument(doc.presigned_url)}
-                                    style={{ cursor: 'pointer' }}
-                                >
-                                    View
-                                </div>
-                            </div>
-                        </div>
-                    ))
+                        );
+                    })
                 )}
             </div>
+
+            <style>{`
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+      `}</style>
         </div>
     );
 }

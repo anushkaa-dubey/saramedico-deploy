@@ -4,6 +4,8 @@ import { useState } from "react";
 import Topbar from "../components/Topbar";
 import styles from "./Team.module.css";
 import { motion } from "framer-motion";
+import { Check, X, Shield, Users, User } from "lucide-react";
+import Link from "next/link";
 
 export default function TeamPage() {
     const [selectedRole, setSelectedRole] = useState('member');
@@ -19,7 +21,7 @@ export default function TeamPage() {
 
             <div className={styles.titleSection}>
                 <h1 className={styles.title}>Invite Team Members</h1>
-                <p className={styles.subtitle}>Grant access yo your clinic's workspace securely</p>
+                <p className={styles.subtitle}>Grant access to your clinic's workspace securely</p>
             </div>
 
             <div className={styles.card}>
@@ -43,7 +45,7 @@ export default function TeamPage() {
                         >
                             <div className={styles.roleHeader}>
                                 <div className={`${styles.roleIconBox} ${styles.adminIcon}`}>
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
+                                    <Shield size={20} />
                                 </div>
                                 <div>
                                     <span className={styles.roleName}>Administrator</span>
@@ -51,9 +53,9 @@ export default function TeamPage() {
                                 </div>
                             </div>
                             <div className={styles.featureList}>
-                                <div className={styles.feature}>✓ Manage team & billing</div>
-                                <div className={styles.feature}>✓ Full patient record access</div>
-                                <div className={styles.feature}>✓ Configure AI settings</div>
+                                <div className={styles.feature}><Check size={14} color="#16a34a" /> Manage team & billing</div>
+                                <div className={styles.feature}><Check size={14} color="#16a34a" /> Full patient record access</div>
+                                <div className={styles.feature}><Check size={14} color="#16a34a" /> Configure AI settings</div>
                             </div>
                         </div>
 
@@ -63,7 +65,7 @@ export default function TeamPage() {
                         >
                             <div className={styles.roleHeader}>
                                 <div className={`${styles.roleIconBox} ${styles.memberIcon}`}>
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
+                                    <Users size={20} />
                                 </div>
                                 <div>
                                     <span className={styles.roleName}>Member</span>
@@ -71,9 +73,9 @@ export default function TeamPage() {
                                 </div>
                             </div>
                             <div className={styles.featureList}>
-                                <div className={styles.feature}>✓ View assigned patients</div>
-                                <div className={styles.feature}>✓ Use AI diagnostic tools</div>
-                                <div className={`${styles.feature} ${styles.featureDisabled}`}>✕ No billing access</div>
+                                <div className={styles.feature}><Check size={14} color="#16a34a" /> View assigned patients</div>
+                                <div className={styles.feature}><Check size={14} color="#16a34a" /> Use AI diagnostic tools</div>
+                                <div className={`${styles.feature} ${styles.featureDisabled}`}><X size={14} color="#dc2626" /> No billing access</div>
                             </div>
                         </div>
 
@@ -83,30 +85,20 @@ export default function TeamPage() {
                         >
                             <div className={styles.roleHeader}>
                                 <div className={`${styles.roleIconBox} ${styles.patientIcon}`}>
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
+                                    <User size={20} />
                                 </div>
                                 <div>
                                     <span className={styles.roleName}>Patient</span>
                                 </div>
                             </div>
                             <div className={styles.featureList}>
-                                <div className={styles.feature}>✓ Check-in appointments</div>
-                                <div className={styles.feature}>✓ Access Records</div>
-                                <div className={`${styles.feature} ${styles.featureDisabled}`}>✕ No billing access</div>
+                                <div className={styles.feature}><Check size={14} color="#16a34a" /> Check-in appointments</div>
+                                <div className={styles.feature}><Check size={14} color="#16a34a" /> Access Records</div>
+                                <div className={`${styles.feature} ${styles.featureDisabled}`}><X size={14} color="#dc2626" /> No billing access</div>
                             </div>
                         </div>
                     </div>
                 </div>
-
-                {/* 
-                <div className={styles.securityNotice}>
-                    <div className={styles.noticeIcon}>i</div>
-                    <div className={styles.noticeContent}>
-                        <h4>Security Notice</h4>
-                        <p>The user will receive an email to join the Team. The invitation link expired in 48hours. They will be required to set up Two-Factor Authentication (2FA) upon their first login.</p>
-                    </div>
-                </div> 
-                */}
 
                 <div className={styles.actions}>
                     <button className={styles.cancelBtn}>Cancel</button>

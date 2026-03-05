@@ -140,6 +140,10 @@
     flex: 1;
 }
 
+.colEmail {
+    flex: 1.5;
+}
+
 .colMrn {
     flex: 1;
 }
@@ -150,6 +154,12 @@
 
 .colProblem {
     flex: 1;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.statusCol {
+    flex: 0.5;
     display: flex;
     justify-content: flex-end;
 }
@@ -251,6 +261,24 @@
 .profileMeta {
     font-size: 13px;
     color: #64748b;
+}
+
+.editProfileBtn {
+    padding: 6px 12px;
+    font-size: 12px;
+    border-radius: 8px;
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    cursor: pointer;
+    color: #64748b;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.editProfileBtn:hover {
+    background: #e2e8f0;
+    color: #0f172a;
+    border-color: #cbd5e1;
 }
 
 .statsRow {

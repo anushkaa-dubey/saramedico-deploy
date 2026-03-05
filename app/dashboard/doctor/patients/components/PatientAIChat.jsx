@@ -17,10 +17,11 @@ export default function PatientAIChat({ patientId, documentId = null, doctorId =
     const [isLoading, setIsLoading] = useState(false);
     const [conversationId, setConversationId] = useState(null);
     const [error, setError] = useState("");
-    const [activeMode, setActiveMode] = useState("doctor"); // "doctor" | "patient"
+    const [showHistory, setShowHistory] = useState(false); // toggle raw history panel
     const [aiAccess, setAiAccess] = useState(null); // null=checking, true=ok, false=denied
     const [grantingAccess, setGrantingAccess] = useState(false);
     const messagesEndRef = useRef(null);
+    const activeMode = "doctor"; // Always use doctor mode
 
     // Check AI permission whenever patient changes
     useEffect(() => {
@@ -31,13 +32,13 @@ export default function PatientAIChat({ patientId, documentId = null, doctorId =
         });
     }, [patientId, doctorId]);
 
-    // Reset conversation and messages when mode or patient changes
+    // Reset conversation and messages when patient changes
     useEffect(() => {
         setMessages([]);
         setConversationId(null);
         setError("");
         loadChatHistory();
-    }, [patientId, activeMode, doctorId]);
+    }, [patientId, doctorId]);
 
     const loadChatHistory = async () => {
         if (!patientId) return;
@@ -270,27 +271,28 @@ export default function PatientAIChat({ patientId, documentId = null, doctorId =
                     </div>
                     <div>
                         <h3 className={styles.headerTitle}>AI Assistant</h3>
-                        <p className={styles.headerSubtitle}>
-                            {activeMode === "doctor" ? "Doctor Clinical Support" : "Patient Q&A Context"}
-                        </p>
+                        <p className={styles.headerSubtitle}>Doctor Clinical Support</p>
                     </div>
                 </div>
 
-                {/* Mode Toggle */}
-                <div className={styles.toggleContainer}>
-                    <button
-                        className={`${styles.modeBtn} ${activeMode === "doctor" ? styles.activeMode : ""}`}
-                        onClick={() => setActiveMode("doctor")}
-                    >
-                        Doctor
-                    </button>
-                    <button
-                        className={`${styles.modeBtn} ${activeMode === "patient" ? styles.activeMode : ""}`}
-                        onClick={() => setActiveMode("patient")}
-                    >
-                        Patient
-                    </button>
-                </div>
+                {/* Chat History Icon */}
+                <button
+                    title="Chat History"
+                    onClick={() => setShowHistory(h => !h)}
+                    style={{
+                        background: showHistory ? "rgba(0,129,254,0.12)" : "rgba(0,0,0,0.04)",
+                        border: showHistory ? "1px solid #0081FE" : "1px solid transparent",
+                        borderRadius: "8px", padding: "6px 10px", cursor: "pointer",
+                        display: "flex", alignItems: "center", gap: "4px",
+                        color: showHistory ? "#0081FE" : "#64748b",
+                        fontSize: "12px", fontWeight: 600, transition: "all 0.2s ease"
+                    }}
+                >
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
+                    </svg>
+                    History
+                </button>
             </div>
 
             {/* Error Display */}
@@ -308,29 +310,26 @@ export default function PatientAIChat({ patientId, documentId = null, doctorId =
                 </div>
             )}
 
+            {/* Empty State or History Drawer */}
+            {showHistory && messages.length > 0 && (
+                <div style={{ padding: "10px 12px", background: "#f8fafc", borderBottom: "1px solid #e2e8f0", fontSize: "12px", color: "#64748b" }}>
+                    <strong style={{ color: "#0f172a" }}>Chat History</strong> — {messages.length} message(s) in this session
+                </div>
+            )}
+
             {/* Messages */}
             <div className={styles.messagesContainer}>
                 {messages.length === 0 && !isLoading && (
                     <div style={{
-                        padding: "40px 20px",
-                        textAlign: "center",
-                        opacity: 0.6,
-                        fontSize: "14px",
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        gap: "10px"
+                        padding: "40px 20px", textAlign: "center", opacity: 0.6, fontSize: "14px",
+                        display: "flex", flexDirection: "column", alignItems: "center", gap: "10px"
                     }}>
                         <div style={{ background: "#f0f9ff", padding: "12px", borderRadius: "50%", color: "#0081FE" }}>
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
                             </svg>
                         </div>
-                        <p>
-                            {activeMode === "doctor"
-                                ? "Ask clinical questions about this patient's history."
-                                : "View or simulate inquiries from the patient's perspective."}
-                        </p>
+                        <p>Ask clinical questions about this patient&apos;s history.</p>
                     </div>
                 )}
 
@@ -370,7 +369,7 @@ export default function PatientAIChat({ patientId, documentId = null, doctorId =
             <div className={styles.inputContainer}>
                 <input
                     type="text"
-                    placeholder={activeMode === "doctor" ? "Ask about patient details..." : "Simulate patient question..."}
+                    placeholder="Ask about patient medical history, diagnosis, medications..."
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyPress={handleKeyPress}

@@ -43,18 +43,7 @@ export default function RecordsPage() {
         <motion.div className={styles.card} variants={itemVariants}>
           <div className={styles.cardHeader}>
             <h3>Visit History</h3>
-
-            <div className={styles.filters}>
-              <select>
-                <option>All Types</option>
-              </select>
-
-              <select>
-                <option>Last 6 Months</option>
-              </select>
-            </div>
           </div>
-
           <RecordsTable />
         </motion.div>
 

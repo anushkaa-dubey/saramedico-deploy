@@ -25,7 +25,7 @@ export default function DoctorOnboardingStep2() {
       // alert("Please upload a file");
       // return; 
     }
-    // Upload logic here?
+    // Upload logic 
     router.push("/auth/signup/onboarding/doctor/step-3");
   };
 

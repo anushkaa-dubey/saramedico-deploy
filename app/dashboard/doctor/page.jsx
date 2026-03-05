@@ -12,8 +12,10 @@ import { useState, useEffect } from "react";
 import { fetchAppointments, createConsultation, fetchProfile, fetchTasks, fetchPatients, fetchTeamMembers } from "@/services/doctor";
 import { fetchQueueMetrics } from "@/services/consultation";
 import Link from "next/link";
+import { ClipboardList, AlertTriangle, CheckCircle, Timer } from "lucide-react";
 
-import { fetchCalendarMonth, fetchCalendarDay, deleteCalendarEvent } from "@/services/calendar";
+import { fetchCalendarMonth, fetchCalendarDay, deleteCalendarEvent, createCalendarEvent } from "@/services/calendar";
+import StartSessionModal from "./components/StartSessionModal";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -55,17 +57,22 @@ export default function DoctorDashboard() {
   // const [activityFeed, setActivityFeed] = useState([]); // Missing backend endpoint /doctor/activity
   // const [metrics, setMetrics] = useState(null); // Missing backend endpoint /doctor/me/dashboard
   const [doctorProfile, setDoctorProfile] = useState(null);
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [isEventModalOpen, setIsEventModalOpen] = useState(false);
+  const [newEvent, setNewEvent] = useState({ title: "", type: "event", time: "10:00" });
 
   const loadDashboardData = async () => {
     try {
-      const [appts, profile, tasks, patients, queueData, staffData] = await Promise.all([
-        fetchAppointments(),
-        fetchProfile(),
-        fetchTasks(),
-        fetchPatients(),
-        fetchQueueMetrics().catch(() => ({ pending_review: 0, high_urgency: 0, cleared_today: 0, avg_wait_time_minutes: 0 })),
-        fetchTeamMembers().catch(() => [])
+      const [appts, profile, tasks, patients, queueData, staffData, clinicalMetrics] = await Promise.all([
+        fetchAppointments().catch(() => []),
+        fetchProfile().catch(() => null),
+        fetchTasks().catch(() => []),
+        fetchPatients().catch(() => []),
+        fetchQueueMetrics().catch(() => ({ pending_review: 0, high_urgency: 0, cleared_today: 0 })),
+        fetchTeamMembers().catch(() => []),
+        import("@/services/doctor").then(m => m.fetchDashboardMetrics().catch(() => null))
       ]);
+
       if (!profile) return;
 
       if (profile.role !== "doctor") {
@@ -76,14 +83,22 @@ export default function DoctorDashboard() {
       const consultationsData = await import("@/services/consultation").then(m => m.fetchConsultations().catch(() => ({ consultations: [] })));
       const consultations = Array.isArray(consultationsData) ? consultationsData : (consultationsData?.consultations || consultationsData?.items || []);
 
+      const today = new Date().toISOString().split('T')[0];
+      const todayAppts = (appts || []).filter(a => {
+        const d = new Date(a.requested_date || a.date || a.scheduled_at).toISOString().split('T')[0];
+        return d === today;
+      });
+
+      const urgentTasks = (tasks || []).filter(t => t.status !== "completed" && (t.priority === "high" || t.priority === "urgent")).length;
+
       setAppointments(appts || []);
       setDoctorProfile(profile);
       setTeamMembers(staffData || []);
       setMetrics({
-        pending_review: queueData.pending_review || 0,
-        high_urgency: queueData.high_urgency || 0,
+        pending_review: clinicalMetrics?.pending_notes || queueData.pending_review || 0,
+        high_urgency: urgentTasks || clinicalMetrics?.urgent_notes || queueData.high_urgency || 0,
         cleared_today: queueData.cleared_today || 0,
-        avg_wait_time: queueData.avg_wait_time_minutes || 0,
+        today_meetings: todayAppts.length,
         total_patients: patients.length,
         total_records: consultations.length
       });
@@ -96,7 +111,7 @@ export default function DoctorDashboard() {
     pending_review: 0,
     high_urgency: 0,
     cleared_today: 0,
-    avg_wait_time: 0,
+    today_meetings: 0,
     total_patients: 0,
     total_records: 0
   });
@@ -149,12 +164,33 @@ export default function DoctorDashboard() {
   };
 
   const handleDayClick = async (day) => {
+    const newSelected = new Date(currentYear, currentDate.getMonth(), day);
+    setSelectedDate(newSelected);
     try {
-      const dateStr = `${currentYear}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      const dateStr = newSelected.toISOString().split('T')[0];
       const events = await fetchCalendarDay(dateStr);
       setSelectedDayEvents(events?.events || []);
     } catch (err) {
       console.error("Failed to fetch calendar day data:", err);
+    }
+  };
+
+  const handleCreateEvent = async () => {
+    if (!newEvent.title.trim()) return;
+    try {
+      const dateStr = selectedDate.toISOString().split('T')[0];
+      await createCalendarEvent({
+        title: newEvent.title,
+        event_type: newEvent.type,
+        start_time: `${dateStr}T${newEvent.time}:00Z`,
+        end_time: `${dateStr}T${parseInt(newEvent.time.split(':')[0]) + 1}:00:00Z`
+      });
+      setIsEventModalOpen(false);
+      setNewEvent({ title: "", type: "event", time: "10:00" });
+      refreshMonthData();
+      handleDayClick(selectedDate.getDate());
+    } catch (err) {
+      console.error("Failed to create event:", err);
     }
   };
 
@@ -234,6 +270,14 @@ export default function DoctorDashboard() {
         onSuccess={() => router.push("/dashboard/doctor/patients")}
       /> */}
 
+      <StartSessionModal
+        isOpen={showConsentModal}
+        onClose={() => setShowConsentModal(false)}
+        onSessionStarted={(session) => {
+          loadDashboardData();
+        }}
+      />
+
       <motion.section className={styles.header} variants={itemVariants}>
         <div>
           <h2 className={styles.greeting}>
@@ -248,6 +292,7 @@ export default function DoctorDashboard() {
               whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
               className={styles.iconBtn}
               onClick={() => router.push("/dashboard/admin/upload-documents")}
+              title="Upload Documents"
             >
               <img src={uploadIcon.src} alt="Upload" width="20" height="20" />
             </motion.button>
@@ -255,7 +300,8 @@ export default function DoctorDashboard() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               className={styles.iconBtn}
-              onClick={() => setIsModalOpen(true)}
+              onClick={() => router.push("/dashboard/doctor/patients")}
+              title="Add Patient"
             >
               <img src={personIcon.src} alt="Add Person" width="20" height="20" />
             </motion.button>
@@ -288,7 +334,7 @@ export default function DoctorDashboard() {
       >
         <div className={styles.summaryCard}>
           <div className={`${styles.summaryIcon}`} style={{ background: '#eff6ff', color: '#3b82f6' }}>
-            <img src={scheduleIcon.src} alt="Pending Review" width="22" height="22" />
+            <ClipboardList size={22} />
           </div>
           <div className={styles.summaryInfo}>
             <span className={styles.summaryLabel}>Pending Review</span>
@@ -299,7 +345,7 @@ export default function DoctorDashboard() {
 
         <div className={styles.summaryCard}>
           <div className={`${styles.summaryIcon}`} style={{ background: '#fef2f2', color: '#ef4444' }}>
-            <span style={{ fontSize: '20px' }}>⚠️</span>
+            <AlertTriangle size={22} />
           </div>
           <div className={styles.summaryInfo}>
             <span className={styles.summaryLabel}>High Urgency</span>
@@ -310,7 +356,7 @@ export default function DoctorDashboard() {
 
         <div className={styles.summaryCard}>
           <div className={`${styles.summaryIcon}`} style={{ background: '#f0fdf4', color: '#16a34a' }}>
-            <img src={uploadIcon.src} alt="Cleared Today" width="22" height="22" />
+            <CheckCircle size={22} />
           </div>
           <div className={styles.summaryInfo}>
             <span className={styles.summaryLabel}>Cleared Today</span>
@@ -321,11 +367,11 @@ export default function DoctorDashboard() {
 
         <div className={styles.summaryCard}>
           <div className={`${styles.summaryIcon}`} style={{ background: '#fff7ed', color: '#f97316' }}>
-            <span style={{ fontSize: '20px' }}>⏱️</span>
+            <Timer size={22} />
           </div>
           <div className={styles.summaryInfo}>
-            <span className={styles.summaryLabel}>Avg Wait Time</span>
-            <h3 className={styles.summaryValue}>{metrics.avg_wait_time}m</h3>
+            <span className={styles.summaryLabel}>Today's Total Meetings</span>
+            <h3 className={styles.summaryValue}>{metrics.today_meetings}</h3>
             <span className={styles.summaryTrend} style={{ color: '#f97316' }}>Patient Flow</span>
           </div>
         </div>
@@ -400,16 +446,18 @@ export default function DoctorDashboard() {
 
             <div className={styles.calendarGrid}>
               {daysInMonth.map(day => {
+                const dayDate = new Date(currentYear, currentDate.getMonth(), day);
                 const isToday = isTodayMonth && day === todayDate;
+                const isSelected = selectedDate && selectedDate.getDate() === day && selectedDate.getMonth() === currentDate.getMonth();
                 const dayInfo = monthData?.days?.find(d => d.day === day);
                 const eventCount = dayInfo?.event_count || 0;
 
                 const isBusy = eventCount > 0;
-                const isVeryBusy = eventCount >= 3; // edit as per requests , for testing made it very busy
+                const isVeryBusy = eventCount >= 3;
                 return (
                   <div
                     key={day}
-                    className={`${styles.calendarCell} ${isToday ? styles.cellToday : ""}`}
+                    className={`${styles.calendarCell} ${isToday ? styles.cellToday : ""} ${isSelected ? styles.cellActive : ""}`}
                     onClick={() => handleDayClick(day)}
                     style={{ position: 'relative' }}
                   >
@@ -430,35 +478,49 @@ export default function DoctorDashboard() {
                 );
               })}
             </div>
+
+            <button
+              className={styles.addTaskBtn}
+              style={{ marginTop: '12px', width: '100%' }}
+              onClick={() => setIsEventModalOpen(true)}
+              disabled={!selectedDate}
+            >
+              + Add Event
+            </button>
           </motion.div>
 
-          {/* Today's Schedule Card */}
+          {/* Today's Schedule Card -> Now Selected Day's Events */}
           <motion.div variants={itemVariants} className={styles.card} style={{ marginBottom: '16px' }}>
             <div className={styles.cardHeader} style={{ marginBottom: '12px' }}>
-              <h3 className={styles.cardTitle}>Today's Schedule</h3>
-              <span style={{ fontSize: '12px', color: '#94a3b8' }}>{appointments.length} Total</span>
+              <h3 className={styles.cardTitle}>
+                {selectedDate.toDateString() === new Date().toDateString() ? "Today's Schedule" : `${selectedDate.toLocaleDateString('default', { month: 'short', day: 'numeric' })} Schedule`}
+              </h3>
+              <span style={{ fontSize: '12px', color: '#94a3b8' }}>{(selectedDayEvents || []).length} Items</span>
             </div>
 
-            {appointments.length > 0 ? (
-              <div className={styles.profileCardCompact}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-                  <div className={styles.profileName} style={{ fontSize: '15px' }}>
-                    {appointments[0].patient_name || "Patient Session"}
+            {(selectedDayEvents || []).length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {(selectedDayEvents || []).map((ev, idx) => (
+                  <div key={ev.id || idx} className={styles.profileCardCompact} style={{ padding: '12px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <div>
+                        <div style={{ fontWeight: '700', fontSize: '14px', color: '#0f172a' }}>{ev.title}</div>
+                        <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>
+                          {ev.start_time ? new Date(ev.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "All-day"}
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => handleDeleteEvent(ev.id)}
+                        style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', fontSize: '14px' }}
+                      >
+                        ×
+                      </button>
+                    </div>
                   </div>
-                  <span style={{ fontWeight: '700', color: '#0f172a', fontSize: '13px' }}>
-                    {new Date(appointments[0].requested_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </span>
-                </div>
-                <div style={{ fontSize: '12px', color: '#64748b', marginBottom: '12px' }}>
-                  {appointments[0].reason || "General Consultation"}
-                </div>
-                <div className={styles.profileActions}>
-                  <button className={styles.startMeetBtn} style={{ height: '32px', fontSize: '12px' }} onClick={handleStartSession}>Join Now</button>
-                  <button className={styles.detailsBtn} style={{ height: '32px', fontSize: '12px' }} onClick={() => router.push(`/dashboard/doctor/patients/${appointments[0].patient_id}`)}>View Record</button>
-                </div>
+                ))}
               </div>
             ) : (
-              <p style={{ fontSize: '13px', color: '#94a3b8', textAlign: 'center', padding: '10px' }}>No visits scheduled</p>
+              <p style={{ fontSize: '13px', color: '#94a3b8', textAlign: 'center', padding: '10px' }}>No events scheduled</p>
             )}
           </motion.div>
 
@@ -486,49 +548,56 @@ export default function DoctorDashboard() {
         </div>
       </section>
 
-      {/* Start Session Modal */}
-      {showConsentModal && (
+      {/* Add Event Modal */}
+      {isEventModalOpen && (
         <div className={styles.modalOverlay}>
-          <div className={styles.modalContent}>
+          <div className={styles.modalContent} style={{ maxWidth: '400px' }}>
             <div className={styles.modalHeader}>
-              <h3 className={styles.modalTitle}>Pre-Visit Checklist</h3>
-              <p className={styles.modalSub}>Please verify the required pre-requisites before initializing the AI scribe session.</p>
+              <h3 className={styles.modalTitle}>Add Calendar Event</h3>
+              <p className={styles.modalSub}>{selectedDate?.toDateString()}</p>
             </div>
-
-            <div className={styles.checkboxGroup}>
-              <label className={`${styles.checkboxItem} ${consentVerified ? styles.checkboxItemActive : ""}`}>
-                <input type="checkbox" checked={consentVerified} onChange={(e) => setConsentVerified(e.target.checked)} style={{ width: "18px", height: "18px", cursor: "pointer" }} />
-                <span className={`${styles.checkboxLabel} ${consentVerified ? styles.checkboxLabelActive : ""}`}>Patient Consent Verified</span>
-              </label>
-
-              <label className={`${styles.checkboxItem} ${recordingReady ? styles.checkboxItemActive : ""}`}>
-                <input type="checkbox" checked={recordingReady} onChange={(e) => setRecordingReady(e.target.checked)} style={{ width: "18px", height: "18px", cursor: "pointer" }} />
-                <span className={`${styles.checkboxLabel} ${recordingReady ? styles.checkboxLabelActive : ""}`}>Recording Hardware Ready</span>
-              </label>
-            </div>
-
-            {showConsentError && (!consentVerified || !recordingReady) && (
-              <div className={styles.errorMsg}>
-                Please check all required boxes to proceed.
+            <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
+              <div>
+                <label style={{ fontSize: '13px', color: '#64748b', display: 'block', marginBottom: '5px' }}>Title</label>
+                <input
+                  type="text"
+                  value={newEvent.title}
+                  onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
+                  placeholder="Event title"
+                  style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0' }}
+                />
               </div>
-            )}
-
-            <div className={styles.modalActions}>
-              <button className={styles.detailsBtn} onClick={() => setShowConsentModal(false)}>Cancel</button>
-              <button
-                className={styles.primaryBtn}
-                onClick={proceedToSession}
-                style={{
-                  background: (consentVerified && recordingReady) ? "" : "#cbd5e1",
-                  cursor: (consentVerified && recordingReady) ? "pointer" : "not-allowed"
-                }}
-              >
-                Join Meet
-              </button>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ fontSize: '13px', color: '#64748b', display: 'block', marginBottom: '5px' }}>Type</label>
+                  <select
+                    value={newEvent.type}
+                    onChange={(e) => setNewEvent({ ...newEvent, type: e.target.value })}
+                    style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0' }}
+                  >
+                    <option value="event">Event</option>
+                    <option value="task">Task</option>
+                    <option value="reminder">Reminder</option>
+                  </select>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{ fontSize: '13px', color: '#64748b', display: 'block', marginBottom: '5px' }}>Time</label>
+                  <input
+                    type="time"
+                    value={newEvent.time}
+                    onChange={(e) => setNewEvent({ ...newEvent, time: e.target.value })}
+                    style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0' }}
+                  />
+                </div>
+              </div>
+            </div>
+            <div className={styles.modalActions} style={{ padding: '20px', borderTop: '1px solid #e2e8f0' }}>
+              <button className={styles.detailsBtn} onClick={() => setIsEventModalOpen(false)}>Cancel</button>
+              <button className={styles.primaryBtn} onClick={handleCreateEvent}>Save Event</button>
             </div>
           </div>
         </div>
       )}
-    </motion.div>
+    </motion.div >
   );
 }

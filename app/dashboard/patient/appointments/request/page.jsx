@@ -35,7 +35,6 @@ export default function RequestAppointment() {
             if (Array.isArray(data)) {
                 doctorsArray = data;
             } else if (data && typeof data === 'object') {
-                // Check for common wrappers
                 doctorsArray = data.doctors || data.items || data.data || [];
             }
 

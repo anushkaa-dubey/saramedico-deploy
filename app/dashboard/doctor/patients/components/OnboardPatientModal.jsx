@@ -4,6 +4,7 @@ import styles from "./OnboardPatientModal.module.css";
 import { onboardPatient } from "@/services/doctor";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
+import { Check, X } from "lucide-react";
 
 export default function OnboardPatientModal({ isOpen, onClose, onSuccess }) {
     const [formData, setFormData] = useState({
@@ -13,7 +14,17 @@ export default function OnboardPatientModal({ isOpen, onClose, onSuccess }) {
         phone_number: "",
         email: "",
         password: "",
-        gender: "male"
+        gender: "male",
+        address_street: "",
+        address_city: "",
+        address_state: "",
+        address_zipCode: "",
+        emergency_name: "",
+        emergency_relationship: "",
+        emergency_phone: "",
+        medicalHistory: "",
+        allergies: "",
+        medications: ""
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
@@ -40,20 +51,8 @@ export default function OnboardPatientModal({ isOpen, onClose, onSuccess }) {
         setError("");
 
         try {
-            // const payload = {
-            //     first_name: formData.first_name,
-            //     last_name: formData.last_name,
-            //     fullName: `${formData.first_name} ${formData.last_name}`,
-            //     email: formData.email,
-            //     password: formData.password,
-            //     date_of_birth: formData.date_of_birth,
-            //     gender: formData.gender,
-            //     phone: formData.phone_number.startsWith("+") ? formData.phone_number : `+${formData.phone_number}`,
-            //     phone_number: formData.phone_number.startsWith("+") ? formData.phone_number : `+${formData.phone_number}`,
-            //     role: "patient"
-            // };
             const payload = {
-                fullName: `${formData.first_name} ${formData.last_name}`,
+                fullName: `${formData.first_name} ${formData.last_name}`.trim(),
                 email: formData.email,
                 password: formData.password,
                 dateOfBirth: formData.date_of_birth,
@@ -61,6 +60,20 @@ export default function OnboardPatientModal({ isOpen, onClose, onSuccess }) {
                 phoneNumber: formData.phone_number.startsWith("+")
                     ? formData.phone_number
                     : `+${formData.phone_number}`,
+                address: {
+                    street: formData.address_street,
+                    city: formData.address_city,
+                    state: formData.address_state,
+                    zipCode: formData.address_zipCode
+                },
+                emergencyContact: {
+                    name: formData.emergency_name,
+                    relationship: formData.emergency_relationship,
+                    phoneNumber: formData.emergency_phone
+                },
+                medicalHistory: formData.medicalHistory,
+                allergies: formData.allergies ? formData.allergies.split(",").map(a => a.trim()).filter(Boolean) : [],
+                medications: formData.medications ? formData.medications.split(",").map(m => m.trim()).filter(Boolean) : [],
             };
             await onboardPatient(payload);
             setOnboardedData({ email: formData.email, password: formData.password });
@@ -78,12 +91,12 @@ export default function OnboardPatientModal({ isOpen, onClose, onSuccess }) {
             <div className={styles.modal}>
                 <div className={styles.header}>
                     <h3>{onboardedData ? "Patient Onboarded Ready!" : "Onboard New Patient"}</h3>
-                    <button onClick={onClose} className={styles.closeBtn}>&times;</button>
+                    <button onClick={onClose} className={styles.closeBtn}><X size={20} /></button>
                 </div>
                 <div className={styles.scrollContent}>
                     {onboardedData ? (
                         <div className={styles.successView}>
-                            <div className={styles.successIcon}>✓</div>
+                            <div className={styles.successIcon}><Check size={32} /></div>
                             <p className={styles.successTitle}>Patient Created Successfully!</p>
                             <p className={styles.warningText}>Please share these credentials with the patient. <strong>This password is shown only once.</strong></p>
 
@@ -95,11 +108,13 @@ export default function OnboardPatientModal({ isOpen, onClose, onSuccess }) {
                                         <button onClick={() => handleCopy(onboardedData.email)} className={styles.copyBtn}>Copy</button>
                                     </div>
                                 </div>
-                                <div className={styles.credItem}>
-                                    <label>Password</label>
-                                    <div className={styles.credValue}>
-                                        <span>{onboardedData.password}</span>
-                                        <button onClick={() => handleCopy(onboardedData.password)} className={styles.copyBtn}>Copy</button>
+                                <div className={styles.credentialBoxInner}>
+                                    <div className={styles.credItem}>
+                                        <label>Password</label>
+                                        <div className={styles.credValue}>
+                                            <span>{onboardedData.password}</span>
+                                            <button onClick={() => handleCopy(onboardedData.password)} className={styles.copyBtn}>Copy</button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -199,6 +214,114 @@ export default function OnboardPatientModal({ isOpen, onClose, onSuccess }) {
                                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                                     required
                                 />
+                            </div>
+
+                            <hr style={{ margin: "20px 0", border: "0", borderTop: "1px solid #e2e8f0" }} />
+                            <h4 style={{ margin: "0 0 16px 0", fontSize: "16px", color: "#0f172a" }}>Address</h4>
+
+                            <div className={styles.field}>
+                                <label>Street Address</label>
+                                <input
+                                    type="text"
+                                    placeholder="123 Main St"
+                                    value={formData.address_street}
+                                    onChange={(e) => setFormData({ ...formData, address_street: e.target.value })}
+                                />
+                            </div>
+                            <div className={styles.row}>
+                                <div className={styles.field}>
+                                    <label>City</label>
+                                    <input
+                                        type="text"
+                                        placeholder="City"
+                                        value={formData.address_city}
+                                        onChange={(e) => setFormData({ ...formData, address_city: e.target.value })}
+                                    />
+                                </div>
+                                <div className={styles.field}>
+                                    <label>State</label>
+                                    <input
+                                        type="text"
+                                        placeholder="State"
+                                        value={formData.address_state}
+                                        onChange={(e) => setFormData({ ...formData, address_state: e.target.value })}
+                                    />
+                                </div>
+                                <div className={styles.field}>
+                                    <label>Zip Code</label>
+                                    <input
+                                        type="text"
+                                        placeholder="Zip"
+                                        value={formData.address_zipCode}
+                                        onChange={(e) => setFormData({ ...formData, address_zipCode: e.target.value })}
+                                    />
+                                </div>
+                            </div>
+
+                            <hr style={{ margin: "20px 0", border: "0", borderTop: "1px solid #e2e8f0" }} />
+                            <h4 style={{ margin: "0 0 16px 0", fontSize: "16px", color: "#0f172a" }}>Emergency Contact</h4>
+
+                            <div className={styles.row}>
+                                <div className={styles.field}>
+                                    <label>Name</label>
+                                    <input
+                                        type="text"
+                                        placeholder="Jane Doe"
+                                        value={formData.emergency_name}
+                                        onChange={(e) => setFormData({ ...formData, emergency_name: e.target.value })}
+                                    />
+                                </div>
+                                <div className={styles.field}>
+                                    <label>Relationship</label>
+                                    <input
+                                        type="text"
+                                        placeholder="Spouse"
+                                        value={formData.emergency_relationship}
+                                        onChange={(e) => setFormData({ ...formData, emergency_relationship: e.target.value })}
+                                    />
+                                </div>
+                            </div>
+                            <div className={styles.field}>
+                                <label>Phone</label>
+                                <input
+                                    type="tel"
+                                    placeholder="+1 555-000-0000"
+                                    value={formData.emergency_phone}
+                                    onChange={(e) => setFormData({ ...formData, emergency_phone: e.target.value })}
+                                />
+                            </div>
+
+                            <hr style={{ margin: "20px 0", border: "0", borderTop: "1px solid #e2e8f0" }} />
+                            <h4 style={{ margin: "0 0 16px 0", fontSize: "16px", color: "#0f172a" }}>Medical Information</h4>
+
+                            <div className={styles.field}>
+                                <label>Medical History</label>
+                                <textarea
+                                    className={styles.textarea}
+                                    placeholder="Past conditions, surgeries, etc."
+                                    value={formData.medicalHistory}
+                                    onChange={(e) => setFormData({ ...formData, medicalHistory: e.target.value })}
+                                />
+                            </div>
+                            <div className={styles.row}>
+                                <div className={styles.field}>
+                                    <label>Allergies (comma separated)</label>
+                                    <input
+                                        type="text"
+                                        placeholder="Peanuts, Penicillin"
+                                        value={formData.allergies}
+                                        onChange={(e) => setFormData({ ...formData, allergies: e.target.value })}
+                                    />
+                                </div>
+                                <div className={styles.field}>
+                                    <label>Medications (comma separated)</label>
+                                    <input
+                                        type="text"
+                                        placeholder="Lisinopril, Metformin"
+                                        value={formData.medications}
+                                        onChange={(e) => setFormData({ ...formData, medications: e.target.value })}
+                                    />
+                                </div>
                             </div>
 
                             {error && <div className={styles.errorContainer}>{error}</div>}

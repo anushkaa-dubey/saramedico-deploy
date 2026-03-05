@@ -5,35 +5,22 @@ import { useRouter } from "next/navigation";
 import styles from "./Step1.module.css";
 import Image from "next/image";
 import logo from "@/public/logo2.svg";
-import search from "@/public/icons/search.svg";
+import { Search, Stethoscope, HeartPulse, ScanFace, Baby, Brain, Bone, Activity, BrainCircuit, Scan, Scissors, Siren, PlusCircle } from "lucide-react";
 import { updateDoctorProfile } from "@/services/doctor";
 
-import genMedIcon from "@/public/icons/speciality/general_medicine.svg";
-import cardiologyIcon from "@/public/icons/speciality/cardiology.svg";
-import dermatologyIcon from "@/public/icons/speciality/dermatology.svg";
-import pediatricsIcon from "@/public/icons/speciality/pediatrics.svg";
-import psychiatryIcon from "@/public/icons/speciality/Psyc.svg";
-import orthopedicsIcon from "@/public/icons/speciality/orthopedics.svg";
-import oncologyIcon from "@/public/icons/speciality/oncology.svg";
-import neurologyIcon from "@/public/icons/speciality/neurology.svg";
-import radiologyIcon from "@/public/icons/speciality/radiology.svg";
-import surgeryIcon from "@/public/icons/speciality/surgery.svg";
-import emergencyIcon from "@/public/icons/speciality/emergency.svg";
-import otherIcon from "@/public/icons/speciality/other.svg";
-
 const specialties = [
-  { id: "general_medicine", label: "General Medicine", icon: <img src={genMedIcon.src} alt="" width="40" height="40" /> },
-  { id: "cardiology", label: "Cardiology", icon: <img src={cardiologyIcon.src} alt="" width="40" height="40" /> },
-  { id: "dermatology", label: "Dermatology", icon: <img src={dermatologyIcon.src} alt="" width="40" height="40" /> },
-  { id: "pediatrics", label: "Pediatrics", icon: <img src={pediatricsIcon.src} alt="" width="40" height="40" /> },
-  { id: "psychiatry", label: "Psychiatry", icon: <img src={psychiatryIcon.src} alt="" width="40" height="40" /> },
-  { id: "orthopedics", label: "Orthopedics", icon: <img src={orthopedicsIcon.src} alt="" width="40" height="40" /> },
-  { id: "oncology", label: "Oncology", icon: <img src={oncologyIcon.src} alt="" width="40" height="40" /> },
-  { id: "neurology", label: "Neurology", icon: <img src={neurologyIcon.src} alt="" width="40" height="40" /> },
-  { id: "radiology", label: "Radiology", icon: <img src={radiologyIcon.src} alt="" width="40" height="40" /> },
-  { id: "surgery", label: "Surgery", icon: <img src={surgeryIcon.src} alt="" width="40" height="40" /> },
-  { id: "emergency", label: "Emergency", icon: <img src={emergencyIcon.src} alt="" width="40" height="40" /> },
-  { id: "other", label: "Other Speciality", icon: <img src={otherIcon.src} alt="" width="40" height="40" /> },
+  { id: "general_medicine", label: "General Medicine", icon: <Stethoscope size={32} /> },
+  { id: "cardiology", label: "Cardiology", icon: <HeartPulse size={32} /> },
+  { id: "dermatology", label: "Dermatology", icon: <ScanFace size={32} /> },
+  { id: "pediatrics", label: "Pediatrics", icon: <Baby size={32} /> },
+  { id: "psychiatry", label: "Psychiatry", icon: <Brain size={32} /> },
+  { id: "orthopedics", label: "Orthopedics", icon: <Bone size={32} /> },
+  { id: "oncology", label: "Oncology", icon: <Activity size={32} /> },
+  { id: "neurology", label: "Neurology", icon: <BrainCircuit size={32} /> },
+  { id: "radiology", label: "Radiology", icon: <Scan size={32} /> },
+  { id: "surgery", label: "Surgery", icon: <Scissors size={32} /> },
+  { id: "emergency", label: "Emergency", icon: <Siren size={32} /> },
+  { id: "other", label: "Other Speciality", icon: <PlusCircle size={32} /> },
 ];
 
 export default function DoctorOnboardingStep1() {
@@ -101,7 +88,7 @@ export default function DoctorOnboardingStep1() {
             <p className={styles.subheading}>Saramedico optimizes its clinical AI engine on your field of practice.</p>
 
             <div className={styles.searchBox}>
-              <span className={styles.searchIcon}><Image src={search.src} alt="Search" width="18" height="18" />  </span>
+              <span className={styles.searchIcon}><Search size={18} />  </span>
               <input
                 type="text"
                 placeholder="Search patients, reports, notes..."

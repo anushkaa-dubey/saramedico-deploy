@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import styles from "./AdminDashboard.module.css";
-import notificationIcon from "@/public/icons/notification.svg";
+// import notificationIcon from "@/public/icons/notification.svg";
 import searchIcon from "@/public/icons/search.svg";
 import docIcon from "@/public/icons/docs.svg";
 import personIcon from "@/public/icons/person.svg";
@@ -212,9 +212,9 @@ export default function AdminDashboard() {
         </div>
 
         <div className={styles.topActions}>
-          <button className={styles.iconBtn}>
+          {/* <button className={styles.iconBtn}>
             <img src={notificationIcon.src} alt="Notifications" width="20" height="20" />
-          </button>
+          </button> */}
 
           <div className={styles.profile}>
             <div className={styles.profileInfo}>
