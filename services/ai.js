@@ -1,133 +1,143 @@
 import { API_BASE_URL, getAuthHeaders, handleResponse } from "./apiConfig";
 
 /**
- * AI Document Processing
- * Endpoint: POST /api/v1/doctor/ai/process-document
+ * Create a new AI Chat Session
+ * POST /api/v1/doctor/ai/chat/session
  */
-export const processDocumentWithAI = async (payload) => {
-    const response = await fetch(`${API_BASE_URL}/doctor/ai/process-document`, {
+export const createAIChatSession = async (patientId, title = null) => {
+    const response = await fetch(`${API_BASE_URL}/doctor/ai/chat/session`, {
         method: "POST",
         headers: getAuthHeaders(),
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+            patient_id: patientId,
+            title: title
+        }),
     });
     return handleResponse(response);
 };
 
 /**
- * Trigger AI document analysis
- * Endpoint: POST /api/v1/documents/{document_id}/analyze
+ * List all AI Chat Sessions for a specific patient
+ * GET /api/v1/doctor/ai/chat/sessions?patient_id={uuid}
  */
-export const analyzeDocument = async (documentId) => {
-    const response = await fetch(`${API_BASE_URL}/documents/${documentId}/analyze`, {
+export const fetchAIChatSessions = async (patientId) => {
+    const response = await fetch(`${API_BASE_URL}/doctor/ai/chat/sessions?patient_id=${patientId}`, {
+        headers: getAuthHeaders(),
+    });
+    return handleResponse(response);
+};
+
+/**
+ * Get message history for a specific AI Chat Session
+ * GET /api/v1/doctor/ai/chat/session/{session_id}
+ */
+export const fetchAIChatHistory = async (sessionId) => {
+    const response = await fetch(`${API_BASE_URL}/doctor/ai/chat/session/${sessionId}`, {
+        headers: getAuthHeaders(),
+    });
+    return handleResponse(response);
+};
+
+/**
+ * Send a message to the AI Chat (Streaming/SSE)
+ * POST /api/v1/doctor/ai/chat/message
+ * Note: This returns a raw response for the consumer to handle SSE stream.
+ */
+export const sendAIChatMessage = async (sessionId, patientId, message, documentId = null) => {
+    const response = await fetch(`${API_BASE_URL}/doctor/ai/chat/message`, {
         method: "POST",
-        headers: getAuthHeaders()
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+            session_id: sessionId,
+            patient_id: patientId,
+            message: message,
+            document_id: documentId
+        }),
     });
-    return handleResponse(response);
-};
 
-/**
- * Get document processing status
- * Endpoint: GET /api/v1/documents/{document_id}/status
- */
-export const getDocumentStatus = async (documentId) => {
-    const response = await fetch(`${API_BASE_URL}/documents/${documentId}/status`, {
-        headers: getAuthHeaders()
-    });
-    return handleResponse(response);
-};
-
-/**
- * Helper for text responses — also parses JSON error bodies from FastAPI
- */
-const handleTextResponse = async (response) => {
-    const text = await response.text();
     if (!response.ok) {
-        // Try to extract a clean error message from FastAPI JSON error body
-        let errorMessage = text;
-        try {
-            const errObj = JSON.parse(text);
-            if (typeof errObj?.detail === "string") {
-                errorMessage = errObj.detail;
-            } else if (Array.isArray(errObj?.detail)) {
-                errorMessage = errObj.detail.map(e => e.msg || e).join(", ");
-            } else if (errObj?.message) {
-                errorMessage = errObj.message;
-            }
-        } catch (e) {
-            // Not JSON, use raw text
-        }
-        throw new Error(errorMessage || `Request failed with status ${response.status}`);
+        const error = await response.json().catch(() => ({ detail: "Failed to send message" }));
+        throw new Error(error.detail || "Failed to send message");
     }
-    return text;
+
+    return response.body; // Stream reader
 };
 
+/**
+ * Extract doctor credentials from certificate image (Vision OCR)
+ * POST /api/v1/doctor/extract-credentials
+ */
+export const extractDoctorCredentials = async (imageFile) => {
+    const formData = new FormData();
+    formData.append("certificate_image", imageFile);
+
+    const headers = getAuthHeaders();
+    delete headers["Content-Type"]; // Let browser set boundary
+
+    const response = await fetch(`${API_BASE_URL}/doctor/extract-credentials`, {
+        method: "POST",
+        headers: headers,
+        body: formData,
+    });
+    return handleResponse(response);
+};
+
+// --- Legacy Compatibility Wrappers ---
+// These are restored to fix console errors in components that haven't been migrated yet.
 
 /**
- * Doctor AI Chat
- * Endpoint: POST /api/v1/doctor/ai/chat/doctor
- * Returns plain text string
+ * Legacy single-request AI chat (non-streaming)
  */
 export const doctorAIChat = async (payload) => {
-    const response = await fetch(`${API_BASE_URL}/doctor/ai/chat/doctor`, {
+    // We'll create a session automatically or use a default one for legacy compatibility
+    const response = await fetch(`${API_BASE_URL}/doctor/ai/chat/message`, {
         method: "POST",
         headers: getAuthHeaders(),
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+            session_id: payload.conversation_id || "default",
+            patient_id: payload.patient_id,
+            message: payload.query,
+            document_id: payload.document_id || null
+        }),
     });
-    const text = await handleTextResponse(response);
-    return { response: text };
-};
 
-/**
- * Patient AI Chat
- * Endpoint: POST /api/v1/doctor/ai/chat/patient
- * Returns plain text string
- */
-export const patientAIChat = async (payload) => {
-    const response = await fetch(`${API_BASE_URL}/doctor/ai/chat/patient`, {
-        method: "POST",
-        headers: getAuthHeaders(),
-        body: JSON.stringify(payload),
-    });
-    const text = await handleTextResponse(response);
-    return { response: text };
-};
+    if (!response.ok) return handleResponse(response);
 
-/**
- * Fetch Patient Chat History
- * Endpoint: GET /api/v1/doctor/ai/chat-history/patient?patient_id=...
- */
-export const fetchPatientChatHistory = async (patientId) => {
-    const response = await fetch(
-        `${API_BASE_URL}/doctor/ai/chat-history/patient?patient_id=${patientId}`,
-        {
-            headers: getAuthHeaders(),
-        }
-    );
-    const text = await handleTextResponse(response);
+    // Legacy expects full JSON response, not a stream.
+    // However, if the backend only supports streams now, this might fail.
+    // We'll try to read it as JSON first.
     try {
+        const text = await response.text();
         return JSON.parse(text);
     } catch (e) {
-        console.warn("Chat history is not valid JSON, returning []", e);
-        return [];
+        // Fallback for stream
+        return { response: "Streaming response started. Please update component to handle SSE." };
     }
 };
 
+export const patientAIChat = doctorAIChat; // Alias
+
 /**
- * Fetch Doctor Chat History
- * Endpoint: GET /api/v1/doctor/ai/chat-history/doctor?patient_id=...&doctor_id=...
+ * Fetch history (mapped to new session flow)
  */
 export const fetchDoctorChatHistory = async (patientId, doctorId) => {
-    const response = await fetch(
-        `${API_BASE_URL}/doctor/ai/chat-history/doctor?patient_id=${patientId}&doctor_id=${doctorId}`,
-        {
-            headers: getAuthHeaders(),
-        }
-    );
-    const text = await handleTextResponse(response);
     try {
-        return JSON.parse(text);
-    } catch (e) {
-        console.warn("Chat history is not valid JSON, returning []", e);
+        const sessions = await fetchAIChatSessions(patientId);
+        if (sessions && sessions.length > 0) {
+            const history = await fetchAIChatHistory(sessions[0].session_id);
+            // Map new format {role, content} to old format {role, message, timestamp}
+            return (history.messages || []).map((m, idx) => ({
+                id: idx,
+                role: m.role,
+                message: m.content,
+                timestamp: new Date().toISOString()
+            }));
+        }
+        return [];
+    } catch (err) {
+        console.error("fetchDoctorChatHistory error:", err);
         return [];
     }
 };
+
+export const fetchPatientChatHistory = fetchDoctorChatHistory; // Alias

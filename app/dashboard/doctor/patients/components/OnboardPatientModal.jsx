@@ -52,30 +52,25 @@ export default function OnboardPatientModal({ isOpen, onClose, onSuccess }) {
 
         try {
             const payload = {
-                fullName: `${formData.first_name} ${formData.last_name}`.trim(),
+                full_name: `${formData.first_name} ${formData.last_name}`,
                 email: formData.email,
                 password: formData.password,
-                dateOfBirth: formData.date_of_birth,
+                date_of_birth: formData.date_of_birth,
                 gender: formData.gender,
-                phoneNumber: formData.phone_number.startsWith("+")
-                    ? formData.phone_number
-                    : `+${formData.phone_number}`,
+                // phone_number: formData.phone_number,
+                phone_number: `+${formData.phone_number.replace(/\D/g, "")}`,
                 address: {
                     street: formData.address_street,
                     city: formData.address_city,
                     state: formData.address_state,
-                    zipCode: formData.address_zipCode
+                    zip_code: formData.address_zipCode
                 },
-                emergencyContact: {
+                emergency_contact: {
                     name: formData.emergency_name,
                     relationship: formData.emergency_relationship,
-                    phoneNumber: formData.emergency_phone
-                },
-                medicalHistory: formData.medicalHistory,
-                allergies: formData.allergies ? formData.allergies.split(",").map(a => a.trim()).filter(Boolean) : [],
-                medications: formData.medications ? formData.medications.split(",").map(m => m.trim()).filter(Boolean) : [],
-            };
-            await onboardPatient(payload);
+                    phone_number: formData.emergency_phone
+                }
+            }; await onboardPatient(payload);
             setOnboardedData({ email: formData.email, password: formData.password });
             onSuccess();
         } catch (err) {

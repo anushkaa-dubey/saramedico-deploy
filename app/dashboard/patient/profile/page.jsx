@@ -10,6 +10,7 @@ import { motion } from "framer-motion";
 import { fetchProfile } from "@/services/patient";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
+import { API_BASE_URL, getAuthHeaders, handleResponse } from "@/services/apiConfig";
 
 const containerVariants = {
     hidden: { opacity: 0 },
@@ -30,6 +31,11 @@ const itemVariants = {
 export default function ProfilePage() {
     const [loading, setLoading] = useState(false);
     const fileInputRef = useRef(null);
+    const [avatarFile, setAvatarFile] = useState(null);
+    const [avatarPreview, setAvatarPreview] = useState(null);
+    const [uploadingAvatar, setUploadingAvatar] = useState(false);
+    const [avatarError, setAvatarError] = useState("");
+    const [avatarSuccess, setAvatarSuccess] = useState("");
 
     // Profile data state
     const [profileData, setProfileData] = useState({
@@ -73,9 +79,44 @@ export default function ProfilePage() {
     const handleAvatarUpload = (e) => {
         const file = e.target.files[0];
         if (file) {
+            setAvatarFile(file);
             const tempUrl = URL.createObjectURL(file);
-            setProfileData(prev => ({ ...prev, avatar: tempUrl }));
-            // Add backend upload functionality here if needed
+            setAvatarPreview(tempUrl);
+            setAvatarError("");
+            setAvatarSuccess("");
+        }
+    };
+
+    const handleSaveAvatar = async () => {
+        if (!avatarFile) return;
+        setUploadingAvatar(true);
+        setAvatarError("");
+        setAvatarSuccess("");
+        try {
+            const formData = new FormData();
+            formData.append("file", avatarFile);
+
+            const headers = getAuthHeaders();
+            delete headers["Content-Type"];
+
+            const avatarRes = await fetch(`${API_BASE_URL}/users/me/avatar`, {
+                method: 'POST',
+                headers: headers,
+                body: formData
+            });
+
+            if (!avatarRes.ok) throw new Error("Avatar upload failed");
+
+            const avatarData = await handleResponse(avatarRes);
+            setProfileData(prev => ({ ...prev, avatar: avatarData?.avatar_url || avatarData?.url || prev.avatar }));
+            setAvatarFile(null);
+            setAvatarSuccess("Avatar uploaded successfully!");
+            window.dispatchEvent(new Event('avatarUpdated'));
+        } catch (err) {
+            console.error("Failed to upload avatar", err);
+            setAvatarError(err.message || "Failed to upload avatar.");
+        } finally {
+            setUploadingAvatar(false);
         }
     };
 
@@ -103,8 +144,8 @@ export default function ProfilePage() {
                             onClick={() => fileInputRef.current?.click()}
                             title="Click to upload profile picture"
                         >
-                            {profileData.avatar ? (
-                                <img src={profileData.avatar} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            {avatarPreview || profileData.avatar ? (
+                                <img src={avatarPreview || profileData.avatar} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                             ) : (
                                 (profileData.firstName || profileData.lastName) ? `${profileData.firstName?.[0] || ''}${profileData.lastName?.[0] || ''}`.toUpperCase() : "P"
                             )}
@@ -118,6 +159,27 @@ export default function ProfilePage() {
                         </div>
                         <h3 className={styles.profileName}>{profileData.firstName} {profileData.lastName}</h3>
                         <span className={styles.mrn}>MRN: {profileData.mrn}</span>
+
+                        <div style={{ marginTop: '16px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                            <span style={{ fontSize: '13px', color: '#4f46e5', cursor: 'pointer', fontWeight: '500', marginBottom: '8px' }} onClick={() => fileInputRef.current?.click()}>
+                                Upload Image / Avatar
+                            </span>
+                            {avatarFile && (
+                                <button
+                                    onClick={handleSaveAvatar}
+                                    disabled={uploadingAvatar}
+                                    style={{
+                                        padding: '6px 16px', backgroundColor: '#3730a3', color: '#fff',
+                                        borderRadius: '6px', border: 'none', cursor: 'pointer', fontSize: '13px',
+                                        fontWeight: '500'
+                                    }}
+                                >
+                                    {uploadingAvatar ? "Saving..." : "Save"}
+                                </button>
+                            )}
+                            {avatarError && <div style={{ color: '#ef4444', fontSize: '12px', marginTop: '8px', textAlign: 'center', fontWeight: '500' }}>{avatarError}</div>}
+                            {avatarSuccess && <div style={{ color: '#22c55e', fontSize: '12px', marginTop: '8px', textAlign: 'center', fontWeight: '500' }}>{avatarSuccess}</div>}
+                        </div>
                     </div>
 
                     {/* Right Forms */}

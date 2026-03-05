@@ -134,27 +134,29 @@ export default function DoctorAppointments() {
                                                 >
                                                     {apt.status.toUpperCase()}
                                                 </span>
-                                                {apt.status === 'accepted' && (
-                                                    <button
-                                                        onClick={() => router.push("/dashboard/doctor/video-call")}
-                                                        style={{
-                                                            display: "flex",
-                                                            alignItems: "center",
-                                                            justifyContent: "center",
-                                                            padding: "6px 12px",
-                                                            background: "#3b82f6",
-                                                            color: "white",
-                                                            border: "none",
-                                                            borderRadius: "6px",
-                                                            fontSize: "12px",
-                                                            fontWeight: "bold",
-                                                            cursor: "pointer",
-                                                            width: "fit-content"
-                                                        }}
-                                                    >
-                                                        Start Meeting
-                                                    </button>
-                                                )}
+                                                {apt.status === 'accepted' &&
+                                                    !(apt.completion_time || apt.completionTime) &&
+                                                    (apt.visit_state || apt.visitState) !== 'completed' && (
+                                                        <button
+                                                            onClick={() => router.push("/dashboard/doctor/video-call")}
+                                                            style={{
+                                                                display: "flex",
+                                                                alignItems: "center",
+                                                                justifyContent: "center",
+                                                                padding: "6px 12px",
+                                                                background: "#3b82f6",
+                                                                color: "white",
+                                                                border: "none",
+                                                                borderRadius: "6px",
+                                                                fontSize: "12px",
+                                                                fontWeight: "bold",
+                                                                cursor: "pointer",
+                                                                width: "fit-content"
+                                                            }}
+                                                        >
+                                                            Start Meeting
+                                                        </button>
+                                                    )}
                                             </div>
                                         </td>
                                         <td>

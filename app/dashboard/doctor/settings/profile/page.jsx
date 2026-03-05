@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Image from "next/image";
 import styles from "../Settings.module.css";
 import lock from "@/public/icons/lock.svg";
@@ -8,6 +8,7 @@ import notification from "@/public/icons/notification.svg";
 import mfa from "@/public/icons/MFA.svg";
 import { motion } from "framer-motion";
 import { fetchDoctorProfile, updateDoctorProfile } from "@/services/doctor";
+import { API_BASE_URL, getAuthHeaders, handleResponse } from "@/services/apiConfig";
 
 export default function ProfileSettings() {
     const [profile, setProfile] = useState({
@@ -15,10 +16,16 @@ export default function ProfileSettings() {
         email: "",
         credentials: "",
         specialty: "",
-        license_number: ""
+        license_number: "",
+        avatar_url: ""
     });
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const fileInputRef = useRef(null);
+    const [avatarFile, setAvatarFile] = useState(null);
+    const [avatarPreview, setAvatarPreview] = useState(null);
+    const [avatarError, setAvatarError] = useState("");
+    const [avatarSuccess, setAvatarSuccess] = useState("");
 
     useEffect(() => {
         const getProfile = async () => {
@@ -30,7 +37,8 @@ export default function ProfileSettings() {
                         email: data.email || "",
                         credentials: data.credentials || "",
                         specialty: data.specialty || "",
-                        license_number: data.license_number || data.licenseNumber || ""
+                        license_number: data.license_number || data.licenseNumber || "",
+                        avatar_url: data.avatar_url || ""
                     });
                 }
             } catch (err) {
@@ -48,17 +56,52 @@ export default function ProfileSettings() {
 
     const handleSave = async () => {
         setSaving(true);
+        setAvatarError("");
+        setAvatarSuccess("");
         try {
+            let avatarUpdated = false;
+            // Avatar upload
+            if (avatarFile) {
+                const formData = new FormData();
+                formData.append("file", avatarFile);
+
+                const headers = getAuthHeaders();
+                delete headers["Content-Type"];
+
+                const avatarRes = await fetch(`${API_BASE_URL}/users/me/avatar`, {
+                    method: 'POST',
+                    headers: headers,
+                    body: formData
+                });
+
+                if (!avatarRes.ok) {
+                    throw new Error("Avatar upload failed");
+                }
+
+                const avatarData = await handleResponse(avatarRes);
+                setProfile(prev => ({ ...prev, avatar_url: avatarData?.avatar_url || avatarData?.url || prev.avatar_url }));
+                setAvatarFile(null);
+                avatarUpdated = true;
+            }
+
+            // Profile fields upload
             await updateDoctorProfile({
                 full_name: profile.full_name,
                 specialty: profile.specialty,
                 credentials: profile.credentials,
                 license_number: profile.license_number
             });
-            alert("Profile updated successfully!");
+
+            if (avatarUpdated) {
+                setAvatarSuccess("Avatar uploaded and profile updated successfully.");
+                window.dispatchEvent(new Event('avatarUpdated'));
+            } else {
+                setAvatarSuccess("Profile updated successfully!");
+                alert("Profile updated successfully!");
+            }
         } catch (err) {
             console.error("Failed to update profile", err);
-            alert("Failed to update profile.");
+            setAvatarError(err.message || "Failed to update profile or avatar.");
         } finally {
             setSaving(false);
         }
@@ -93,11 +136,41 @@ export default function ProfileSettings() {
                 {/* Profile Card */}
                 <div className={styles.profileCard}>
                     {/* <h2 className={styles.profileCardTitle}>My Profile</h2> */}
-                    <div className={styles.profileCardContent}>
-                        {/* <div className={styles.profileAvatar}></div> */}
-                        <div className={styles.profileInfo}>
-                            <h3>{profile.full_name || "Doctor"}</h3>
-                            <p>{profile.credentials}{profile.credentials && profile.specialty ? ', ' : ''}{profile.specialty ? profile.specialty.toUpperCase() : ""}</p>
+                    <div className={styles.profileCardContent} style={{ display: 'flex', alignItems: 'center', marginBottom: '24px' }}>
+                        <div
+                            style={{
+                                width: '80px', height: '80px', borderRadius: '50%',
+                                backgroundColor: '#e0e7ff', display: 'flex', alignItems: 'center',
+                                justifyContent: 'center', overflow: 'hidden', cursor: 'pointer',
+                                fontSize: '24px', fontWeight: 'bold', color: '#3730a3', marginRight: '20px'
+                            }}
+                            onClick={() => fileInputRef.current?.click()}
+                        >
+                            {avatarPreview || profile.avatar_url ? (
+                                <img src={avatarPreview || profile.avatar_url} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            ) : (
+                                profile.full_name ? profile.full_name.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase() : "DR"
+                            )}
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                            <div className={styles.profileInfo} style={{ marginBottom: '8px' }}>
+                                <h3>{profile.full_name || "Doctor"}</h3>
+                                <p>{profile.credentials}{profile.credentials && profile.specialty ? ', ' : ''}{profile.specialty ? profile.specialty.toUpperCase() : ""}</p>
+                            </div>
+                            <div>
+                                <span style={{ fontSize: '13px', color: '#4f46e5', cursor: 'pointer', fontWeight: '500' }} onClick={() => fileInputRef.current?.click()}>
+                                    Upload Avatar
+                                </span>
+                                <input type="file" ref={fileInputRef} style={{ display: 'none' }} accept="image/*" onChange={(e) => {
+                                    const file = e.target.files[0];
+                                    if (file) {
+                                        setAvatarFile(file);
+                                        setAvatarPreview(URL.createObjectURL(file));
+                                        setAvatarSuccess("");
+                                        setAvatarError("");
+                                    }
+                                }} />
+                            </div>
                         </div>
                     </div>
 
@@ -128,6 +201,8 @@ export default function ProfileSettings() {
                         <button className={styles.cancelBtn}>Cancel</button>
                         <button className={styles.saveBtn} onClick={handleSave} disabled={saving}>{saving ? "Saving..." : "Save Changes"}</button>
                     </div>
+                    {avatarError && <div style={{ color: '#ef4444', fontSize: '14px', textAlign: 'right', marginTop: '12px', fontWeight: '500' }}>{avatarError}</div>}
+                    {avatarSuccess && <div style={{ color: '#22c55e', fontSize: '14px', textAlign: 'right', marginTop: '12px', fontWeight: '500' }}>{avatarSuccess}</div>}
                 </div>
 
                 {/* Bottom Cards commented out as requested */}

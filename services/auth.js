@@ -108,3 +108,22 @@ export const forgotPassword = async (payload) => {
 
     return handleResponse(response);
 };
+/**
+ * Upload profile avatar
+ * POST /api/v1/users/me/avatar
+ */
+export const uploadAvatar = async (file) => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const token = localStorage.getItem("authToken");
+    const response = await fetch(`${API_BASE_URL}/users/me/avatar`, {
+        method: "POST",
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+    });
+
+    return handleResponse(response);
+};

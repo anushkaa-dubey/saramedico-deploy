@@ -95,18 +95,7 @@ export default function AppointmentsManagement() {
                 </div>
             </motion.div>
 
-            {/* Appointment Distribution "Chart" (Mock) */}
-            <motion.div className={styles.card} style={{ marginTop: '24px' }} variants={itemVariants}>
-                <h3 style={{ marginBottom: '16px', fontSize: '15px' }}>Appointment Distribution</h3>
-                <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end', height: '100px', padding: '0 20px' }}>
-                    {[40, 70, 45, 90, 60, 80, 50].map((h, i) => (
-                        <div key={i} style={{ flex: 1, height: `${h}%`, background: 'linear-gradient(to top, #359AFF, #9CCDFF)', borderRadius: '4px 4px 0 0' }} />
-                    ))}
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '8px', fontSize: '10px', color: '#64748b' }}>
-                    <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
-                </div>
-            </motion.div>
+
         </motion.div>
     );
 }

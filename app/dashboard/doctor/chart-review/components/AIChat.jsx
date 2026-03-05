@@ -2,14 +2,19 @@
 
 import { useState, useRef, useEffect } from "react";
 import styles from "./AIChat.module.css";
-import { doctorAIChat, fetchDoctorChatHistory } from "@/services/ai";
+import {
+    createAIChatSession,
+    fetchAIChatSessions,
+    fetchAIChatHistory,
+} from "@/services/ai";
 import { checkAIPermission, requestAIAccess } from "@/services/doctor";
+import { getAuthHeaders, API_BASE_URL } from "@/services/apiConfig";
 
 export default function AIChat({ onCitationClick, patientId, doctorId, documentId }) {
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState("");
     const [isTyping, setIsTyping] = useState(false);
-    const [conversationId, setConversationId] = useState(null);
+    const [sessionId, setSessionId] = useState(null);
     const messagesEndRef = useRef(null);
     const [aiAccess, setAiAccess] = useState(null); // null=checking, true=ok, false=denied
     const [grantingAccess, setGrantingAccess] = useState(false);
@@ -32,48 +37,42 @@ export default function AIChat({ onCitationClick, patientId, doctorId, documentI
         });
     }, [patientId, doctorId]);
 
+    // Manage AI Session
     useEffect(() => {
-        loadChatHistory();
-    }, [patientId, doctorId]);
+        if (!patientId || aiAccess !== true) return;
+        initializeSession();
+    }, [patientId, aiAccess]);
 
-    const loadChatHistory = async () => {
-        if (!patientId || !doctorId) return;
-
-        setIsTyping(true);
+    const initializeSession = async () => {
         try {
-            const history = await fetchDoctorChatHistory(patientId, doctorId);
-            if (history && Array.isArray(history) && history.length > 0) {
-                const formattedMessages = history.map((msg, idx) => ({
-                    id: idx,
-                    role: msg.role || (msg.sender === "ai" ? "assistant" : "user"),
-                    text: msg.message || msg.text || msg.query,
-                    citations: [] // Backend text response doesn't have citations yet
-                }));
-                setMessages(formattedMessages);
-
-                if (history[0].conversation_id) {
-                    setConversationId(history[0].conversation_id);
-                }
+            const sessions = await fetchAIChatSessions(patientId);
+            if (sessions && sessions.length > 0) {
+                // Use the most recent session
+                setSessionId(sessions[0].session_id);
+                loadHistory(sessions[0].session_id);
             } else {
-                // Default greeting if no history
+                // Create a new session
+                const newSession = await createAIChatSession(patientId, "Chart Review Session");
+                setSessionId(newSession.session_id);
                 setMessages([{
                     id: 'init',
                     role: "assistant",
-                    text: "I've analyzed the document. What would you like to know?",
-                    citations: []
+                    content: "I've analyzed the document. What would you like to know?",
                 }]);
             }
         } catch (err) {
-            console.error("Failed to load chat history:", err);
-            // Fallback to greeting
-            setMessages([{
-                id: 'init',
-                role: "assistant",
-                text: "I've analyzed the document. What would you like to know?",
-                citations: []
-            }]);
-        } finally {
-            setIsTyping(false);
+            console.error("Failed to initialize AI session:", err);
+        }
+    };
+
+    const loadHistory = async (sId) => {
+        try {
+            const data = await fetchAIChatHistory(sId);
+            if (data && data.messages) {
+                setMessages(data.messages);
+            }
+        } catch (err) {
+            console.error("Failed to load history:", err);
         }
     };
 
@@ -87,92 +86,81 @@ export default function AIChat({ onCitationClick, patientId, doctorId, documentI
 
     const handleSend = async (textInput = null) => {
         const query = textInput || input;
-        if (!query.trim() || isTyping) return;
-        // Block if still checking permissions or if access is denied
+        if (!query.trim() || isTyping || !sessionId) return;
         if (aiAccess !== true) return;
 
         const userMessage = {
             id: Date.now(),
-            role: "user",
-            text: query,
-            citations: []
+            role: "doctor",
+            content: query,
         };
 
         setMessages(prev => [...prev, userMessage]);
         setInput("");
         setIsTyping(true);
 
+        // Add a placeholder for AI response that we will update with tokens
+        const aiMessageId = Date.now() + 1;
+        setMessages(prev => [...prev, {
+            id: aiMessageId,
+            role: "assistant",
+            content: "",
+            isStreaming: true
+        }]);
+
         try {
-            const payload = {
-                patient_id: patientId,
-                query: query, // Backend expects 'query'
-                document_id: documentId || null // Backend expects singular 'document_id'
-            };
+            const response = await fetch(`${API_BASE_URL}/doctor/ai/chat/message`, {
+                method: "POST",
+                headers: getAuthHeaders(),
+                body: JSON.stringify({
+                    session_id: sessionId,
+                    patient_id: patientId,
+                    message: query,
+                    document_id: documentId || null
+                }),
+            });
 
-            if (conversationId) {
-                payload.conversation_id = conversationId;
+            if (!response.ok) throw new Error("Stream failed");
+
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let fullText = "";
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                const chunk = decoder.decode(value, { stream: true });
+                fullText += chunk;
+
+                setMessages(prev => prev.map(m =>
+                    m.id === aiMessageId ? { ...m, content: fullText } : m
+                ));
             }
 
-            const result = await doctorAIChat(payload);
+            // Final update to mark as finished
+            setMessages(prev => prev.map(m =>
+                m.id === aiMessageId ? { ...m, isStreaming: false } : m
+            ));
 
-            // Result is { response: "text" } from our updated service
-            const aiText = result.response || result.message || "No response received.";
-
-            if (result.conversation_id) {
-                setConversationId(result.conversation_id);
-            }
-
-            const aiResponse = {
-                id: Date.now() + 1,
-                role: "assistant",
-                text: aiText,
-                citations: [] // Backend text response doesn't support citations yet
-            };
-
-            setMessages(prev => [...prev, aiResponse]);
         } catch (err) {
-            console.error("AI chat error:", err);
-            // If backend returns 403 (no AI access), reset the UI to the access-request screen.
-            // This handles the case where /permissions/check and /doctor/ai/chat/doctor disagree.
-            const isAccessDenied = err.message?.includes('403') ||
-                err.message?.toLowerCase().includes('no ai access') ||
-                err.message?.toLowerCase().includes('permission denied') ||
-                err.message?.toLowerCase().includes('no access');
-
-            if (isAccessDenied) {
-                // Remove the user's message we just added and show the access request UI
-                setMessages(prev => prev.filter(m => m.id !== userMessage.id));
-                setAiAccess(false);
-                setRequestSent(false);
-            } else {
-                const errorMsg = {
-                    id: Date.now() + 1,
-                    role: "assistant",
-                    text: `Error: ${err.message || "Something went wrong"}`,
-                    citations: []
-                };
-                setMessages(prev => [...prev, errorMsg]);
-            }
+            console.error("AI stream error:", err);
+            setMessages(prev => prev.map(m =>
+                m.id === aiMessageId ? { ...m, content: "Error: Failed to get response from AI.", isStreaming: false } : m
+            ));
         } finally {
             setIsTyping(false);
         }
     };
 
     const handleGrantAccess = async () => {
-        if (!doctorId) {
-            setAccessError("Doctor profile not loaded.");
-            return;
-        }
         setGrantingAccess(true);
         setAccessError("");
         try {
             await requestAIAccess(patientId);
-            // Access request sent — patient must approve.
-            // We don't set aiAccess=true here since it's still pending.
             setRequestSent(true);
         } catch (err) {
-            // 409 = request already exists, treat as success
-            if (err.message?.includes('409') || err.message?.toLowerCase().includes('already')) {
+            if (err.message?.includes('409')) {
                 setRequestSent(true);
             } else {
                 setAccessError(err.message || "Failed to send access request");
@@ -182,11 +170,6 @@ export default function AIChat({ onCitationClick, patientId, doctorId, documentI
         }
     };
 
-    const handleQuestionClick = (question) => {
-        handleSend(question);
-    };
-
-    // Show access denied UI
     if (aiAccess === false) {
         return (
             <div className={styles.aiChat}>
@@ -201,61 +184,28 @@ export default function AIChat({ onCitationClick, patientId, doctorId, documentI
                         <p className={styles.headerSubtitle}>Access Required</p>
                     </div>
                 </div>
-                <div style={{
-                    display: "flex", flexDirection: "column", alignItems: "center",
-                    justifyContent: "center", gap: "16px", padding: "40px 20px",
-                    textAlign: "center"
-                }}>
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "16px", padding: "40px 20px", textAlign: "center" }}>
                     {requestSent ? (
                         <>
-                            <div style={{
-                                width: "52px", height: "52px", borderRadius: "50%",
-                                background: "rgba(34,197,94,0.1)", display: "flex",
-                                alignItems: "center", justifyContent: "center"
-                            }}>
-                                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2">
-                                    <path d="M20 6L9 17L4 12" />
-                                </svg>
+                            <div style={{ width: "52px", height: "52px", borderRadius: "50%", background: "rgba(34,197,94,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2"><path d="M20 6L9 17L4 12" /></svg>
                             </div>
                             <div>
                                 <p style={{ fontWeight: 600, color: "#16a34a", marginBottom: "6px", fontSize: "15px" }}>Request Sent!</p>
-                                <p style={{ fontSize: "13px", color: "#666", maxWidth: "260px" }}>
-                                    An access request has been sent to the patient. AI chat will be available once they approve it.
-                                </p>
+                                <p style={{ fontSize: "13px", color: "#666", maxWidth: "260px" }}>An access request has been sent to the patient. AI chat available once approved.</p>
                             </div>
                         </>
                     ) : (
                         <>
-                            <div style={{
-                                width: "52px", height: "52px", borderRadius: "50%",
-                                background: "rgba(244,67,54,0.1)", display: "flex",
-                                alignItems: "center", justifyContent: "center"
-                            }}>
-                                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#d32f2f" strokeWidth="2">
-                                    <circle cx="12" cy="12" r="10" />
-                                    <line x1="12" y1="8" x2="12" y2="12" />
-                                    <line x1="12" y1="16" x2="12.01" y2="16" />
-                                </svg>
+                            <div style={{ width: "52px", height: "52px", borderRadius: "50%", background: "rgba(244,67,54,0.1)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#d32f2f" strokeWidth="2"><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" /></svg>
                             </div>
                             <div>
                                 <p style={{ fontWeight: 600, color: "#d32f2f", marginBottom: "6px", fontSize: "15px" }}>No AI Access</p>
-                                <p style={{ fontSize: "13px", color: "#666", maxWidth: "260px" }}>
-                                    You don&apos;t have AI access for this patient&apos;s data. Click below to send an access request — the patient will need to approve it.
-                                </p>
+                                <p style={{ fontSize: "13px", color: "#666", maxWidth: "260px" }}>You don&apos;t have AI access for this patient.</p>
                             </div>
-                            {accessError && <p style={{ fontSize: "12px", color: "#d32f2f" }}>{accessError}</p>}
-                            <button
-                                onClick={handleGrantAccess}
-                                disabled={grantingAccess}
-                                style={{
-                                    padding: "10px 24px", borderRadius: "8px",
-                                    background: grantingAccess ? "#ccc" : "#0081FE",
-                                    color: "#fff", border: "none",
-                                    cursor: grantingAccess ? "not-allowed" : "pointer",
-                                    fontSize: "14px", fontWeight: 600
-                                }}
-                            >
-                                {grantingAccess ? "Sending Request..." : "Request AI Access"}
+                            <button onClick={handleGrantAccess} disabled={grantingAccess} style={{ padding: "10px 24px", borderRadius: "8px", background: grantingAccess ? "#ccc" : "#0081FE", color: "#fff", border: "none", cursor: "pointer", fontSize: "14px", fontWeight: 600 }}>
+                                {grantingAccess ? "Sending..." : "Request Access"}
                             </button>
                         </>
                     )}
@@ -266,84 +216,39 @@ export default function AIChat({ onCitationClick, patientId, doctorId, documentI
 
     return (
         <div className={styles.aiChat}>
-            {/* Header */}
             <div className={styles.header}>
                 <div className={styles.headerIcon}>
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                        <path d="M8 10h.01M12 10h.01M16 10h.01" />
                     </svg>
                 </div>
                 <div>
                     <h3 className={styles.headerTitle}>AI Assistant</h3>
-                    <p className={styles.headerSubtitle}>Ask questions about this document</p>
+                    <p className={styles.headerSubtitle}>Powered by Claude 3.5 Sonnet</p>
                 </div>
             </div>
 
-            {/* Messages */}
             <div className={styles.messagesContainer}>
-                {messages.map((message) => (
-                    <div
-                        key={message.id}
-                        className={`${styles.message} ${message.role === "user" ? styles.userMessage : styles.aiMessage}`}
-                    >
+                {messages.map((m, idx) => (
+                    <div key={m.id || `msg-${idx}`} className={`${styles.message} ${m.role === "doctor" ? styles.userMessage : styles.aiMessage}`}>
                         <div className={styles.messageContent}>
-                            <p>{message.text}</p>
-                            {message.citations && message.citations.length > 0 && (
-                                <div className={styles.citations}>
-                                    {message.citations.map((citation, idx) => (
-                                        <button
-                                            key={idx}
-                                            className={styles.citationBtn}
-                                            onClick={() => onCitationClick && onCitationClick(citation.page)}
-                                        >
-                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-                                                <polyline points="14 2 14 8 20 8" />
-                                            </svg>
-                                            Page {citation.page}
-                                        </button>
-                                    ))}
-                                </div>
-                            )}
+                            <p style={{ whiteSpace: "pre-wrap" }}>{m.content}</p>
                         </div>
                     </div>
                 ))}
-                {isTyping && (
+                {isTyping && messages[messages.length - 1]?.isStreaming !== true && (
                     <div className={`${styles.message} ${styles.aiMessage}`}>
-                        <div className={styles.typingIndicator}>
-                            <span></span>
-                            <span></span>
-                            <span></span>
-                        </div>
+                        <div className={styles.typingIndicator}><span></span><span></span><span></span></div>
                     </div>
                 )}
                 <div ref={messagesEndRef} />
             </div>
 
-            {/* Sample Questions */}
-            {messages.length <= 1 && (
-                <div className={styles.sampleQuestions}>
-                    <p className={styles.sampleLabel}>Try asking:</p>
-                    <div className={styles.questionGrid}>
-                        {sampleQuestions.map((question, idx) => (
-                            <button
-                                key={idx}
-                                className={styles.questionBtn}
-                                onClick={() => handleQuestionClick(question)}
-                            >
-                                {question}
-                            </button>
-                        ))}
-                    </div>
-                </div>
-            )}
-
             {/* Input */}
             <div className={styles.inputContainer}>
                 <input
                     type="text"
-                    placeholder="Ask a question about this document..."
+                    placeholder="Ask a question..."
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyPress={(e) => e.key === "Enter" && handleSend()}

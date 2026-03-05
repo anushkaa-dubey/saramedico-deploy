@@ -9,7 +9,7 @@ import micWhiteIcon from "@/public/icons/mic_white.svg";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
-import { fetchAppointments, createConsultation, fetchProfile, fetchTasks, fetchPatients, fetchTeamMembers } from "@/services/doctor";
+import { fetchAppointments, createConsultation, fetchProfile, fetchTasks, fetchPatients } from "@/services/doctor";
 import { fetchQueueMetrics } from "@/services/consultation";
 import Link from "next/link";
 import { ClipboardList, AlertTriangle, CheckCircle, Timer } from "lucide-react";
@@ -63,13 +63,12 @@ export default function DoctorDashboard() {
 
   const loadDashboardData = async () => {
     try {
-      const [appts, profile, tasks, patients, queueData, staffData, clinicalMetrics] = await Promise.all([
+      const [appts, profile, tasks, patients, queueData, clinicalMetrics] = await Promise.all([
         fetchAppointments().catch(() => []),
         fetchProfile().catch(() => null),
         fetchTasks().catch(() => []),
         fetchPatients().catch(() => []),
         fetchQueueMetrics().catch(() => ({ pending_review: 0, high_urgency: 0, cleared_today: 0 })),
-        fetchTeamMembers().catch(() => []),
         import("@/services/doctor").then(m => m.fetchDashboardMetrics().catch(() => null))
       ]);
 
@@ -93,7 +92,7 @@ export default function DoctorDashboard() {
 
       setAppointments(appts || []);
       setDoctorProfile(profile);
-      setTeamMembers(staffData || []);
+
       setMetrics({
         pending_review: clinicalMetrics?.pending_notes || queueData.pending_review || 0,
         high_urgency: urgentTasks || clinicalMetrics?.urgent_notes || queueData.high_urgency || 0,
@@ -116,7 +115,7 @@ export default function DoctorDashboard() {
     total_records: 0
   });
 
-  const [teamMembers, setTeamMembers] = useState([]);
+
 
   const refreshMonthData = async () => {
     try {
@@ -524,27 +523,7 @@ export default function DoctorDashboard() {
             )}
           </motion.div>
 
-          {/* On-duty Staff */}
-          <motion.div variants={itemVariants} className={styles.card}>
-            <div className={styles.cardHeader} style={{ marginBottom: '12px' }}>
-              <h3 className={styles.cardTitle}>On-Duty Staff</h3>
-              <Link href="/dashboard/doctor/team" className={styles.link}>Manage</Link>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {teamMembers.length > 0 ? teamMembers.slice(0, 3).map((staff, idx) => (
-                <div key={idx} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <div className={styles.avatarSmall} style={{ background: staff.role === 'Admin' ? '#fef3c7' : '#ecfdf5' }}></div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: '13px', fontWeight: '600' }}>{staff.full_name || staff.name || "Team Member"}</div>
-                    <div style={{ fontSize: '11px', color: '#94a3b8' }}>{staff.role || "Staff"} • Active</div>
-                  </div>
-                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: staff.status === 'offline' ? '#cbd5e1' : '#10b981' }}></div>
-                </div>
-              )) : (
-                <p style={{ fontSize: '12px', color: '#94a3b8', textAlign: 'center' }}>No active staff listed</p>
-              )}
-            </div>
-          </motion.div>
+
         </div>
       </section>
 

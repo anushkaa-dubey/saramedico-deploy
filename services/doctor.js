@@ -179,8 +179,8 @@ export const fetchPatientDocuments = async (patientId) => {
                 // Rewrite docker-internal hostname to public AWS IP
                 // minio:9000 → 107.20.98.130:9000
                 doc.presigned_url = url
-                    .replace(/^https?:\/\/minio:9000\//, `http://${BACKEND_HOST}:9000/`)
-                    .replace(/^https?:\/\/[^/]+:9000\//, `http://${BACKEND_HOST}:9000/`);
+                    .replace(/^https?:\/\/minio:9000\//, `http://${BACKEND_HOST}:9001/`)
+                    .replace(/^https?:\/\/[^/]+:9000\//, `http://${BACKEND_HOST}:9001/`);
             }
             return doc;
         });

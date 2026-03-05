@@ -2,7 +2,8 @@
 
 import { useState, useRef, useEffect } from "react";
 import styles from "./AIChat.module.css";
-import { doctorAIChat, patientAIChat, fetchPatientChatHistory, fetchDoctorChatHistory } from "@/services/ai";
+import { createAIChatSession, fetchAIChatSessions, fetchAIChatHistory } from "@/services/ai";
+import { getAuthHeaders, API_BASE_URL } from "@/services/apiConfig";
 import { checkAIPermission, grantAIAccess } from "@/services/doctor";
 
 /**
@@ -47,29 +48,25 @@ export default function PatientAIChat({ patientId, documentId = null, doctorId =
 
         setIsLoading(true);
         try {
-            let history;
-            if (activeMode === "doctor") {
-                history = await fetchDoctorChatHistory(patientId, doctorId);
-            } else {
-                history = await fetchPatientChatHistory(patientId);
-            }
+            const sessions = await fetchAIChatSessions(patientId);
+            if (sessions && sessions.length > 0) {
+                const sId = sessions[0].session_id;
+                setConversationId(sId);
+                const history = await fetchAIChatHistory(sId);
 
-            if (history && Array.isArray(history)) {
-                // Determine user role label based on mode
-                const userRole = activeMode === "doctor" ? "user" : "patient_user";
-
-                const formattedMessages = history.map((msg, idx) => ({
-                    id: idx,
-                    role: msg.role || (msg.sender === "ai" ? "assistant" : "user"),
-                    text: msg.message || msg.text || msg.query,
-                    timestamp: msg.timestamp || msg.created_at,
-                    isError: false
-                }));
-                setMessages(formattedMessages);
-
-                if (history.length > 0 && history[0].conversation_id) {
-                    setConversationId(history[0].conversation_id);
+                if (history && history.messages && Array.isArray(history.messages)) {
+                    const formattedMessages = history.messages.map((msg, idx) => ({
+                        id: msg.id || idx,
+                        role: msg.role === "doctor" ? "user" : msg.role,
+                        text: msg.content,
+                        timestamp: msg.created_at,
+                        isError: false
+                    }));
+                    setMessages(formattedMessages);
                 }
+            } else {
+                const newSession = await createAIChatSession(patientId, "Doctor Chat");
+                setConversationId(newSession.session_id);
             }
         } catch (err) {
             console.error("Failed to load chat history:", err);
@@ -118,9 +115,8 @@ export default function PatientAIChat({ patientId, documentId = null, doctorId =
             return;
         }
 
-
         const userMessage = {
-            id: Date.now(), // Use timestamp for unique ID locally
+            id: Date.now(),
             role: "user",
             text: input,
             timestamp: new Date().toISOString()
@@ -132,62 +128,60 @@ export default function PatientAIChat({ patientId, documentId = null, doctorId =
         setIsLoading(true);
         setError("");
 
+        const aiMessageId = Date.now() + 1;
+        setMessages(prev => [...prev, {
+            id: aiMessageId,
+            role: "assistant",
+            text: "",
+            timestamp: new Date().toISOString()
+        }]);
+
         try {
-            const payload = {
-                patient_id: patientId,
-                query: currentInput, // Backend expects 'query'
-                document_id: documentId || null
-            };
-
-            if (conversationId) {
-                payload.conversation_id = conversationId;
+            let currentSessionId = conversationId;
+            if (!currentSessionId) {
+                const newSession = await createAIChatSession(patientId, "Doctor Chat");
+                currentSessionId = newSession.session_id;
+                setConversationId(currentSessionId);
             }
 
-            let response;
-            if (activeMode === "doctor") {
-                response = await doctorAIChat(payload);
-            } else {
-                response = await patientAIChat(payload);
+            const response = await fetch(`${API_BASE_URL}/doctor/ai/chat/message`, {
+                method: "POST",
+                headers: getAuthHeaders(),
+                body: JSON.stringify({
+                    session_id: currentSessionId,
+                    patient_id: patientId,
+                    message: currentInput,
+                    document_id: documentId || null
+                }),
+            });
+
+            if (!response.ok) {
+                const errData = await response.json().catch(() => ({}));
+                throw new Error(errData.detail || "Stream failed");
             }
 
-            // Update conversation ID if returned
-            if (response.conversation_id) {
-                setConversationId(response.conversation_id);
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let fullText = "";
+
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                const chunk = decoder.decode(value, { stream: true });
+                fullText += chunk;
+
+                setMessages(prev => prev.map(m =>
+                    m.id === aiMessageId ? { ...m, text: fullText } : m
+                ));
             }
-
-            const aiMessage = {
-                id: Date.now() + 1,
-                role: "assistant",
-                text: response.response || response.message || response.answer,
-                timestamp: new Date().toISOString()
-            };
-
-            setMessages(prev => [...prev, aiMessage]);
         } catch (err) {
             console.error("AI chat error:", err);
-
             let parsedMessage = err.message || "Failed to get AI response";
-            try {
-                // Try to parse the backend JSON error format e.g. {"detail":"..."}
-                const errObj = JSON.parse(err.message);
-                if (errObj.detail) {
-                    parsedMessage = errObj.detail;
-                }
-            } catch (e) {
-                // Not JSON, use as is
-            }
-
             setError(parsedMessage);
-
-            // Add error message to chat
-            const errorMessage = {
-                id: Date.now() + 2,
-                role: "assistant",
-                text: `Error: ${parsedMessage}`,
-                timestamp: new Date().toISOString(),
-                isError: true
-            };
-            setMessages(prev => [...prev, errorMessage]);
+            setMessages(prev => prev.map(m =>
+                m.id === aiMessageId ? { ...m, text: `Error: ${parsedMessage}`, isError: true } : m
+            ));
         } finally {
             setIsLoading(false);
         }

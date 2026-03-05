@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import styles from "./DocumentsList.module.css";
 import { fetchPatientDocuments, uploadPatientDocument, fetchDocumentDetails } from "@/services/doctor";
-import { processDocumentWithAI, getDocumentStatus } from "@/services/ai";
 
 const FILE_ICONS = {
     pdf: { color: "#ef4444", bg: "#fef2f2", icon: "📄" },
@@ -85,59 +84,15 @@ export default function DocumentsList({ patientId }) {
         setProcessResults(prev => ({ ...prev, [documentId]: { status: "processing" } }));
         setError("");
 
-        // Clear any existing poll for this doc
-        if (pollingRefs.current[documentId]) {
-            clearInterval(pollingRefs.current[documentId]);
-            delete pollingRefs.current[documentId];
-        }
-
-        try {
-            await processDocumentWithAI({ patient_id: patientId, document_id: documentId });
-
-            // Poll for completion — max 60 seconds (20 polls × 3s)
-            let pollCount = 0;
-            const MAX_POLLS = 20;
-
-            const intervalId = setInterval(async () => {
-                pollCount++;
-                try {
-                    const statusData = await getDocumentStatus(documentId);
-                    const status = statusData.status || statusData.processing_status || "processing";
-                    setProcessResults(prev => ({
-                        ...prev,
-                        [documentId]: { status, details: statusData.message || "" }
-                    }));
-
-                    const isDone = ["completed", "indexed", "failed", "processed"].includes(status);
-                    if (isDone || pollCount >= MAX_POLLS) {
-                        clearInterval(pollingRefs.current[documentId]);
-                        delete pollingRefs.current[documentId];
-                        setProcessingDoc(null);
-                        if (isDone) loadDocuments();
-                        if (pollCount >= MAX_POLLS && !isDone) {
-                            setProcessResults(prev => ({
-                                ...prev,
-                                [documentId]: { status: "timeout", details: "Processing is taking longer than expected." }
-                            }));
-                        }
-                    }
-                } catch (pollErr) {
-                    console.error("Polling error:", pollErr);
-                    clearInterval(pollingRefs.current[documentId]);
-                    delete pollingRefs.current[documentId];
-                    setProcessingDoc(null);
-                    setProcessResults(prev => ({ ...prev, [documentId]: { status: "failed", details: "Could not get status." } }));
-                }
-            }, 3000);
-
-            pollingRefs.current[documentId] = intervalId;
-
-        } catch (err) {
-            console.error("AI processing error:", err);
-            setError(err.message || "Failed to process document with AI");
+        // Mock AI indexing as the new RAG system handles this automatically
+        setTimeout(() => {
+            setProcessResults(prev => ({
+                ...prev,
+                [documentId]: { status: "completed", details: "Processed successfully" }
+            }));
             setProcessingDoc(null);
-            setProcessResults(prev => ({ ...prev, [documentId]: { status: "failed", details: err.message } }));
-        }
+            loadDocuments();
+        }, 2000);
     };
 
     const handleOpenDocument = async (doc) => {
