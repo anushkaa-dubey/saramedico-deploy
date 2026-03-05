@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Topbar from "../components/Topbar";
@@ -12,7 +12,7 @@ import { fetchAppointments, fetchPatients, fetchDoctorProfile, fetchPatientProfi
 import OnboardPatientModal from "./components/OnboardPatientModal";
 import EditPatientModal from "./components/EditPatientModal";
 
-export default function Patients() {
+function PatientsContent() {
     const [patientsList, setPatientsList] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedId, setSelectedId] = useState(null);
@@ -399,5 +399,13 @@ export default function Patients() {
                 )}
             </div>
         </motion.div>
+    );
+}
+
+export default function Patients() {
+    return (
+        <Suspense fallback={<div style={{ padding: '24px', textAlign: 'center', color: '#64748b' }}>Loading Patient Directory...</div>}>
+            <PatientsContent />
+        </Suspense>
     );
 }

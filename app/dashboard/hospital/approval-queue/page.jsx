@@ -1,13 +1,13 @@
 "use client";
 import { useState, useEffect } from "react";
-import { fetchReviewQueue, fetchHospitalStats } from "@/services/hospital";
+import { fetchReviewQueue, fetchHospitalStats, fetchHospitalAppointments } from "@/services/hospital";
 import { motion } from "framer-motion";
 import Topbar from "../components/Topbar";
 import styles from "../HospitalDashboard.module.css";
 
 export default function ApprovalQueuePage() {
     const [queue, setQueue] = useState([]);
-    const [stats, setStats] = useState({ notesPendingSignature: 0, transcriptionQueueStatus: 0, averageNoteCompletionTime: "0m" });
+    const [stats, setStats] = useState({ notesPendingSignature: 0, transcriptionQueueStatus: 0, averageNoteCompletionTime: "0m", clearedToday: 0, avgWaitTime: "0m" });
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
 
@@ -15,12 +15,36 @@ export default function ApprovalQueuePage() {
         const loadData = async () => {
             setLoading(true);
             try {
-                const [queueData, statsData] = await Promise.all([
+                const [queueData, statsData, appointments] = await Promise.all([
                     fetchReviewQueue({ search, limit: 10 }),
-                    fetchHospitalStats()
+                    fetchHospitalStats(),
+                    fetchHospitalAppointments()
                 ]);
+
+                // Filter for today's completed appointments
+                const today = new Date().toISOString().split('T')[0];
+                const todayAppts = appointments.filter(a => a.requested_date?.split('T')[0] === today);
+                const completedToday = todayAppts.filter(a => a.status === 'completed').length;
+
+                // Calculate wait time: difference between first and last meeting time of the day
+                let waitTimeStr = "0m";
+                if (todayAppts.length > 1) {
+                    const times = todayAppts
+                        .map(a => new Date(a.requested_date).getTime())
+                        .sort((a, b) => a - b);
+                    const diffMs = times[times.length - 1] - times[0];
+                    const diffMins = Math.round(diffMs / 60000);
+                    const hours = Math.floor(diffMins / 60);
+                    const mins = diffMins % 60;
+                    waitTimeStr = hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+                }
+
                 setQueue(queueData || []);
-                setStats(statsData);
+                setStats({
+                    ...statsData,
+                    clearedToday: completedToday,
+                    avgWaitTime: waitTimeStr
+                });
             } catch (err) {
                 console.error("Failed to load queue data:", err);
             } finally {
@@ -66,9 +90,9 @@ export default function ApprovalQueuePage() {
                 <div className={styles.overviewSection} style={{ marginBottom: '32px' }}>
                     {[
                         { label: "Pending Review", value: stats.notesPendingSignature, color: "#f59e0b", icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg> },
-                        { label: "High Urgency", value: stats.transcriptionQueueStatus, color: "#ef4444", icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg> },
-                        { label: "Cleared Today", value: "Live", color: "#10b981", icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"></polyline></svg> },
-                        { label: "Avg Wait Time", value: stats.averageNoteCompletionTime, color: "#359aff", icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> }
+                        // { label: "High Urgency", value: stats.transcriptionQueueStatus, color: "#ef4444", icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg> },
+                        { label: "Cleared Today", value: stats.clearedToday, color: "#10b981", icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"></polyline></svg> },
+                        { label: "Avg Wait Time", value: stats.avgWaitTime, color: "#359aff", icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> }
                     ].map((s, i) => (
                         <div key={i} style={{ background: '#ffffff', padding: '20px', borderRadius: '16px', border: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', gap: '16px' }}>
                             <div style={{ background: `${s.color}15`, color: s.color, width: '48px', height: '48px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{s.icon}</div>
@@ -100,7 +124,7 @@ export default function ApprovalQueuePage() {
                             <thead>
                                 <tr className={styles.activityHeader}>
                                     <th style={{ padding: '16px 24px', color: '#94a3b8', whiteSpace: 'nowrap' }}>PATIENT</th>
-                                    <th style={{ color: '#94a3b8', whiteSpace: 'nowrap' }}>PROVIDER</th>
+                                    <th style={{ color: '#94a3b8', whiteSpace: 'nowrap' }}>DOCTOR</th>
                                     <th style={{ color: '#94a3b8', whiteSpace: 'nowrap' }}>TIMESTAMP</th>
                                     <th style={{ color: '#94a3b8', whiteSpace: 'nowrap' }}>VISIT STATE</th>
                                     <th style={{ textAlign: 'right', paddingRight: '24px', color: '#94a3b8', whiteSpace: 'nowrap' }}>ACTIONS</th>

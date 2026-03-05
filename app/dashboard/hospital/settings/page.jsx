@@ -1,45 +1,99 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Topbar from "../components/Topbar";
 import styles from "../HospitalDashboard.module.css";
-import { motion } from "framer-motion";
-import { inviteStaff } from "@/services/hospital";
+import { motion, AnimatePresence } from "framer-motion";
+import { fetchAdminSettings, updateOrgSettings, updateDevSettings, updateBackupSettings } from "@/services/admin";
 
 export default function SettingsPage() {
-    const [formData, setFormData] = useState({
-        full_name: "",
-        email: "",
-        department: "Cardiology Department",
-        role: "doctor",
-        password: "TempPassword123!" // Temporary password for invitation
-    });
-    const [loading, setLoading] = useState(false);
+    const [activeTab, setActiveTab] = useState("organization");
+    const [settings, setSettings] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState({ type: "", text: "" });
 
-    const handleInvite = async () => {
-        if (!formData.full_name || !formData.email) {
-            setMessage({ type: "error", text: "Please fill in all required fields." });
-            return;
-        }
-
+    const loadSettings = async () => {
         setLoading(true);
-        setMessage({ type: "", text: "" });
-
         try {
-            await inviteStaff({
-                email: formData.email,
-                password: formData.password,
-                role: formData.role,
-                full_name: formData.full_name
-            });
-            setMessage({ type: "success", text: `Invitation sent to ${formData.email} successfully!` });
-            setFormData({ ...formData, full_name: "", email: "" });
+            const data = await fetchAdminSettings();
+            setSettings(data);
         } catch (err) {
-            setMessage({ type: "error", text: err.message || "Failed to send invitation. Please try again." });
+            console.error("Failed to load admin settings:", err);
+            setMessage({ type: "error", text: "Failed to load settings." });
         } finally {
             setLoading(false);
         }
     };
+
+    useEffect(() => {
+        loadSettings();
+    }, []);
+
+    const handleUpdateOrg = async (e) => {
+        e.preventDefault();
+        setSaving(true);
+        setMessage({ type: "", text: "" });
+        try {
+            const formData = new FormData(e.target);
+            const payload = Object.fromEntries(formData);
+            await updateOrgSettings(payload);
+            setMessage({ type: "success", text: "Organization settings updated successfully." });
+            loadSettings();
+        } catch (err) {
+            setMessage({ type: "error", text: "Failed to update organization settings." });
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const handleUpdateDev = async (e) => {
+        e.preventDefault();
+        setSaving(true);
+        setMessage({ type: "", text: "" });
+        try {
+            const formData = new FormData(e.target);
+            const payload = Object.fromEntries(formData);
+            await updateDevSettings(payload);
+            setMessage({ type: "success", text: "Developer settings updated successfully." });
+            loadSettings();
+        } catch (err) {
+            setMessage({ type: "error", text: "Failed to update developer settings." });
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const handleUpdateBackup = async (e) => {
+        e.preventDefault();
+        setSaving(true);
+        setMessage({ type: "", text: "" });
+        try {
+            const formData = new FormData(e.target);
+            const payload = Object.fromEntries(formData);
+            await updateBackupSettings(payload);
+            setMessage({ type: "success", text: "Backup settings updated successfully." });
+            loadSettings();
+        } catch (err) {
+            setMessage({ type: "error", text: "Failed to update backup settings." });
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    if (loading) {
+        return (
+            <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100%' }}>
+                <Topbar title="Admin Settings" />
+                <div style={{ padding: '40px', textAlign: 'center', color: '#64748b' }}>Loading administrative configuration...</div>
+            </div>
+        );
+    }
+
+    const tabs = [
+        { id: "organization", label: "Organization", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 21h18"></path><path d="M3 7v1a3 3 0 0 0 6 0V7m0 1a3 3 0 0 0 6 0V7m0 1a3 3 0 0 0 6 0V7H3"></path><path d="M19 21V11"></path><path d="M5 21V11"></path></svg> },
+        { id: "developer", label: "Developer", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg> },
+        { id: "backup", label: "Backups", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg> }
+    ];
 
     return (
         <motion.div
@@ -47,14 +101,12 @@ export default function SettingsPage() {
             animate={{ opacity: 1 }}
             style={{ display: 'flex', flexDirection: 'column', background: 'transparent', padding: 0, minHeight: '100%' }}
         >
-            <Topbar title="Invite Staff Member" />
+            <Topbar title="Enterprise Configuration" />
 
             <div className={styles.contentWrapper}>
-                <div className={styles.pageHeaderRow} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', flexWrap: 'wrap', gap: '16px' }}>
-                    <div>
-                        <h1 style={{ fontSize: '24px', fontWeight: '800', color: '#0f172a', margin: 0 }}>Invite Staff Member</h1>
-                        <p style={{ color: '#64748b', margin: '4px 0 0 0' }}>Onboard a new medical professional to your department network with secure credential.</p>
-                    </div>
+                <div style={{ marginBottom: '32px' }}>
+                    <h1 style={{ fontSize: '24px', fontWeight: '800', color: '#0f172a', margin: 0 }}>Enterprise Settings</h1>
+                    <p style={{ color: '#64748b', margin: '4px 0 0 0' }}>Manage organization profile, developer integrations, and data backup policies.</p>
                 </div>
 
                 {message.text && (
@@ -72,101 +124,175 @@ export default function SettingsPage() {
                     </div>
                 )}
 
-                <div className={styles.dashboardGrid}>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                        <div className={styles.card} style={{ padding: '32px', borderRadius: '16px', border: 'none' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '32px' }}>
-                                <div style={{ color: '#3b82f6' }}>
-                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><line x1="19" y1="8" x2="19" y2="14" /><line x1="16" y1="11" x2="22" y2="11" /></svg>
-                                </div>
-                                <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#1e293b' }}>Staff Details</h3>
-                            </div>
+                <div style={{ display: 'flex', gap: '32px', alignItems: 'flex-start' }}>
+                    {/* Sidebar Tabs */}
+                    <div style={{ width: '240px', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        {tabs.map(tab => (
+                            <button
+                                key={tab.id}
+                                onClick={() => { setActiveTab(tab.id); setMessage({ type: "", text: "" }); }}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '12px',
+                                    padding: '12px 16px',
+                                    borderRadius: '10px',
+                                    border: 'none',
+                                    background: activeTab === tab.id ? '#3b82f6' : 'transparent',
+                                    color: activeTab === tab.id ? 'white' : '#64748b',
+                                    fontSize: '14px',
+                                    fontWeight: '700',
+                                    textAlign: 'left',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s'
+                                }}
+                            >
+                                {tab.icon}
+                                {tab.label}
+                            </button>
+                        ))}
+                    </div>
 
-                            <div className={styles.overviewSection} style={{ gap: '24px' }}>
-                                <div className={styles.formGroup}>
-                                    <label style={{ fontSize: '11px', fontWeight: '800', color: '#94a3b8', marginBottom: '8px', display: 'block' }}>FULL NAME</label>
-                                    <div style={{ position: 'relative' }}>
-                                        <svg style={{ position: 'absolute', left: '12px', top: '48%', transform: 'translateY(-50%)', color: '#94a3b8' }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                                        <input
-                                            type="text"
-                                            placeholder="John Doe"
-                                            value={formData.full_name}
-                                            onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                                            style={{ width: '100%', padding: '12px 12px 12px 40px', borderRadius: '10px', border: '1px solid #f1f5f9', background: '#ffffff' }}
-                                        />
-                                    </div>
-                                </div>
-                                <div className={styles.formGroup}>
-                                    <label style={{ fontSize: '11px', fontWeight: '800', color: '#94a3b8', marginBottom: '8px', display: 'block' }}>EMAIL ADDRESS</label>
-                                    <div style={{ position: 'relative' }}>
-                                        <svg style={{ position: 'absolute', left: '12px', top: '48%', transform: 'translateY(-50%)', color: '#94a3b8' }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
-                                        <input
-                                            type="email"
-                                            placeholder="john.doe@hospital.com"
-                                            value={formData.email}
-                                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                            style={{ width: '100%', padding: '12px 12px 12px 40px', borderRadius: '10px', border: '1px solid #f1f5f9', background: '#ffffff' }}
-                                        />
-                                    </div>
-                                </div>
-                                <div className={styles.formGroup}>
-                                    <label style={{ fontSize: '11px', fontWeight: '800', color: '#94a3b8', marginBottom: '8px', display: 'block' }}>DEPARTMENT</label>
-                                    <select
-                                        value={formData.department}
-                                        onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                                        style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #f1f5f9', background: '#ffffff', color: '#64748b' }}
-                                    >
-                                        <option>Cardiology Department</option>
-                                        <option>General Medicine</option>
-                                        <option>Dermatology</option>
-                                        <option>Pediatrics</option>
-                                        <option>Psychiatry</option>
-                                        <option>Orthopedics</option>
-                                        <option>Oncology</option>
-                                        <option>Neurology</option>
-                                        <option>Radiology</option>
-                                        <option>Surgery</option>
-                                        <option>Emergency</option>
-                                    </select>
-                                </div>
-                                <div className={styles.formGroup}>
-                                    <label style={{ fontSize: '11px', fontWeight: '800', color: '#94a3b8', marginBottom: '8px', display: 'block' }}>ROLES & PERMISSIONS</label>
-                                    <select
-                                        value={formData.role}
-                                        onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                                        style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #f1f5f9', background: '#ffffff', color: '#64748b' }}
-                                    >
-                                        <option value="doctor">Medical Doctor</option>
-                                        <option value="patient">Staff Member</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div style={{ marginTop: '32px', padding: '24px', background: '#f8fafc', borderRadius: '12px', border: '1px solid #f1f5f9' }}>
-                                <div style={{ display: 'flex', gap: '16px' }}>
-                                    <div style={{ color: '#64748b', marginTop: '4px' }}>
-                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-                                    </div>
-                                    <div>
-                                        <div style={{ fontWeight: '800', color: '#1e293b', marginBottom: '4px' }}>Security & HIPAA Policy</div>
-                                        <div style={{ fontSize: '13px', color: '#64748b', lineHeight: '1.6' }}>Inviting this user will provide access to PHI(Protected Health Information). An encrypted invitation link will be sent to the email provided, valid for 48 hours.</div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '32px' }}>
-                                <button style={{ padding: '12px 24px', borderRadius: '10px', border: 'none', background: 'transparent', color: '#1e293b', fontWeight: '700', cursor: 'pointer' }}>Cancel</button>
-                                <button
-                                    onClick={handleInvite}
-                                    disabled={loading}
-                                    className={styles.primaryBtn}
-                                    style={{ padding: '12px 32px', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '8px', opacity: loading ? 0.7 : 1, cursor: loading ? 'not-allowed' : 'pointer' }}
+                    {/* Content Area */}
+                    <div style={{ flex: 1, background: '#ffffff', borderRadius: '16px', padding: '32px', border: '1px solid #f1f5f9' }}>
+                        <AnimatePresence mode="wait">
+                            {activeTab === 'organization' && (
+                                <motion.div
+                                    key="org"
+                                    initial={{ opacity: 0, x: 10 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: -10 }}
                                 >
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-                                    {loading ? "Sending..." : "Send Invite"}
-                                </button>
-                            </div>
-                        </div>
+                                    <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#1e293b', marginBottom: '24px' }}>Organization Profile</h3>
+                                    <form onSubmit={handleUpdateOrg} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                                            <div className={styles.formGroup}>
+                                                <label style={{ fontSize: '11px', fontWeight: '800', color: '#94a3b8', marginBottom: '8px', display: 'block' }}>HOSPITAL NAME</label>
+                                                <input
+                                                    name="name"
+                                                    required
+                                                    defaultValue={settings?.organization?.name}
+                                                    style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0' }}
+                                                />
+                                            </div>
+                                            <div className={styles.formGroup}>
+                                                <label style={{ fontSize: '11px', fontWeight: '800', color: '#94a3b8', marginBottom: '8px', display: 'block' }}>ORGANIZATION EMAIL</label>
+                                                <input
+                                                    name="org_email"
+                                                    required
+                                                    type="email"
+                                                    defaultValue={settings?.organization?.org_email}
+                                                    style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0' }}
+                                                />
+                                            </div>
+                                            <div className={styles.formGroup}>
+                                                <label style={{ fontSize: '11px', fontWeight: '800', color: '#94a3b8', marginBottom: '8px', display: 'block' }}>TIMEZONE</label>
+                                                <select
+                                                    name="timezone"
+                                                    defaultValue={settings?.organization?.timezone || "UTC"}
+                                                    style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0', background: 'white' }}
+                                                >
+                                                    <option value="UTC">UTC (Greenwich Mean Time)</option>
+                                                    <option value="EST">EST (Eastern Standard Time)</option>
+                                                    <option value="PST">PST (Pacific Standard Time)</option>
+                                                    <option value="IST">IST (India Standard Time)</option>
+                                                </select>
+                                            </div>
+                                            <div className={styles.formGroup}>
+                                                <label style={{ fontSize: '11px', fontWeight: '800', color: '#94a3b8', marginBottom: '8px', display: 'block' }}>DATE FORMAT</label>
+                                                <select
+                                                    name="date_format"
+                                                    defaultValue={settings?.organization?.date_format || "MM/DD/YYYY"}
+                                                    style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0', background: 'white' }}
+                                                >
+                                                    <option>MM/DD/YYYY</option>
+                                                    <option>DD/MM/YYYY</option>
+                                                    <option>YYYY-MM-DD</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '12px' }}>
+                                            <button type="submit" disabled={saving} className={styles.primaryBtn} style={{ padding: '12px 24px', opacity: saving ? 0.7 : 1 }}>
+                                                {saving ? "Saving Changes..." : "Save Org Settings"}
+                                            </button>
+                                        </div>
+                                    </form>
+                                </motion.div>
+                            )}
+
+                            {activeTab === 'developer' && (
+                                <motion.div
+                                    key="dev"
+                                    initial={{ opacity: 0, x: 10 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: -10 }}
+                                >
+                                    <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#1e293b', marginBottom: '24px' }}>Developer Settings</h3>
+                                    <form onSubmit={handleUpdateDev} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                                        <div className={styles.formGroup}>
+                                            <label style={{ fontSize: '11px', fontWeight: '800', color: '#94a3b8', marginBottom: '8px', display: 'block' }}>API KEY NAME</label>
+                                            <input
+                                                name="api_key_name"
+                                                placeholder="e.g. Production Mobile App"
+                                                defaultValue={settings?.developer?.api_key_name}
+                                                style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0' }}
+                                            />
+                                        </div>
+                                        <div className={styles.formGroup}>
+                                            <label style={{ fontSize: '11px', fontWeight: '800', color: '#94a3b8', marginBottom: '8px', display: 'block' }}>WEBHOOK URL</label>
+                                            <input
+                                                name="webhook_url"
+                                                type="url"
+                                                placeholder="https://your-server.com/webhook"
+                                                defaultValue={settings?.developer?.webhook_url}
+                                                style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0' }}
+                                            />
+                                        </div>
+                                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '12px' }}>
+                                            <button type="submit" disabled={saving} className={styles.primaryBtn} style={{ padding: '12px 24px', opacity: saving ? 0.7 : 1 }}>
+                                                {saving ? "Saving..." : "Update Dev Settings"}
+                                            </button>
+                                        </div>
+                                    </form>
+                                </motion.div>
+                            )}
+
+                            {activeTab === 'backup' && (
+                                <motion.div
+                                    key="backup"
+                                    initial={{ opacity: 0, x: 10 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: -10 }}
+                                >
+                                    <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#1e293b', marginBottom: '24px' }}>Data Backup Policy</h3>
+                                    <form onSubmit={handleUpdateBackup} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                                        <div className={styles.formGroup}>
+                                            <label style={{ fontSize: '11px', fontWeight: '800', color: '#94a3b8', marginBottom: '8px', display: 'block' }}>BACKUP FREQUENCY</label>
+                                            <select
+                                                name="backup_frequency"
+                                                defaultValue={settings?.backup?.backup_frequency || "Daily"}
+                                                style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0', background: 'white' }}
+                                            >
+                                                <option>Hourly</option>
+                                                <option>Daily</option>
+                                                <option>Weekly</option>
+                                                <option>Monthly</option>
+                                            </select>
+                                        </div>
+                                        <div style={{ padding: '16px', borderRadius: '12px', background: '#f8fafc', border: '1px solid #e2e8f0' }}>
+                                            <div style={{ fontSize: '12px', color: '#64748b', lineHeight: '1.6' }}>
+                                                <strong>Note:</strong> Automated backups are encrypted using AES-256 and stored in geographically redundant secure storage. You will receive an email notification if a backup fails.
+                                            </div>
+                                        </div>
+                                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '12px' }}>
+                                            <button type="submit" disabled={saving} className={styles.primaryBtn} style={{ padding: '12px 24px', opacity: saving ? 0.7 : 1 }}>
+                                                {saving ? "Updating..." : "Update Backup Policy"}
+                                            </button>
+                                        </div>
+                                    </form>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
                     </div>
                 </div>
             </div>

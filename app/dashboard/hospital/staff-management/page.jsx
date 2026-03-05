@@ -1,25 +1,44 @@
 "use client";
-import { useState, useEffect } from "react";
-import { fetchDoctors } from "@/services/patient";
+import { fetchAdminAccounts, adminRemoveMember } from "@/services/admin";
+import { onboardPatient } from "@/services/doctor";
 import { motion } from "framer-motion";
 import Topbar from "../components/Topbar";
 import styles from "../HospitalDashboard.module.css";
-
+import InviteStaffModal from "./components/InviteStaffModal";
+import CreatePatientModal from "./components/CreatePatientModal";
+import DoctorDetailsModal from "./components/DoctorDetailsModal";
+import { useState, useEffect } from "react";
 export default function StaffManagementPage() {
     const [staffList, setStaffList] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+    const [isPatientModalOpen, setIsPatientModalOpen] = useState(false);
+    const [selectedDoctorId, setSelectedDoctorId] = useState(null);
+
+    const loadStaff = async () => {
+        setLoading(true);
+        try {
+            const results = await fetchAdminAccounts();
+            setStaffList(results || []);
+        } catch (err) {
+            console.error("Failed to load staff:", err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleRemoveStaff = async (id) => {
+        if (!confirm("Are you sure you want to remove this team member?")) return;
+        try {
+            await adminRemoveMember(id);
+            loadStaff();
+        } catch (err) {
+            console.error("Failed to remove staff:", err);
+            alert("Failed to remove staff member.");
+        }
+    };
 
     useEffect(() => {
-        const loadStaff = async () => {
-            try {
-                const results = await fetchDoctors();
-                setStaffList(results || []);
-            } catch (err) {
-                console.error("Failed to load staff:", err);
-            } finally {
-                setLoading(false);
-            }
-        };
         loadStaff();
     }, []);
 
@@ -43,6 +62,21 @@ export default function StaffManagementPage() {
                     <div>
                         <h1 style={{ fontSize: '24px', fontWeight: '800', color: '#0f172a', margin: 0 }}>Staff Management</h1>
                         <p style={{ color: '#64748b', margin: '4px 0 0 0' }}>Manage hospital personnel, shifts, and department assignments.</p>
+                    </div>
+                    <div style={{ display: 'flex', gap: '12px' }}>
+                        <button
+                            onClick={() => setIsPatientModalOpen(true)}
+                            className={styles.outlineBtn}
+                            style={{ background: '#ffffff', color: '#10b981', borderColor: '#10b981' }}
+                        >
+                            + Create Patient ID
+                        </button>
+                        <button
+                            onClick={() => setIsInviteModalOpen(true)}
+                            className={styles.primaryBtn}
+                        >
+                            + Invite Doctor
+                        </button>
                     </div>
                 </div>
 
@@ -91,7 +125,22 @@ export default function StaffManagementPage() {
                                             <span style={{ color: '#10b981', background: `#10b98110`, padding: '4px 12px', borderRadius: '20px', fontWeight: '700', fontSize: '11px' }}>ACTIVE</span>
                                         </td>
                                         <td style={{ textAlign: 'right', paddingRight: '24px', whiteSpace: 'nowrap' }}>
-                                            <button className={styles.outlineBtn} style={{ height: '32px', fontSize: '12px' }}>Manage</button>
+                                            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                                                <button
+                                                    onClick={() => setSelectedDoctorId(s.id)}
+                                                    className={styles.outlineBtn}
+                                                    style={{ height: '32px', fontSize: '12px' }}
+                                                >
+                                                    Manage
+                                                </button>
+                                                <button
+                                                    onClick={() => handleRemoveStaff(s.id)}
+                                                    className={styles.outlineBtn}
+                                                    style={{ height: '32px', fontSize: '12px', color: '#ef4444', borderColor: '#fee2e2' }}
+                                                >
+                                                    Remove
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}
@@ -99,6 +148,24 @@ export default function StaffManagementPage() {
                         </table>
                     </div>
                 </div>
+
+                <InviteStaffModal
+                    isOpen={isInviteModalOpen}
+                    onClose={() => setIsInviteModalOpen(false)}
+                    onSuccess={() => { setIsInviteModalOpen(false); loadStaff(); }}
+                />
+
+                <CreatePatientModal
+                    isOpen={isPatientModalOpen}
+                    onClose={() => setIsPatientModalOpen(false)}
+                    onSuccess={() => { setIsPatientModalOpen(false); }}
+                />
+
+                <DoctorDetailsModal
+                    isOpen={!!selectedDoctorId}
+                    onClose={() => setSelectedDoctorId(null)}
+                    doctorId={selectedDoctorId}
+                />
             </div>
         </motion.div>
     );

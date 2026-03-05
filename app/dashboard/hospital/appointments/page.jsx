@@ -3,54 +3,86 @@ import Topbar from "../components/Topbar";
 import styles from "../HospitalDashboard.module.css";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
-import { fetchHospitalAppointments, fetchHospitalStats } from "@/services/hospital";
+import { fetchHospitalAppointments, fetchHospitalStats, fetchOrganizationMembers } from "@/services/hospital";
+import { fetchCalendarMonth, fetchCalendarDay, deleteCalendarEvent, createCalendarEvent } from "@/services/calendar";
+import { fetchTasks, addTask, deleteTask } from "@/services/doctor";
+import CalendarModal from "./components/CalendarModal";
 
 export default function AppointmentsPage() {
-    const [view, setView] = useState('schedule'); // 'list' or 'schedule'
+    const [view, setView] = useState('schedule');
     const [appointments, setAppointments] = useState([]);
     const [loading, setLoading] = useState(true);
     const [monthData, setMonthData] = useState({});
     const [stats, setStats] = useState({ notesPendingSignature: 0, transcriptionQueueStatus: 0 });
+    const [doctors, setDoctors] = useState([]);
+    const [doctorFilter, setDoctorFilter] = useState("All");
+    const [statusFilter, setStatusFilter] = useState("All");
+    const [selectedDate, setSelectedDate] = useState(new Date());
+    const [dayEvents, setDayEvents] = useState([]);
+    const [dayTasks, setDayTasks] = useState([]);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [modalMode, setModalMode] = useState('event'); // 'event' or 'task'
+
+    const loadMonthData = async (date = selectedDate) => {
+        try {
+            const year = date.getFullYear();
+            const month = date.getMonth() + 1;
+            const data = await fetchCalendarMonth(year, month);
+            setMonthData(data || {});
+        } catch (err) {
+            console.error("Failed to load month data:", err);
+        }
+    };
+
+    const loadDayData = async (date = selectedDate) => {
+        try {
+            const dateStr = date.toISOString().split('T')[0];
+            const [events, tasks] = await Promise.all([
+                fetchCalendarDay(dateStr),
+                fetchTasks()
+            ]);
+            setDayEvents(events || []);
+            setDayTasks(tasks || []);
+        } catch (err) {
+            console.error("Failed to load day data:", err);
+        }
+    };
 
     useEffect(() => {
-        const loadMonthData = async () => {
+        const loadInitialData = async () => {
+            setLoading(true);
             try {
-                const year = new Date().getFullYear();
-                const month = new Date().getMonth() + 1;
-                const { fetchCalendarMonth } = await import("@/services/calendar");
-                const data = await fetchCalendarMonth(year, month);
-                setMonthData(data || {});
+                const [statData, apptData, teamData] = await Promise.all([
+                    fetchHospitalStats(),
+                    fetchHospitalAppointments(),
+                    fetchOrganizationMembers()
+                ]);
+                setStats(statData);
+                setAppointments(apptData || []);
+                setDoctors(teamData || []);
+                await Promise.all([loadMonthData(), loadDayData()]);
             } catch (err) {
-                console.error("Failed to load month data:", err);
-            }
-        };
-
-        const loadStats = async () => {
-            const data = await fetchHospitalStats();
-            setStats(data);
-        };
-
-        const loadAppts = async () => {
-            try {
-                const data = await fetchHospitalAppointments();
-                setAppointments(data || []);
-            } catch (err) {
-                console.error("Failed to load hospital appointments:", err);
+                console.error("Failed to load appointments data:", err);
             } finally {
                 setLoading(false);
             }
         };
 
-        loadMonthData();
-        loadStats();
-        loadAppts();
+        loadInitialData();
     }, []);
+
+    useEffect(() => {
+        loadMonthData(selectedDate);
+    }, [selectedDate.getMonth(), selectedDate.getFullYear()]);
+
+    useEffect(() => {
+        loadDayData(selectedDate);
+    }, [selectedDate]);
 
     const weekDays = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
     const currentDateObj = new Date();
     const currentMonthName = currentDateObj.toLocaleString('default', { month: 'long' });
     const currentYear = currentDateObj.getFullYear();
-    const daysInMonth = new Date(currentYear, currentDateObj.getMonth() + 1, 0).getDate();
 
     return (
         <motion.div
@@ -127,19 +159,46 @@ export default function AppointmentsPage() {
                 {view === 'list' ? (
                     <div className={styles.card} style={{ border: 'none', borderRadius: '16px', padding: '0', overflow: 'hidden' }}>
                         <div style={{ padding: '24px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
-                            <div style={{ fontWeight: '700', color: '#0f172a' }}>Tuesday, October 24, 2026</div>
+                            <div style={{ fontWeight: '700', color: '#0f172a' }}>{selectedDate.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</div>
                             <div style={{ display: 'flex', gap: '12px' }}>
-                                <select className={styles.outlineBtn} style={{ background: '#ffffff' }}><option>All Doctors</option></select>
-                                <select className={styles.outlineBtn} style={{ background: '#ffffff' }}><option>All Statuses</option></select>
+                                <select
+                                    className={styles.outlineBtn}
+                                    style={{ background: '#ffffff' }}
+                                    value={doctorFilter}
+                                    onChange={(e) => setDoctorFilter(e.target.value)}
+                                >
+                                    <option value="All">All Doctors</option>
+                                    {doctors.map(d => <option key={d.id} value={d.full_name}>{d.full_name}</option>)}
+                                </select>
+                                <select
+                                    className={styles.outlineBtn}
+                                    style={{ background: '#ffffff' }}
+                                    value={statusFilter}
+                                    onChange={(e) => setStatusFilter(e.target.value)}
+                                >
+                                    <option value="All">All Statuses</option>
+                                    <option value="Remote">Remote</option>
+                                    <option value="On-Site">On-Site</option>
+                                </select>
                             </div>
                         </div>
 
                         <div style={{ display: 'flex', flexDirection: 'column' }}>
                             {loading ? (
                                 <div style={{ padding: '40px', textAlign: 'center', color: '#64748b' }}>Loading appointments...</div>
-                            ) : appointments.length === 0 ? (
-                                <div style={{ padding: '40px', textAlign: 'center', color: '#64748b' }}>No appointments scheduled for this date.</div>
-                            ) : appointments.map((appt, i) => {
+                            ) : appointments.filter(a => {
+                                const matchesDoctor = doctorFilter === "All" || a.doctor_name === doctorFilter || a.doctor?.full_name === doctorFilter;
+                                const matchesStatus = statusFilter === "All" || (statusFilter === "Remote" && a.visit_type === "video") || (statusFilter === "On-Site" && a.visit_type === "in-person");
+                                const matchesDate = !selectedDate || new Date(a.scheduled_at).toDateString() === selectedDate.toDateString();
+                                return matchesDoctor && matchesStatus && matchesDate;
+                            }).length === 0 ? (
+                                <div style={{ padding: '40px', textAlign: 'center', color: '#64748b' }}>No appointments match your filters.</div>
+                            ) : appointments.filter(a => {
+                                const matchesDoctor = doctorFilter === "All" || a.doctor_name === doctorFilter || a.doctor?.full_name === doctorFilter;
+                                const matchesStatus = statusFilter === "All" || (statusFilter === "Remote" && a.visit_type === "video") || (statusFilter === "On-Site" && a.visit_type === "in-person");
+                                const matchesDate = !selectedDate || new Date(a.scheduled_at).toDateString() === selectedDate.toDateString();
+                                return matchesDoctor && matchesStatus && matchesDate;
+                            }).map((appt, i) => {
                                 const time = appt.scheduled_at ? new Date(appt.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "TBD";
                                 const status = appt.status || "scheduled";
                                 const colors = {
@@ -169,7 +228,7 @@ export default function AppointmentsPage() {
                                             </div>
                                             <div style={{ minWidth: '150px' }}>
                                                 <div style={{ fontSize: '11px', fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '4px' }}>Visit Type</div>
-                                                <div style={{ fontWeight: '500', color: '#64748b' }}>{appt.visit_type || (appt.reason && appt.reason.length > 20 ? appt.reason.substring(0, 20) + '...' : appt.reason) || "Consultation"}</div>
+                                                <div style={{ fontWeight: '500', color: '#64748b' }}>{appt.visit_type === 'video' ? 'Remote' : 'On-Site'}</div>
                                             </div>
                                             <div style={{ flex: 1, textAlign: 'right' }}>
                                                 <span style={{ color: color, background: `${color}10`, padding: '6px 16px', borderRadius: '8px', fontWeight: '800', fontSize: '10px', textTransform: 'uppercase' }}>{status}</span>
@@ -185,10 +244,18 @@ export default function AppointmentsPage() {
                         <div className={styles.card} style={{ border: 'none', borderRadius: '16px', padding: '24px' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                                    <h2 style={{ fontSize: '18px', fontWeight: '800', color: '#1e293b', margin: 0 }}>{currentMonthName} {currentYear}</h2>
+                                    <h2 style={{ fontSize: '18px', fontWeight: '800', color: '#1e293b', margin: 0 }}>{selectedDate.toLocaleString('default', { month: 'long' })} {selectedDate.getFullYear()}</h2>
                                     <div style={{ display: 'flex', gap: '8px', color: '#94a3b8' }}>
-                                        <button style={{ background: 'none', border: 'none', cursor: 'pointer' }}>‹</button>
-                                        <button style={{ background: 'none', border: 'none', cursor: 'pointer' }}>›</button>
+                                        <button onClick={() => {
+                                            const newDate = new Date(selectedDate);
+                                            newDate.setMonth(newDate.getMonth() - 1);
+                                            setSelectedDate(newDate);
+                                        }} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>‹</button>
+                                        <button onClick={() => {
+                                            const newDate = new Date(selectedDate);
+                                            newDate.setMonth(newDate.getMonth() + 1);
+                                            setSelectedDate(newDate);
+                                        }} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>›</button>
                                     </div>
                                 </div>
                                 <div style={{ display: 'flex', background: '#f1f5f9', padding: '4px', borderRadius: '8px' }}>
@@ -202,14 +269,31 @@ export default function AppointmentsPage() {
                                 {weekDays.map(h => (
                                     <div key={h} style={{ padding: '12px', textAlign: 'center', fontSize: '10px', fontWeight: '800', color: '#94a3b8', borderBottom: '1px solid #f1f5f9' }}>{h}</div>
                                 ))}
-                                {Array.from({ length: daysInMonth }).map((_, i) => {
-                                    const day = i + 1;
-                                    const count = monthData[day];
-                                    const hasShifts = count > 0;
+                                {Array.from({ length: 35 }).map((_, i) => {
+                                    const firstDayOfMonth = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1).getDay();
+                                    const day = i + 1 - firstDayOfMonth;
+                                    const isCurrentMonth = day > 0 && day <= new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 0).getDate();
+                                    const displayDay = isCurrentMonth ? day : "";
+
+                                    const dayData = monthData?.days?.find(d => d.day === day) || {};
+                                    const count = dayData.events_count || 0;
+                                    const isSelected = selectedDate.getDate() === day && isCurrentMonth;
+
                                     return (
-                                        <div key={i} style={{ minHeight: '100px', padding: '8px', borderRight: (i + 1) % 7 === 0 ? 'none' : '1px solid #f1f5f9', borderBottom: i >= (daysInMonth - 7) ? 'none' : '1px solid #f1f5f9' }}>
-                                            <div style={{ fontSize: '11px', fontWeight: '700', color: hasShifts ? '#3b82f6' : '#94a3b8', marginBottom: '8px' }}>{day}</div>
-                                            {count > 0 && (
+                                        <div
+                                            key={i}
+                                            onClick={() => isCurrentMonth && setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth(), day))}
+                                            style={{
+                                                minHeight: '100px',
+                                                padding: '8px',
+                                                cursor: isCurrentMonth ? 'pointer' : 'default',
+                                                background: isSelected ? '#eff6ff' : (isCurrentMonth ? '#ffffff' : '#f9fafb'),
+                                                borderRight: (i + 1) % 7 === 0 ? 'none' : '1px solid #f1f5f9',
+                                                borderBottom: '1px solid #f1f5f9'
+                                            }}
+                                        >
+                                            <div style={{ fontSize: '11px', fontWeight: '700', color: isSelected ? '#3b82f6' : '#94a3b8', marginBottom: '8px' }}>{displayDay}</div>
+                                            {count > 0 && isCurrentMonth && (
                                                 <div style={{ fontSize: '9px', fontWeight: '800', background: count > 3 ? '#fef2f2' : '#eff6ff', color: count > 3 ? '#ef4444' : '#3b82f6', padding: '4px 8px', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
                                                     <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: count > 3 ? '#ef4444' : '#3b82f6' }} />
                                                     {count} {count === 1 ? 'Event' : 'Events'}
@@ -226,10 +310,10 @@ export default function AppointmentsPage() {
                                 <div style={{ fontSize: '11px', fontWeight: '800', color: '#94a3b8', marginBottom: '16px', textTransform: 'uppercase' }}>Statistics</div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                                     <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: '#eff6ff', color: '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 0 0 1 0 7.75" /></svg>
                                     </div>
                                     <div>
-                                        <div style={{ fontSize: '28px', fontWeight: '800', color: '#1e293b' }}>{stats.notesPendingSignature}</div>
+                                        <div style={{ fontSize: '28px', fontWeight: '800', color: '#1e293b' }}>{stats.notesPendingSignature || 0}</div>
                                         <div style={{ fontSize: '11px', fontWeight: '700', color: '#94a3b8' }}>PENDING REVIEWS</div>
                                     </div>
                                 </div>
@@ -237,13 +321,48 @@ export default function AppointmentsPage() {
 
                             <div className={styles.card} style={{ padding: '24px', borderRadius: '16px', border: 'none' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                                    <div style={{ fontSize: '11px', fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase' }}>High Urgency</div>
-                                    <button style={{ background: 'transparent', border: 'none', color: '#3b82f6', fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}>View All</button>
+                                    <div style={{ fontSize: '11px', fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase' }}>Selected Day Schedule</div>
+                                    <div style={{ display: 'flex', gap: '8px' }}>
+                                        <button onClick={() => { setModalMode('event'); setIsModalOpen(true); }} style={{ background: 'transparent', border: 'none', color: '#3b82f6', fontSize: '11px', fontWeight: '800', cursor: 'pointer' }}>+ EVENT</button>
+                                        <button onClick={() => { setModalMode('task'); setIsModalOpen(true); }} style={{ background: 'transparent', border: 'none', color: '#10b981', fontSize: '11px', fontWeight: '800', cursor: 'pointer' }}>+ TASK</button>
+                                    </div>
                                 </div>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', minHeight: '100px', justifyContent: 'center', alignItems: 'center', color: '#94a3b8', fontSize: '13px' }}>
-                                    {stats.transcriptionQueueStatus === 0 ? "No critical alerts" : `${stats.transcriptionQueueStatus} tasks need attention`}
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                    {dayEvents.length === 0 && dayTasks.length === 0 ? (
+                                        <div style={{ color: '#94a3b8', fontSize: '12px', textAlign: 'center', padding: '20px 0' }}>No events or tasks for this day.</div>
+                                    ) : (
+                                        <>
+                                            {dayEvents.map((ev, idx) => (
+                                                <div key={`ev-${idx}`} style={{ background: '#f8fafc', padding: '10px', borderRadius: '8px', borderLeft: '4px solid #3b82f6', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                    <div>
+                                                        <div style={{ fontSize: '13px', fontWeight: '700' }}>{ev.title || "Meeting"}</div>
+                                                        <div style={{ fontSize: '10px', color: '#64748b' }}>{ev.time || ev.scheduled_at?.split('T')[1].substring(0, 5)} • {ev.doctor_name || "Doctor"}</div>
+                                                    </div>
+                                                    <button onClick={() => { if (confirm("Delete event?")) deleteCalendarEvent(ev.id).then(() => loadDayData()); }} style={{ border: 'none', background: 'transparent', color: '#ef4444', cursor: 'pointer' }}>×</button>
+                                                </div>
+                                            ))}
+                                            {dayTasks.map((tk, idx) => (
+                                                <div key={`tk-${idx}`} style={{ background: '#f8fafc', padding: '10px', borderRadius: '8px', borderLeft: '4px solid #10b981', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                    <div>
+                                                        <div style={{ fontSize: '13px', fontWeight: '700' }}>{tk.title || tk.task_name || "Task"}</div>
+                                                        <div style={{ fontSize: '10px', color: '#64748b' }}>Task • {tk.status}</div>
+                                                    </div>
+                                                    <button onClick={() => { if (confirm("Delete task?")) deleteTask(tk.id).then(() => loadDayData()); }} style={{ border: 'none', background: 'transparent', color: '#ef4444', cursor: 'pointer' }}>×</button>
+                                                </div>
+                                            ))}
+                                        </>
+                                    )}
                                 </div>
                             </div>
+
+                            <CalendarModal
+                                isOpen={isModalOpen}
+                                onClose={() => setIsModalOpen(false)}
+                                mode={modalMode}
+                                selectedDate={selectedDate}
+                                doctors={doctors}
+                                onSave={() => { setIsModalOpen(false); loadDayData(); loadMonthData(); }}
+                            />
                         </div>
                     </div>
                 )}

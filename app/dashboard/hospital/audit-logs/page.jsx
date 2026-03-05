@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import Topbar from "../components/Topbar";
 import styles from "../HospitalDashboard.module.css";
 import { motion } from "framer-motion";
-import { fetchAuditLogs } from "@/services/hospital";
+import { fetchAdminAuditLogs } from "@/services/admin";
 
 export default function AuditLogsPage() {
     const [logs, setLogs] = useState([]);
@@ -14,7 +14,7 @@ export default function AuditLogsPage() {
         setLoading(true);
         setError("");
         try {
-            const data = await fetchAuditLogs();
+            const data = await fetchAdminAuditLogs();
             setLogs(data || []);
         } catch (err) {
             console.error("Failed to load audit logs:", err);
