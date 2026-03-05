@@ -45,7 +45,12 @@ export default function HospitalDashboard() {
                 if (!profileData) return;
 
                 if (profileData.role !== "hospital") {
-                    router.replace(`/dashboard/${profileData.role}`);
+                    const r = (profileData.role || "").toLowerCase();
+                    const path = r === "patient" ? "/dashboard/patient"
+                        : r === "doctor" ? "/dashboard/doctor"
+                            : (r === "admin" || r === "administrator") ? "/dashboard/admin"
+                                : null;
+                    if (path) router.replace(path);
                     return;
                 }
 

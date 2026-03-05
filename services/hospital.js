@@ -1,186 +1,185 @@
 import { API_BASE_URL, getAuthHeaders, handleResponse } from "./apiConfig";
 
 /**
- * Fetch hospital-wide appointments
- * Endpoint: GET /api/v1/doctor/appointments
+ * 1. Register a New Hospital
+ * Endpoint: POST /api/v1/auth/register/hospital
  */
-export const fetchHospitalAppointments = async () => {
+export const registerHospital = async (payload) => {
     try {
-        const response = await fetch(`${API_BASE_URL}/doctor/appointments`, {
-            headers: getAuthHeaders(),
-        });
-        const data = await handleResponse(response);
-        return Array.isArray(data) ? data : (data.appointments || data.items || data.data || []);
-    } catch (err) {
-        console.error("fetchHospitalAppointments error:", err);
-        return [];
-    }
-};
-
-/**
- * Fetch hospital queue metrics
- * Endpoint: GET /api/v1/consultations/queue/metrics
- */
-export const fetchHospitalStats = async () => {
-    try {
-        const response = await fetch(`${API_BASE_URL}/consultations/queue/metrics`, {
-            headers: getAuthHeaders(),
-        });
-        const data = await handleResponse(response);
-        return {
-            notesPendingSignature: data.pending_review || data.pending || 0,
-            transcriptionQueueStatus: data.high_urgency || data.urgent || 0,
-            averageNoteCompletionTime: data.avg_wait_time_minutes
-                ? `${data.avg_wait_time_minutes} mins`
-                : (data.avg_completion_time || "0 mins"),
-            patientsToday: data.patients_today || 0,
-        };
-    } catch (err) {
-        console.error("fetchHospitalStats error:", err);
-        // Return zeroed defaults — page will show 0 not crash
-        return {
-            notesPendingSignature: 0,
-            transcriptionQueueStatus: 0,
-            averageNoteCompletionTime: "0 mins",
-            patientsToday: 0,
-        };
-    }
-};
-
-/**
- * Fetch Review Queue / Consultations
- * Endpoint: GET /api/v1/consultations
- */
-export const fetchReviewQueue = async (filters = {}) => {
-    try {
-        const params = new URLSearchParams();
-        if (filters.visit_state) params.append("visit_state", filters.visit_state);
-        if (filters.search) params.append("search", filters.search);
-        params.append("limit", filters.limit || 10);
-
-        const response = await fetch(`${API_BASE_URL}/consultations?${params.toString()}`, {
-            headers: getAuthHeaders(),
-        });
-        const data = await handleResponse(response);
-        const consultations = data.consultations || data.items || [];
-
-        return consultations.map(c => ({
-            id: c.id,
-            patient: c.patientName || c.patient_name || "Unknown Patient",
-            mrn: c.patient_mrn || "N/A",
-            provider: c.doctorName || c.doctor_name || "Unknown Provider",
-            status: c.visit_state || c.status || "Needs Review",
-            urgency: c.urgency_level || "Normal",
-            time: c.scheduledAt ? new Date(c.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "N/A",
-            date: c.scheduledAt ? new Date(c.scheduledAt).toLocaleDateString() : "Today",
-            department: c.department || "General"
-        }));
-    } catch (err) {
-        console.error("fetchReviewQueue error:", err);
-        return [];
-    }
-};
-
-/**
- * Invite a new staff member (Team invite)
- * Endpoint: POST /api/v1/team/invite
- */
-export const inviteStaff = async (staffData) => {
-    try {
-        const response = await fetch(`${API_BASE_URL}/team/invite`, {
+        const response = await fetch(`${API_BASE_URL}/auth/register/hospital`, {
             method: "POST",
-            headers: getAuthHeaders(),
-            body: JSON.stringify(staffData)
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(payload),
         });
         return await handleResponse(response);
     } catch (err) {
-        console.error("inviteStaff error:", err);
+        console.error("registerHospital error:", err);
         throw err;
     }
 };
 
 /**
- * Fetch Hospital/Organization profile
- * Endpoint: GET /api/v1/organization
+ * 2. Admin Login
+ * Endpoint: POST /api/v1/auth/login
  */
-export const fetchHospitalProfile = async () => {
+export const loginHospital = async (email, password) => {
     try {
-        const response = await fetch(`${API_BASE_URL}/organization`, {
+        const formData = new URLSearchParams();
+        formData.append("username", email);
+        formData.append("password", password);
+
+        const response = await fetch(`${API_BASE_URL}/auth/login`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: formData.toString(),
+        });
+        return await handleResponse(response);
+    } catch (err) {
+        console.error("loginHospital error:", err);
+        throw err;
+    }
+};
+
+/**
+ * 3. Fetch Home / Overview Page
+ * Endpoint: GET /api/v1/hospital/dashboard/overview
+ */
+export const fetchHospitalDashboardOverview = async () => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/hospital/dashboard/overview`, {
             headers: getAuthHeaders(),
         });
         return await handleResponse(response);
     } catch (err) {
-        console.error("fetchHospitalProfile error:", err);
-        return null;
+        console.error("fetchHospitalDashboardOverview error:", err);
+        return { metrics: {}, recentActivities: [] };
     }
 };
 
 /**
- * Fetch Audit Logs (Hospital-level)
- * Endpoint: GET /api/v1/audit/logs
+ * 4. Fetch Directory Page
+ * Endpoint: GET /api/v1/hospital/directory
  */
-export const fetchAuditLogs = async (params = {}) => {
+export const fetchHospitalDirectory = async () => {
     try {
-        const query = new URLSearchParams(params).toString();
-        const response = await fetch(`${API_BASE_URL}/audit/logs${query ? `?${query}` : ""}`, {
+        const response = await fetch(`${API_BASE_URL}/hospital/directory`, {
+            headers: getAuthHeaders(),
+        });
+        return await handleResponse(response);
+    } catch (err) {
+        console.error("fetchHospitalDirectory error:", err);
+        return { doctors: [], patients: [] };
+    }
+};
+
+/**
+ * 5. Fetch Appointments & Calendar
+ * Endpoint: GET /api/v1/calendar/organization/events
+ */
+export const fetchOrganizationEvents = async (startDate, endDate, eventType = "appointment") => {
+    try {
+        const params = new URLSearchParams();
+        if (startDate) params.append("start_date", startDate);
+        if (endDate) params.append("end_date", endDate);
+        if (eventType) params.append("event_type", eventType);
+
+        const response = await fetch(`${API_BASE_URL}/calendar/organization/events?${params.toString()}`, {
             headers: getAuthHeaders(),
         });
         const data = await handleResponse(response);
-        return Array.isArray(data) ? data : (data?.logs || data?.items || []);
+        return Array.isArray(data) ? data : [];
     } catch (err) {
-        console.error("fetchAuditLogs error:", err);
+        console.error("fetchOrganizationEvents error:", err);
         return [];
     }
 };
 
 /**
- * Fetch Department Staff
- * Endpoint: GET /api/v1/team/staff
+ * 6. Fetch Patients Page
+ * Endpoint: GET /api/v1/hospital/patients
  */
-export const fetchDepartmentStaff = async (params = {}) => {
+export const fetchHospitalPatients = async () => {
     try {
-        const query = new URLSearchParams(params).toString();
-        const response = await fetch(`${API_BASE_URL}/team/staff${query ? `?${query}` : ""}`, {
+        const response = await fetch(`${API_BASE_URL}/hospital/patients`, {
             headers: getAuthHeaders(),
         });
-        const data = await handleResponse(response);
-        return Array.isArray(data) ? data : (data?.staff || data?.members || []);
+        return await handleResponse(response);
     } catch (err) {
-        console.error("fetchDepartmentStaff error:", err);
-        return [];
+        console.error("fetchHospitalPatients error:", err);
+        return { metrics: {}, patients: [] };
     }
 };
 
 /**
- * Fetch Pending Team Invites
- * Endpoint: GET /api/v1/team/invites/pending
+ * 7. Fetch Staff Data
+ * Endpoint: GET /api/v1/hospital/staff
  */
-export const fetchPendingInvites = async () => {
+export const fetchHospitalStaff = async () => {
     try {
-        const response = await fetch(`${API_BASE_URL}/team/invites/pending`, {
+        const response = await fetch(`${API_BASE_URL}/hospital/staff`, {
             headers: getAuthHeaders(),
         });
-        const data = await handleResponse(response);
-        return Array.isArray(data) ? data : (data?.invites || data?.items || []);
+        return await handleResponse(response);
     } catch (err) {
-        console.error("fetchPendingInvites error:", err);
-        return [];
+        console.error("fetchHospitalStaff error:", err);
+        return { metrics: {}, staff: [] };
     }
 };
 
 /**
- * Fetch all organization members
- * Endpoint: GET /api/v1/organization/members
+ * 8. "Invite Doctor" Button
+ * Endpoint: POST /api/v1/team/invite
  */
-export const fetchOrganizationMembers = async () => {
+export const inviteHospitalStaff = async (payload) => {
     try {
-        const response = await fetch(`${API_BASE_URL}/organization/members`, {
+        const response = await fetch(`${API_BASE_URL}/team/invite`, {
+            method: "POST",
             headers: getAuthHeaders(),
+            body: JSON.stringify(payload),
         });
-        const data = await handleResponse(response);
-        return Array.isArray(data) ? data : (data?.members || data?.users || []);
+        return await handleResponse(response);
     } catch (err) {
-        console.error("fetchOrganizationMembers error:", err);
-        return [];
+        console.error("inviteHospitalStaff error:", err);
+        throw err;
+    }
+};
+
+/**
+ * 9. "Create Event" Button
+ * Endpoint: POST /api/v1/calendar/events
+ */
+export const createHospitalEvent = async (payload) => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/calendar/events`, {
+            method: "POST",
+            headers: getAuthHeaders(),
+            body: JSON.stringify(payload),
+        });
+        return await handleResponse(response);
+    } catch (err) {
+        console.error("createHospitalEvent error:", err);
+        throw err;
+    }
+};
+
+/**
+ * 10. "Create Task" Button
+ * Endpoint: POST /api/v1/tasks
+ */
+export const createHospitalTask = async (payload) => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/tasks`, {
+            method: "POST",
+            headers: getAuthHeaders(),
+            body: JSON.stringify(payload),
+        });
+        return await handleResponse(response);
+    } catch (err) {
+        console.error("createHospitalTask error:", err);
+        throw err;
     }
 };

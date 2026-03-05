@@ -75,7 +75,11 @@ export default function DoctorDashboard() {
       if (!profile) return;
 
       if (profile.role !== "doctor") {
-        router.replace(`/dashboard/${profile.role}`);
+        const r = (profile.role || "").toLowerCase();
+        const path = r === "patient" ? "/dashboard/patient"
+          : (r === "admin" || r === "administrator" || r === "hospital") ? "/dashboard/admin"
+            : null;
+        if (path) router.replace(path);
         return;
       }
 

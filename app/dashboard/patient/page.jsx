@@ -37,6 +37,15 @@ export default function PatientDashboard() {
   const [user, setUser] = useState(null);
   const [consultations, setConsultations] = useState([]);
 
+  /** Maps any backend role string to a safe dashboard path */
+  const roleToDashboard = (role) => {
+    if (!role) return null;
+    const r = role.toLowerCase();
+    if (r === "doctor") return "/dashboard/doctor";
+    if (r === "admin" || r === "administrator" || r === "hospital") return "/dashboard/admin";
+    return null; // stay on patient dashboard
+  };
+
   // useEffect(() => {
   //   const load = async () => {
   //     try {
@@ -59,7 +68,8 @@ export default function PatientDashboard() {
 
         if (!profile) return;
         if (profile.role !== "patient") {
-          router.push(`/dashboard/${profile.role}`);
+          const path = roleToDashboard(profile.role);
+          if (path) router.replace(path);
           return;
         }
 
@@ -77,7 +87,8 @@ export default function PatientDashboard() {
             const parsed = JSON.parse(stored);
 
             if (parsed.role !== "patient") {
-              router.replace(`/dashboard/${profile.role}`); return;
+              const path = roleToDashboard(parsed.role);
+              if (path) router.replace(path);
             }
 
             setUser(parsed);

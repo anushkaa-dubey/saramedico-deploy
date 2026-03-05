@@ -52,21 +52,21 @@ export default function OnboardPatientModal({ isOpen, onClose, onSuccess }) {
 
         try {
             const payload = {
-                fullName: `${formData.first_name} ${formData.last_name}`,
+                full_name: `${formData.first_name} ${formData.last_name}`,
                 email: formData.email,
                 password: formData.password,
-                dateOfBirth: formData.date_of_birth,
+                phone_number: `+${formData.phone_number.replace(/\D/g, "")}`,
+                date_of_birth: formData.date_of_birth,
                 gender: formData.gender,
-                phoneNumber: `+${formData.phone_number.replace(/\D/g, "")}`,
 
                 address: {
-                    street: formData.address_street || "",
-                    city: formData.address_city || "",
-                    state: formData.address_state || "",
-                    zipCode: formData.address_zipCode || ""
+                    street: formData.address_street,
+                    city: formData.address_city,
+                    state: formData.address_state,
+                    zip: formData.address_zipCode
                 },
 
-                medicalHistory: formData.medicalHistory || "",
+                medical_history: formData.medicalHistory || "None",
 
                 allergies: formData.allergies
                     ? formData.allergies.split(",").map(a => a.trim())
@@ -74,19 +74,7 @@ export default function OnboardPatientModal({ isOpen, onClose, onSuccess }) {
 
                 medications: formData.medications
                     ? formData.medications.split(",").map(m => m.trim())
-                    : [],
-
-                ...(formData.emergency_name ||
-                    formData.emergency_relationship ||
-                    formData.emergency_phone
-                    ? {
-                        emergencyContact: {
-                            name: formData.emergency_name,
-                            relationship: formData.emergency_relationship,
-                            phoneNumber: formData.emergency_phone
-                        }
-                    }
-                    : {})
+                    : []
             }; await onboardPatient(payload);
             setOnboardedData({ email: formData.email, password: formData.password });
             onSuccess();

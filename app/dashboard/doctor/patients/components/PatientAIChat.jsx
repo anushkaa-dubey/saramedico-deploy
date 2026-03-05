@@ -18,11 +18,11 @@ export default function PatientAIChat({ patientId, documentId = null, doctorId =
     const [isLoading, setIsLoading] = useState(false);
     const [conversationId, setConversationId] = useState(null);
     const [error, setError] = useState("");
-    const [showHistory, setShowHistory] = useState(false); // toggle raw history panel
-    const [aiAccess, setAiAccess] = useState(null); // null=checking, true=ok, false=denied
+    const [showHistory, setShowHistory] = useState(false);
+    const [aiAccess, setAiAccess] = useState(null);
     const [grantingAccess, setGrantingAccess] = useState(false);
     const messagesEndRef = useRef(null);
-    const activeMode = "doctor"; // Always use doctor mode
+    const activeMode = "doctor";
 
     // Check AI permission whenever patient changes
     useEffect(() => {

@@ -70,7 +70,11 @@ export default function AdminDashboard() {
         if (!profile) return;
 
         if (profile.role !== "admin") {
-          router.replace(`/dashboard/${profile.role}`);
+          const r = (profile.role || "").toLowerCase();
+          const path = r === "patient" ? "/dashboard/patient"
+            : r === "doctor" ? "/dashboard/doctor"
+              : null;
+          if (path) router.replace(path);
           return;
         }
 

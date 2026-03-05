@@ -222,7 +222,7 @@ export default function DoctorVideoCallPage() {
                             fontWeight: '700',
                             fontSize: '16px',
                             cursor: !appointment?.meet_link ? 'not-allowed' : 'pointer',
-                            transition: 'all 0.2sease',
+                            transition: 'all 0.2s ease',
                             width: '100%',
                             boxShadow: !appointment?.meet_link ? 'none' : '0 4px 12px rgba(59, 130, 246, 0.3)',
                             display: 'flex',
@@ -230,27 +230,30 @@ export default function DoctorVideoCallPage() {
                             alignItems: 'center',
                             gap: '12px'
                         }}
-                        onMouseOver={(e) => {
-                            if (appointment?.meet_link) {
-                                e.currentTarget.style.transform = 'translateY(-2px)'
-                                e.currentTarget.style.backgroundColor = '#2563eb'
-                            }
-                        }}
-                        onMouseOut={(e) => {
-                            if (appointment?.meet_link) {
-                                e.currentTarget.style.transform = 'translateY(0)'
-                                e.currentTarget.style.backgroundColor = '#3b82f6'
-                            }
-                        }}
                     >
-                        {!appointment?.meet_link ? (
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                            </svg>
-                        ) : null}
                         {appointment?.meet_link ? "Join Google Meet" : "Meeting Link Unavailable"}
                     </button>
+
+                    {appointment?.id && (
+                        <button
+                            onClick={() => router.push(`/dashboard/doctor/patients/soap?id=${appointment.id}`)}
+                            style={{
+                                background: 'white',
+                                color: '#0f172a',
+                                border: '1px solid #e2e8f0',
+                                padding: '14px 32px',
+                                borderRadius: '12px',
+                                fontWeight: '600',
+                                fontSize: '15px',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s ease',
+                                width: '100%',
+                            }}
+                        >
+                            📋 View / Generate SOAP Note
+                        </button>
+                    )}
+
                     {!appointment?.meet_link && (
                         <p style={{ fontSize: '13px', color: '#ef4444', margin: 0, fontWeight: 500 }}>
                             Waiting for the consultation meeting link to be generated.

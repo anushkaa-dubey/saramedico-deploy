@@ -162,10 +162,11 @@ export const fetchPatients = async () => {
     const response = await fetch(`${API_BASE_URL}/doctor/patients`, {
         headers: getAuthHeaders(),
     });
-    const data = await handleResponse(response);
-    return Array.isArray(data) ? data : (data.patients || data.items || data.data || []);
-};
 
+    const data = await handleResponse(response);
+
+    return data?.all_patients || [];
+};
 /**
  * Fetch patient profile details
  * Endpoint: GET /api/v1/patients/{id}
