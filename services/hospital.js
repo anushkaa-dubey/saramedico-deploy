@@ -226,3 +226,129 @@ export const fetchHospitalAppointments = async () => {
 export const fetchReviewQueue = async () => {
     return [];
 };
+
+/**
+ * Fetch departments for the organization.
+ * Endpoint: GET /api/v1/organization/departments
+ */
+export const fetchOrganizationDepartments = async () => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/organization/departments`, {
+            headers: getAuthHeaders(),
+        });
+        const data = await handleResponse(response);
+        // Accepts { departments: [...] } or a plain array
+        return Array.isArray(data) ? data : (data?.departments || []);
+    } catch (err) {
+        console.error("fetchOrganizationDepartments error:", err);
+        return [];
+    }
+};
+
+/**
+ * Create a new department.
+ * Endpoint: POST /api/v1/organization/departments
+ */
+export const createOrganizationDepartment = async (departmentName) => {
+    const response = await fetch(`${API_BASE_URL}/organization/departments`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ department_name: departmentName }),
+    });
+    return handleResponse(response);
+};
+
+/**
+ * Fetch doctors in a specific department.
+ * Endpoint: GET /api/v1/doctors/by-department?department={name}
+ */
+export const fetchDoctorsByDepartment = async (departmentName) => {
+    try {
+        const response = await fetch(
+            `${API_BASE_URL}/doctors/by-department?department=${encodeURIComponent(departmentName)}`,
+            { headers: getAuthHeaders() }
+        );
+        const data = await handleResponse(response);
+        return Array.isArray(data) ? data : (data?.results || data?.doctors || []);
+    } catch (err) {
+        console.error("fetchDoctorsByDepartment error:", err);
+        return [];
+    }
+};
+
+/**
+ * Invite / create a new doctor account under the hospital.
+ * Endpoint: POST /api/v1/hospital/doctor/create
+ */
+export const createHospitalDoctor = async (payload) => {
+    const response = await fetch(`${API_BASE_URL}/hospital/doctor/create`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(payload),
+    });
+    return handleResponse(response);
+};
+
+/**
+ * Fetch pending doctor invites.
+ * Endpoint: GET /api/v1/hospital/doctor/invites
+ */
+export const fetchPendingInvites = async () => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/hospital/doctor/invites`, {
+            headers: getAuthHeaders(),
+        });
+        const data = await handleResponse(response);
+        return Array.isArray(data) ? data : (data?.pending_invites || []);
+    } catch (err) {
+        console.error("fetchPendingInvites error:", err);
+        return [];
+    }
+};
+
+/**
+ * Update a hospital doctor's role.
+ * Endpoint: PATCH /api/v1/hospital/doctor/{doctor_id}
+ */
+export const updateHospitalDoctor = async (doctorId, updates) => {
+    const response = await fetch(`${API_BASE_URL}/hospital/doctor/${doctorId}`, {
+        method: "PATCH",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(updates),
+    });
+    return handleResponse(response);
+};
+
+/**
+ * Set doctor's own availability status.
+ * Endpoint: POST /api/v1/doctor/status
+ * payload: { status: "active" | "inactive" | "busy" }
+ */
+export const setDoctorStatus = async (status) => {
+    const response = await fetch(`${API_BASE_URL}/doctor/status`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({ status }),
+    });
+    return handleResponse(response);
+};
+
+/**
+ * Fetch all doctors with their active/inactive status (Hospital Admin).
+ * Endpoint: GET /api/v1/hospital/doctor/status
+ * Returns array of doctors with status field.
+ */
+export const fetchHospitalDoctorStatus = async () => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/hospital/doctor/status`, {
+            headers: getAuthHeaders(),
+        });
+        const data = await handleResponse(response);
+        return Array.isArray(data) ? data : (data?.doctors || data?.results || []);
+    } catch (err) {
+        console.error("fetchHospitalDoctorStatus error:", err);
+        return [];
+    }
+};
+
+

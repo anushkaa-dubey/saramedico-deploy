@@ -350,3 +350,141 @@ export const inviteTeamMember = async (payload) => {
         throw err;
     }
 };
+
+/**
+ * Update Account (Admin)
+ * Endpoint: PATCH /api/v1/admin/accounts/{id}
+ */
+export const updateAdminAccount = async (id, payload) => {
+    const response = await fetch(`${API_BASE_URL}/admin/accounts/${id}`, {
+        method: "PATCH",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(payload),
+    });
+    return handleResponse(response);
+};
+
+/**
+ * Fetch All Appointments (System-wide)
+ * Endpoint: GET /api/v1/admin/appointments/all
+ */
+export const fetchAdminAppointments = async () => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/admin/appointments/all`, {
+            headers: getAuthHeaders(),
+        });
+        const data = await handleResponse(response);
+        return Array.isArray(data) ? data : (data?.appointments || data?.items || []);
+    } catch (err) {
+        console.error("fetchAdminAppointments error:", err);
+        return [];
+    }
+};
+
+/**
+ * Fetch Organization Stats Table
+ * Endpoint: GET /api/v1/admin/organizations/stats
+ */
+export const fetchOrgStats = async () => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/admin/organizations/stats`, {
+            headers: getAuthHeaders(),
+        });
+        const data = await handleResponse(response);
+        return Array.isArray(data) ? data : (data?.organizations || data?.stats || []);
+    } catch (err) {
+        console.error("fetchOrgStats error:", err);
+        return [];
+    }
+};
+
+/**
+ * Update Admin Profile
+ * Endpoint: PATCH /api/v1/admin/settings/profile
+ */
+export const updateAdminProfile = async (payload) => {
+    const response = await fetch(`${API_BASE_URL}/admin/settings/profile`, {
+        method: "PATCH",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(payload),
+    });
+    return handleResponse(response);
+};
+
+/**
+ * Upload Admin Avatar
+ * Endpoint: POST /api/v1/admin/settings/avatar
+ */
+export const uploadAdminAvatar = async (file) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    const headers = getAuthHeaders();
+    delete headers["Content-Type"];
+    const response = await fetch(`${API_BASE_URL}/admin/settings/avatar`, {
+        method: "POST",
+        headers,
+        body: formData,
+    });
+    return handleResponse(response);
+};
+
+/**
+ * Get Doctors by Department
+ * Endpoint: GET /api/v1/doctors/by-department?department=X
+ */
+export const fetchDoctorsByDepartment = async (department) => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/doctors/by-department?department=${encodeURIComponent(department)}`, {
+            headers: getAuthHeaders(),
+        });
+        const data = await handleResponse(response);
+        return Array.isArray(data) ? data : (data?.results || data?.doctors || []);
+    } catch (err) {
+        console.error("fetchDoctorsByDepartment error:", err);
+        return [];
+    }
+};
+
+/**
+ * Create Doctor Account (Hospital Admin)
+ * Endpoint: POST /api/v1/hospital/doctor/create
+ */
+export const createHospitalDoctor = async (payload) => {
+    const response = await fetch(`${API_BASE_URL}/hospital/doctor/create`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(payload),
+    });
+    return handleResponse(response);
+};
+
+/**
+ * Update Doctor Profile (Hospital Admin)
+ * Endpoint: PATCH /api/v1/hospital/doctor/{doctor_id}
+ */
+export const updateHospitalDoctor = async (doctorId, payload) => {
+    const response = await fetch(`${API_BASE_URL}/hospital/doctor/${doctorId}`, {
+        method: "PATCH",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(payload),
+    });
+    return handleResponse(response);
+};
+
+/**
+ * Fetch Organization Departments
+ * Endpoint: GET /api/v1/organization/departments
+ */
+export const fetchOrgDepartments = async () => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/organization/departments`, {
+            headers: getAuthHeaders(),
+        });
+        const data = await handleResponse(response);
+        return Array.isArray(data) ? data : (data?.departments || []);
+    } catch (err) {
+        console.error("fetchOrgDepartments error:", err);
+        return [];
+    }
+};
+

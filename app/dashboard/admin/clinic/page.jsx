@@ -1,150 +1,127 @@
 "use client";
 import styles from "../AdminDashboard.module.css";
-import scheduleIcon from "@/public/icons/schedule.svg";
-import personIcon from "@/public/icons/person.svg";
-import settingsIcon from "@/public/icons/settings.svg";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
-import { fetchOrganization, fetchOrgMembers } from "@/services/admin";
+import { fetchOrgStats } from "@/services/admin";
+import { Building2, BarChart2 } from "lucide-react";
 
 export default function ClinicManagement() {
-    const [org, setOrg] = useState(null);
-    const [staffCount, setStaffCount] = useState(null);
+    const [orgStats, setOrgStats] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const load = async () => {
-            try {
-                const [orgData, members] = await Promise.all([
-                    fetchOrganization(),
-                    fetchOrgMembers(),
-                ]);
-                setOrg(orgData);
-                setStaffCount(members?.length ?? null);
-            } catch (err) {
-                console.error("ClinicManagement init error:", err);
-            } finally {
-                setLoading(false);
-            }
-        };
-        load();
+        loadData();
     }, []);
 
-    const itemVariants = {
-        hidden: { opacity: 0, y: 20 },
-        show: {
-            opacity: 1,
-            y: 0,
-            transition: { type: "spring", stiffness: 100, damping: 15 }
+    const loadData = async () => {
+        try {
+            const stats = await fetchOrgStats();
+            setOrgStats(stats || []);
+        } catch (err) {
+            console.error("Failed to load organization stats:", err);
+        } finally {
+            setLoading(false);
         }
     };
 
-    const formatHours = (hours) => {
-        if (!hours) return "Backend not connected";
-        if (typeof hours === "string") return hours;
-        return `${hours.open || "09:00 AM"} - ${hours.close || "06:00 PM"}`;
+    const itemVariants = {
+        hidden: { opacity: 0, y: 20 },
+        show: { opacity: 1, y: 0 }
     };
 
     return (
-        <motion.div initial="hidden" animate="show" variants={{ show: { transition: { staggerChildren: 0.1 } } }}>
+        <motion.div initial="hidden" animate="show" variants={{ show: { transition: { staggerChildren: 0.1 } } }} style={{ width: "100%" }}>
+
             <motion.div className={styles.titleRow} variants={itemVariants}>
                 <div>
-                    <h2 className={styles.heading}>Clinic Management</h2>
-                    <p className={styles.subtext}>Configure clinic profile, staff availability, and medical services</p>
+                    <h2 className={styles.heading}>Organization Statistics</h2>
+                    <p className={styles.subtext}>Overview of hospitals registered in the system.</p>
                 </div>
             </motion.div>
 
-            <motion.div className={styles.managementSection} variants={itemVariants}>
-                <div className={styles.contextPanel} style={{ height: "auto", opacity: 1, background: "transparent", border: "none", boxShadow: "none" }}>
-                    <div className={styles.clinicGrid}>
-                        <div className={styles.clinicCard}>
-                            <div className={styles.clinicCardHead}>
-                                <img src={scheduleIcon.src} alt="" width="20" />
-                                <h4>Availability</h4>
-                            </div>
-                            <p>Set operational hours, emergency slots, and holiday schedules.</p>
-                            <div style={{ marginTop: "auto" }}>
-                                <div style={{ fontSize: "12px", color: "#64748b", marginBottom: "8px" }}>
-                                    Current: <strong>
-                                        {loading ? "Loading..." : formatHours(org?.operating_hours || org?.hours)}
-                                    </strong>
-                                </div>
-                                <button className={styles.inlineBtn}>Update Schedule</button>
-                            </div>
-                        </div>
-                        <div className={styles.clinicCard}>
-                            <div className={styles.clinicCardHead}>
-                                <img src={personIcon.src} alt="" width="20" />
-                                <h4>Doctors</h4>
-                            </div>
-                            <p>Onboard new medical staff, manage permissions and specializations.</p>
-                            <div style={{ marginTop: "auto" }}>
-                                <div style={{ fontSize: "12px", color: "#64748b", marginBottom: "8px" }}>
-                                    Staff Count: <strong>
-                                        {loading ? "Loading..." : staffCount !== null ? `${staffCount} Active` : "Backend not connected"}
-                                    </strong>
-                                </div>
-                                <button className={styles.inlineBtn}>Add/Edit Staff</button>
-                            </div>
-                        </div>
-                        <div className={styles.clinicCard}>
-                            <div className={styles.clinicCardHead}>
-                                <img src={settingsIcon.src} alt="" width="20" />
-                                <h4>Services</h4>
-                            </div>
-                            <p>Define treatment packages, lab offerings, and pricing tiers.</p>
-                            <div style={{ marginTop: "auto" }}>
-                                <div style={{ fontSize: "12px", color: "#64748b", marginBottom: "8px" }}>
-                                    Active Services: <strong>
-                                        {loading ? "Loading..." : org?.services_count !== undefined ? `${org.services_count} Items` : "Backend not connected"}
-                                    </strong>
-                                </div>
-                                <button className={styles.inlineBtn}>Configure Services</button>
-                            </div>
-                        </div>
+            <motion.div className={styles.card} variants={itemVariants}>
+                <div className={styles.cardHeader}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                        <BarChart2 size={18} color="#6366f1" />
+                        <h3>Clinic Statistics</h3>
                     </div>
                 </div>
-            </motion.div>
 
-            <motion.div className={styles.card} style={{ marginTop: "24px" }} variants={itemVariants}>
-                <h3 style={{ marginBottom: "16px", fontSize: "15px" }}>Clinic Profile</h3>
-                {loading ? (
-                    <div style={{ color: "#94a3b8", padding: "8px", fontSize: "14px" }}>Loading clinic profile...</div>
-                ) : (
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "20px" }}>
-                        <div>
-                            <label style={{ fontSize: "12px", color: "#94a3b8", display: "block", marginBottom: "4px" }}>Clinic Name</label>
-                            <div style={{ fontSize: "14px", fontWeight: "500" }}>
-                                {org?.name || "Backend not connected"}
-                            </div>
-                        </div>
-                        <div>
-                            <label style={{ fontSize: "12px", color: "#94a3b8", display: "block", marginBottom: "4px" }}>Location</label>
-                            <div style={{ fontSize: "14px", fontWeight: "500" }}>
-                                {org?.address || org?.location || "Backend not connected"}
-                            </div>
-                        </div>
-                        <div>
-                            <label style={{ fontSize: "12px", color: "#94a3b8", display: "block", marginBottom: "4px" }}>Emergency Contact</label>
-                            <div style={{ fontSize: "14px", fontWeight: "500" }}>
-                                {org?.emergency_contact || org?.phone || "Backend not connected"}
-                            </div>
-                        </div>
-                        <div>
-                            <label style={{ fontSize: "12px", color: "#94a3b8", display: "block", marginBottom: "4px" }}>License Status</label>
-                            <div style={{
-                                fontSize: "12px",
-                                color: org?.license_status === "active" || org?.is_licensed ? "#16a34a" : "#94a3b8",
-                                background: org?.license_status === "active" || org?.is_licensed ? "#ecfdf5" : "#f1f5f9",
-                                padding: "2px 8px",
-                                borderRadius: "4px",
-                                display: "inline-block"
-                            }}>
-                                {org?.license_status || (org?.is_licensed ? "Active" : org ? "Unknown" : "Backend not connected")}
-                            </div>
-                        </div>
-                    </div>
-                )}
+                <table className={styles.table}>
+                    <thead>
+                        <tr>
+                            <th>ORGANIZATION</th>
+                            <th style={{ textAlign: "center" }}>ACTIVE STAFF</th>
+                            <th style={{ textAlign: "center" }}>TOTAL PATIENTS</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {loading ? (
+                            <tr>
+                                <td colSpan="3" style={{ padding: "32px", textAlign: "center", color: "#94a3b8" }}>
+                                    Loading organization data...
+                                </td>
+                            </tr>
+                        ) : orgStats.length === 0 ? (
+                            <tr>
+                                <td colSpan="3" style={{ padding: "32px", textAlign: "center", color: "#94a3b8" }}>
+                                    No organization stats available.
+                                </td>
+                            </tr>
+                        ) : (
+                            orgStats.map((stat, i) => (
+                                <tr key={stat.organization_id || i}>
+                                    <td>
+                                        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                                            <div style={{
+                                                width: "34px",
+                                                height: "34px",
+                                                borderRadius: "10px",
+                                                background: "#eff6ff",
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "center"
+                                            }}>
+                                                <Building2 size={16} color="#2563eb" />
+                                            </div>
+
+                                            <span style={{ fontWeight: "600", color: "#0f172a" }}>
+                                                {stat.organization_name || "—"}
+                                            </span>
+                                        </div>
+                                    </td>
+
+                                    <td style={{ textAlign: "center" }}>
+                                        <span style={{
+                                            background: "#eff6ff",
+                                            color: "#2563eb",
+                                            padding: "4px 12px",
+                                            borderRadius: "99px",
+                                            fontSize: "13px",
+                                            fontWeight: "700"
+                                        }}>
+                                            {stat.active_staff_count ?? "—"}
+                                        </span>
+                                    </td>
+
+                                    <td style={{ textAlign: "center" }}>
+                                        <span style={{
+                                            background: "#f0fdf4",
+                                            color: "#16a34a",
+                                            padding: "4px 12px",
+                                            borderRadius: "99px",
+                                            fontSize: "13px",
+                                            fontWeight: "700"
+                                        }}>
+                                            {stat.total_patient_count ?? "—"}
+                                        </span>
+                                    </td>
+                                </tr>
+                            ))
+                        )}
+                    </tbody>
+                </table>
             </motion.div>
         </motion.div>
     );

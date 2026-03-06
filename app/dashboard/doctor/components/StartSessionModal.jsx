@@ -60,16 +60,18 @@ export default function StartSessionModal({ isOpen, onClose, onSessionStarted })
         if (!appointment) return;
 
         try {
-            const patient_id = appointment.patient_id || appointment.user_id;
+            const patientId = appointment.patient_id || appointment.user_id;
             const session = await createConsultation({
-                patient_id,
-                appointment_id: appointment.id,
-                scheduled_at: new Date().toISOString(),
-                visit_type: "video"
+                patientId,
+                appointmentId: appointment.id,
+                scheduledAt: new Date().toISOString(),
+                durationMinutes: 30,
+                notes: "Telehealth Consultation"
             });
 
-            if (session?.meet_link) {
-                window.open(session.meet_link, "_blank");
+            const meetLink = session?.meetLink || session?.meet_link;
+            if (meetLink) {
+                window.open(meetLink, "_blank");
                 if (onSessionStarted) onSessionStarted(session);
                 onClose();
             } else {

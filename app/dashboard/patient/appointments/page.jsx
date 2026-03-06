@@ -121,7 +121,7 @@ export default function AppointmentsPage() {
                                                         {apt.status === 'accepted' && (
                                                             <button
                                                                 onClick={() => {
-                                                                    const link = apt.meet_link || apt.join_url;
+                                                                    const link = apt.meetLink || apt.meet_link || apt.join_url;
                                                                     if (link) {
                                                                         window.open(link, "_blank");
                                                                     } else {

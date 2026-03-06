@@ -1,7 +1,6 @@
 "use client";
-
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Topbar from "../components/Topbar";
 import SOAPEditor from "./components/SOAPEditor";
 import AssistPanel from "./components/AssistPanel";
@@ -9,31 +8,11 @@ import styles from "./VideoCall.module.css";
 import contactIcon from "@/public/icons/contact.svg";
 import { motion } from "framer-motion";
 import { fetchAppointments } from "@/services/doctor";
-
-const FULL_TRANSCRIPT = [
-    {
-        id: 1,
-        speaker: 'patient',
-        text: "I've been facing discomfort in breathing, and severe headaches in uncontrollable frequency, my eyes go blur sometimes, sometimes they see a flash"
-    },
-    {
-        id: 2,
-        speaker: 'doctor',
-        text: "What else do you think you do when it happens?"
-    },
-    {
-        id: 3,
-        speaker: 'patient',
-        text: "I usually try to rest in a dark room. The headaches are worse with light and noise."
-    },
-    {
-        id: 4,
-        speaker: 'doctor',
-        text: "How long have you been experiencing these symptoms?"
-    }
-];
+import { fetchConsultationById } from "@/services/consultation";
 
 export default function DoctorVideoCallPage() {
+    const searchParams = useSearchParams();
+    const consultationId = searchParams.get("consultationId");
     const [transcript, setTranscript] = useState([]);
     const [appointment, setAppointment] = useState(null);
     const router = useRouter();
@@ -41,12 +20,27 @@ export default function DoctorVideoCallPage() {
     const suggestedTags = ["Migraine", "Nausea", "Photophobia", "Acrophobia"];
 
     useEffect(() => {
-        loadLatestAppointment();
-    }, []);
+        if (consultationId) {
+            loadConsultation(consultationId);
+        } else {
+            loadLatestAppointment();
+        }
+    }, [consultationId]);
+
+    const loadConsultation = async (id) => {
+        try {
+            const data = await fetchConsultationById(id);
+            setAppointment(data);
+        } catch (err) {
+            console.error("Failed to load clinical consultation:", err);
+            loadLatestAppointment();
+        }
+    };
 
     const loadLatestAppointment = async () => {
         try {
-            const appointments = await fetchAppointments();
+            const appointmentsData = await fetchAppointments();
+            const appointments = Array.isArray(appointmentsData) ? appointmentsData : [];
             const next = appointments
                 .filter(a => a.status === 'accepted' || a.status === 'scheduled')
                 .sort((a, b) => new Date(a.requested_date || a.scheduled_at) - new Date(b.requested_date || b.scheduled_at))[0];
@@ -57,22 +51,8 @@ export default function DoctorVideoCallPage() {
         }
     };
 
-    useEffect(() => {
-        setTranscript([FULL_TRANSCRIPT[0]]);
-        let index = 1;
-        const interval = setInterval(() => {
-            if (index < FULL_TRANSCRIPT.length) {
-                setTranscript(prev => [...prev, FULL_TRANSCRIPT[index]]);
-                index++;
-            } else {
-                clearInterval(interval);
-            }
-        }, 5000);
-        return () => clearInterval(interval);
-    }, []);
-
     const handleJoinMeet = () => {
-        const link = appointment?.meet_link;
+        const link = appointment?.meetLink || appointment?.meet_link;
         if (link) {
             window.open(link, "_blank");
         } else {
@@ -212,26 +192,26 @@ export default function DoctorVideoCallPage() {
 
                     <button
                         onClick={handleJoinMeet}
-                        disabled={!appointment?.meet_link}
+                        disabled={!(appointment?.meetLink || appointment?.meet_link)}
                         style={{
-                            background: !appointment?.meet_link ? '#cbd5e1' : '#3b82f6',
+                            background: !(appointment?.meetLink || appointment?.meet_link) ? '#cbd5e1' : '#3b82f6',
                             color: 'white',
                             border: 'none',
                             padding: '16px 32px',
                             borderRadius: '12px',
                             fontWeight: '700',
                             fontSize: '16px',
-                            cursor: !appointment?.meet_link ? 'not-allowed' : 'pointer',
+                            cursor: !(appointment?.meetLink || appointment?.meet_link) ? 'not-allowed' : 'pointer',
                             transition: 'all 0.2s ease',
                             width: '100%',
-                            boxShadow: !appointment?.meet_link ? 'none' : '0 4px 12px rgba(59, 130, 246, 0.3)',
+                            boxShadow: !(appointment?.meetLink || appointment?.meet_link) ? 'none' : '0 4px 12px rgba(59, 130, 246, 0.3)',
                             display: 'flex',
                             justifyContent: 'center',
                             alignItems: 'center',
                             gap: '12px'
                         }}
                     >
-                        {appointment?.meet_link ? "Join Google Meet" : "Meeting Link Unavailable"}
+                        {(appointment?.meetLink || appointment?.meet_link) ? "Join Google Meet" : "Meeting Link Unavailable"}
                     </button>
 
                     {appointment?.id && (
@@ -254,7 +234,7 @@ export default function DoctorVideoCallPage() {
                         </button>
                     )}
 
-                    {!appointment?.meet_link && (
+                    {!(appointment?.meetLink || appointment?.meet_link) && (
                         <p style={{ fontSize: '13px', color: '#ef4444', margin: 0, fontWeight: 500 }}>
                             Waiting for the consultation meeting link to be generated.
                         </p>

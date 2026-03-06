@@ -20,6 +20,7 @@ export default function LiveConsultPage() {
     const [audioLevel, setAudioLevel] = useState(0);
     const [isRecording, setIsRecording] = useState(false);
     const [isCreatingSession, setIsCreatingSession] = useState(false);
+    const [activeConsultation, setActiveConsultation] = useState(null);
 
     const audioContextRef = useRef(null);
     const analyserRef = useRef(null);
@@ -151,14 +152,16 @@ export default function LiveConsultPage() {
         setIsCreatingSession(true);
         try {
             const resp = await createConsultation({
-                patient_id: selectedPatient.id,
-                scheduled_at: new Date().toISOString(),
-                visit_type: "video",
-                chief_complaint: "In-Person Live Session"
+                patientId: selectedPatient.id,
+                // scheduledAt: new Date().toISOString(),
+                scheduledAt: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
+                durationMinutes: 30,
+                notes: "Live consultation"
             });
 
             if (resp && resp.id) {
-                router.push(`/dashboard/doctor/video-call?consultationId=${resp.id}`);
+                setActiveConsultation(resp);
+                // We keep the doctor on this page so they can click the "Join Google Meet" button as per requirement.
             } else if (resp?.detail) {
                 alert(`Error: ${resp.detail}`);
             } else {
@@ -338,13 +341,36 @@ export default function LiveConsultPage() {
                         <button
                             className={styles.startSessionBtn}
                             onClick={onStartSession}
-                            disabled={!selectedPatient || isCreatingSession}
+                            disabled={!selectedPatient || isCreatingSession || activeConsultation}
                             style={{
-                                opacity: (!selectedPatient || isCreatingSession) ? 0.6 : 1,
-                                cursor: (!selectedPatient || isCreatingSession) ? 'not-allowed' : 'pointer'
+                                opacity: (!selectedPatient || isCreatingSession || activeConsultation) ? 0.6 : 1,
+                                cursor: (!selectedPatient || isCreatingSession || activeConsultation) ? 'not-allowed' : 'pointer',
+                                marginBottom: '12px'
                             }}
                         >
-                            <Image src={micIcon} alt="Session" /> {isCreatingSession ? "INITIALIZING..." : "Start Consultation"}
+                            <Image src={micIcon} alt="Mic" /> {isCreatingSession ? "INITIALIZING..." : (activeConsultation ? "Session Created" : "Start Consultation")}
+                        </button>
+
+                        <button
+                            className={styles.startSessionBtn}
+                            onClick={() => {
+                                const meetLink = activeConsultation?.meetLink || activeConsultation?.meet_link;
+                                if (meetLink) {
+                                    window.open(meetLink, "_blank");
+                                }
+                                if (activeConsultation?.id) {
+                                    router.push(`/dashboard/doctor/video-call?consultationId=${activeConsultation.id}`);
+                                }
+                            }}
+                            disabled={!activeConsultation}
+                            style={{
+                                background: activeConsultation ? "#3b82f6" : "#e2e8f0",
+                                color: activeConsultation ? "white" : "#94a3b8",
+                                opacity: !activeConsultation ? 0.6 : 1,
+                                cursor: !activeConsultation ? 'not-allowed' : 'pointer'
+                            }}
+                        >
+                            Join Google Meet
                         </button>
                     </div>
 

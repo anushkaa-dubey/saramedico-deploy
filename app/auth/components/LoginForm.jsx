@@ -32,11 +32,17 @@ export default function LoginForm() {
     setLoading(true);
 
     try {
-      // Step 1: Login to get tokens stored in localStorage
-      await loginUser({ email, password });
+      // Step 1: Login to get tokens and user data
+      const data = await loginUser({ email, password });
 
-      // Step 2: Fetch user profile using the stored token — this always has valid role
-      const user = await getCurrentUser();
+      // Step 2: Resolve the user object
+      // Prefer the user object returned from login for immediate role/status checks
+      let user = data.user;
+
+      // Fallback to getCurrentUser if login didn't return user object (sessions restore pattern)
+      if (!user) {
+        user = await getCurrentUser();
+      }
 
       if (!user) {
         throw new Error("Could not retrieve user profile after login. Please try again.");
@@ -45,13 +51,16 @@ export default function LoginForm() {
       // Step 3: Persist user to localStorage for dashboard pages
       localStorage.setItem("user", JSON.stringify(user));
 
-      // Step 4: Resolve the dashboard path based on backend-provided role
+      // Step 4: Resolve the dashboard path based on backend-provided role and onboarding status
       const userRole = (user.role || "").toLowerCase();
 
-      if (userRole === "doctor" && !user.onboarding_complete) {
-        router.replace("/auth/signup/onboarding/doctor/step-1");
-      } else if (userRole === "doctor") {
-        router.replace("/dashboard/doctor");
+      if (userRole === "doctor") {
+        // Only redirect to onboarding if explicitly indicated as false by backend
+        if (user.onboarding_complete === false) {
+          router.replace("/auth/signup/onboarding/doctor/step-1");
+        } else {
+          router.replace("/dashboard/doctor");
+        }
       } else if (userRole === "patient") {
         router.replace("/dashboard/patient");
       } else if (userRole === "admin" || userRole === "administrator") {

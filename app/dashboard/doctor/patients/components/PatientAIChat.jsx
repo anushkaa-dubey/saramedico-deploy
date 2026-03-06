@@ -23,6 +23,7 @@ export default function PatientAIChat({ patientId, documentId = null, doctorId =
     const [grantingAccess, setGrantingAccess] = useState(false);
     const [sessions, setSessions] = useState([]);
     const [isSessionsLoading, setIsSessionsLoading] = useState(false);
+    const [showHistory, setShowHistory] = useState(false);
     const messagesEndRef = useRef(null);
     const activeMode = "doctor";
 
@@ -174,7 +175,6 @@ export default function PatientAIChat({ patientId, documentId = null, doctorId =
 ## Clinical Evidence
 ## Clinical Interpretation (include Confidence)
 Use bullet points for findings and markdown for structure. Do not include this instruction in your response.]\n\n`;
-
             const response = await fetch(`${API_BASE_URL}/doctor/ai/chat/message`, {
                 method: "POST",
                 headers: getAuthHeaders(),

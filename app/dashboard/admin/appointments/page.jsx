@@ -1,152 +1,161 @@
 "use client";
-
-import { useState, useEffect } from "react";
 import styles from "../AdminDashboard.module.css";
-import messagesIcon from "@/public/icons/messages.svg";
 import { motion } from "framer-motion";
-import { fetchCalendarEvents } from "@/services/calendar";
+import { useState, useEffect } from "react";
+import { fetchAdminAppointments } from "@/services/admin";
+import {
+    Calendar as CalendarIcon,
+    Clock,
+    User,
+    Building2,
+    RefreshCw
+} from "lucide-react";
 
-export default function AppointmentsManagement() {
+export default function AdminAppointments() {
     const [appointments, setAppointments] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const loadAppointments = async () => {
-            setLoading(true);
-
-            try {
-                const start = new Date();
-                const end = new Date();
-
-                end.setDate(end.getDate() + 30); // fetch next 30 days
-
-                const data = await fetchCalendarEvents({
-                    start_date: start.toISOString(),
-                    end_date: end.toISOString(),
-                    event_type: "appointment"
-                });
-
-                setAppointments(Array.isArray(data) ? data : []);
-            } catch (err) {
-                console.error("Failed to fetch appointments:", err);
-            } finally {
-                setLoading(false);
-            }
-        };
-
         loadAppointments();
     }, []);
 
-    const itemVariants = {
-        hidden: { opacity: 0, y: 20 },
-        show: {
-            opacity: 1,
-            y: 0,
-            transition: {
-                type: "spring",
-                stiffness: 100,
-                damping: 15
-            }
+    const loadAppointments = async () => {
+        setLoading(true);
+        try {
+            const data = await fetchAdminAppointments();
+            setAppointments(data);
+        } catch (err) {
+            console.error("Failed to load appointments:", err);
+        } finally {
+            setLoading(false);
         }
+    };
+
+    const itemVariants = {
+        hidden: { opacity: 0, y: 15 },
+        show: { opacity: 1, y: 0 }
+    };
+
+    const getStatusStyle = (status) => {
+        const s = (status || "").toLowerCase();
+        if (s === "accepted" || s === "confirmed" || s === "completed") return { bg: "#f0fdf4", text: "#16a34a" };
+        if (s === "pending") return { bg: "#fef3c7", text: "#d97706" };
+        if (s === "cancelled" || s === "declined" || s === "rejected") return { bg: "#fef2f2", text: "#ef4444" };
+        return { bg: "#f1f5f9", text: "#64748b" };
     };
 
     return (
         <motion.div
             initial="hidden"
             animate="show"
-            variants={{ show: { transition: { staggerChildren: 0.1 } } }}
+            variants={{ show: { transition: { staggerChildren: 0.08 } } }}
+            style={{ width: "100%" }}
         >
             <motion.div className={styles.titleRow} variants={itemVariants}>
                 <div>
-                    <h2 className={styles.heading}>Appointments Management</h2>
-                    <p className={styles.subtext}>
-                        Monitor and manage clinic bookings, schedules, and patient notifications
-                    </p>
+                    <h2 className={styles.heading}>All Appointments</h2>
+                    <p className={styles.subtext}>System-wide appointment records across all organizations.</p>
                 </div>
+                <button className={styles.secondaryBtn} onClick={loadAppointments} style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    <RefreshCw size={14} />
+                    Refresh
+                </button>
             </motion.div>
 
-            <motion.div className={styles.managementSection} variants={itemVariants}>
-                <div className={styles.contextPanel} style={{ height: "auto", opacity: 1 }}>
-                    <div className={styles.panelContent}>
-                        <div className={styles.bookingsTableWrapper}>
-                            <table className={styles.bookingsTable}>
-                                <thead>
-                                    <tr>
-                                        <th>Time</th>
-                                        <th>Patient</th>
-                                        <th>Type</th>
-                                        <th>Status</th>
-                                        <th>Actions</th>
+            <motion.div className={styles.card} variants={itemVariants}>
+                <table className={styles.table}>
+                    <thead>
+                        <tr>
+                            <th>DATE & TIME</th>
+                            <th>DOCTOR</th>
+                            <th>PATIENT</th>
+                            <th>ORGANIZATION</th>
+                            <th>REASON</th>
+                            <th>STATUS</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {loading ? (
+                            <tr>
+                                <td colSpan="6" style={{ padding: "40px", textAlign: "center", color: "#94a3b8" }}>
+                                    Loading appointments...
+                                </td>
+                            </tr>
+                        ) : appointments.length === 0 ? (
+                            <tr>
+                                <td colSpan="6" style={{ padding: "40px", textAlign: "center", color: "#94a3b8" }}>
+                                    No appointments found in the system.
+                                </td>
+                            </tr>
+                        ) : (
+                            appointments.map(app => {
+                                const statusStyle = getStatusStyle(app.status);
+                                const dateObj = app.requested_date ? new Date(app.requested_date) : null;
+
+                                return (
+                                    <tr key={app.id}>
+                                        <td>
+                                            <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                                                <div style={{ padding: "8px", background: "#f8fafc", borderRadius: "8px", color: "#6366f1" }}>
+                                                    <CalendarIcon size={16} />
+                                                </div>
+                                                <div>
+                                                    <div style={{ fontWeight: "600", fontSize: "13px" }}>
+                                                        {dateObj ? dateObj.toLocaleDateString() : "—"}
+                                                    </div>
+                                                    <div style={{ fontSize: "11px", color: "#94a3b8", display: "flex", alignItems: "center", gap: "3px" }}>
+                                                        <Clock size={10} />
+                                                        {dateObj ? dateObj.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "All Day"}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+
+                                        <td>
+                                            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                                <User size={14} />
+                                                {app.doctor_name || "—"}
+                                            </div>
+                                        </td>
+
+                                        <td>
+                                            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                                <User size={14} />
+                                                {app.patient_name || "—"}
+                                            </div>
+                                        </td>
+
+                                        <td>
+                                            <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px" }}>
+                                                <Building2 size={13} />
+                                                {app.organization_name || "—"}
+                                            </div>
+                                        </td>
+
+                                        <td style={{ fontSize: "13px", maxWidth: "160px" }}>
+                                            {app.reason || "—"}
+                                        </td>
+
+                                        <td>
+                                            <span
+                                                style={{
+                                                    padding: "4px 10px",
+                                                    borderRadius: "99px",
+                                                    fontSize: "11px",
+                                                    fontWeight: "700",
+                                                    background: statusStyle.bg,
+                                                    color: statusStyle.text
+                                                }}
+                                            >
+                                                {app.status || "Scheduled"}
+                                            </span>
+                                        </td>
                                     </tr>
-                                </thead>
-
-                                <tbody>
-                                    {loading ? (
-                                        <tr>
-                                            <td colSpan={5} style={{ textAlign: "center", padding: "24px", color: "#64748b" }}>
-                                                Loading appointments...
-                                            </td>
-                                        </tr>
-                                    ) : appointments.length === 0 ? (
-                                        <tr>
-                                            <td colSpan={5} style={{ textAlign: "center", padding: "24px", color: "#64748b" }}>
-                                                No appointments found.
-                                            </td>
-                                        </tr>
-                                    ) : (
-                                        appointments.map((b, i) => (
-                                            <tr key={b.id || i}>
-                                                <td>
-                                                    {b.start_time
-                                                        ? new Date(b.start_time).toLocaleTimeString([], {
-                                                            hour: "2-digit",
-                                                            minute: "2-digit"
-                                                        })
-                                                        : "N/A"}
-                                                </td>
-
-                                                <td>
-                                                    {b.metadata?.patient_name ||
-                                                        b.user_name ||
-                                                        b.title ||
-                                                        "Consultation"}
-                                                </td>
-
-                                                <td>{b.event_type || "Appointment"}</td>
-
-                                                <td>
-                                                    <span
-                                                        className={`${styles.statusBadge} ${styles[(b.status || "pending").toLowerCase()]
-                                                            }`}
-                                                    >
-                                                        {b.status || "Pending"}
-                                                    </span>
-                                                </td>
-
-                                                <td className={styles.actionBtns}>
-                                                    <button className={styles.tableActionBtn}>
-                                                        Confirm
-                                                    </button>
-                                                    <button className={styles.tableActionBtnSecondary}>
-                                                        Reschedule
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        ))
-                                    )}
-                                </tbody>
-                            </table>
-
-                            <div className={styles.notifyBanner}>
-                                <img src={messagesIcon.src} alt="" width="16" />
-                                <span>
-                                    Selected patients will be notified automatically via Email.
-                                </span>
-                                <button className={styles.notifyAllBtn}>Notify All</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                                );
+                            })
+                        )}
+                    </tbody>
+                </table>
             </motion.div>
         </motion.div>
     );

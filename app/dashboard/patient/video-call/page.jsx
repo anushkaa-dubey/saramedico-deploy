@@ -41,7 +41,7 @@ export default function VideoCallPage() {
     // };
     const handleJoinMeet = () => {
         const link =
-            appointment?.meet_link || appointment?.join_url;
+            appointment?.meetLink || appointment?.meet_link || appointment?.join_url;
 
         if (link) {
             window.open(link, "_blank");

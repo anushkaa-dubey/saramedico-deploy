@@ -1,49 +1,98 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import styles from "../HospitalDashboard.module.css";
 import logo from "@/public/logo2.svg";
-import { LayoutDashboard, ClipboardList, Calendar, Users, Menu, LogOut } from "lucide-react";
+import { LayoutDashboard, ClipboardList, Calendar, Users, Menu, LogOut, Building2, Plus, ChevronDown, X } from "lucide-react";
+import { fetchOrganizationDepartments, createOrganizationDepartment } from "@/services/hospital";
 
-// Icons
-// import dashboardIcon from "@/public/icons/dashboard.svg"; // For Doctors
-// import messagesIcon from "@/public/icons/messages.svg";
-// import scheduleIcon from "@/public/icons/schedule.svg"; // For Appointments
-// import manageIcon from "@/public/icons/manage.svg"; // For Analytics
+// Medical specialties from Doctor Step-1 onboarding list
+const SPECIALTY_OPTIONS = [
+    "Cardiology",
+    "Neurology",
+    "Pediatrics",
+    "Orthopedics",
+    "Radiology",
+    "General Surgery",
+    "Emergency Medicine",
+    "Dermatology",
+    "Psychiatry",
+    "Oncology",
+    "Internal Medicine",
+    "Ophthalmology",
+    "ENT",
+    "Urology",
+    "Obstetrics & Gynecology",
+];
 
 export default function Sidebar() {
     const pathname = usePathname();
     const router = useRouter();
     const [isOpen, setIsOpen] = useState(false);
-
-
+    const [isDeptOpen, setIsDeptOpen] = useState(true);
+    const [departments, setDepartments] = useState([]);
+    const [showNewDeptDropdown, setShowNewDeptDropdown] = useState(false);
+    const [creatingDept, setCreatingDept] = useState(false);
+    const dropdownRef = useRef(null);
 
     const isActive = (path) => {
         if (path === "/dashboard/hospital") return pathname === path;
-        return pathname === path || pathname.startsWith(path + '/');
+        return pathname === path || pathname.startsWith(path + "/");
     };
 
     const handleLogout = () => {
+        localStorage.removeItem("authToken");
         router.push("/auth/login");
     };
 
-    const navItems = [
-        {
-            label: "Dashboard", path: "/dashboard/hospital", icon: <LayoutDashboard size={18} />
-        },
-        {
-            label: "Approval Queue", path: "/dashboard/hospital/approval-queue", icon: <ClipboardList size={18} />
-        },
-        {
-            label: "Appointments", path: "/dashboard/hospital/appointments", icon: <Calendar size={18} />
-        },
-        {
-            label: "Patients", path: "/dashboard/hospital/patients", icon: <Users size={18} />
+    const loadDepartments = async () => {
+        try {
+            const data = await fetchOrganizationDepartments();
+            setDepartments(data);
+        } catch (err) {
+            console.error("Failed to load departments:", err);
         }
+    };
+
+    useEffect(() => {
+        loadDepartments();
+    }, []);
+
+    // Close dropdown on outside click
+    useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+                setShowNewDeptDropdown(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    const handleCreateDepartment = async (specialtyName) => {
+        setCreatingDept(true);
+        setShowNewDeptDropdown(false);
+        try {
+            await createOrganizationDepartment(specialtyName);
+            await loadDepartments();
+            const slug = specialtyName.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+            router.push(`/dashboard/hospital/departments/${slug}`);
+            setIsOpen(false);
+        } catch (err) {
+            alert(`Failed to create department: ${err.message || "Unknown error"}`);
+        } finally {
+            setCreatingDept(false);
+        }
+    };
+
+    const navItems = [
+        { label: "Dashboard", path: "/dashboard/hospital", icon: <LayoutDashboard size={18} /> },
+        { label: "Appointments", path: "/dashboard/hospital/appointments", icon: <Calendar size={18} /> },
+        { label: "Patients", path: "/dashboard/hospital/patients", icon: <Users size={18} /> },
     ];
 
-    const [isDeptOpen, setIsDeptOpen] = useState(true);
+    const deptSlug = (name) => name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
 
     return (
         <>
@@ -52,33 +101,30 @@ export default function Sidebar() {
                     className={styles.mobileToggleBtn}
                     onClick={() => setIsOpen(true)}
                     aria-label="Toggle Menu"
-                    style={{ background: 'white', border: '1px solid #e2e8f0' }}
+                    style={{ background: "white", border: "1px solid #e2e8f0" }}
                 >
                     <Menu size={20} color="#64748b" />
                 </button>
             )}
 
             {isOpen && (
-                <div
-                    className={styles.mobileOverlay}
-                    onClick={() => setIsOpen(false)}
-                />
+                <div className={styles.mobileOverlay} onClick={() => setIsOpen(false)} />
             )}
 
-            <aside className={`${styles.sidebar} ${isOpen ? styles.open : ''}`}>
+            <aside className={`${styles.sidebar} ${isOpen ? styles.open : ""}`}>
                 <div>
-                    <div className={styles.logoRow} style={{ marginBottom: '32px' }}>
+                    <div className={styles.logoRow} style={{ marginBottom: "32px" }}>
                         <div className={styles.iconPlaceholder}>
-                            <img src={logo.src} alt="Logo" style={{ width: '130px' }} />
+                            <img src={logo.src} alt="Logo" style={{ width: "130px" }} />
                         </div>
                     </div>
 
-                    <nav className={styles.navGroup} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <nav className={styles.navGroup} style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
                         {navItems.map((item) => (
                             <Link
                                 key={item.path}
                                 href={item.path}
-                                className={`${styles.navItem} ${isActive(item.path) && !pathname.includes('departments') ? styles.active : ""}`}
+                                className={`${styles.navItem} ${isActive(item.path) && !pathname.includes("departments") ? styles.active : ""}`}
                                 onClick={() => setIsOpen(false)}
                             >
                                 {item.icon}
@@ -86,95 +132,191 @@ export default function Sidebar() {
                             </Link>
                         ))}
 
-                        {/* Departments section commented out as it contains mock data and lacks backend endpoints */}
-                        {/* 
-                        <div className={styles.submenuWrapper}>
+                        {/* Departments & Roles Section */}
+                        <div style={{ marginTop: "8px" }}>
+                            {/* Section Header */}
                             <div
-                                className={`${styles.navItem} ${pathname.includes('/departments') ? styles.active : ""}`}
+                                className={`${styles.navItem} ${pathname.includes("/departments") ? styles.active : ""}`}
                                 onClick={() => setIsDeptOpen(!isDeptOpen)}
-                                style={{ cursor: 'pointer', justifyContent: 'space-between' }}
+                                style={{ cursor: "pointer", justifyContent: "space-between", userSelect: "none" }}
                             >
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="11" rx="2" ry="2" /><path d="M9 3v18" /><path d="m3 9 6-6" /><path d="m3 15 6 6" /></svg>
-                                    Departments
+                                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                                    <Building2 size={18} />
+                                    Departments &amp; Roles
                                 </div>
-                                <svg
-                                    width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"
-                                    style={{ transform: isDeptOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s', opacity: 0.5 }}
-                                >
-                                    <polyline points="6 9 12 15 18 9" />
-                                </svg>
+                                <ChevronDown
+                                    size={14}
+                                    style={{
+                                        transform: isDeptOpen ? "rotate(180deg)" : "none",
+                                        transition: "transform 0.2s",
+                                        opacity: 0.5,
+                                    }}
+                                />
                             </div>
 
                             {isDeptOpen && (
-                                <div className={styles.submenu} style={{ display: 'flex', flexDirection: 'column', gap: '2px', padding: '4px 0 8px 48px' }}>
-                                    {[
-                                        { label: "Cardiology", path: "/dashboard/hospital/departments/cardiology" },
-                                        { label: "Emergency (ER)", path: "/dashboard/hospital/departments/emergency" }
-                                    ].map((dept, i) => (
-                                        <Link
-                                            key={i}
-                                            href={dept.path}
-                                            className={styles.submenuItem}
-                                            onClick={() => setIsOpen(false)}
+                                <div style={{ paddingLeft: "40px", paddingBottom: "4px" }}>
+                                    {/* Hospital name label */}
+                                    <div style={{
+                                        fontSize: "11px",
+                                        fontWeight: "800",
+                                        color: "#94a3b8",
+                                        textTransform: "uppercase",
+                                        letterSpacing: "0.06em",
+                                        padding: "8px 0 4px 8px",
+                                    }}>
+                                        General Hospital
+                                    </div>
+
+                                    {/* Department links */}
+                                    {departments.length === 0 ? (
+                                        <div style={{ fontSize: "12px", color: "#94a3b8", padding: "6px 8px" }}>
+                                            No departments yet
+                                        </div>
+                                    ) : (
+                                        departments.map((dept, i) => {
+                                            const slug = deptSlug(typeof dept === "string" ? dept : dept.name || dept.department_name);
+                                            const label = typeof dept === "string" ? dept : dept.name || dept.department_name;
+                                            const path = `/dashboard/hospital/departments/${slug}`;
+                                            const active = pathname === path || pathname.startsWith(path + "/");
+                                            return (
+                                                <Link
+                                                    key={i}
+                                                    href={path}
+                                                    onClick={() => setIsOpen(false)}
+                                                    style={{
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                        gap: "8px",
+                                                        fontSize: "13.5px",
+                                                        color: active ? "#1e40af" : "#475569",
+                                                        textDecoration: "none",
+                                                        padding: "7px 8px",
+                                                        borderRadius: "8px",
+                                                        fontWeight: active ? "700" : "500",
+                                                        background: active ? "#eff6ff" : "transparent",
+                                                        transition: "all 0.15s",
+                                                    }}
+                                                >
+                                                    <span style={{
+                                                        width: "5px",
+                                                        height: "5px",
+                                                        borderRadius: "50%",
+                                                        background: active ? "#3b82f6" : "#cbd5e1",
+                                                        flexShrink: 0,
+                                                    }} />
+                                                    {label}
+                                                </Link>
+                                            );
+                                        })
+                                    )}
+
+                                    {/* New Department Button */}
+                                    <div ref={dropdownRef} style={{ position: "relative", marginTop: "6px" }}>
+                                        <button
+                                            onClick={() => setShowNewDeptDropdown((v) => !v)}
+                                            disabled={creatingDept}
                                             style={{
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                gap: '8px',
-                                                fontSize: '14px',
-                                                color: pathname.includes(dept.path) ? '#0f172a' : '#64748b',
-                                                textDecoration: 'none',
-                                                padding: '8px 0',
-                                                fontWeight: pathname.includes(dept.path) ? '700' : '500'
+                                                display: "flex",
+                                                alignItems: "center",
+                                                gap: "6px",
+                                                fontSize: "12px",
+                                                color: creatingDept ? "#94a3b8" : "#3b82f6",
+                                                background: "none",
+                                                border: "none",
+                                                cursor: creatingDept ? "not-allowed" : "pointer",
+                                                fontWeight: "700",
+                                                padding: "6px 8px",
+                                                borderRadius: "6px",
+                                                width: "100%",
+                                                textAlign: "left",
                                             }}
                                         >
-                                            <svg width="6" height="6" viewBox="0 0 24 24" fill="currentColor" style={{ opacity: 0.4 }}><circle cx="12" cy="12" r="10" /></svg>
-                                            {dept.label}
-                                        </Link>
-                                    ))}
+                                            <Plus size={13} />
+                                            {creatingDept ? "Creating..." : "New Department"}
+                                        </button>
+
+                                        {showNewDeptDropdown && (
+                                            <div style={{
+                                                position: "absolute",
+                                                top: "110%",
+                                                left: 0,
+                                                zIndex: 999,
+                                                background: "#ffffff",
+                                                border: "1px solid #e2e8f0",
+                                                borderRadius: "10px",
+                                                boxShadow: "0 10px 25px rgba(0,0,0,0.12)",
+                                                minWidth: "200px",
+                                                maxHeight: "260px",
+                                                overflowY: "auto",
+                                            }}>
+                                                <div style={{
+                                                    padding: "8px 12px",
+                                                    fontSize: "10px",
+                                                    fontWeight: "800",
+                                                    color: "#94a3b8",
+                                                    textTransform: "uppercase",
+                                                    letterSpacing: "0.06em",
+                                                    borderBottom: "1px solid #f1f5f9",
+                                                }}>
+                                                    Select Specialty
+                                                </div>
+                                                {SPECIALTY_OPTIONS.map((opt) => (
+                                                    <button
+                                                        key={opt}
+                                                        onClick={() => handleCreateDepartment(opt)}
+                                                        style={{
+                                                            display: "block",
+                                                            width: "100%",
+                                                            textAlign: "left",
+                                                            padding: "9px 14px",
+                                                            fontSize: "13px",
+                                                            color: "#1e293b",
+                                                            background: "none",
+                                                            border: "none",
+                                                            cursor: "pointer",
+                                                            fontWeight: "500",
+                                                            transition: "background 0.15s",
+                                                        }}
+                                                        onMouseEnter={e => e.currentTarget.style.background = "#f1f5f9"}
+                                                        onMouseLeave={e => e.currentTarget.style.background = "none"}
+                                                    >
+                                                        {opt}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             )}
-                        </div> 
-                        */}
+                        </div>
 
                         <Link
                             href="/dashboard/hospital/staff-management"
-                            className={`${styles.navItem} ${pathname.includes('staff-management') ? styles.active : ""}`}
+                            className={`${styles.navItem} ${pathname.includes("staff-management") ? styles.active : ""}`}
                             onClick={() => setIsOpen(false)}
                         >
                             <Users size={20} />
                             Staff Management
                         </Link>
-
-                        {/* Settings and Audit Logs commented out as they contain mock data */}
-                        {/* 
-                        <Link
-                            href="/dashboard/hospital/settings"
-                            className={`${styles.navItem} ${pathname.includes('settings') ? styles.active : ""}`}
-                            onClick={() => setIsOpen(false)}
-                        >
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33 1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1-2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82 1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" /></svg>
-                            Settings
-                        </Link>
-
-                        <Link
-                            href="/dashboard/hospital/audit-logs"
-                            className={`${styles.navItem} ${pathname.includes('audit-logs') ? styles.active : ""}`}
-                            onClick={() => setIsOpen(false)}
-                        >
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                            Audit Logs
-                        </Link>
-                        */}
                     </nav>
                 </div>
 
                 <button
                     className={styles.logoutBtn}
                     onClick={handleLogout}
-                    style={{ margin: '0 12px 24px', width: 'calc(100% - 24px)', background: 'transparent', border: '1px solid #e2e8f0', color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    style={{
+                        margin: "0 12px 24px",
+                        width: "calc(100% - 24px)",
+                        background: "transparent",
+                        border: "1px solid #e2e8f0",
+                        color: "#64748b",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                    }}
                 >
-                    <LogOut size={18} style={{ marginRight: '10px' }} />
+                    <LogOut size={18} style={{ marginRight: "10px" }} />
                     Logout
                 </button>
             </aside>

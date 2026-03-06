@@ -587,25 +587,11 @@ export const uploadPatientDocument = async (patientId, file, metadata) => {
  * Create a new consultation (Google Meet integrated)
  * Endpoint: POST /api/v1/consultations
  */
-export const createConsultation = async ({
-    patient_id,
-    appointment_id = null,
-    scheduled_at,
-    duration_minutes = 30,
-    visit_type = "video",
-    chief_complaint = "AI Scribe Session"
-}) => {
+export const createConsultation = async (payload) => {
     const response = await fetch(`${API_BASE_URL}/consultations`, {
         method: "POST",
         headers: getAuthHeaders(),
-        body: JSON.stringify({
-            patient_id,
-            appointment_id,
-            scheduled_at,
-            duration_minutes,
-            visit_type,
-            chief_complaint
-        })
+        body: JSON.stringify(payload)
     });
     return handleResponse(response);
 };

@@ -6,7 +6,19 @@ import styles from "../AdminDashboard.module.css";
 import logo from "@/public/logo.png";
 import SignoutModal from "../../../auth/components/SignoutModal";
 import { logoutUser } from "@/services/auth";
-import { LayoutDashboard, Users, FileText, Settings, Menu, X, LogOut } from "lucide-react";
+import {
+  LayoutDashboard,
+  Users,
+  FileText,
+  Settings,
+  Menu,
+  X,
+  LogOut,
+  Calendar,
+  Hospital,
+  UserCircle,
+  Layers
+} from "lucide-react";
 
 export default function AdminSidebar() {
   const pathname = usePathname();
@@ -28,6 +40,21 @@ export default function AdminSidebar() {
       icon: <LayoutDashboard size={18} />
     },
     {
+      label: "Appointments",
+      path: "/dashboard/admin/appointments",
+      icon: <Calendar size={18} />
+    },
+    {
+      label: "Clinic Management",
+      path: "/dashboard/admin/clinic",
+      icon: <Hospital size={18} />
+    },
+    {
+      label: "Departments & Roles",
+      path: "/dashboard/admin/departments",
+      icon: <Layers size={18} />
+    },
+    {
       label: "Team Management",
       path: "/dashboard/admin/manage-accounts",
       icon: <Users size={18} />
@@ -46,7 +73,7 @@ export default function AdminSidebar() {
 
   return (
     <>
-      {!isOpen && (
+      {/* {!isOpen && (
         <button
           className={styles.mobileToggleBtn}
           onClick={() => setIsOpen(true)}
@@ -54,7 +81,7 @@ export default function AdminSidebar() {
         >
           <Menu size={24} />
         </button>
-      )}
+      )} */}
 
       {isOpen && (
         <div
@@ -69,12 +96,12 @@ export default function AdminSidebar() {
             <div className={styles.iconPlaceholder}>
               <img src={logo.src} alt="Logo" />
             </div>
-            <button
+            {/* <button
               className={styles.closeBtnHidden}
               onClick={() => setIsOpen(false)}
-            >
-              <X size={20} />
-            </button>
+            > */}
+            {/* <X size={20} />
+          </button> */}
           </div>
 
           <nav className={styles.navGroup}>
@@ -99,7 +126,7 @@ export default function AdminSidebar() {
           <LogOut size={18} className={styles.logoutIcon} />
           Logout
         </button>
-      </aside>
+      </aside >
 
       <SignoutModal
         isOpen={isSignoutModalOpen}

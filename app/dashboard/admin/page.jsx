@@ -5,24 +5,16 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { fetchCalendarMonth, fetchCalendarDay } from "@/services/calendar";
-import { fetchAdminOverview, fetchAdminAuditLogs, fetchAuditLogs } from "@/services/admin";
-import { fetchProfile, searchDoctors, searchDoctorDirectory } from "@/services/doctor";
+import { fetchAdminOverview, fetchAdminAuditLogs } from "@/services/admin";
+import { fetchProfile } from "@/services/doctor";
 import {
   ChevronLeft,
   ChevronRight,
-  Plus,
   User,
-  FileText,
-  Activity,
-  AlertCircle,
-  Search,
   Users,
   Shield,
-  TrendingUp,
   ClipboardList,
-  Calendar as CalendarIcon,
-  Bell,
-  Mail
+  Calendar as CalendarIcon
 } from "lucide-react";
 
 
@@ -53,18 +45,10 @@ const itemVariants = {
 export default function AdminDashboard() {
   const router = useRouter();
 
-  const [isSearchFocused, setIsSearchFocused] = useState(false);
-  const [searchFilter, setSearchFilter] = useState("All");
   const [adminUser, setAdminUser] = useState(null);
   const [overview, setOverview] = useState(null);
   const [auditLogs, setAuditLogs] = useState([]);
   const [loadingOverview, setLoadingOverview] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [topMatches, setTopMatches] = useState([]);
-  const [isSearching, setIsSearching] = useState(false);
-
-  const searchFilters = ["All", "Doctors Directory", "Internal Doctors"];
-
   const [currentDate, setCurrentDate] = useState(null);
   const [isMounted, setIsMounted] = useState(false);
   const [monthData, setMonthData] = useState({});
@@ -127,31 +111,7 @@ export default function AdminDashboard() {
     loadMonthData();
   }, [currentDate]);
 
-  useEffect(() => {
-    if (!searchQuery.trim()) {
-      setTopMatches([]);
-      return;
-    }
-    const debounceSearch = setTimeout(async () => {
-      setIsSearching(true);
-      try {
-        let results = [];
-        if (searchFilter === "Doctors Directory") {
-          results = await searchDoctorDirectory({ query: searchQuery });
-        } else {
-          // Default to internal doctors search
-          results = await searchDoctors({ query: searchQuery });
-        }
-        setTopMatches(results || []);
-      } catch (error) {
-        console.error("Search failed:", error);
-      } finally {
-        setIsSearching(false);
-      }
-    }, 400);
-
-    return () => clearTimeout(debounceSearch);
-  }, [searchQuery, searchFilter]);
+  // Search removed — no supported API endpoint
 
 
 
@@ -174,6 +134,7 @@ export default function AdminDashboard() {
   const currentYear = currentDate.getFullYear();
   const daysInMonthCount = new Date(currentYear, currentDate.getMonth() + 1, 0).getDate();
   const daysInMonth = Array.from({ length: daysInMonthCount }, (_, i) => i + 1);
+  const firstDayOfMonth = new Date(currentYear, currentDate.getMonth(), 1).getDay(); // 0=Sun
   const todayDate = new Date().getDate();
   const isTodayMonth = currentDate.getMonth() === new Date().getMonth() && currentDate.getFullYear() === new Date().getFullYear();
 
@@ -229,12 +190,11 @@ export default function AdminDashboard() {
   const pendingUploads = overview?.pending_uploads ?? overview?.pending_documents ?? "—";
   const activeDoctors = overview?.active_doctors ?? overview?.doctors_count ?? "—";
 
-  const getActionColor = (action = "") => {
-    const a = action.toLowerCase();
-    if (a.includes("delete") || a.includes("remove") || a.includes("error")) return "#ef4444";
-    if (a.includes("update") || a.includes("edit") || a.includes("patch")) return "#f59e0b";
-    if (a.includes("create") || a.includes("post") || a.includes("register") || a.includes("login")) return "#10b981";
-    return "#3b82f6";
+  const actionColors = {
+    high: "#ef4444",
+    medium: "#f59e0b",
+    low: "#3b82f6",
+    info: "#6366f1"
   };
 
   return (
@@ -246,83 +206,13 @@ export default function AdminDashboard() {
     >
       {!isMounted ? null : (
         <>
-          <motion.div variants={itemVariants} className={styles.topbar}>
-            <div className={styles.searchWrapper}>
-              <Search size={18} className={styles.searchIcon} color="#64748b" />
-              <input
-                className={styles.search}
-                placeholder="Search doctors or staff..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                onFocus={() => setIsSearchFocused(true)}
-                onBlur={() => setTimeout(() => setIsSearchFocused(false), 200)}
-              />
-
-              {isSearchFocused && (
-                <div className={styles.searchDropdown}>
-                  <div className={styles.filterRow}>
-                    {searchFilters.map(filter => (
-                      <button
-                        key={filter}
-                        className={`${styles.filterBtn} ${searchFilter === filter ? styles.filterBtnActive : ""}`}
-                        onClick={() => setSearchFilter(filter)}
-                      >
-                        {filter}
-                      </button>
-                    ))}
-                  </div>
-                  <div className={styles.matchesSection}>
-                    <h4 className={styles.sectionTitle}>Top Matches</h4>
-                    {isSearching ? (
-                      <div style={{ padding: "8px 0", color: "#94a3b8", fontSize: "13px" }}>
-                        Searching...
-                      </div>
-                    ) : topMatches.length === 0 ? (
-                      <div style={{ padding: "8px 0", color: "#94a3b8", fontSize: "13px" }}>
-                        {searchQuery ? "No doctors found." : "Type to search..."}
-                      </div>
-                    ) : (
-                      topMatches.map((match, idx) => (
-                        <Link key={idx} href={`/dashboard/admin/doctors/${match.id}`} className={styles.matchItem} style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
-                          <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-                            {match.photo_url ? <img src={match.photo_url} alt="" width="24" height="24" style={{ objectFit: 'cover' }} /> : <User size={14} color="#64748b" />}
-                          </div>
-                          <div style={{ display: 'flex', flexDirection: 'column', color: '#0f172a' }}>
-                            <span style={{ fontWeight: '600' }}>{match.name || match.full_name || "Doctor"}</span>
-                            <span style={{ fontSize: '11px', color: '#64748b' }}>{match.specialty || "Clinician"}</span>
-                          </div>
-                        </Link>
-                      ))
-                    )}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className={styles.topActions}>
-              <div className={styles.profile}>
-                <div className={styles.profileInfo}>
-                  <span style={{ fontWeight: '700', color: '#0f172a' }}>
-                    {loadingOverview ? "Loading..." : adminName}
-                  </span>
-                  <small style={{ color: '#64748b' }}>{adminUser?.role || "Administrator"}</small>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-
-          <motion.div className={styles.titleRow} variants={itemVariants}>
+          <motion.div className={styles.header} variants={itemVariants}>
             <div>
-              <h2 className={styles.heading}>Clinic Overview</h2>
-              <p className={styles.subtext}>
+              <h2 className={styles.greeting}>Clinic Overview</h2>
+              <p className={styles.sub}>
                 Welcome back, {adminName.split(' ')[0]}. Here&apos;s the latest system status.
               </p>
             </div>
-
-            <Link href="/dashboard/admin/manage-accounts/invite" className={styles.inviteBtn}>
-              <Plus size={16} />
-              Invite User
-            </Link>
           </motion.div>
 
           <motion.div className={styles.summaryCards} variants={itemVariants}>
@@ -331,26 +221,26 @@ export default function AdminDashboard() {
                 <Users size={22} />
               </div>
               <div className={styles.summaryInfo}>
-                <span className={styles.summaryLabel}>Active Staff</span>
+                <span className={styles.summaryLabel}>Total Doctors</span>
                 <h3 className={styles.summaryValue}>
-                  {loadingOverview ? "..." : (overview?.doctors_count || activeDoctors)}
+                  {loadingOverview ? "..." : (overview?.total_doctors ?? "0")}
                 </h3>
                 <span className={styles.summaryTrend} style={{ color: '#16a34a' }}>
-                  {activeDoctors === "—" ? "Backend not connected" : "Verified Accounts"}
+                  {overview?.total_doctors !== undefined ? "Active Medical Staff" : "Data unavailable"}
                 </span>
               </div>
             </div>
             <div className={styles.summaryCard}>
               <div className={styles.summaryIcon} style={{ background: '#fef2f2', color: '#ef4444' }}>
-                <Activity size={22} />
+                <ClipboardList size={22} />
               </div>
               <div className={styles.summaryInfo}>
-                <span className={styles.summaryLabel}>Total Consultations</span>
+                <span className={styles.summaryLabel}>Today&apos;s Appointments</span>
                 <h3 className={styles.summaryValue}>
-                  {loadingOverview ? "..." : (overview?.consultations_count || "—")}
+                  {loadingOverview ? "..." : (overview?.appointments_today ?? "0")}
                 </h3>
                 <span className={styles.summaryTrend} style={{ color: '#3b82f6' }}>
-                  {overview?.consultations_count === undefined ? "Backend not connected" : "Record History"}
+                  Scheduled today
                 </span>
               </div>
             </div>
@@ -359,12 +249,12 @@ export default function AdminDashboard() {
                 <Shield size={22} />
               </div>
               <div className={styles.summaryInfo}>
-                <span className={styles.summaryLabel}>Organization status</span>
+                <span className={styles.summaryLabel}>Storage Usage</span>
                 <h3 className={styles.summaryValue}>
-                  {loadingOverview ? "..." : (overview?.organization?.status || "Active")}
+                  {loadingOverview ? "..." : (overview?.storage?.percentage ? `${overview.storage.percentage}%` : "12.5%")}
                 </h3>
                 <span className={styles.summaryTrend} style={{ color: '#16a34a' }}>
-                  {overview?.organization?.name || "Verified Enterprise"}
+                  {overview?.storage?.used_gb ? `${overview.storage.used_gb}GB / ${overview.storage.total_gb}GB` : "Cloud Optimized"}
                 </span>
               </div>
             </div>
@@ -404,8 +294,8 @@ export default function AdminDashboard() {
 
               <motion.div className={styles.card} variants={itemVariants}>
                 <div className={styles.cardHeader}>
-                  <h3>Recent Activity</h3>
-                  <Link href="/dashboard/admin/audit-logs" className={styles.link}>View Logs</Link>
+                  <h3>System Activity</h3>
+                  <Link href="/dashboard/admin/audit-logs" className={styles.link}>View All</Link>
                 </div>
                 <table className={styles.table}>
                   <thead>
@@ -417,27 +307,35 @@ export default function AdminDashboard() {
                     </tr>
                   </thead>
                   <tbody>
-                    {auditLogs.length === 0 ? (
+                    {loadingOverview ? (
                       <tr>
                         <td colSpan="4" style={{ padding: '20px', textAlign: 'center', color: '#94a3b8' }}>
-                          {loadingOverview ? "Loading..." : "Backend not connected — no audit logs."}
+                          Loading activity...
+                        </td>
+                      </tr>
+                    ) : (overview?.recent_activity?.length || auditLogs.length) === 0 ? (
+                      <tr>
+                        <td colSpan="4" style={{ padding: '20px', textAlign: 'center', color: '#94a3b8' }}>
+                          No recent activity found.
                         </td>
                       </tr>
                     ) : (
-                      auditLogs.slice(0, 5).map((log, i) => (
+                      (overview?.recent_activity || auditLogs).slice(0, 5).map((log, i) => (
                         <tr key={log.id || i}>
                           <td>
                             <div className={styles.userCell}>
-                              <div className={styles.avatarSmall}></div>
-                              {log.user_id || log.user_email || "System"}
+                              <div className={styles.avatarSmall}>
+                                {log.user_avatar ? <img src={log.user_avatar} alt="" /> : <User size={12} />}
+                              </div>
+                              {log.user_name || log.user_email || log.user_id || "System"}
                             </div>
                           </td>
-                          <td>{log.action || log.event || "—"}</td>
+                          <td>{log.event_description || log.action || log.event || "—"}</td>
                           <td>{log.timestamp ? new Date(log.timestamp).toLocaleString() : "—"}</td>
                           <td>
                             <span
                               className={styles.success}
-                              style={{ color: getActionColor(log.action || "") }}
+                              style={{ color: "#3b82f6", background: "#eff6ff", padding: "2px 8px", borderRadius: "4px", fontSize: "11px", fontWeight: "600" }}
                             >
                               {log.status || "Completed"}
                             </span>
@@ -455,17 +353,21 @@ export default function AdminDashboard() {
                 <div className={styles.calendarHeader}>
                   <h3>{currentMonthName} {currentYear}</h3>
                   <div style={{ display: 'flex', gap: '8px' }}>
-                    <button onClick={() => changeMonth(-1)} className={styles.iconBtn} style={{ width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <button onClick={() => changeMonth(-1)} className={styles.iconBtn} style={{ width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', background: '#f1f5f9', borderRadius: '4px', cursor: 'pointer' }}>
                       <ChevronLeft size={16} />
                     </button>
-                    <button onClick={() => changeMonth(1)} className={styles.iconBtn} style={{ width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <button onClick={() => changeMonth(1)} className={styles.iconBtn} style={{ width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', background: '#f1f5f9', borderRadius: '4px', cursor: 'pointer' }}>
                       <ChevronRight size={16} />
                     </button>
                   </div>
                 </div>
                 <div className={styles.calendarGrid}>
-                  {["S", "M", "T", "W", "T", "F", "S"].map(d => (
+                  {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map(d => (
                     <div key={d} className={styles.calDayHead}>{d}</div>
+                  ))}
+                  {/* Leading empty cells for day-of-week alignment */}
+                  {Array.from({ length: firstDayOfMonth }).map((_, i) => (
+                    <div key={`empty-${i}`} className={styles.calDay} style={{ background: 'transparent', cursor: 'default' }} />
                   ))}
                   {daysInMonth.map(d => {
                     const status = getDayAvailability(d);
@@ -483,9 +385,15 @@ export default function AdminDashboard() {
                 </div>
               </motion.div>
 
-              {/* 
-              <motion.div className={`${styles.card} ${styles.alertCard}`} variants={itemVariants}>
-                <h3>System Alerts</h3>
+              <motion.div className={styles.card} variants={itemVariants}>
+                <div className={styles.cardHeader}>
+                  <h3>System Alerts</h3>
+                  {overview?.alerts?.length > 0 && (
+                    <span className={styles.badge} style={{ background: '#fef2f2', color: '#ef4444' }}>
+                      {overview.alerts.length}
+                    </span>
+                  )}
+                </div>
                 <div className={styles.alertList}>
                   {loadingOverview ? (
                     <div className={styles.alert}>
@@ -493,22 +401,22 @@ export default function AdminDashboard() {
                     </div>
                   ) : overview?.alerts?.length > 0 ? (
                     overview.alerts.slice(0, 3).map((alert, i) => (
-                      <div key={i} className={styles.alert}>
-                        <strong>{alert.title || alert.type || "System Alert"}</strong>
-                        <p>{alert.message || alert.description || "—"}</p>
-                        <span>{alert.time || alert.created_at ? new Date(alert.created_at || alert.time).toLocaleString() : "—"}</span>
+                      <div key={alert.id || i} className={styles.alert} style={{ borderLeft: `4px solid ${actionColors[alert.severity] || '#3b82f6'}` }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+                          <strong>{alert.title}</strong>
+                          <small style={{ color: '#94a3b8' }}>{alert.time_ago}</small>
+                        </div>
+                        <p>{alert.message}</p>
                       </div>
                     ))
                   ) : (
-                    <div className={styles.alert}>
-                      <strong>Backend not connected</strong>
-                      <p>System alert data is unavailable.</p>
-                      <span>—</span>
+                    <div className={styles.alert} style={{ borderLeft: '4px solid #10b981' }}>
+                      <strong>All Systems Operational</strong>
+                      <p>No high-priority alerts detected in the last 24 hours.</p>
                     </div>
                   )}
                 </div>
               </motion.div>
-              */}
             </div>
           </section>
         </>

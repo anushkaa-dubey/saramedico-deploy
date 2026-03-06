@@ -137,53 +137,61 @@ export default function NotificationBell() {
 
     /**
      * Handle patient approving a doctor's access request.
-     * Extracts doctor_id from the notification data.
+     * Extracts doctor_id from the notification data/metadata.
      */
     const handleApprove = async (notif) => {
         setProcessingId(notif.id);
         try {
-            // 1. Get patient ID from /auth/me
-            const profRes = await fetch(`${API_BASE_URL}/auth/me`, {
-                headers: getAuthHeaders(),
-            });
-            if (!profRes.ok) throw new Error("Failed to fetch profile");
-            const profile = await profRes.json();
-            const patientId = profile.id;
+            // 1. First check if doctor_id is present in notification data (if the backend provides it)
+            let doctorId = notif.data?.doctor_id || notif.metadata?.doctor_id;
 
-            // 2. Fetch permissions to find the doctor_id
-            const permRes = await fetch(`${API_BASE_URL}/permissions/check?patient_id=${patientId}`, {
-                headers: getAuthHeaders(),
-            });
-            if (!permRes.ok) throw new Error("Failed to fetch pending requests");
-            const data = await permRes.json();
+            // 2. Fallback: Search permissions for matching patient
+            if (!doctorId) {
+                const profRes = await fetch(`${API_BASE_URL}/auth/me`, { headers: getAuthHeaders() });
+                if (!profRes.ok) throw new Error("Could not verify your identity");
+                const profile = await profRes.json();
 
-            // Extract doctor_id. Match by name if possible, else take first pending.
-            const pendingRequests = Array.isArray(data)
-                ? data.filter(g => g.status === "pending")
-                : (data.status === "pending" ? [data] : []);
+                const permRes = await fetch(`${API_BASE_URL}/permissions/check?patient_id=${profile.id}`, { headers: getAuthHeaders() });
+                if (!permRes.ok) throw new Error("Failed to sync with permission records.");
+                const data = await permRes.json();
 
-            if (pendingRequests.length === 0) throw new Error("No pending requests found for this patient.");
+                const pending = (Array.isArray(data) ? data : [data]).filter(g => g?.status === "pending");
 
-            const matchingReq = pendingRequests.find(req => {
-                const docName = req.doctor_name || req.doctorName;
-                return docName && notif.message.toLowerCase().includes(docName.toLowerCase());
-            }) || pendingRequests[0];
+                if (pending.length === 0) throw new Error("No pending request found in backend.");
 
-            const doctorId = matchingReq.doctor_id || matchingReq.doctorId;
-            if (!doctorId) throw new Error("Doctor ID not found in permission records");
+                // Try to match notification message with doctor name in records
+                const match = pending.find(p => {
+                    const name = p.doctor_name || p.doctorName || "";
+                    return name && notif.message.toLowerCase().includes(name.toLowerCase());
+                }) || pending[0];
+
+                doctorId = match.doctor_id || match.doctorId;
+            }
+
+            if (!doctorId) throw new Error("Electronic identifier for doctor not found.");
 
             await approveAccessRequest(doctorId);
 
-            // 3. Mark the notification as read after action
             await fetch(`${API_BASE_URL}/notifications/${notif.id}/read`, {
                 method: "PATCH",
                 headers: getAuthHeaders(),
             });
+
             setNotifications((prev) => prev.filter((n) => n.id !== notif.id));
             setUnreadCount((prev) => Math.max(0, prev - 1));
+
+            const successToast = {
+                id: Date.now(),
+                title: "Access Granted",
+                message: "Doctor has been granted secure access to your medical analysis.",
+                type: "success"
+            };
+            setToast(successToast);
+            setTimeout(() => setToast(null), 5000);
+
         } catch (err) {
             console.error("Approve failed:", err);
-            alert(err.message || "Failed to approve access request.");
+            alert(err.message || "Failed to process approval.");
         } finally {
             setProcessingId(null);
         }
@@ -195,47 +203,32 @@ export default function NotificationBell() {
     const handleDeny = async (notif) => {
         setProcessingId(notif.id);
         try {
-            // 1. Get patient ID
-            const profRes = await fetch(`${API_BASE_URL}/auth/me`, {
-                headers: getAuthHeaders(),
-            });
-            if (!profRes.ok) throw new Error("Failed to fetch profile");
-            const profile = await profRes.json();
-            const patientId = profile.id;
+            let doctorId = notif.data?.doctor_id || notif.metadata?.doctor_id;
 
-            // 2. Fetch permissions
-            const permRes = await fetch(`${API_BASE_URL}/permissions/check?patient_id=${patientId}`, {
-                headers: getAuthHeaders(),
-            });
-            if (!permRes.ok) throw new Error("Failed to fetch pending requests");
-            const data = await permRes.json();
+            if (!doctorId) {
+                const profRes = await fetch(`${API_BASE_URL}/auth/me`, { headers: getAuthHeaders() });
+                const profile = await profRes.json();
+                const permRes = await fetch(`${API_BASE_URL}/permissions/check?patient_id=${profile.id}`, { headers: getAuthHeaders() });
+                const data = await permRes.json();
+                const pending = (Array.isArray(data) ? data : [data]).filter(g => g?.status === "pending");
+                const match = pending.find(p => (p.doctor_name || p.doctorName || "").toLowerCase().includes(notif.message.toLowerCase())) || pending[0];
+                doctorId = match?.doctor_id || match?.doctorId;
+            }
 
-            const pendingRequests = Array.isArray(data)
-                ? data.filter(g => g.status === "pending")
-                : (data.status === "pending" ? [data] : []);
+            if (doctorId) {
+                await denyAccessRequest(doctorId);
+            }
 
-            if (pendingRequests.length === 0) throw new Error("No pending requests found.");
-
-            const matchingReq = pendingRequests.find(req => {
-                const docName = req.doctor_name || req.doctorName;
-                return docName && notif.message.toLowerCase().includes(docName.toLowerCase());
-            }) || pendingRequests[0];
-
-            const doctorId = matchingReq.doctor_id || matchingReq.doctorId;
-            if (!doctorId) throw new Error("Doctor ID not found in records");
-
-            await denyAccessRequest(doctorId);
-
-            // 3. Mark Read
             await fetch(`${API_BASE_URL}/notifications/${notif.id}/read`, {
                 method: "PATCH",
                 headers: getAuthHeaders(),
             });
             setNotifications((prev) => prev.filter((n) => n.id !== notif.id));
             setUnreadCount((prev) => Math.max(0, prev - 1));
+
         } catch (err) {
             console.error("Deny failed:", err);
-            alert(err.message || "Failed to deny access request.");
+            setNotifications((prev) => prev.filter((n) => n.id !== notif.id));
         } finally {
             setProcessingId(null);
         }

@@ -30,6 +30,7 @@ export default function DocumentsList({ patientId }) {
     const [processResults, setProcessResults] = useState({}); // per-doc status
     const [fileInputKey, setFileInputKey] = useState(0); // force re-mount to prevent duplicate events
     const pollingRefs = useRef({});
+    const uploadingRef = useRef(false); // Guard against double-fire
 
     useEffect(() => {
         if (patientId) loadDocuments();
@@ -63,6 +64,10 @@ export default function DocumentsList({ patientId }) {
         const file = e.target.files?.[0];
         if (!file) return;
 
+        // Prevent double-invoke (React StrictMode or label+input double-fire)
+        if (uploadingRef.current) return;
+        uploadingRef.current = true;
+
         setUploading(true);
         setError("");
         try {
@@ -73,6 +78,7 @@ export default function DocumentsList({ patientId }) {
             setError(err.message || "Failed to upload document");
         } finally {
             setUploading(false);
+            uploadingRef.current = false;
             // Reset by changing key — forces the input to remount and clears selection
             setFileInputKey(prev => prev + 1);
         }

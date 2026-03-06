@@ -226,44 +226,6 @@ export default function DoctorDashboard() {
     setShowConsentModal(true);
   };
 
-  const proceedToSession = async () => {
-    if (!consentVerified || !recordingReady) {
-      setShowConsentError(true);
-      return;
-    }
-
-    try {
-      const appointment = appointments[0];
-      const patient_id = appointment?.patient_id || appointment?.patientId || appointment?.user_id || appointment?.id;
-      const appointment_id = appointment?.id;
-
-      if (!patient_id) {
-        alert("No active patient appointment found for session initiation.");
-        return;
-      }
-
-      const session = await createConsultation({
-        patient_id,
-        appointment_id,
-        scheduled_at: new Date().toISOString(),
-        visit_type: "video"
-      });
-
-      if (session && session.meet_link) {
-        setShowConsentModal(false);
-        window.open(session.meet_link, "_blank");
-      } else {
-        setShowConsentModal(false);
-        // Fallback if no link returned
-        router.push("/dashboard/doctor/video-call");
-      }
-    } catch (err) {
-      console.error("Failed to start session:", err);
-      const msg = typeof err === 'string' ? err : (err.message || "Unknown error");
-      alert("Failed to start Google Meet session: " + msg);
-    }
-  };
-
   const visitStates = {
     "Scheduled": "#64748b",
     "Checked-In": "#3b82f6",

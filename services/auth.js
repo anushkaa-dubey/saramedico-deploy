@@ -15,6 +15,23 @@ export const registerUser = async (payload) => {
 };
 
 /**
+ * Register a new Hospital organization
+ * POST /api/v1/auth/register/hospital
+ */
+export const registerHospital = async (payload) => {
+    const response = await fetch(`${API_BASE_URL}/auth/register/hospital`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+    });
+    return handleResponse(response);
+};
+
+
+
+/**
  * Login user and get authentication token
  */
 export const loginUser = async (payload) => {

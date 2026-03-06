@@ -288,10 +288,10 @@ export default function SoapNotesPage() {
                                     {marking ? "Processing..." : "✓ Mark Consultation as Complete"}
                                 </button>
 
-                                {consultation.meet_link && (
+                                {(consultation.meetLink || consultation.meet_link) && (
                                     <div style={{ marginTop: "24px" }}>
                                         <a
-                                            href={consultation.meet_link}
+                                            href={consultation.meetLink || consultation.meet_link}
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             style={{ color: "#3b82f6", fontSize: "13px", fontWeight: "600", textDecoration: "none" }}
@@ -336,13 +336,13 @@ export default function SoapNotesPage() {
                         </p>
                     </div>
 
-                    {consultation.meet_link && (
+                    {(consultation.meetLink || consultation.meet_link) && (
                         <div className={styles.infoCard}>
                             <div className={styles.infoCardHeader}>
                                 <span className={styles.infoTitle}>Google Meet</span>
                             </div>
                             <a
-                                href={consultation.meet_link}
+                                href={consultation.meetLink || consultation.meet_link}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className={styles.infoText}

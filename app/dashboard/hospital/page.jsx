@@ -5,10 +5,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { fetchAdminOverview, fetchOrgMembers } from "@/services/admin";
+import { fetchAdminOverview } from "@/services/admin";
 import { fetchProfile } from "@/services/doctor";
-import { fetchOrganizationEvents } from "@/services/hospital";
-import { Users, Database, Calendar, Plus } from "lucide-react";
+import { fetchOrganizationDepartments, fetchDoctorsByDepartment } from "@/services/hospital";
+import { Users, Building2, Plus } from "lucide-react";
 
 const containerVariants = {
     hidden: { opacity: 0 },
@@ -41,11 +41,11 @@ export default function HospitalDashboard() {
         const loadData = async () => {
             setLoading(true);
             try {
-                const [overview, profileData, staffMembers, apptData] = await Promise.all([
+                // Fetch basic required data
+                const [overview, profileData, orgDepartments] = await Promise.all([
                     fetchAdminOverview(),
                     fetchProfile(),
-                    fetchOrgMembers(),
-                    fetchOrganizationEvents()
+                    fetchOrganizationDepartments()
                 ]);
 
                 if (!profileData) return;
@@ -60,21 +60,24 @@ export default function HospitalDashboard() {
                     return;
                 }
 
-                const staff = staffMembers || [];
-                const appointments = apptData || [];
+                // Calculate total staff based on departments API
+                let totalStaffCount = 0;
+                for (let dept of orgDepartments) {
+                    const deptName = typeof dept === 'string' ? dept : (dept.name || dept.department_name);
+                    try {
+                        const deptDocs = await fetchDoctorsByDepartment(deptName);
+                        totalStaffCount += (deptDocs || []).length;
+                    } catch (e) {
+                        console.error(`Failed to fetch doctors for department ${deptName}`, e);
+                    }
+                }
 
                 setOverviewData(overview);
                 setDoctorProfile(profileData);
                 setStatsData({
-                    totalStaff: staff.length,
-                    storage: overview?.storage || { used_gb: 0, total_gb: 0, percentage: 0 },
-                    alerts: overview?.alerts || [],
-                    recentActivity: overview?.recent_activity || [],
-                    appointmentsToday: appointments.filter(a => {
-                        const today = new Date().toISOString().split('T')[0];
-                        const apptDate = a.requested_date ? a.requested_date.split('T')[0] : "";
-                        return apptDate === today;
-                    }).length
+                    totalStaff: totalStaffCount,
+                    departmentCount: orgDepartments.length,
+                    recentActivity: overview?.recent_activity || []
                 });
 
             } catch (err) {
@@ -90,28 +93,16 @@ export default function HospitalDashboard() {
     const stats = [
         {
             label: "TOTAL STAFF COUNT",
-            value: statsData.totalStaff || "0",
+            value: statsData.totalStaff?.toString() || "0",
             icon: <Users size={20} />,
             color: "#3b82f6",
             bgColor: "#eff6ff",
             lineColor: "#3b82f6"
         },
         {
-            label: "STORAGE USED",
-            value: `${statsData.storage?.used_gb || 0} GB`,
-            subValue: `/ ${statsData.storage?.total_gb || 0} GB`,
-            badge: `${statsData.storage?.percentage || 0}%`,
-            badgeColor: "#3b82f6",
-            badgeBg: "#eff6ff",
-            icon: <Database size={20} />,
-            color: "#f59e0b",
-            bgColor: "#fffbeb",
-            lineColor: "#fde68a"
-        },
-        {
-            label: "APPOINTMENTS TODAY",
-            value: statsData.appointmentsToday || "0",
-            icon: <Calendar size={20} />,
+            label: "DEPARTMENT COUNT",
+            value: statsData.departmentCount?.toString() || "0",
+            icon: <Building2 size={20} />,
             color: "#10b981",
             bgColor: "#f0fdf4",
             lineColor: "#10b981"
@@ -271,21 +262,7 @@ export default function HospitalDashboard() {
 
                         {/* Right Side Column */}
                         <div className={styles.rightColMain}>
-                            {/* System Alerts */}
-                            <div className={styles.card} style={{ padding: '20px', marginBottom: '24px' }}>
-                                <h3 style={{ fontSize: '14px', fontWeight: '800', marginBottom: '16px', color: '#1e293b' }}>System Alerts</h3>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                                    {(!statsData.alerts || statsData.alerts.length === 0) ? (
-                                        <div style={{ fontSize: '12px', color: '#94a3b8', textAlign: 'center' }}>No active alerts.</div>
-                                    ) : statsData.alerts.map((alert, i) => (
-                                        <div key={alert.id || i} style={{ padding: '12px', borderRadius: '10px', background: alert.severity === 'critical' ? '#fee2e2' : '#f1f5f9', border: `1px solid ${alert.severity === 'critical' ? '#fecaca' : '#e2e8f0'}` }}>
-                                            <div style={{ fontSize: '13px', fontWeight: '700', color: alert.severity === 'critical' ? '#991b1b' : '#1e293b' }}>{alert.title}</div>
-                                            <div style={{ fontSize: '12px', color: alert.severity === 'critical' ? '#b91c1c' : '#64748b', marginTop: '2px' }}>{alert.message}</div>
-                                            <div style={{ fontSize: '10px', color: '#94a3b8', marginTop: '8px', fontWeight: '600' }}>{alert.time_ago}</div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
+                            {/* System Alerts Removed Per Requirements */}
 
                             {/* Quick Actions Integration */}
                             <div className={styles.card} style={{ padding: '20px' }}>
