@@ -4,26 +4,27 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       {
-        protocol: 'https',
-        hostname: 'images.unsplash.com',
-        port: '',
-        pathname: '/**',
+        protocol: "https",
+        hostname: "images.unsplash.com",
+        pathname: "/**",
       },
     ],
   },
+
   async rewrites() {
-    const backendUrl = new URL(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1');
-    const backendHost = backendUrl.hostname;
-    const backendProtocol = backendUrl.protocol;
+    const apiUrl =
+      process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+
+    const backendUrl = new URL(apiUrl);
 
     return [
       {
-        source: '/api/v1/:path*',
-        destination: `${backendProtocol}//${backendHost}:8000/api/v1/:path*`,
+        source: "/api/v1/:path*",
+        destination: `${backendUrl.origin}/api/v1/:path*`,
       },
       {
-        source: '/api/storage/:path*',
-        destination: `${backendProtocol}//${backendHost}:9000/:path*`,
+        source: "/api/storage/:path*",
+        destination: `${backendUrl.origin}/:path*`,
       },
     ];
   },

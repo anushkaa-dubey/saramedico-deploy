@@ -118,64 +118,64 @@ export default function Home() {
   ];
 
   const features: Record<Tab, Feature[]> = {
-    /*
-        Reviewers: [
-          {
-            id: "ocr",
-            title: "Intelligent OCR & Data Extraction",
-            description: "Transform messy faxes and PDFs into searchable, structured data instantly. Our AI identifies key medical entities, lab results, and patient demographics, populating your database automatically with high accuracy.",
-            items: ["Handles handwritten doctor notes", "Smart categorization of document types", "Instant searchability across millions of pages"],
-            details: [
-              "Advanced handwriting recognition for clinician notes",
-              "Automated table extraction for lab results & vitals",
-              "ICD-10 Mapping for instant diagnostic coding",
-              "Multi-format support: Fax, physical scans, and PDFs"
-            ],
-            helper: "Requires clinician review before final chart entry.",
-    
-            icon: <DocIcon />,
-            image: "/landing%20page%20images/OCR.jpg",
-            reverse: false
-          },
-          {
-            id: "chronology",
-            title: "Visual Patient Chronology",
-            description: "Stop scrolling through hundreds of pages. Our Timeline View aggregates every encounter, lab result, and prescription into an interactive visual history, allowing reviewers to grasp complex cases in seconds.",
-            items: ["60% faster chart review time", "Zero missed critical events", "Integrated lab trends", "Searchable patient timeline"],
-            details: [
-              "Event Correlation across multiple encounters",
-              "Visual Timelines of patient healthcare journeys",
-              "Automated Medication Reconciliation detection",
-              "Smart Filtering by specialty or date range"
-            ],
-    
-            icon: <GraphIcon />,
-            image: "/landing%20page%20images/visualPatient.jpg",
-            reverse: true
-          },
-          {
-            id: "redaction",
-            title: "Automated PII Redaction",
-            description: "Share data securely for research or second opinions. Our AI automatically detects and redacts 18 types of identifiers, ensuring compliance before documents ever leave your secure environment.",
-            items: [
-              { label: "Patient Names", icon: <UserIconBase /> },
-              { label: "Dates & Birthdays", icon: <CalendarIconBase /> },
-              { label: "Addresses & Locations", icon: <HomeIconBase /> }
-            ],
-            details: [
-              "18 HIPAA-compliant Identifiers automatically detected",
-              "Contextual Anonymization maintaining medical logic",
-              "Batch Processing for large document scales",
-              "Audit Logging & Full Redaction Certificates"
-            ],
-    
-            icon: <PlusIcon />,
-            image: "/landing%20page%20images/automate_PII.jpg",
-            reverse: false,
-            isPII: true
-          }
+
+    Reviewers: [
+      {
+        id: "ocr",
+        title: "Intelligent OCR & Data Extraction",
+        description: "Transform messy faxes and PDFs into searchable, structured data instantly. Our AI identifies key medical entities, lab results, and patient demographics, populating your database automatically with high accuracy.",
+        items: ["Handles handwritten doctor notes", "Smart categorization of document types", "Instant searchability across millions of pages"],
+        details: [
+          "Advanced handwriting recognition for clinician notes",
+          "Automated table extraction for lab results & vitals",
+          "ICD-10 Mapping for instant diagnostic coding",
+          "Multi-format support: Fax, physical scans, and PDFs"
         ],
-        */
+        helper: "Requires clinician review before final chart entry.",
+
+        icon: <DocIcon />,
+        image: "/landing%20page%20images/OCR.jpg",
+        reverse: false
+      },
+      {
+        id: "chronology",
+        title: "Visual Patient Chronology",
+        description: "Stop scrolling through hundreds of pages. Our Timeline View aggregates every encounter, lab result, and prescription into an interactive visual history, allowing reviewers to grasp complex cases in seconds.",
+        items: ["60% faster chart review time", "Zero missed critical events", "Integrated lab trends", "Searchable patient timeline"],
+        details: [
+          "Event Correlation across multiple encounters",
+          "Visual Timelines of patient healthcare journeys",
+          "Automated Medication Reconciliation detection",
+          "Smart Filtering by specialty or date range"
+        ],
+
+        icon: <GraphIcon />,
+        image: "/landing%20page%20images/visualPatient.jpg",
+        reverse: true
+      },
+      {
+        id: "redaction",
+        title: "Automated PII Redaction",
+        description: "Share data securely for research or second opinions. Our AI automatically detects and redacts 18 types of identifiers, ensuring compliance before documents ever leave your secure environment.",
+        items: [
+          { label: "Patient Names", icon: <UserIconBase /> },
+          { label: "Dates & Birthdays", icon: <CalendarIconBase /> },
+          { label: "Addresses & Locations", icon: <HomeIconBase /> }
+        ],
+        details: [
+          "18 HIPAA-compliant Identifiers automatically detected",
+          "Contextual Anonymization maintaining medical logic",
+          "Batch Processing for large document scales",
+          "Audit Logging & Full Redaction Certificates"
+        ],
+
+        icon: <PlusIcon />,
+        image: "/landing%20page%20images/automate_PII.jpg",
+        reverse: false,
+        isPII: true
+      }
+    ],
+
     Clinicians: [
       {
         id: "redaction-clinician",

@@ -1,4 +1,5 @@
 "use client";
+import { Suspense } from "react";
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Topbar from "../components/Topbar";
@@ -10,7 +11,7 @@ import { motion } from "framer-motion";
 import { fetchAppointments } from "@/services/doctor";
 import { fetchConsultationById } from "@/services/consultation";
 
-export default function DoctorVideoCallPage() {
+function DoctorVideoCallPage() {
     const searchParams = useSearchParams();
     const consultationId = searchParams.get("consultationId");
     const [transcript, setTranscript] = useState([]);
@@ -242,5 +243,12 @@ export default function DoctorVideoCallPage() {
                 </div>
             </main>
         </div>
+    );
+}
+export default function Page() {
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <DoctorVideoCallPage />
+        </Suspense>
     );
 }

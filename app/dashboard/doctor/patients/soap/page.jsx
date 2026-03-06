@@ -1,4 +1,5 @@
 "use client";
+import { Suspense } from "react";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import { fetchConsultationById, markConsultationComplete, fetchSoapNote } from "@/services/consultation";
@@ -9,7 +10,7 @@ import { motion } from "framer-motion";
 const POLL_INTERVAL_MS = 10000; // 10 seconds per handbook spec
 const MAX_POLL_ATTEMPTS = 40;   // ~4 minutes max
 
-export default function SoapNotesPage() {
+function SoapNotesPage() {
     const searchParams = useSearchParams();
     const consultationId = searchParams.get("consultationId");
 
@@ -375,5 +376,12 @@ export default function SoapNotesPage() {
                 </div>
             </div>
         </motion.div>
+    );
+}
+export default function Page() {
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <SoapNotesPage />
+        </Suspense>
     );
 }
