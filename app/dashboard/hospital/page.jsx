@@ -60,14 +60,17 @@ export default function HospitalDashboard() {
                     return;
                 }
 
+                const staff = staffMembers || [];
+                const appointments = apptData || [];
+
                 setOverviewData(overview);
                 setDoctorProfile(profileData);
                 setStatsData({
-                    totalStaff: staffMembers.length,
+                    totalStaff: staff.length,
                     storage: overview?.storage || { used_gb: 0, total_gb: 0, percentage: 0 },
                     alerts: overview?.alerts || [],
                     recentActivity: overview?.recent_activity || [],
-                    appointmentsToday: apptData.filter(a => {
+                    appointmentsToday: appointments.filter(a => {
                         const today = new Date().toISOString().split('T')[0];
                         const apptDate = a.requested_date ? a.requested_date.split('T')[0] : "";
                         return apptDate === today;

@@ -3,13 +3,12 @@ import Topbar from "../components/Topbar";
 import styles from "../HospitalDashboard.module.css";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
-import { fetchHospitalStats, fetchReviewQueue, fetchDepartmentStaff } from "@/services/hospital";
+import { fetchHospitalStats, fetchHospitalStaff } from "@/services/hospital";
 import { fetchCalendarMonth } from "@/services/calendar";
 
 export default function CardiologyDepartmentPage() {
     const [stats, setStats] = useState({ notesPendingSignature: 0, transcriptionQueueStatus: 0, averageNoteCompletionTime: "—" });
-    const [queue, setQueue] = useState([]);
-    const [onDutyStaff, setOnDutyStaff] = useState([]);
+    const [staff, setStaff] = useState([]);
     const [calendarData, setCalendarData] = useState({});
     const [loading, setLoading] = useState(true);
     const currentDate = new Date();
@@ -22,15 +21,13 @@ export default function CardiologyDepartmentPage() {
         const load = async () => {
             setLoading(true);
             try {
-                const [statsData, queueData, staffData, calData] = await Promise.all([
+                const [statsData, staffData, calData] = await Promise.all([
                     fetchHospitalStats(),
-                    fetchReviewQueue({ limit: 5 }),
-                    fetchDepartmentStaff({ role: "doctor", status: "active" }),
+                    fetchHospitalStaff(),
                     fetchCalendarMonth(currentYear, currentDate.getMonth() + 1),
                 ]);
-                setStats(statsData);
-                setQueue(queueData || []);
-                setOnDutyStaff(staffData || []);
+                setStats(statsData?.metrics || { notesPendingSignature: 0, transcriptionQueueStatus: 0, averageNoteCompletionTime: "—" });
+                setStaff(staffData || []);
                 if (calData?.days) {
                     const mapped = {};
                     calData.days.forEach(d => { mapped[d.day] = d.event_count || d.count || 0; });
@@ -68,8 +65,8 @@ export default function CardiologyDepartmentPage() {
             badgeColor: "#10b981"
         },
         {
-            label: "ON-DUTY DOCTORS",
-            value: loading ? "..." : onDutyStaff.length || "—",
+            label: "CLINICAL STAFF",
+            value: loading ? "..." : staff.length || "—",
             badge: "Active",
             icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>,
             badgeColor: "#10b981"
@@ -89,8 +86,8 @@ export default function CardiologyDepartmentPage() {
                     <div className={styles.leftColMain}>
                         <div className={styles.pageHeaderRow} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
                             <div>
-                                <h1 style={{ fontSize: "24px", fontWeight: "800", color: "#0f172a", margin: 0 }}>Approval Queue</h1>
-                                <p style={{ color: "#64748b", margin: "4px 0 0 0" }}>Review clinical sessions for AI documentation.</p>
+                                <h1 style={{ fontSize: "24px", fontWeight: "800", color: "#0f172a", margin: 0 }}>Clinical Staff</h1>
+                                <p style={{ color: "#64748b", margin: "4px 0 0 0" }}>Manage cardiology department providers and roles.</p>
                             </div>
                             <div className={styles.pageHeaderActions} style={{ display: "flex", gap: "12px", alignItems: "center" }}>
                                 <button className={styles.primaryBtn} style={{ background: "#3b82f6", color: "white", border: "none", padding: "0 24px", fontWeight: "700" }}>Schedule</button>
@@ -113,12 +110,12 @@ export default function CardiologyDepartmentPage() {
                             ))}
                         </div>
 
-                        {/* Queue Table */}
+                        {/* Staff Table */}
                         <div className={styles.card}>
-                            <div className={styles.cardTitle}>Review Queue</div>
+                            <div className={styles.cardTitle}>Department Staff</div>
                             <div className={styles.filterButtonRow} style={{ display: "flex", gap: "8px", marginTop: "16px", marginBottom: "16px" }}>
                                 <div style={{ flex: 1, position: "relative" }}>
-                                    <input placeholder="Search..." style={{ width: "100%", padding: "8px 12px", borderRadius: "8px", border: "1px solid #f1f5f9", fontSize: "13px" }} />
+                                    <input placeholder="Search staff..." style={{ width: "100%", padding: "8px 12px", borderRadius: "8px", border: "1px solid #f1f5f9", fontSize: "13px" }} />
                                 </div>
                                 <button className={styles.outlineBtn} style={{ height: "36px" }}>Filters</button>
                             </div>
@@ -127,51 +124,38 @@ export default function CardiologyDepartmentPage() {
                                 <table className={styles.activityTable}>
                                     <thead>
                                         <tr className={styles.activityHeader}>
-                                            <th style={{ whiteSpace: "nowrap" }}>PATIENT</th>
-                                            <th style={{ whiteSpace: "nowrap" }}>SESSION ID</th>
-                                            <th style={{ whiteSpace: "nowrap" }}>URGENCY</th>
-                                            <th style={{ whiteSpace: "nowrap" }}>DATE/TIME</th>
-                                            <th style={{ whiteSpace: "nowrap" }}>PROVIDER</th>
+                                            <th style={{ whiteSpace: "nowrap" }}>NAME</th>
+                                            <th style={{ whiteSpace: "nowrap" }}>ROLE</th>
+                                            <th style={{ whiteSpace: "nowrap" }}>EMAIL</th>
                                             <th style={{ whiteSpace: "nowrap" }}>STATUS</th>
                                             <th style={{ textAlign: "right", whiteSpace: "nowrap" }}>ACTIONS</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {loading ? (
-                                            <tr><td colSpan="7" style={{ padding: "32px", textAlign: "center", color: "#94a3b8" }}>Loading queue...</td></tr>
-                                        ) : queue.length === 0 ? (
-                                            <tr><td colSpan="7" style={{ padding: "32px", textAlign: "center", color: "#94a3b8" }}>Backend not connected — no queue data.</td></tr>
-                                        ) : queue.map((row, i) => {
-                                            const urgencyColor = row.urgency === "High" ? "#ef4444" : row.urgency === "Medium" ? "#f59e0b" : "#3b82f6";
-                                            const statusColor = row.status.toLowerCase().includes("review") ? "#ef4444" : "#10b981";
+                                            <tr><td colSpan="5" style={{ padding: "32px", textAlign: "center", color: "#94a3b8" }}>Loading staff...</td></tr>
+                                        ) : staff.length === 0 ? (
+                                            <tr><td colSpan="5" style={{ padding: "32px", textAlign: "center", color: "#94a3b8" }}>No staff members found.</td></tr>
+                                        ) : staff.map((member, i) => {
+                                            const statusColor = member.status === "active" ? "#10b981" : "#f59e0b";
                                             return (
                                                 <tr key={i} className={styles.activityRow}>
                                                     <td style={{ whiteSpace: "nowrap" }}>
-                                                        <div style={{ fontWeight: "800", color: "#1e293b" }}>{row.patient}</div>
-                                                        <div style={{ fontSize: "11px", color: "#94a3b8" }}>MRN: {row.mrn}</div>
-                                                    </td>
-                                                    <td style={{ fontSize: "12px", fontWeight: "500", color: "#64748b", whiteSpace: "nowrap" }}>#{row.id || "N/A"}</td>
-                                                    <td style={{ whiteSpace: "nowrap" }}>
-                                                        <span style={{ fontSize: "10px", fontWeight: "800", color: urgencyColor, background: `${urgencyColor}15`, padding: "2px 8px", borderRadius: "4px" }}>{row.urgency}</span>
-                                                    </td>
-                                                    <td style={{ whiteSpace: "nowrap" }}>
-                                                        <div style={{ fontSize: "13px", fontWeight: "700", color: "#475569" }}>{row.time}</div>
-                                                        <div style={{ fontSize: "11px", color: "#94a3b8" }}>{row.date}</div>
-                                                    </td>
-                                                    <td style={{ whiteSpace: "nowrap" }}>
                                                         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                                                            <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: "#f1f5f9", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "10px", fontWeight: "700", color: "#64748b" }}>{(row.provider || "D")[0]}</div>
-                                                            <span style={{ fontSize: "13px", fontWeight: "600", color: "#475569" }}>{row.provider}</span>
+                                                            <div style={{ width: "24px", height: "24px", borderRadius: "50%", background: "#f1f5f9", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "10px", fontWeight: "700", color: "#64748b" }}>{(member.full_name || "U")[0]}</div>
+                                                            <span style={{ fontSize: "13px", fontWeight: "600", color: "#475569" }}>{member.full_name || member.name || "Unknown"}</span>
                                                         </div>
                                                     </td>
+                                                    <td style={{ fontSize: "12px", fontWeight: "700", color: "#64748b", textTransform: "capitalize" }}>{member.role || "Provider"}</td>
+                                                    <td style={{ fontSize: "12px", color: "#64748b" }}>{member.email}</td>
                                                     <td style={{ whiteSpace: "nowrap" }}>
                                                         <span style={{ color: statusColor, background: `${statusColor}15`, padding: "4px 12px", borderRadius: "20px", fontWeight: "700", fontSize: "11px", display: "inline-flex", alignItems: "center", gap: "4px" }}>
                                                             <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: statusColor }} />
-                                                            {row.status}
+                                                            {member.status || "Active"}
                                                         </span>
                                                     </td>
                                                     <td style={{ textAlign: "right", whiteSpace: "nowrap" }}>
-                                                        <button className={styles.outlineBtn} style={{ height: "32px", fontSize: "12px" }}>Review</button>
+                                                        <button className={styles.outlineBtn} style={{ height: "32px", fontSize: "12px" }}>Details</button>
                                                     </td>
                                                 </tr>
                                             );
@@ -205,19 +189,19 @@ export default function CardiologyDepartmentPage() {
                             </div>
                         </div>
 
-                        {/* On-Duty Staff */}
+                        {/* Hospital Staff Overview */}
                         <div className={styles.card} style={{ marginBottom: "24px" }}>
-                            <div className={styles.cardTitle}>On-Duty Staff</div>
+                            <div className={styles.cardTitle}>Active Staff</div>
                             <div style={{ marginTop: "16px" }}>
                                 {loading ? (
                                     <div style={{ color: "#94a3b8", fontSize: "13px", padding: "12px 0" }}>Loading staff...</div>
-                                ) : onDutyStaff.length === 0 ? (
-                                    <div style={{ color: "#94a3b8", fontSize: "13px", padding: "12px 0" }}>Backend not connected — staff unavailable.</div>
-                                ) : onDutyStaff.slice(0, 4).map((s, i) => (
-                                    <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "12px 0", borderBottom: i < onDutyStaff.length - 1 ? "1px solid #f1f5f9" : "none" }}>
+                                ) : staff.length === 0 ? (
+                                    <div style={{ color: "#94a3b8", fontSize: "13px", padding: "12px 0" }}>No staff members available.</div>
+                                ) : staff.slice(0, 4).map((s, i) => (
+                                    <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "12px 0", borderBottom: i < staff.length - 1 ? "1px solid #f1f5f9" : "none" }}>
                                         <div style={{ fontSize: "13px", fontWeight: "600" }}>{s.full_name || s.name || "—"}</div>
-                                        <div style={{ fontSize: "10px", color: s.is_active !== false ? "#10b981" : "#f59e0b", fontWeight: "800" }}>
-                                            {s.status || (s.is_active !== false ? "Active" : "Away")}
+                                        <div style={{ fontSize: "10px", color: s.status === "active" ? "#10b981" : "#f59e0b", fontWeight: "800" }}>
+                                            {s.status || "Active"}
                                         </div>
                                     </div>
                                 ))}

@@ -18,6 +18,25 @@ export const fetchTasks = async () => {
 };
 
 /**
+ * Extract doctor credentials from an uploaded certificate image
+ * Endpoint: POST /api/v1/doctor/extract-credentials
+ */
+export const extractDoctorCredentials = async (certificateFile) => {
+    const formData = new FormData();
+    formData.append("certificate_image", certificateFile);
+
+    const headers = getAuthHeaders();
+    delete headers["Content-Type"]; // Let browser set multipart boundary
+
+    const response = await fetch(`${API_BASE_URL}/doctor/extract-credentials`, {
+        method: "POST",
+        headers: headers,
+        body: formData,
+    });
+    return handleResponse(response);
+};
+
+/**
  * Search Doctors
  * Endpoint: GET /api/v1/doctors/search
  */

@@ -87,8 +87,9 @@ export default function DoctorDashboard() {
       if (profile.role !== "doctor") {
         const r = (profile.role || "").toLowerCase();
         const path = r === "patient" ? "/dashboard/patient"
-          : (r === "admin" || r === "administrator" || r === "hospital") ? "/dashboard/admin"
-            : null;
+          : (r === "admin" || r === "administrator") ? "/dashboard/admin"
+            : r === "hospital" ? "/dashboard/hospital"
+              : null;
         if (path) router.replace(path);
         return;
       }
@@ -156,20 +157,35 @@ export default function DoctorDashboard() {
     }
   };
 
-  if (!isMounted) return null;
+  useEffect(() => {
+    const fetchToday = async () => {
+      const today = new Date().toISOString().split('T')[0];
+      try {
+        const response = await fetchCalendarDay(today);
+        setSelectedDayEvents(response?.events || []);
+      } catch (err) {
+        console.error("Init today events error:", err);
+      }
+    };
+    if (isMounted) fetchToday();
+  }, [isMounted]);
 
-  const currentMonthName = currentDate?.toLocaleString('default', { month: 'long' }) || "";
-  const currentYear = currentDate?.getFullYear() || 2026;
-  const daysInMonthCount = currentDate ? new Date(currentYear, currentDate.getMonth() + 1, 0).getDate() : 30;
+  if (!isMounted || !currentDate) return null;
+
+  const currentMonthName = currentDate.toLocaleString('default', { month: 'long' });
+  const currentYear = currentDate.getFullYear();
+  const daysInMonthCount = new Date(currentYear, currentDate.getMonth() + 1, 0).getDate();
   const daysInMonth = Array.from({ length: daysInMonthCount }, (_, i) => i + 1);
   const todayDate = new Date().getDate();
-  const isTodayMonth = currentDate ? (currentDate.getMonth() === new Date().getMonth() && currentDate.getFullYear() === new Date().getFullYear()) : false;
+  const isTodayMonth = currentDate.getMonth() === new Date().getMonth() && currentDate.getFullYear() === new Date().getFullYear();
+
 
   const changeMonth = (offset) => {
     const newDate = new Date(currentDate);
     newDate.setMonth(newDate.getMonth() + offset);
     setCurrentDate(newDate);
   };
+
 
   const handleDayClick = async (day) => {
     const newSelected = new Date(currentYear, currentDate.getMonth(), day);

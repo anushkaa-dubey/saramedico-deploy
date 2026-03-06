@@ -20,6 +20,7 @@ const roles = [
     {
         title: "Hospital",
         loginUrl: "/auth/login?role=hospital",
+        signupUrl: "/auth/signup?role=hospital",
     },
 ];
 
@@ -39,7 +40,7 @@ export default function RolesPage() {
                 width: "100%",
                 maxWidth: "900px",
                 display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+                gridTemplateColumns: "repeat(2, 1fr)",
                 gap: "24px",
             }}>
                 {roles.map((role) => (

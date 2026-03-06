@@ -1,19 +1,29 @@
 "use client";
 import { useState, useEffect } from "react";
 import styles from "./AdminDashboard.module.css";
-// import notificationIcon from "@/public/icons/notification.svg";
-import searchIcon from "@/public/icons/search.svg";
-import docIcon from "@/public/icons/docs.svg";
-import personIcon from "@/public/icons/person.svg";
-import micIcon from "@/public/icons/mic_white.svg";
-import scheduleIcon from "@/public/icons/schedule.svg";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { fetchCalendarMonth, fetchCalendarDay } from "@/services/calendar";
 import { fetchAdminOverview, fetchAdminAuditLogs, fetchAuditLogs } from "@/services/admin";
 import { fetchProfile, searchDoctors, searchDoctorDirectory } from "@/services/doctor";
-import { ChevronLeft, ChevronRight, Plus, User, FileText, Activity, AlertCircle } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Plus,
+  User,
+  FileText,
+  Activity,
+  AlertCircle,
+  Search,
+  Users,
+  Shield,
+  TrendingUp,
+  ClipboardList,
+  Calendar as CalendarIcon,
+  Bell,
+  Mail
+} from "lucide-react";
 
 
 const containerVariants = {
@@ -98,6 +108,7 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     const loadMonthData = async () => {
+      if (!currentDate) return;
       try {
         const year = currentDate.getFullYear();
         const month = currentDate.getMonth() + 1;
@@ -142,6 +153,30 @@ export default function AdminDashboard() {
     return () => clearTimeout(debounceSearch);
   }, [searchQuery, searchFilter]);
 
+
+
+  useEffect(() => {
+    const fetchToday = async () => {
+      const today = new Date().toISOString().split('T')[0];
+      try {
+        const response = await fetchCalendarDay(today);
+        setSelectedDayEvents(response?.events || []);
+      } catch (err) {
+        console.error("Init today events error:", err);
+      }
+    };
+    if (isMounted) fetchToday();
+  }, [isMounted]);
+
+  if (!currentDate || !isMounted) return null;
+
+  const currentMonthName = currentDate.toLocaleString('default', { month: 'long' });
+  const currentYear = currentDate.getFullYear();
+  const daysInMonthCount = new Date(currentYear, currentDate.getMonth() + 1, 0).getDate();
+  const daysInMonth = Array.from({ length: daysInMonthCount }, (_, i) => i + 1);
+  const todayDate = new Date().getDate();
+  const isTodayMonth = currentDate.getMonth() === new Date().getMonth() && currentDate.getFullYear() === new Date().getFullYear();
+
   const handleDayClick = async (day) => {
     const selectedDate = new Date(currentYear, currentDate.getMonth(), day);
     const dateStr = selectedDate.toISOString().split('T')[0];
@@ -160,27 +195,13 @@ export default function AdminDashboard() {
     setCurrentDate(newDate);
   };
 
-  useEffect(() => {
-    const fetchToday = async () => {
-      const today = new Date().toISOString().split('T')[0];
-      try {
-        const response = await fetchCalendarDay(today);
-        setSelectedDayEvents(response?.events || []);
-      } catch (err) {
-        console.error("Init today events error:", err);
-      }
-    };
-    if (isMounted) fetchToday();
-  }, [isMounted]);
 
-  if (!currentDate) return null;
 
-  const currentMonthName = currentDate.toLocaleString('default', { month: 'long' });
-  const currentYear = currentDate.getFullYear();
-  const daysInMonthCount = new Date(currentYear, currentDate.getMonth() + 1, 0).getDate();
-  const daysInMonth = Array.from({ length: daysInMonthCount }, (_, i) => i + 1);
-  const todayDate = new Date().getDate();
-  const isTodayMonth = currentDate.getMonth() === new Date().getMonth() && currentDate.getFullYear() === new Date().getFullYear();
+
+
+
+
+
 
   const getDayAvailability = (day) => {
     const count = monthData[day];
@@ -227,10 +248,10 @@ export default function AdminDashboard() {
         <>
           <motion.div variants={itemVariants} className={styles.topbar}>
             <div className={styles.searchWrapper}>
-              <img src={searchIcon.src} alt="Search" className={styles.searchIcon} />
+              <Search size={18} className={styles.searchIcon} color="#64748b" />
               <input
                 className={styles.search}
-                placeholder="Search doctors..."
+                placeholder="Search doctors or staff..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 onFocus={() => setIsSearchFocused(true)}
@@ -263,10 +284,12 @@ export default function AdminDashboard() {
                     ) : (
                       topMatches.map((match, idx) => (
                         <Link key={idx} href={`/dashboard/admin/doctors/${match.id}`} className={styles.matchItem} style={{ textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
-                          <img src={match.photo_url || personIcon.src} alt="" width="24" height="24" style={{ borderRadius: '50%', objectFit: 'cover' }} />
+                          <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                            {match.photo_url ? <img src={match.photo_url} alt="" width="24" height="24" style={{ objectFit: 'cover' }} /> : <User size={14} color="#64748b" />}
+                          </div>
                           <div style={{ display: 'flex', flexDirection: 'column', color: '#0f172a' }}>
-                            <span>{match.name || match.full_name || "Doctor"}</span>
-                            <span style={{ fontSize: '11px', color: '#64748b' }}>{match.specialty || "General Physician"}</span>
+                            <span style={{ fontWeight: '600' }}>{match.name || match.full_name || "Doctor"}</span>
+                            <span style={{ fontSize: '11px', color: '#64748b' }}>{match.specialty || "Clinician"}</span>
                           </div>
                         </Link>
                       ))
@@ -297,15 +320,15 @@ export default function AdminDashboard() {
             </div>
 
             <Link href="/dashboard/admin/manage-accounts/invite" className={styles.inviteBtn}>
-              <img src={micIcon.src} alt="Mic" width="16" height="16" />
+              <Plus size={16} />
               Invite User
             </Link>
           </motion.div>
 
           <motion.div className={styles.summaryCards} variants={itemVariants}>
             <div className={styles.summaryCard}>
-              <div className={styles.summaryIcon} style={{ background: '#eff6ff' }}>
-                <img src={personIcon.src} alt="" width="20" />
+              <div className={styles.summaryIcon} style={{ background: '#eff6ff', color: '#3b82f6' }}>
+                <Users size={22} />
               </div>
               <div className={styles.summaryInfo}>
                 <span className={styles.summaryLabel}>Active Staff</span>
@@ -318,8 +341,8 @@ export default function AdminDashboard() {
               </div>
             </div>
             <div className={styles.summaryCard}>
-              <div className={styles.summaryIcon} style={{ background: '#fef2f2' }}>
-                <img src={micIcon.src} alt="" width="20" />
+              <div className={styles.summaryIcon} style={{ background: '#fef2f2', color: '#ef4444' }}>
+                <Activity size={22} />
               </div>
               <div className={styles.summaryInfo}>
                 <span className={styles.summaryLabel}>Total Consultations</span>
@@ -332,8 +355,8 @@ export default function AdminDashboard() {
               </div>
             </div>
             <div className={styles.summaryCard}>
-              <div className={styles.summaryIcon} style={{ background: '#f0fdf4' }}>
-                <img src={docIcon.src} alt="" width="20" />
+              <div className={styles.summaryIcon} style={{ background: '#f0fdf4', color: '#16a34a' }}>
+                <Shield size={22} />
               </div>
               <div className={styles.summaryInfo}>
                 <span className={styles.summaryLabel}>Organization status</span>
@@ -371,7 +394,7 @@ export default function AdminDashboard() {
                             <strong>{item.title}</strong>
                             <span>{item.type.toUpperCase()}</span>
                           </div>
-                          <img src={scheduleIcon.src} alt="" width="14" style={{ opacity: 0.4 }} />
+                          <CalendarIcon size={14} color="#64748b" style={{ opacity: 0.5 }} />
                         </div>
                       </div>
                     ))
@@ -460,6 +483,7 @@ export default function AdminDashboard() {
                 </div>
               </motion.div>
 
+              {/* 
               <motion.div className={`${styles.card} ${styles.alertCard}`} variants={itemVariants}>
                 <h3>System Alerts</h3>
                 <div className={styles.alertList}>
@@ -484,6 +508,7 @@ export default function AdminDashboard() {
                   )}
                 </div>
               </motion.div>
+              */}
             </div>
           </section>
         </>

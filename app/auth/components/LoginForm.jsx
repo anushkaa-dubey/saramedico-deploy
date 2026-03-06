@@ -4,16 +4,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { loginUser, getCurrentUser } from "@/services/auth";
 
-/** Maps backend role strings to frontend dashboard paths */
-function getRolePath(role) {
-  if (!role) return null;
-  const r = role.toLowerCase();
-  if (r === "doctor") return "/dashboard/doctor";
-  if (r === "patient") return "/dashboard/patient";
-  if (r === "admin" || r === "administrator" || r === "hospital") return "/dashboard/admin";
-  return null; // unknown role
-}
-
 export default function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -56,14 +46,19 @@ export default function LoginForm() {
       localStorage.setItem("user", JSON.stringify(user));
 
       // Step 4: Resolve the dashboard path based on backend-provided role
-      const rolePath = getRolePath(user.role);
+      const userRole = (user.role || "").toLowerCase();
 
-      if (rolePath) {
-        console.log(`[Login] role="${user.role}" → ${rolePath}`);
-        router.replace(rolePath);
+      if (userRole === "doctor" && !user.onboarding_complete) {
+        router.replace("/auth/signup/onboarding/doctor/step-1");
+      } else if (userRole === "doctor") {
+        router.replace("/dashboard/doctor");
+      } else if (userRole === "patient") {
+        router.replace("/dashboard/patient");
+      } else if (userRole === "admin" || userRole === "administrator") {
+        router.replace("/dashboard/admin");
+      } else if (userRole === "hospital") {
+        router.replace("/dashboard/hospital");
       } else {
-        // If role is truly unknown, log it and fall back safely
-        console.warn(`[Login] Unknown role: "${user.role}" — defaulting to patient dashboard`);
         router.replace("/dashboard/patient");
       }
     } catch (err) {

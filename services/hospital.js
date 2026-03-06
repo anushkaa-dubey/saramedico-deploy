@@ -1,4 +1,5 @@
 import { API_BASE_URL, getAuthHeaders, handleResponse } from "./apiConfig";
+import { fetchOrgMembers, fetchDepartmentStaff as fetchAdminDepartmentStaff } from "./admin";
 
 /**
  * 1. Register a New Hospital
@@ -46,17 +47,17 @@ export const loginHospital = async (email, password) => {
 
 /**
  * 3. Fetch Home / Overview Page
- * Endpoint: GET /api/v1/hospital/dashboard/overview
+ * Endpoint: GET /api/v1/admin/overview
  */
 export const fetchHospitalDashboardOverview = async () => {
     try {
-        const response = await fetch(`${API_BASE_URL}/hospital/dashboard/overview`, {
+        const response = await fetch(`${API_BASE_URL}/admin/overview`, {
             headers: getAuthHeaders(),
         });
         return await handleResponse(response);
     } catch (err) {
         console.error("fetchHospitalDashboardOverview error:", err);
-        return { metrics: {}, recentActivities: [] };
+        return { metrics: {}, recent_activity: [], alerts: [] };
     }
 };
 
@@ -116,17 +117,17 @@ export const fetchHospitalPatients = async () => {
 
 /**
  * 7. Fetch Staff Data
- * Endpoint: GET /api/v1/hospital/staff
+ * Endpoint: GET /api/v1/team/staff
  */
 export const fetchHospitalStaff = async () => {
     try {
-        const response = await fetch(`${API_BASE_URL}/hospital/staff`, {
+        const response = await fetch(`${API_BASE_URL}/team/staff`, {
             headers: getAuthHeaders(),
         });
         return await handleResponse(response);
     } catch (err) {
         console.error("fetchHospitalStaff error:", err);
-        return { metrics: {}, staff: [] };
+        return [];
     }
 };
 
@@ -182,4 +183,46 @@ export const createHospitalTask = async (payload) => {
         console.error("createHospitalTask error:", err);
         throw err;
     }
+};
+
+/**
+ * 11. Fetch Audit Logs
+ * Endpoint: GET /api/v1/audit/logs
+ */
+export const fetchAuditLogs = async () => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/audit/logs`, {
+            headers: getAuthHeaders(),
+        });
+        return await handleResponse(response);
+    } catch (err) {
+        console.error("fetchAuditLogs error:", err);
+        return [];
+    }
+};
+
+/**
+ * 12. Fetch Organization Overview (Redirected)
+ */
+export const fetchHospitalStats = async () => {
+    return fetchHospitalDashboardOverview();
+};
+
+
+// --- Team & Organization Exports (Aliased from Admin Service where available) ---
+
+export const fetchDepartmentStaff = async (params) => {
+    return fetchAdminDepartmentStaff(params);
+};
+
+export const fetchOrganizationMembers = async () => {
+    return fetchOrgMembers();
+};
+
+export const fetchHospitalAppointments = async () => {
+    return [];
+};
+
+export const fetchReviewQueue = async () => {
+    return [];
 };

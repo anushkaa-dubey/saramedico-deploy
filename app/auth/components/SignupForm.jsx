@@ -15,7 +15,6 @@ export default function SignupForm() {
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [isClient, setIsClient] = useState(false);
 
-  // Form state matching backend payload
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -41,16 +40,14 @@ export default function SignupForm() {
     const sessionRole = typeof window !== "undefined" ? sessionStorage.getItem("selectedRole") : null;
     const role = urlRole || sessionRole || "doctor";
 
-    // Patients cannot sign up
-    if (role === "patient") {
-      router.push(`/auth/login?role=patient`);
+    if (role === "patient" || role === "admin" || role === "administrator") {
+      router.push(`/auth/login?role=${role === "patient" ? "patient" : "admin"}`);
       return;
     }
 
     setFormData(prev => ({ ...prev, role }));
   }, [searchParams, router]);
 
-  // Password Rules Calculation
   const hasMinLength = formData.password.length >= 8;
   const hasUppercase = /[A-Z]/.test(formData.password);
   const hasNumber = /[0-9]/.test(formData.password);
@@ -58,7 +55,6 @@ export default function SignupForm() {
 
   const passwordsMatch = formData.password && formData.confirm_password && formData.password === formData.confirm_password;
 
-  // Frontend validation
   const validateForm = () => {
     const newErrors = {};
 
@@ -121,7 +117,6 @@ export default function SignupForm() {
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-    // Clear error for this field when user starts typing
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: "" }));
     }
@@ -166,31 +161,18 @@ export default function SignupForm() {
         organization_name: formData.organization_name
       };
 
-      // 1. Register User
-      await registerUser(payload);
+      const userRole = (formData.role || "").toLowerCase();
 
-      // 2. Auto-login after registration
-      await loginUser({
-        email: formData.email,
-        password: formData.password
-      });
-
-      // 3. Fetch user details to get role
-      const { getCurrentUser } = await import("@/services/auth");
-      const user = await getCurrentUser();
-
-      if (!user) {
-        throw new Error("Failed to fetch user profile after signup.");
-      }
-
-      localStorage.setItem("user", JSON.stringify(user));
-
-      // 4. Redirect to dashboard or onboarding
-      const userRole = user.role || formData.role;
-
-      if (userRole === "doctor" && !user?.onboarding_complete) {
+      if (userRole === "doctor") {
+        sessionStorage.setItem("signup_data", JSON.stringify(payload));
         router.push("/auth/signup/onboarding/doctor/step-1");
+      } else if (userRole === "hospital") {
+        await registerUser(payload);
+        await loginUser({ email: formData.email, password: formData.password });
+        router.push("/dashboard/hospital");
       } else {
+        await registerUser(payload);
+        await loginUser({ email: formData.email, password: formData.password });
         router.push(`/dashboard/${userRole}`);
       }
     } catch (err) {
@@ -201,7 +183,7 @@ export default function SignupForm() {
     }
   };
 
-  if (!isClient) return null; // Avoid hydration mismatch
+  if (!isClient) return null;
 
   return (
     <>

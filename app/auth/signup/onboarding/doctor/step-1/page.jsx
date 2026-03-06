@@ -47,11 +47,10 @@ export default function DoctorOnboardingStep1() {
       // Find the label for the selected ID
       const specialtyLabel = specialties.find(s => s.id === selectedSpecialty)?.label || selectedSpecialty;
 
-      const updatedUser = await updateDoctorProfile({ specialty: specialtyLabel });
-
-      // Update local storage
-      const user = JSON.parse(localStorage.getItem("user") || "{}");
-      localStorage.setItem("user", JSON.stringify({ ...user, ...updatedUser }));
+      // Update session storage
+      const signupData = JSON.parse(sessionStorage.getItem("signup_data") || "{}");
+      signupData.specialty = specialtyLabel;
+      sessionStorage.setItem("signup_data", JSON.stringify(signupData));
 
       router.push("/auth/signup/onboarding/doctor/step-2");
     } catch (err) {
@@ -72,13 +71,13 @@ export default function DoctorOnboardingStep1() {
         <div className={styles.card}>
           <div className={styles.topBar}>
             <div className={styles.stepInfo}>
-              <span className={styles.stepTitle}>STEP 1 OF 3</span>
+              <span className={styles.stepTitle}>STEP 1 OF 2</span>
               <h2 className={styles.mainTitle}>Select Specialty</h2>
             </div>
             <div className={styles.progressSection}>
-              <span className={styles.progressText}>33% Completed</span>
+              <span className={styles.progressText}>50% Completed</span>
               <div className={styles.progressBarBg}>
-                <div className={styles.progressBarFill} style={{ width: "33%" }}></div>
+                <div className={styles.progressBarFill} style={{ width: "50%" }}></div>
               </div>
             </div>
           </div>
@@ -91,7 +90,7 @@ export default function DoctorOnboardingStep1() {
               <span className={styles.searchIcon}><Search size={18} />  </span>
               <input
                 type="text"
-                placeholder="Search patients, reports, notes..."
+                placeholder="Search Specialty"
                 className={styles.searchInput}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
