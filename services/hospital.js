@@ -385,6 +385,67 @@ export async function fetchPatientRecords(patientId) {
     );
 
     if (!res.ok) throw new Error("Failed to fetch patient records");
-
     return res.json();
 }
+
+/**
+ * Settings & Profile
+ * These reuse the admin settings endpoints which are filtered by organization_id
+ */
+export const fetchHospitalSettings = async () => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/hospital/settings`, {
+            headers: getAuthHeaders(),
+        });
+        return await handleResponse(response);
+    } catch (err) {
+        console.error("fetchHospitalSettings error:", err);
+        throw err;
+    }
+};
+
+export const updateHospitalProfile = async (payload) => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/hospital/settings/profile`, {
+            method: "PATCH",
+            headers: getAuthHeaders(),
+            body: JSON.stringify(payload),
+        });
+        return await handleResponse(response);
+    } catch (err) {
+        console.error("updateHospitalProfile error:", err);
+        throw err;
+    }
+};
+
+export const uploadHospitalAvatar = async (file) => {
+    try {
+        const formData = new FormData();
+        formData.append("file", file);
+        const headers = getAuthHeaders();
+        delete headers["Content-Type"];
+        const response = await fetch(`${API_BASE_URL}/hospital/settings/avatar`, {
+            method: "POST",
+            headers,
+            body: formData,
+        });
+        return await handleResponse(response);
+    } catch (err) {
+        console.error("uploadHospitalAvatar error:", err);
+        throw err;
+    }
+};
+
+export const updateHospitalOrgSettings = async (payload) => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/hospital/settings/organization`, {
+            method: "PATCH",
+            headers: getAuthHeaders(),
+            body: JSON.stringify(payload),
+        });
+        return await handleResponse(response);
+    } catch (err) {
+        console.error("updateHospitalOrgSettings error:", err);
+        throw err;
+    }
+};

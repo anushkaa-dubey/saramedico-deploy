@@ -1,12 +1,26 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { logoutUser } from "@/services/auth";
-
 import { usePathname, useRouter } from "next/navigation";
 import styles from "../HospitalDashboard.module.css";
-import logo from "@/public/logo2.svg";
-import { LayoutDashboard, ClipboardList, Calendar, Users, Menu, LogOut, Building2, Plus, ChevronDown, X } from "lucide-react";
+import logo from "@/public/logo.png";
+import {
+    LayoutDashboard,
+    Users,
+    Calendar,
+    Activity,
+    User,
+    PlusCircle,
+    LogOut,
+    Menu,
+    Building2,
+    ClipboardList, // Keep ClipboardList if it's used elsewhere, otherwise remove. Assuming it's not used based on the snippet.
+    Plus, // Keep Plus if it's used elsewhere, otherwise remove.
+    ChevronDown, // Keep ChevronDown as it's used for department toggle.
+    X // Keep X if it's used elsewhere, otherwise remove.
+} from "lucide-react";
+import { logoutUser } from "@/services/auth";
+import SignoutModal from "../../../auth/components/SignoutModal";
 import { fetchHospitalDirectory } from "@/services/hospital";
 import { fetchOrganizationDepartments } from "@/services/hospital";
 
@@ -35,6 +49,7 @@ export default function Sidebar() {
     const [isOpen, setIsOpen] = useState(false);
     const [isDeptOpen, setIsDeptOpen] = useState(true);
     const [departments, setDepartments] = useState([]);
+    const [isSignoutModalOpen, setIsSignoutModalOpen] = useState(false);
 
     const isActive = (path) => {
         if (path === "/dashboard/hospital") return pathname === path;
@@ -197,25 +212,43 @@ export default function Sidebar() {
                         </Link>
                     </nav>
                 </div>
+                
+                <div className={styles.sidebarBottom} style={{ marginTop: "auto", paddingBottom: "20px" }}>
+                    <Link
+                        href="/dashboard/hospital/settings"
+                        className={`${styles.navItem} ${isActive("/dashboard/hospital/settings") ? styles.active : ""}`}
+                        style={{ margin: "0 12px 8px", width: "calc(100% - 24px)" }}
+                        onClick={() => setIsOpen(false)}
+                    >
+                        <Building2 size={18} />
+                        Settings
+                    </Link>
 
-                <button
-                    className={styles.logoutBtn}
-                    onClick={handleLogout}
-                    style={{
-                        margin: "0 12px 24px",
-                        width: "calc(100% - 24px)",
-                        background: "transparent",
-                        border: "1px solid #e2e8f0",
-                        color: "#64748b",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                    }}
-                >
-                    <LogOut size={18} style={{ marginRight: "10px" }} />
-                    Logout
-                </button>
+                    <button
+                        className={styles.logoutBtn}
+                        onClick={() => setIsSignoutModalOpen(true)}
+                        style={{
+                            margin: "0 12px",
+                            width: "calc(100% - 24px)",
+                            background: "transparent",
+                            border: "1px solid #e2e8f0",
+                            color: "#64748b",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                        }}
+                    >
+                        <LogOut size={18} style={{ marginRight: "10px" }} />
+                        Logout
+                    </button>
+                </div>
             </aside>
+
+            <SignoutModal 
+                isOpen={isSignoutModalOpen}
+                onConfirm={handleLogout}
+                onCancel={() => setIsSignoutModalOpen(false)}
+            />
         </>
     );
 }
