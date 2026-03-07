@@ -42,7 +42,9 @@ export default function LiveConsultPage() {
             full_name: name,
             email,
             mrn,
-            last_activity: p.last_activity || p.reason || p.activity || p.chief_complaint || "Consultation",
+            last_activity: typeof (p.last_activity || p.reason || p.activity || p.chief_complaint) === 'object' 
+                ? ((p.last_activity || p.reason || p.activity || p.chief_complaint)?.chief_complaint || "Consultation")
+                : (p.last_activity || p.reason || p.activity || p.chief_complaint || "Consultation"),
             last_visit_date: p.last_visit_date || p.timestamp || p.date || p.last_visit || p.scheduled_at || null,
         };
     };

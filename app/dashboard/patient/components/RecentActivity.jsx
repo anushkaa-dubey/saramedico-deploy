@@ -64,7 +64,11 @@ export default function RecentActivity({ consultations }) {
                     <span>{item.doctorName || item.doctor_name || item.doctor?.full_name || "Doctor"}</span>
                   </div>
                 </td>
-                <td>{item.chiefComplaint || item.chief_complaint || item.reason || "Consultation"}</td>
+                <td>
+                  {typeof (item.chiefComplaint || item.chief_complaint || item.reason) === 'object'
+                    ? ((item.chiefComplaint || item.chief_complaint || item.reason)?.chief_complaint || "Consultation")
+                    : (item.chiefComplaint || item.chief_complaint || item.reason || "Consultation")}
+                </td>
                 <td style={{ color: "#64748b" }}>
                   {(() => {
                     const d = item.scheduledAt || item.scheduled_at || item.appointment_time || item.requested_date;
@@ -93,7 +97,7 @@ export default function RecentActivity({ consultations }) {
               <div>
                 <span className={styles.docName}>{item.doctorName || item.doctor_name || item.doctor?.full_name || "Doctor"}</span>
                 <span className={styles.visitMeta}>
-                  {(() => { const d = item.scheduledAt || item.scheduled_at || item.requested_date; return d ? new Date(d).toLocaleDateString() : "—"; })()} • {item.chiefComplaint || item.chief_complaint || item.reason || "Consultation"}
+                  {(() => { const d = item.scheduledAt || item.scheduled_at || item.requested_date; return d ? new Date(d).toLocaleDateString() : "—"; })()} • {typeof (item.chiefComplaint || item.chief_complaint || item.reason) === 'object' ? ((item.chiefComplaint || item.chief_complaint || item.reason)?.chief_complaint || "Consultation") : (item.chiefComplaint || item.chief_complaint || item.reason || "Consultation")}
                 </span>
               </div>
             </div>

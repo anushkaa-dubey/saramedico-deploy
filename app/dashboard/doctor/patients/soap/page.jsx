@@ -196,7 +196,11 @@ function SoapNotesPage() {
 
                 <div className={styles.pDetailGroup} style={{ marginLeft: "auto" }}>
                     <span className={styles.pLabel}>REASON FOR VISIT</span>
-                    <span className={styles.pValue}>{consultation.chief_complaint || consultation.reason || "Consultation"}</span>
+                    <span className={styles.pValue}>
+                        {typeof (consultation.chief_complaint || consultation.reason) === 'object' 
+                          ? ((consultation.chief_complaint || consultation.reason)?.chief_complaint || "Consultation") 
+                          : (consultation.chief_complaint || consultation.reason || "Consultation")}
+                    </span>
                 </div>
                 <div className={styles.pDetailGroup}>
                     <span className={styles.pLabel}>VISIT TYPE</span>

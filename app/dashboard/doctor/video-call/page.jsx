@@ -156,7 +156,11 @@ function DoctorVideoCallPage() {
                 <div className={styles.patientMeta}>
                     <div className={styles.metaItem}>
                         <span className={styles.metaLabel}>REASON</span>
-                        <span className={styles.metaValue}>{appointment?.reason || appointment?.chief_complaint || "Recurring Migraines"}</span>
+                        <span className={styles.metaValue}>
+                            {typeof (appointment?.reason || appointment?.chief_complaint) === 'object' 
+                              ? ((appointment?.reason || appointment?.chief_complaint)?.chief_complaint || "Recurring Migraines") 
+                              : (appointment?.reason || appointment?.chief_complaint || "Recurring Migraines")}
+                        </span>
                     </div>
                 </div>
             </section>
