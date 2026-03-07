@@ -219,11 +219,30 @@ export const fetchHospitalStats = async () => {
 // };
 
 export const fetchHospitalAppointments = async () => {
-    return [];
+    try {
+        const response = await fetch(`${API_BASE_URL}/consultations`, {
+            method: 'GET',
+            headers: getAuthHeaders(),
+        });
+        const data = await handleResponse(response);
+        return Array.isArray(data) ? data : (data?.consultations || []);
+    } catch (err) {
+        console.error("fetchHospitalAppointments error:", err);
+        return [];
+    }
 };
 
-export const fetchReviewQueue = async () => {
-    return [];
+export const deleteCalendarEvent = async (id) => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/calendar/events/${id}`, {
+            method: 'DELETE',
+            headers: getAuthHeaders(),
+        });
+        return await handleResponse(response);
+    } catch (err) {
+        console.error("deleteCalendarEvent error:", err);
+        throw err;
+    }
 };
 
 /**
@@ -298,13 +317,18 @@ export const fetchPendingInvites = async () => {
  * Update a hospital doctor's role.
  * Endpoint: PATCH /api/v1/hospital/doctor/{doctor_id}
  */
-export const updateHospitalDoctor = async (doctorId, updates) => {
-    const response = await fetch(`${API_BASE_URL}/hospital/doctor/${doctorId}`, {
-        method: "PATCH",
-        headers: getAuthHeaders(),
-        body: JSON.stringify(updates),
-    });
-    return handleResponse(response);
+export const updateHospitalDoctor = async (doctorId, payload) => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/hospital/doctor/${doctorId}`, {
+            method: 'PATCH',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(payload),
+        });
+        return await handleResponse(response);
+    } catch (err) {
+        console.error("updateHospitalDoctor error:", err);
+        throw err;
+    }
 };
 
 /**
@@ -361,13 +385,59 @@ export const fetchDepartmentStaff = async (departmentName) => {
 
 export const fetchOrganizationMembers = async () => {
     try {
-        const response = await fetch(`${API_BASE_URL}/team/staff`, {
+        const response = await fetch(`${API_BASE_URL}/organization/members`, {
+            method: 'GET',
             headers: getAuthHeaders(),
         });
         const data = await handleResponse(response);
-        return Array.isArray(data) ? data : (data?.staff || []);
+        return Array.isArray(data) ? data : (data?.members || []);
     } catch (err) {
         console.error("fetchOrganizationMembers error:", err);
         return [];
+    }
+};
+
+/**
+ * Fetch tasks (Temporarily mocked/bypassed)
+ * TODO: Enable when API is unrestricted
+ */
+export const fetchTasks = async () => {
+    try {
+        // Temporarily return mock data instead of calling API
+        return [
+            // { id: 1, title: "Sample Task", completed: false }
+        ];
+    } catch (err) {
+        console.error("fetchTasks error:", err);
+        return [];
+    }
+};
+
+/**
+ * Add task (Temporarily mocked/bypassed)
+ * TODO: Enable when API is unrestricted
+ */
+export const addTask = async (payload) => {
+    try {
+        console.warn("Task API is currently restricted. Task not saved:", payload);
+        // Temporarily return mock response
+        return { id: Date.now(), ...payload, success: true };
+    } catch (err) {
+        console.error("addTask error:", err);
+        throw err;
+    }
+};
+
+/**
+ * Delete task (Temporarily mocked/bypassed)
+ * TODO: Enable when API is unrestricted
+ */
+export const deleteTask = async (id) => {
+    try {
+        console.warn("Task API is currently restricted. Task not deleted:", id);
+        return { success: true };
+    } catch (err) {
+        console.error("deleteTask error:", err);
+        throw err;
     }
 };

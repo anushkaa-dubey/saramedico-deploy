@@ -105,62 +105,76 @@ appointments
   .map(app => {
                                 return (
                                     <tr key={app.id}>
-                                        <td>
-                                            <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-                                                <div style={{ padding: "8px", background: "#f8fafc", borderRadius: "8px", color: "#6366f1" }}>
-                                                    <CalendarIcon size={16} />
-                                                </div>
-                                                <div>
-                                                    <div style={{ fontWeight: "600", fontSize: "13px" }}>
-                                                        {dateObj ? dateObj.toLocaleDateString() : "—"}
+                                        {(() => {
+                                            const dateObj = app.requested_date ? new Date(app.requested_date) : null;
+                                            const statusStyle = getStatusStyle(app.status);
+                                            return (
+                                                <>
+                                            <td>
+                                                <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                                                    <div style={{ padding: "8px", background: "#f8fafc", borderRadius: "8px", color: "#6366f1" }}>
+                                                        <CalendarIcon size={16} />
                                                     </div>
-                                                    <div style={{ fontSize: "11px", color: "#94a3b8", display: "flex", alignItems: "center", gap: "3px" }}>
-                                                        <Clock size={10} />
-                                                        {dateObj ? dateObj.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "All Day"}
+                                                    <div>
+                                                        <div style={{ fontWeight: "600", fontSize: "13px" }}>
+                                                            {(() => {
+                                                                const dateObj = app.requested_date ? new Date(app.requested_date) : null;
+                                                                return dateObj ? dateObj.toLocaleDateString() : "—";
+                                                            })()}
+                                                        </div>
+                                                        <div style={{ fontSize: "11px", color: "#94a3b8", display: "flex", alignItems: "center", gap: "3px" }}>
+                                                            <Clock size={10} />
+                                                            {(() => {
+                                                                const dateObj = app.requested_date ? new Date(app.requested_date) : null;
+                                                                return dateObj ? dateObj.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "All Day";
+                                                            })()}
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        </td>
+                                            </td>
 
-                                        <td>
-                                            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                                                <User size={14} />
-                                                {app.doctor_name || "—"}
-                                            </div>
-                                        </td>
+                                            <td>
+                                                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                                    <User size={14} />
+                                                    {app.doctor_name || "—"}
+                                                </div>
+                                            </td>
 
-                                        <td>
-                                            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                                                <User size={14} />
-                                                {app.patient_name || "—"}
-                                            </div>
-                                        </td>
+                                            <td>
+                                                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                                    <User size={14} />
+                                                    {app.patient_name || "—"}
+                                                </div>
+                                            </td>
 
-                                        <td>
-                                            <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px" }}>
-                                                <Building2 size={13} />
-                                                {app.organization_name || "—"}
-                                            </div>
-                                        </td>
+                                            <td>
+                                                <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px" }}>
+                                                    <Building2 size={13} />
+                                                    {app.organization_name || "—"}
+                                                </div>
+                                            </td>
 
-                                        <td style={{ fontSize: "13px", maxWidth: "160px" }}>
-                                            {app.reason || "—"}
-                                        </td>
+                                            <td style={{ fontSize: "13px", maxWidth: "160px" }}>
+                                                {app.reason || "—"}
+                                            </td>
 
-                                        <td>
-                                            <span
-                                                style={{
-                                                    padding: "4px 10px",
-                                                    borderRadius: "99px",
-                                                    fontSize: "11px",
-                                                    fontWeight: "700",
-                                                    background: statusStyle.bg,
-                                                    color: statusStyle.text
-                                                }}
-                                            >
-                                                {app.status || "Scheduled"}
-                                            </span>
-                                        </td>
+                                            <td>
+                                                <span
+                                                    style={{
+                                                        padding: "4px 10px",
+                                                        borderRadius: "99px",
+                                                        fontSize: "11px",
+                                                        fontWeight: "700",
+                                                        background: statusStyle.bg,
+                                                        color: statusStyle.text
+                                                    }}
+                                                >
+                                                    {app.status || "Scheduled"}
+                                                </span>
+                                            </td>
+                                            </>
+                                            );
+                                        })()}
                                     </tr>
                                 );
                             })

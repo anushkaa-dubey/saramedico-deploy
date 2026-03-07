@@ -25,9 +25,10 @@ export default function AuditLogsPage() {
 
         try {
             const data = await fetchAdminAuditLogs(filter);
-            setLogs(data || []);
+            setLogs(Array.isArray(data) ? data : []);
         } catch (err) {
             console.error("Audit logs failed:", err);
+            setLogs([]);
         } finally {
             setLoading(false);
         }

@@ -7,6 +7,7 @@ import styles from "../../HospitalDashboard.module.css";
 import { motion } from "framer-motion";
 import {
     fetchHospitalDirectory,
+    fetchOrganizationMembers,
     fetchPendingInvites,
     updateHospitalDoctor,
 } from "@/services/hospital";
@@ -123,17 +124,19 @@ export default function DepartmentPage({ params }) {
         setLoading(true);
         try {
             const [directoryData, invites] = await Promise.all([
-                fetchHospitalDirectory(),
+                fetchOrganizationMembers(),
                 fetchPendingInvites(),
             ]);
 
-            const docs = [
-                ...(directoryData.active_doctors || []),
-                ...(directoryData.inactive_doctors || [])
-            ];
-            const departmentDoctors = docs.filter(
-                d => (d.department || d.specialty) === displayName
-            );
+            const docs = Array.isArray(directoryData) 
+                ? directoryData 
+                : (directoryData?.members || []);
+            
+            const departmentDoctors = docs.filter(d => {
+                const docDept = (d.department || d.specialty || "").trim().toLowerCase();
+                const filterDept = displayName.trim().toLowerCase();
+                return docDept === filterDept;
+            });
 
             setDoctors(departmentDoctors);
             setPendingInvites(invites);

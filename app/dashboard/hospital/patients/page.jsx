@@ -21,10 +21,15 @@ export default function PatientsPage() {
                     fetchHospitalPatients(),
                     fetchHospitalStats()
                 ]);
-                setPatients(patientData?.patients || []);
+                // Handle different response formats
+                const patients = Array.isArray(patientData) 
+                    ? patientData 
+                    : (patientData?.patients || []);
+                setPatients(patients);
                 setStats(statData);
             } catch (err) {
                 console.error("Failed to load patients data:", err);
+                setPatients([]);
             } finally {
                 setLoading(false);
             }

@@ -41,10 +41,12 @@ export default function AppointmentsPage() {
                 fetchCalendarDay(dateStr),
                 fetchTasks()
             ]);
-            setDayEvents(events || []);
-            setDayTasks(tasks || []);
+            setDayEvents(Array.isArray(events) ? events : []);
+            setDayTasks(Array.isArray(tasks) ? tasks : []);
         } catch (err) {
             console.error("Failed to load day data:", err);
+            setDayEvents([]);
+            setDayTasks([]);
         }
     };
 

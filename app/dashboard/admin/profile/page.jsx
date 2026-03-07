@@ -80,7 +80,7 @@ export default function AdminProfilePage() {
 
           <div className={styles.avatarLarge}>
             {profile.avatar_url
-              ? <img src={profile.avatar_url} alt="" />
+              ? <img src={profile.avatar_url} alt="" className="w-[60px] rounded-full aspect-square" style={{width:"70px",aspectRatio:"1",borderRadius:"100%"}} />
               : profile.name?.charAt(0)}
           </div>
 

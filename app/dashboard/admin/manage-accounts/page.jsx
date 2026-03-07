@@ -92,11 +92,11 @@ export default function ManageAccountsPage() {
 
   return (
 
-    <div>
+    <div className="overflow-hidden" style={{overflow:"hidden"}} >
 
-      <h2 className={styles.heading}>Account Management</h2>
+      <h2 className={`${styles.heading}`} style={{padding:"35px"}} >Account Management</h2>
 
-      <div className={styles.card}>
+      <div className={styles.card} style={{overflow:"hidden"}}>
 
         <table className={styles.table}>
 
@@ -110,7 +110,7 @@ export default function ManageAccountsPage() {
             </tr>
           </thead>
 
-          <tbody>
+          <tbody style={{overflowY:"auto"}} >
 
             {loading ? (
 

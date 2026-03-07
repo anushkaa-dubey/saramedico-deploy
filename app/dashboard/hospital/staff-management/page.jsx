@@ -3,7 +3,6 @@ import { motion } from "framer-motion";
 import Topbar from "../components/Topbar";
 import styles from "../HospitalDashboard.module.css";
 import InviteStaffModal from "./components/InviteStaffModal";
-import CreatePatientModal from "./components/CreatePatientModal";
 import DoctorDetailsModal from "./components/DoctorDetailsModal";
 import { useState, useEffect } from "react";
 import { fetchHospitalDoctorStatus } from "@/services/hospital";
@@ -13,7 +12,6 @@ export default function StaffManagementPage() {
     const [doctorStatusList, setDoctorStatusList] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
-    const [isPatientModalOpen, setIsPatientModalOpen] = useState(false);
     const [selectedDoctorId, setSelectedDoctorId] = useState(null);
     const [activeTab, setActiveTab] = useState("all"); // "all" | "active" | "inactive"
 
@@ -108,13 +106,6 @@ export default function StaffManagementPage() {
                         <p style={{ color: '#64748b', margin: '4px 0 0 0' }}>View doctor availability and manage hospital personnel.</p>
                     </div>
                     <div style={{ display: 'flex', gap: '12px' }}>
-                        <button
-                            onClick={() => setIsPatientModalOpen(true)}
-                            className={styles.outlineBtn}
-                            style={{ background: '#ffffff', color: '#10b981', borderColor: '#10b981' }}
-                        >
-                            + Create Patient ID
-                        </button>
                         <button
                             onClick={() => setIsInviteModalOpen(true)}
                             className={styles.primaryBtn}
@@ -245,11 +236,6 @@ export default function StaffManagementPage() {
                     onSuccess={() => { setIsInviteModalOpen(false); loadDoctorStatus(); }}
                 />
 
-                <CreatePatientModal
-                    isOpen={isPatientModalOpen}
-                    onClose={() => setIsPatientModalOpen(false)}
-                    onSuccess={() => { setIsPatientModalOpen(false); }}
-                />
                 <DoctorDetailsModal
                     isOpen={!!selectedDoctorId}
                     onClose={() => setSelectedDoctorId(null)}
