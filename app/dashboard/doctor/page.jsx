@@ -321,9 +321,8 @@ export default function DoctorDashboard() {
           <motion.section
             className={styles.summaryCards}
             variants={itemVariants}
-            style={{ gridTemplateColumns: 'repeat(4, 1fr)', marginBottom: '24px' }}
-          >
-            <div className={styles.summaryCard}>
+            style={{ marginBottom: '24px' }}
+          >            <div className={styles.summaryCard}>
               <div className={`${styles.summaryIcon}`} style={{ background: '#eff6ff', color: '#3b82f6' }}>
                 <ClipboardList size={22} />
               </div>
@@ -410,9 +409,9 @@ export default function DoctorDashboard() {
                           <td>
                             <span className={
                               (app.status || "pending").toLowerCase() === 'completed' ? styles.completed :
-                              (app.status || "pending").toLowerCase() === 'accepted' ? styles.success :
-                              (app.status || "pending").toLowerCase() === 'pending' ? styles.pending :
-                              styles.inReview
+                                (app.status || "pending").toLowerCase() === 'accepted' ? styles.success :
+                                  (app.status || "pending").toLowerCase() === 'pending' ? styles.pending :
+                                    styles.inReview
                             }>
                               {(app.status || "Pending").charAt(0).toUpperCase() + (app.status || "Pending").slice(1)}
                             </span>

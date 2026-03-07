@@ -9,7 +9,7 @@ export default function DoctorLayout({ children }) {
     const pathname = usePathname();
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(true);
-    const isSettingsPage = pathname?.startsWith("/dashboard/doctor/settings");
+    // const isSettingsPage = pathname?.startsWith("/dashboard/doctor/settings");
 
     useEffect(() => {
         const checkAuth = async () => {
@@ -25,7 +25,7 @@ export default function DoctorLayout({ children }) {
                     router.replace("/auth/login");
                     return;
                 }
-                
+
                 // Optional: Check role as well
                 const role = (profile.role || "").toLowerCase();
                 if (role !== 'doctor') {
@@ -36,7 +36,7 @@ export default function DoctorLayout({ children }) {
                     else router.replace("/auth/login");
                     return;
                 }
-                
+
                 setIsLoading(false);
             } catch (err) {
                 console.error("Auth check failed:", err);
@@ -52,9 +52,9 @@ export default function DoctorLayout({ children }) {
         </div>;
     }
 
-    if (isSettingsPage) {
-        return <>{children}</>;
-    }
+    // if (isSettingsPage) {
+    //     return <>{children}</>;
+    // }
 
     return (
         <div className={styles.container}>

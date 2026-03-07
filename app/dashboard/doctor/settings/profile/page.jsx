@@ -111,6 +111,7 @@ export default function ProfileSettings() {
 
     return (
         <motion.div
+            className={styles.main}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}

@@ -288,12 +288,19 @@
   transition: all 0.2s ease;
 }
 
-.summaryCards {
+/* .summaryCards {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 16px;
   margin-bottom: 20px;
   padding: 0 24px;
+} */
+.summaryCards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  padding: 0 24px;
+
 }
 
 .summaryCard {
@@ -930,9 +937,13 @@
 
   .headerActions {
     width: 100%;
-    display: grid;
+    /* display: grid; */
     grid-template-columns: 1fr 1fr;
-    gap: 12px;
+    /* gap: 12px; */
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
   }
 
   .headerActions .iconBtn {
@@ -1647,6 +1658,11 @@
     font-size: 20px;
   }
 
+  .summaryCards {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
   .summaryCard {
     padding: 12px;
   }
@@ -1654,4 +1670,38 @@
   .summaryValue {
     font-size: 20px;
   }
+}
+
+@media (max-width: 768px) {
+  .summaryCards {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .summaryCard {
+    padding: 14px;
+  }
+
+  .summaryValue {
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 640px) {
+  .summaryCards {
+    grid-template-columns: 1fr;
+  }
+}
+
+.headerActions {
+  display: flex;
+  gap: 10px;
+}
+
+.headerActions .outlineBtn,
+.headerActions .primaryBtn {
+  flex: 1;
+  height: 48px;
+  font-size: 14px;
+  white-space: nowrap;
 }
