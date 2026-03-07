@@ -21,7 +21,7 @@ export default function PatientsPage() {
                     fetchHospitalPatients(),
                     fetchHospitalStats()
                 ]);
-                setPatients(patientData || []);
+                setPatients(patientData?.patients || []);
                 setStats(statData);
             } catch (err) {
                 console.error("Failed to load patients data:", err);
