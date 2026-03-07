@@ -144,7 +144,7 @@ function SoapNotesPage() {
     );
 
     const patient = consultation.patient || {};
-    const patientName = patient.full_name || consultation.patient_name || "Patient Record";
+    const patientName = consultation.patientName || consultation.patient_name || patient.full_name || "Patient Record";
     const visitDate = consultation.scheduled_at
         ? new Date(consultation.scheduled_at).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
         : "Today";
@@ -155,9 +155,28 @@ function SoapNotesPage() {
 
             {/* ── Patient Header ── */}
             <div className={styles.patientHeader}>
-                <div className={styles.pName}>{patientName}</div>
-                <div className={styles.pMeta}>DOB: {patient.date_of_birth || patient.dob || "N/A"}</div>
-                <div className={styles.pMeta}>MRN: {patient.mrn || "N/A"}</div>
+                <div style={{
+                    width: "48px",
+                    height: "48px",
+                    borderRadius: "50%",
+                    background: "linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%)",
+                    color: "#0284c7",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: "20px",
+                    fontWeight: "bold",
+                    flexShrink: 0
+                }}>
+                    {patientName ? patientName.charAt(0).toUpperCase() : "P"}
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                    <div className={styles.pName}>{patientName}</div>
+                    <div style={{ display: "flex", gap: "16px" }}>
+                        <div className={styles.pMeta}>DOB: {consultation.patientDob || patient.date_of_birth || patient.dob || "N/A"}</div>
+                        <div className={styles.pMeta}>MRN: {consultation.patientMrn || patient.mrn || "N/A"}</div>
+                    </div>
+                </div>
 
                 <div className={styles.pDetailGroup} style={{ marginLeft: "auto" }}>
                     <span className={styles.pLabel}>REASON FOR VISIT</span>
@@ -291,19 +310,6 @@ function SoapNotesPage() {
                                 >
                                     {marking ? "Processing..." : "✓ Mark Consultation as Complete"}
                                 </button>
-
-                                {(consultation.meetLink || consultation.meet_link) && (
-                                    <div style={{ marginTop: "24px" }}>
-                                        <a
-                                            href={consultation.meetLink || consultation.meet_link}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            style={{ color: "#3b82f6", fontSize: "13px", fontWeight: "600", textDecoration: "none" }}
-                                        >
-                                            📹 Open Google Meet →
-                                        </a>
-                                    </div>
-                                )}
                             </div>
                         )}
                     </div>
@@ -339,23 +345,6 @@ function SoapNotesPage() {
                             {consultation.id || consultationId}
                         </p>
                     </div>
-
-                    {(consultation.meetLink || consultation.meet_link) && (
-                        <div className={styles.infoCard}>
-                            <div className={styles.infoCardHeader}>
-                                <span className={styles.infoTitle}>Google Meet</span>
-                            </div>
-                            <a
-                                href={consultation.meetLink || consultation.meet_link}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className={styles.infoText}
-                                style={{ color: "#3b82f6", textDecoration: "none", fontWeight: "600", wordBreak: "break-all" }}
-                            >
-                                Join Meeting →
-                            </a>
-                        </div>
-                    )}
 
                     {consultation.summary && (
                         <>

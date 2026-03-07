@@ -405,7 +405,12 @@ export default function DoctorDashboard() {
                           <td>{app.reason || "Consultation"}</td>
                           <td>{new Date(app.requested_date).toLocaleDateString()}</td>
                           <td>
-                            <span className={app.status === 'accepted' ? styles.success : styles.inReview}>
+                            <span className={
+                              (app.status || "pending").toLowerCase() === 'completed' ? styles.completed :
+                              (app.status || "pending").toLowerCase() === 'accepted' ? styles.success :
+                              (app.status || "pending").toLowerCase() === 'pending' ? styles.pending :
+                              styles.inReview
+                            }>
                               {(app.status || "Pending").charAt(0).toUpperCase() + (app.status || "Pending").slice(1)}
                             </span>
                           </td>

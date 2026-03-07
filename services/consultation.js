@@ -83,3 +83,28 @@ export const fetchSoapNote = async (consultationId) => {
     const body = await response.json().catch(() => ({}));
     return { httpStatus: response.status, ...body };
 };
+
+/**
+ * Look up the most recent consultation for the current doctor and a specific patient.
+ * Used when navigating to the SOAP note page from an approved appointment.
+ * Endpoint: GET /api/v1/consultations/by-doctor-patient?patient_id=...
+ */
+export const fetchConsultationByPatientId = async (patientId) => {
+    const response = await fetch(`${API_BASE_URL}/consultations/lookup/by-patient?patient_id=${patientId}`, {
+        headers: getAuthHeaders(),
+    });
+    return handleResponse(response);
+};
+
+/**
+ * Delete a consultation
+ */
+export const deleteConsultation = async (consultationId) => {
+    const response = await fetch(`${API_BASE_URL}/consultations/${consultationId}`, {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+    });
+    // the backend may return 204 No Content, in which case there is no body
+    if (response.status === 204) return true;
+    return handleResponse(response);
+};

@@ -29,13 +29,13 @@ export default function LiveConsultPage() {
     // Enhanced mapping for robustness across different API response formats
     const mapToPatientObject = (p) => {
         if (!p) return null;
-        const name = p.full_name || p.patient_name || p.name || p.fullName ||
-            [p.first_name, p.last_name].filter(Boolean).join(" ") ||
-            (p.user && (p.user.full_name || [p.user.first_name, p.user.last_name].filter(Boolean).join(" "))) ||
+        const name = p.full_name || p.patient_name || p.name || p.fullName || p.patientName ||
+            (p.first_name ? [p.first_name, p.last_name].filter(Boolean).join(" ") : null) ||
+            p.user?.full_name || p.user?.name || (p.user?.first_name ? [p.user.first_name, p.user.last_name].filter(Boolean).join(" ") : null) ||
             "Unknown Patient";
         const email = p.email || p.email_addr || p.contact_email || p.user?.email || "N/A";
         const id = p.id || p.patient_id || p.user_id || p.uuid || "N/A";
-        const mrn = p.mrn || p.medical_record_number || (id !== "N/A" ? `MRN-${id.substring(0, 6)}` : "N/A");
+        const mrn = p.mrn || p.medical_record_number || (id !== "N/A" && typeof id === 'string' ? `MRN-${id.substring(0, 6)}` : "N/A");
 
         return {
             id,
@@ -47,41 +47,60 @@ export default function LiveConsultPage() {
         };
     };
 
-    const mergeRecentWithActive = (recentList, activeConsultList, appointmentList) => {
+    const mergeRecentWithActive = (recentList, activeConsultList, appointmentList, directoryList = []) => {
+        // Create a lookup map from directoryList for missing names
+        const dirMap = {};
+        (Array.isArray(directoryList) ? directoryList : []).forEach(p => {
+            const mapped = mapToPatientObject(p);
+            if (mapped && mapped.id !== "N/A") {
+                dirMap[mapped.id] = mapped;
+            }
+        });
+
         const mappedRecent = (Array.isArray(recentList) ? recentList : []).map(mapToPatientObject).filter(p => p.id !== "N/A");
         
         // 1. Instant Consultations
         const consults = (Array.isArray(activeConsultList) ? activeConsultList : []).filter(c => c.status === 'scheduled' || c.status === 'active');
-        const consultPatients = consults.map(c => ({
-            id: c.patientId,
-            full_name: c.patientName || "Patient",
-            email: "N/A",
-            mrn: "N/A",
-            last_activity: "Active Meeting",
-            last_visit_date: c.scheduledAt,
-            consultation_id: c.id,
-            meet_link: c.meetLink,
-            status: c.status,
-            type: 'consultation'
-        }));
+        const consultPatients = consults.map(c => {
+            const pId = c.patientId || c.patient_id;
+            const fallback = dirMap[pId];
+            return {
+                id: pId,
+                full_name: c.patientName || c.patient_name || fallback?.full_name || "Patient",
+                email: fallback?.email || "N/A",
+                mrn: fallback?.mrn || "N/A",
+                last_activity: "Active Meeting",
+                last_visit_date: c.scheduledAt || c.scheduled_at,
+                consultation_id: c.id,
+                meet_link: c.meetLink || c.meet_link,
+                status: c.status,
+                type: 'consultation'
+            };
+        });
 
         // 2. Regular Appointments (Accepted/Scheduled)
         const activeApts = (Array.isArray(appointmentList) ? appointmentList : []).filter(a => 
             (a.status === 'accepted' || a.status === 'scheduled' || a.status === 'active') && 
             !(a.completion_time || a.completionTime)
         );
-        const aptPatients = activeApts.map(a => ({
-            id: a.patient_id || a.patient?.id || a.user_id,
-            full_name: a.patient_name || a.patient?.full_name || a.user?.full_name || "Patient",
-            email: a.patient?.email || "N/A",
-            mrn: a.patient?.mrn || "N/A",
-            last_activity: "Scheduled Appointment",
-            last_visit_date: a.requested_date || a.appointment_time || a.date,
-            appointment_id: a.id,
-            meet_link: a.meet_link || a.join_url || a.start_url || a.meetLink,
-            status: a.status,
-            type: 'appointment'
-        }));
+        const aptPatients = activeApts.map(a => {
+            const pId = a.patient_id || a.patient?.id || a.user_id || "N/A";
+            const fallback = dirMap[pId];
+            const name = a.patient_name || a.patientName || a.patient?.full_name || a.patient?.name || (a.patient?.first_name ? `${a.patient.first_name} ${a.patient.last_name || ''}` : null) || a.user?.full_name || a.user?.name || fallback?.full_name || "Patient";
+            
+            return {
+                id: pId,
+                full_name: name,
+                email: a.patient?.email || fallback?.email || "N/A",
+                mrn: a.patient?.mrn || fallback?.mrn || "N/A",
+                last_activity: "Scheduled Appointment",
+                last_visit_date: a.requested_date || a.appointment_time || a.date,
+                appointment_id: a.id,
+                meet_link: a.meet_link || a.join_url || a.start_url || a.meetLink,
+                status: a.status,
+                type: 'appointment'
+            };
+        });
 
         // Merge all three, active sessions take precedence
         const merged = [...consultPatients, ...aptPatients, ...mappedRecent];
@@ -110,9 +129,11 @@ export default function LiveConsultPage() {
                     const activeConsults = Array.isArray(consultRes?.consultations) ? consultRes.consultations : 
                                          (Array.isArray(consultRes) ? consultRes : []);
                     
-                    const mergedData = mergeRecentWithActive(recentRes, activeConsults, aptRes);
+                    const pList = (Array.isArray(allRes) ? allRes : []).map(mapToPatientObject).filter(p => p.id !== "N/A");
+                    setAllPatients(pList);
+
+                    const mergedData = mergeRecentWithActive(recentRes, activeConsults, aptRes, allRes);
                     setRecentPatients(mergedData);
-                    setAllPatients((Array.isArray(allRes) ? allRes : []).map(mapToPatientObject).filter(p => p.id !== "N/A"));
                 }
             } catch (err) {
                 console.error("Critical error in Live Consult data loading:", err);
@@ -365,9 +386,9 @@ export default function LiveConsultPage() {
                                                 <td>
                                                     <div className={styles.userCell}>
                                                         <div className={styles.avatar}>
-                                                            {p.full_name ? p.full_name[0].toUpperCase() : "P"}
+                                                            {(p.full_name || p.name || p.patient_name || p.patientName || "P")[0].toUpperCase()}
                                                         </div>
-                                                        <span style={{ fontWeight: 600 }}>{p.full_name}</span>
+                                                        <span style={{ fontWeight: 600 }}>{p.full_name || p.name || p.patient_name || p.patientName || "Unknown Patient"}</span>
                                                     </div>
                                                 </td>
                                                 <td>

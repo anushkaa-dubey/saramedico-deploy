@@ -1,25 +1,21 @@
 "use client";
 import { Suspense } from "react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Topbar from "../components/Topbar";
-import SOAPEditor from "./components/SOAPEditor";
-import AssistPanel from "./components/AssistPanel";
 import styles from "./VideoCall.module.css";
-import contactIcon from "@/public/icons/contact.svg";
-import { motion } from "framer-motion";
 import { fetchAppointments, fetchAppointmentById } from "@/services/doctor";
-import { fetchConsultationById } from "@/services/consultation";
+import { fetchConsultationById, fetchConsultationByPatientId } from "@/services/consultation";
 
 function DoctorVideoCallPage() {
     const searchParams = useSearchParams();
     const consultationId = searchParams.get("consultationId");
     const appointmentId = searchParams.get("appointmentId");
-    const [transcript, setTranscript] = useState([]);
     const [appointment, setAppointment] = useState(null);
+    // The real consultation ID that SOAP notes require
+    const [resolvedConsultationId, setResolvedConsultationId] = useState(consultationId || null);
     const router = useRouter();
-
-    const suggestedTags = ["Migraine", "Nausea", "Photophobia", "Acrophobia"];
+    const hasMeetLink = useRef(false);
 
     useEffect(() => {
         if (consultationId) {
@@ -29,20 +25,62 @@ function DoctorVideoCallPage() {
         } else {
             loadLatestAppointment();
         }
+
+        // Poll every 5s for meet_link if not yet available
+        const interval = setInterval(async () => {
+            if (hasMeetLink.current) return;
+            if (consultationId) await loadConsultation(consultationId);
+            else if (appointmentId) await loadAppointment(appointmentId);
+            else await loadLatestAppointment();
+        }, 5000);
+
+        return () => clearInterval(interval);
     }, [consultationId, appointmentId]);
 
     const normalizeAppointment = (data) => {
         if (!data) return null;
         return {
             ...data,
-            meet_link: data.meet_link || data.meetLink || data.join_url || data.start_url
+            meet_link: data.meet_link || data.meetLink || data.google_meet_link
+                || data.hangout_link || data.join_url || data.start_url || data.url || null
         };
+    };
+
+    /**
+     * Try to resolve a real consultation ID from:
+     * 1. appointment.meeting_id (set during approval)
+     * 2. consultation lookup by patient_id
+     */
+    const resolveConsultationId = async (appt) => {
+        if (!appt) return;
+
+        // 1. Direct consultation_id field on the appointment (set during approval)
+        if (appt.meeting_id) {
+            setResolvedConsultationId(appt.meeting_id);
+            return;
+        }
+
+        // 2. Fall back: look up by doctor+patient
+        if (appt.patient_id) {
+            try {
+                const consult = await fetchConsultationByPatientId(appt.patient_id);
+                if (consult?.id) {
+                    setResolvedConsultationId(consult.id);
+                }
+            } catch {
+                // Silently fail — SOAP note button will be hidden if no ID
+            }
+        }
     };
 
     const loadConsultation = async (id) => {
         try {
             const data = await fetchConsultationById(id);
-            setAppointment(normalizeAppointment(data));
+            const normalized = normalizeAppointment(data);
+            setAppointment(normalized);
+            if (normalized?.meet_link) hasMeetLink.current = true;
+            // For consultations, the id IS the consultation id
+            setResolvedConsultationId(id);
         } catch (err) {
             console.error("Failed to load clinical consultation:", err);
             if (!appointmentId) loadLatestAppointment();
@@ -52,7 +90,10 @@ function DoctorVideoCallPage() {
     const loadAppointment = async (id) => {
         try {
             const data = await fetchAppointmentById(id);
-            setAppointment(normalizeAppointment(data));
+            const normalized = normalizeAppointment(data);
+            setAppointment(normalized);
+            if (normalized?.meet_link) hasMeetLink.current = true;
+            await resolveConsultationId(normalized);
         } catch (err) {
             console.error("Failed to load specific appointment:", err);
             loadLatestAppointment();
@@ -68,7 +109,10 @@ function DoctorVideoCallPage() {
                 .sort((a, b) => new Date(a.requested_date || a.scheduled_at) - new Date(b.requested_date || b.scheduled_at))[0];
 
             if (next) {
-                setAppointment(normalizeAppointment(next));
+                const normalized = normalizeAppointment(next);
+                setAppointment(normalized);
+                if (normalized?.meet_link) hasMeetLink.current = true;
+                await resolveConsultationId(normalized);
             }
         } catch (err) {
             console.error("Failed to load appointment for video call:", err);
@@ -81,6 +125,20 @@ function DoctorVideoCallPage() {
             window.open(link, "_blank");
         } else {
             alert("No meeting link available for this session.");
+        }
+    };
+
+    const handleViewSoap = () => {
+        if (resolvedConsultationId) {
+            router.push(`/dashboard/doctor/patients/soap?consultationId=${resolvedConsultationId}`);
+        } else if (appointment?.patient_id) {
+            // Last resort: try to navigate and let SOAP page handle lookup
+            fetchConsultationByPatientId(appointment.patient_id)
+                .then(c => {
+                    if (c?.id) router.push(`/dashboard/doctor/patients/soap?consultationId=${c.id}`);
+                    else alert("Could not find a consultation for this appointment yet. Please try again after the doctor approves.");
+                })
+                .catch(() => alert("Could not find a linked consultation. Please start a consultation from the Live Consult page first."));
         }
     };
 
@@ -237,9 +295,9 @@ function DoctorVideoCallPage() {
                         {appointment?.meet_link ? "Join Google Meet" : "Meeting Link Unavailable"}
                     </button>
 
-                    {appointment?.id && (
+                    {(resolvedConsultationId || appointment?.patient_id) && (
                         <button
-                            onClick={() => router.push(`/dashboard/doctor/patients/soap?consultationId=${appointment.id}`)}
+                            onClick={handleViewSoap}
                             style={{
                                 background: 'white',
                                 color: '#0f172a',

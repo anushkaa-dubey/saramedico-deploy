@@ -29,10 +29,13 @@ export default function StartSessionModal({ isOpen, onClose, onSessionStarted })
     const loadInitialData = async () => {
         setLoading(true);
         try {
-            const pData = await import("@/services/doctor").then(m => m.fetchPatients().catch(() => []));
-            setAllPatients(pData);
+            const m = await import("@/services/doctor");
+            const data = await m.fetchPatients().catch(() => ({ all_patients: [] }));
+            const list = Array.isArray(data) ? data : (data.all_patients || data.allPatients || []);
+            setAllPatients(list);
         } catch (err) {
             console.error("Failed to load modal data:", err);
+            setAllPatients([]);
         } finally {
             setLoading(false);
         }

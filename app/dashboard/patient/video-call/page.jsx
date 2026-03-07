@@ -17,14 +17,21 @@ function VideoCallContent() {
 
     useEffect(() => {
         loadSession();
-    }, [consultationId, appointmentId]);
+        // Poll for link if not yet available
+        const interval = setInterval(async () => {
+            if (!appointment?.meet_link) {
+                await loadSession();
+            }
+        }, 5000);
+        return () => clearInterval(interval);
+    }, [consultationId, appointmentId, !!appointment?.meet_link]);
 
     const normalizeAppointment = (data) => {
         if (!data) return null;
         return {
             ...data,
             doctor_name: data.doctorName || data.doctor_name || "Doctor",
-            meet_link: data.meetLink || data.meet_link || data.join_url || data.start_url
+            meet_link: data.meetLink || data.meet_link || data.google_meet_link || data.hangout_link || data.join_url || data.start_url || data.url
         };
     };
 
@@ -44,6 +51,18 @@ function VideoCallContent() {
                     setAppointment(normalizeAppointment(appt));
                     return;
                 }
+            }
+
+            // Fallback: search for active consultations
+            try {
+                const consultations = await fetchMyConsultations();
+                const activeConsultRaw = Array.isArray(consultations) ? consultations.find(c => c.status === 'scheduled' || c.status === 'active') : null;
+                if (activeConsultRaw) {
+                    setAppointment(normalizeAppointment(activeConsultRaw));
+                    return;
+                }
+            } catch (cErr) {
+                console.warn("Consultation fetch failed:", cErr);
             }
 
             const appointments = await fetchAppointments();

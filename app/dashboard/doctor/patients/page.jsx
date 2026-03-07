@@ -8,7 +8,7 @@ import PatientAIChat from "./components/PatientAIChat";
 import PatientVitals from "./components/PatientVitals";
 import styles from "./Patients.module.css";
 import { motion } from "framer-motion";
-import { Users, Calendar, ChevronRight, MoreVertical } from "lucide-react";
+import { Users, Calendar, ChevronRight, MoreVertical, Trash2 } from "lucide-react";
 import { fetchAppointments, fetchPatients, fetchDoctorProfile, fetchPatientProfile } from "@/services/doctor";
 import { checkPermissions, requestAccess, revokeDoctorAccess } from "@/services/permissions";
 import OnboardPatientModal from "./components/OnboardPatientModal";
@@ -185,6 +185,25 @@ function PatientsContent() {
 
     const [visits, setVisits] = useState([]);
     const [loadingVisits, setLoadingVisits] = useState(false);
+    const [deletingVisitId, setDeletingVisitId] = useState(null);
+
+    const handleDeleteConsultation = async (visitId) => {
+        if (!confirm("Are you sure you want to delete this consultation record? This cannot be undone.")) return;
+        
+        setDeletingVisitId(visitId);
+        try {
+            const { deleteConsultation } = await import("@/services/consultation");
+            await deleteConsultation(visitId);
+            showToast("Consultation record deleted successfully.", "success");
+            // refresh visits
+            loadVisits(selectedId);
+        } catch (err) {
+            console.error(err);
+            showToast(err.message || "Failed to delete consultation record.", "error");
+        } finally {
+            setDeletingVisitId(null);
+        }
+    };
 
     // When patient selected, load their visits AND fetch full profile details
     useEffect(() => {
@@ -527,15 +546,67 @@ function PatientsContent() {
                                                             <span className={styles.visitDate}>{new Date(visit.scheduledAt || visit.date).toLocaleDateString()}</span>
                                                             <span className={styles.visitArrow}><ChevronRight size={16} /></span>
                                                         </div>
-                                                        <span className={styles.visitType}>{visit.visitState || visit.visit_state || "CONSULTATION"}</span>
+                                                        <div style={{ display: 'flex', gap: '8px', marginBottom: '8px', flexWrap: 'wrap' }}>
+                                                            <span style={{
+                                                                padding: "4px 8px",
+                                                                borderRadius: "6px",
+                                                                fontSize: "10px",
+                                                                fontWeight: "700",
+                                                                textTransform: "uppercase",
+                                                                background: visit.status === "completed" ? "#f0fdf4" : "#f8fafc",
+                                                                color: visit.status === "completed" ? "#16a34a" : "#64748b",
+                                                                border: `1px solid ${visit.status === "completed" ? "#bbf7d0" : "#e2e8f0"}`
+                                                            }}>
+                                                                MEETING: {visit.status || "UNKNOWN"}
+                                                            </span>
+                                                            <span style={{
+                                                                padding: "4px 8px",
+                                                                borderRadius: "6px",
+                                                                fontSize: "10px",
+                                                                fontWeight: "700",
+                                                                textTransform: "uppercase",
+                                                                background: visit.aiStatus === "completed" ? "#f0fdf4" : visit.aiStatus === "processing" ? "#eff6ff" : visit.aiStatus === "failed" ? "#fef2f2" : "#f8fafc",
+                                                                color: visit.aiStatus === "completed" ? "#16a34a" : visit.aiStatus === "processing" ? "#2563eb" : visit.aiStatus === "failed" ? "#dc2626" : "#64748b",
+                                                                border: `1px solid ${visit.aiStatus === "completed" ? "#bbf7d0" : visit.aiStatus === "processing" ? "#bfdbfe" : visit.aiStatus === "failed" ? "#fecaca" : "#e2e8f0"}`
+                                                            }}>
+                                                                SOAP: {visit.aiStatus || "PENDING"}
+                                                            </span>
+                                                            {visit.visitState && visit.visitState !== "scheduled" && (
+                                                                <span className={styles.visitType}>{visit.visitState || visit.visit_state}</span>
+                                                            )}
+                                                        </div>
                                                         <p className={styles.visitNotes}>
                                                             {visit.chiefComplaint || visit.chief_complaint || visit.summary || visit.reason || "Patient encounter session recorded and processed."}
                                                         </p>
-                                                        <Link href={`/dashboard/doctor/patients/soap?consultationId=${visit.id}`} style={{ textDecoration: 'none' }}>
-                                                            <button className={styles.soapBtn}>
-                                                                View SOAP Note
+                                                        <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
+                                                            <Link href={`/dashboard/doctor/patients/soap?consultationId=${visit.id}`} style={{ textDecoration: 'none', flex: 1 }}>
+                                                                <button className={styles.soapBtn} style={{ width: '100%' }}>
+                                                                    View SOAP Note
+                                                                </button>
+                                                            </Link>
+                                                            <button
+                                                                onClick={() => handleDeleteConsultation(visit.id)}
+                                                                disabled={deletingVisitId === visit.id}
+                                                                style={{
+                                                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                                    width: '40px', borderRadius: '8px', cursor: deletingVisitId === visit.id ? 'not-allowed' : 'pointer',
+                                                                    background: '#fff', border: '1px solid #fee2e2', color: '#ef4444', opacity: deletingVisitId === visit.id ? 0.5 : 1, transition: 'all 0.2s',
+                                                                }}
+                                                                onMouseEnter={(e) => {
+                                                                    if (deletingVisitId !== visit.id) {
+                                                                        e.currentTarget.style.background = '#fef2f2';    
+                                                                    }
+                                                                }}
+                                                                onMouseLeave={(e) => e.currentTarget.style.background = '#fff'}
+                                                                title="Delete Consultation"
+                                                            >
+                                                                {deletingVisitId === visit.id ? (
+                                                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ animation: "spin 0.8s linear infinite" }}><path d="M21 12a9 9 0 1 1-6.219-8.56" /></svg>
+                                                                ) : (
+                                                                    <Trash2 size={18} />
+                                                                )}
                                                             </button>
-                                                        </Link>
+                                                        </div>
                                                     </div>
                                                 ))
                                             )}
