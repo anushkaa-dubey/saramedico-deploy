@@ -1,13 +1,16 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { logoutUser } from "@/services/auth";
+
 import { usePathname, useRouter } from "next/navigation";
 import styles from "../HospitalDashboard.module.css";
 import logo from "@/public/logo2.svg";
 import { LayoutDashboard, ClipboardList, Calendar, Users, Menu, LogOut, Building2, Plus, ChevronDown, X } from "lucide-react";
-import { fetchOrganizationDepartments, createOrganizationDepartment } from "@/services/hospital";
+import { fetchHospitalDirectory } from "@/services/hospital";
+import { fetchOrganizationDepartments } from "@/services/hospital";
 
-// Medical specialties from Doctor Step-1 onboarding list
+
 const SPECIALTY_OPTIONS = [
     "Cardiology",
     "Neurology",
@@ -32,59 +35,47 @@ export default function Sidebar() {
     const [isOpen, setIsOpen] = useState(false);
     const [isDeptOpen, setIsDeptOpen] = useState(true);
     const [departments, setDepartments] = useState([]);
-    const [showNewDeptDropdown, setShowNewDeptDropdown] = useState(false);
-    const [creatingDept, setCreatingDept] = useState(false);
-    const dropdownRef = useRef(null);
 
     const isActive = (path) => {
         if (path === "/dashboard/hospital") return pathname === path;
         return pathname === path || pathname.startsWith(path + "/");
     };
 
-    const handleLogout = () => {
-        localStorage.removeItem("authToken");
+    const handleLogout = async () => {
+        await logoutUser();
         router.push("/auth/login");
     };
 
     const loadDepartments = async () => {
         try {
-            const data = await fetchOrganizationDepartments();
-            setDepartments(data);
+            const depts = await fetchOrganizationDepartments();
+
+            if (depts && depts.length > 0) {
+                setDepartments(depts);
+                return;
+            }
+
+            // fallback from doctors
+            const directory = await fetchHospitalDirectory();
+            const doctors = directory.doctors || [];
+
+            const uniqueDepts = [
+                ...new Set(
+                    doctors
+                        .map(d => d.department || d.specialty)
+                        .filter(Boolean)
+                )
+            ];
+            setDepartments(uniqueDepts);
+
         } catch (err) {
             console.error("Failed to load departments:", err);
         }
     };
-
     useEffect(() => {
         loadDepartments();
     }, []);
 
-    // Close dropdown on outside click
-    useEffect(() => {
-        const handleClickOutside = (e) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-                setShowNewDeptDropdown(false);
-            }
-        };
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, []);
-
-    const handleCreateDepartment = async (specialtyName) => {
-        setCreatingDept(true);
-        setShowNewDeptDropdown(false);
-        try {
-            await createOrganizationDepartment(specialtyName);
-            await loadDepartments();
-            const slug = specialtyName.toLowerCase().replace(/[^a-z0-9]+/g, "-");
-            router.push(`/dashboard/hospital/departments/${slug}`);
-            setIsOpen(false);
-        } catch (err) {
-            alert(`Failed to create department: ${err.message || "Unknown error"}`);
-        } finally {
-            setCreatingDept(false);
-        }
-    };
 
     const navItems = [
         { label: "Dashboard", path: "/dashboard/hospital", icon: <LayoutDashboard size={18} /> },
@@ -211,82 +202,7 @@ export default function Sidebar() {
                                         })
                                     )}
 
-                                    {/* New Department Button */}
-                                    <div ref={dropdownRef} style={{ position: "relative", marginTop: "6px" }}>
-                                        <button
-                                            onClick={() => setShowNewDeptDropdown((v) => !v)}
-                                            disabled={creatingDept}
-                                            style={{
-                                                display: "flex",
-                                                alignItems: "center",
-                                                gap: "6px",
-                                                fontSize: "12px",
-                                                color: creatingDept ? "#94a3b8" : "#3b82f6",
-                                                background: "none",
-                                                border: "none",
-                                                cursor: creatingDept ? "not-allowed" : "pointer",
-                                                fontWeight: "700",
-                                                padding: "6px 8px",
-                                                borderRadius: "6px",
-                                                width: "100%",
-                                                textAlign: "left",
-                                            }}
-                                        >
-                                            <Plus size={13} />
-                                            {creatingDept ? "Creating..." : "New Department"}
-                                        </button>
 
-                                        {showNewDeptDropdown && (
-                                            <div style={{
-                                                position: "absolute",
-                                                top: "110%",
-                                                left: 0,
-                                                zIndex: 999,
-                                                background: "#ffffff",
-                                                border: "1px solid #e2e8f0",
-                                                borderRadius: "10px",
-                                                boxShadow: "0 10px 25px rgba(0,0,0,0.12)",
-                                                minWidth: "200px",
-                                                maxHeight: "260px",
-                                                overflowY: "auto",
-                                            }}>
-                                                <div style={{
-                                                    padding: "8px 12px",
-                                                    fontSize: "10px",
-                                                    fontWeight: "800",
-                                                    color: "#94a3b8",
-                                                    textTransform: "uppercase",
-                                                    letterSpacing: "0.06em",
-                                                    borderBottom: "1px solid #f1f5f9",
-                                                }}>
-                                                    Select Specialty
-                                                </div>
-                                                {SPECIALTY_OPTIONS.map((opt) => (
-                                                    <button
-                                                        key={opt}
-                                                        onClick={() => handleCreateDepartment(opt)}
-                                                        style={{
-                                                            display: "block",
-                                                            width: "100%",
-                                                            textAlign: "left",
-                                                            padding: "9px 14px",
-                                                            fontSize: "13px",
-                                                            color: "#1e293b",
-                                                            background: "none",
-                                                            border: "none",
-                                                            cursor: "pointer",
-                                                            fontWeight: "500",
-                                                            transition: "background 0.15s",
-                                                        }}
-                                                        onMouseEnter={e => e.currentTarget.style.background = "#f1f5f9"}
-                                                        onMouseLeave={e => e.currentTarget.style.background = "none"}
-                                                    >
-                                                        {opt}
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </div>
                                 </div>
                             )}
                         </div>

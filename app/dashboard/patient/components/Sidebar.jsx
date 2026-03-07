@@ -1,6 +1,5 @@
 "use client";
 import { useState } from "react";
-
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import styles from "../PatientDashboard.module.css";
@@ -14,12 +13,10 @@ export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const [isSignoutModalOpen, setIsSignoutModalOpen] = useState(false);
-
   const handleLogout = async () => {
     await logoutUser();
     router.push("/auth/login");
   };
-
   const isActive = (path) => pathname === path;
 
   const [isOpen, setIsOpen] = useState(false);

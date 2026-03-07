@@ -2,9 +2,9 @@
 import { useState, useEffect } from "react";
 import Topbar from "../components/Topbar";
 import styles from "../HospitalDashboard.module.css";
+import Link from "next/link";
 import { motion } from "framer-motion";
-import { fetchOrganizationMembers } from "@/services/hospital";
-import { fetchDoctors } from "@/services/patient";
+import { fetchOrganizationMembers, fetchHospitalDirectory } from "@/services/hospital";
 
 export default function DepartmentsPage() {
     const [stats, setStats] = useState({
@@ -16,19 +16,24 @@ export default function DepartmentsPage() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const loadData = async () => {
+        const load = async () => {
+            setLoading(true);
             try {
-                const [members, doctors] = await Promise.all([
-                    fetchOrganizationMembers(),
-                    fetchDoctors()
+                const [directoryData, invites] = await Promise.all([
+                    fetchHospitalDirectory(),
+                    fetchPendingInvites(),
                 ]);
-                setStats(prev => ({
-                    ...prev,
-                    staffMembers: members.length || 0,
-                    totalDoctors: doctors.length || 0
-                }));
+
+                const docs = directoryData.doctors || [];
+
+                const departmentDoctors = docs.filter(
+                    d => (d.specialty || "").toLowerCase() === displayName.toLowerCase()
+                );
+
+                setDoctors(departmentDoctors);
+                setPendingInvites(invites);
             } catch (err) {
-                console.error("Failed to load department stats:", err);
+                console.error("DepartmentPage load error:", err);
             } finally {
                 setLoading(false);
             }
@@ -101,8 +106,20 @@ export default function DepartmentsPage() {
                                         </span>
                                     </td>
                                     <td style={{ textAlign: 'right', padding: '20px 24px' }}>
-                                        <button style={{ background: 'transparent', border: 'none', color: '#359aff', fontWeight: '700', cursor: 'pointer', fontSize: '13px' }}>Manage</button>
-                                    </td>
+                                        <Link href={`/dashboard/hospital/departments/${dept.name.toLowerCase().replace(/\s+/g, '-')}`}>
+                                            <button
+                                                style={{
+                                                    background: 'transparent',
+                                                    border: 'none',
+                                                    color: '#359aff',
+                                                    fontWeight: '700',
+                                                    cursor: 'pointer',
+                                                    fontSize: '13px'
+                                                }}
+                                            >
+                                                Manage
+                                            </button>
+                                        </Link>                                    </td>
                                 </tr>
                             ))}
                         </tbody>

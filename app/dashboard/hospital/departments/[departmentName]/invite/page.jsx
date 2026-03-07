@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import Topbar from "../../../components/Topbar";
 import styles from "../../../HospitalDashboard.module.css";
 import { motion } from "framer-motion";
-import { createHospitalDoctor, fetchPendingInvites } from "@/services/hospital";
+import { createHospitalDoctor, fetchPendingInvites, fetchHospitalDirectory } from "@/services/hospital";
 
 const ROLE_OPTIONS = [
     "Head of Department",
@@ -49,16 +49,29 @@ export default function InviteStaffPage({ params }) {
         const load = async () => {
             setLoadingInvites(true);
             try {
-                const data = await fetchPendingInvites();
+                const [data, directoryData] = await Promise.all([
+                    fetchPendingInvites(),
+                    fetchHospitalDirectory()
+                ]);
                 setPendingInvites(data);
+
+                const docs = [
+                    ...(directoryData.active_doctors || []),
+                    ...(directoryData.inactive_doctors || [])
+                ];
+                const uniqueDepts = [...new Set(docs.map(d => d.department || d.specialty).filter(Boolean))];
+                if (displayName && !uniqueDepts.includes(displayName)) {
+                    uniqueDepts.push(displayName);
+                }
+                setDepartments(uniqueDepts);
             } catch (err) {
-                console.error("fetchPendingInvites error:", err);
+                console.error("fetch data error:", err);
             } finally {
                 setLoadingInvites(false);
             }
         };
         load();
-    }, []);
+    }, [displayName]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();

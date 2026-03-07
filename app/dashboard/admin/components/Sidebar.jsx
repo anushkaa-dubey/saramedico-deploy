@@ -1,37 +1,41 @@
 "use client";
+
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import styles from "../AdminDashboard.module.css";
 import logo from "@/public/logo.png";
+
 import SignoutModal from "../../../auth/components/SignoutModal";
 import { logoutUser } from "@/services/auth";
+
 import {
   LayoutDashboard,
   Users,
-  FileText,
-  Settings,
-  Menu,
-  X,
-  LogOut,
   Calendar,
   Hospital,
-  UserCircle,
-  Layers
+  Settings,
+  LogOut
 } from "lucide-react";
+import path from "path";
 
 export default function AdminSidebar() {
+
   const pathname = usePathname();
   const router = useRouter();
+
   const [isSignoutModalOpen, setIsSignoutModalOpen] = useState(false);
-  const [isOpen, setIsOpen] = useState(false);
 
   const handleLogout = async () => {
     await logoutUser();
     router.push("/auth/login");
   };
-
-  const isActive = (path) => pathname === path || pathname.startsWith(path);
+  const isActive = (path) => {
+    if (path === "/dashboard/admin") {
+      return pathname === path;
+    }
+    return pathname.startsWith(path);
+  };
 
   const navItems = [
     {
@@ -50,19 +54,14 @@ export default function AdminSidebar() {
       icon: <Hospital size={18} />
     },
     {
-      label: "Departments & Roles",
-      path: "/dashboard/admin/departments",
-      icon: <Layers size={18} />
-    },
-    {
-      label: "Team Management",
+      label: "Manage Accounts",
       path: "/dashboard/admin/manage-accounts",
       icon: <Users size={18} />
     },
     {
       label: "Audit Logs",
       path: "/dashboard/admin/audit-logs",
-      icon: <FileText size={18} />
+      icon: <Users size={18} />
     },
     {
       label: "Settings",
@@ -73,52 +72,34 @@ export default function AdminSidebar() {
 
   return (
     <>
-      {/* {!isOpen && (
-        <button
-          className={styles.mobileToggleBtn}
-          onClick={() => setIsOpen(true)}
-          aria-label="Toggle Menu"
-        >
-          <Menu size={24} />
-        </button>
-      )} */}
+      <aside className={styles.sidebar}>
 
-      {isOpen && (
-        <div
-          className={styles.mobileOverlay}
-          onClick={() => setIsOpen(false)}
-        />
-      )}
+        {/* Top section */}
+        <div className={styles.sidebarTop}>
 
-      <aside className={`${styles.sidebar} ${isOpen ? styles.open : ''}`}>
-        <div>
+          {/* Logo */}
           <div className={styles.logoRow}>
-            <div className={styles.iconPlaceholder}>
-              <img src={logo.src} alt="Logo" />
-            </div>
-            {/* <button
-              className={styles.closeBtnHidden}
-              onClick={() => setIsOpen(false)}
-            > */}
-            {/* <X size={20} />
-          </button> */}
+            <img src={logo.src} alt="Logo" />
           </div>
 
+          {/* Navigation */}
           <nav className={styles.navGroup}>
             {navItems.map((item) => (
               <Link
                 key={item.path}
                 href={item.path}
-                className={`${styles.navItem} ${isActive(item.path) && (item.path !== "/dashboard/admin" || pathname === "/dashboard/admin") ? styles.active : ""}`}
-                onClick={() => setIsOpen(false)}
+                className={`${styles.navItem} ${isActive(item.path) ? styles.active : ""
+                  }`}
               >
                 {item.icon}
                 {item.label}
               </Link>
             ))}
           </nav>
+
         </div>
 
+        {/* Logout */}
         <button
           className={styles.logoutBtn}
           onClick={() => setIsSignoutModalOpen(true)}
@@ -126,7 +107,8 @@ export default function AdminSidebar() {
           <LogOut size={18} className={styles.logoutIcon} />
           Logout
         </button>
-      </aside >
+
+      </aside>
 
       <SignoutModal
         isOpen={isSignoutModalOpen}

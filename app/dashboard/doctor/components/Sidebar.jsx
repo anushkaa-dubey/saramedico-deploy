@@ -1,6 +1,5 @@
 "use client";
 import { useState } from "react";
-
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import styles from "../DoctorDashboard.module.css";
@@ -19,7 +18,6 @@ export default function Sidebar() {
     await logoutUser();
     router.push("/auth/login");
   };
-
   const isActive = (path) => pathname === path || pathname.startsWith(path);
 
   // State for mobile sidebar toggle

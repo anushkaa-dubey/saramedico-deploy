@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import styles from "../AdminDashboard.module.css";
-import { fetchAdminAuditLogs, exportAuditLogs } from "@/services/admin";
+import { fetchAdminAuditLogs } from "@/services/admin";
 import { motion } from "framer-motion";
 
 export default function AuditLogsPage() {
@@ -33,40 +33,40 @@ export default function AuditLogsPage() {
         }
     };
 
-    const handleExport = async () => {
+    // const handleExport = async () => {
 
-        setExporting(true);
+    //     setExporting(true);
 
-        try {
+    //     try {
 
-            const response = await exportAuditLogs(filter);
+    //         const response = await exportAuditLogs(filter);
 
-            const blob = await response.blob();
+    //         const blob = await response.blob();
 
-            const url = window.URL.createObjectURL(blob);
+    //         const url = window.URL.createObjectURL(blob);
 
-            const a = document.createElement("a");
+    //         const a = document.createElement("a");
 
-            a.href = url;
+    //         a.href = url;
 
-            a.download = `audit_logs_${new Date().toISOString().split("T")[0]}.csv`;
+    //         a.download = `audit_logs_${new Date().toISOString().split("T")[0]}.csv`;
 
-            document.body.appendChild(a);
+    //         document.body.appendChild(a);
 
-            a.click();
+    //         a.click();
 
-            window.URL.revokeObjectURL(url);
+    //         window.URL.revokeObjectURL(url);
 
-        } catch (err) {
+    //     } catch (err) {
 
-            console.error("Export failed:", err);
+    //         console.error("Export failed:", err);
 
-        } finally {
+    //     } finally {
 
-            setExporting(false);
+    //         setExporting(false);
 
-        }
-    };
+    //     }
+    // };
 
     const getActionColor = (action) => {
 
@@ -99,13 +99,13 @@ export default function AuditLogsPage() {
 
                 </div>
 
-                <button
-                    onClick={handleExport}
-                    disabled={exporting || loading}
+                {/* <button
+                    // onClick={handleExport}
+                    // disabled={exporting || loading}
                     className={styles.inviteBtn}
                 >
-                    {exporting ? "Exporting..." : "Download CSV"}
-                </button>
+                    { {exporting ? "Exporting..." : "Download CSV"} }
+                </button> */}
 
             </div>
 

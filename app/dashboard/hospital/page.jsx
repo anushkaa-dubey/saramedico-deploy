@@ -5,9 +5,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { fetchAdminOverview } from "@/services/admin";
+// import { fetchAdminOverview } from "@/services/admin";
+import { fetchHospitalDashboardOverview } from "@/services/hospital";
 import { fetchProfile } from "@/services/doctor";
-import { fetchOrganizationDepartments, fetchDoctorsByDepartment } from "@/services/hospital";
+import { fetchHospitalDirectory } from "@/services/hospital";
 import { Users, Building2, Plus } from "lucide-react";
 
 const containerVariants = {
@@ -41,11 +42,9 @@ export default function HospitalDashboard() {
         const loadData = async () => {
             setLoading(true);
             try {
-                // Fetch basic required data
-                const [overview, profileData, orgDepartments] = await Promise.all([
-                    fetchAdminOverview(),
+                const [profileData, directoryData] = await Promise.all([
                     fetchProfile(),
-                    fetchOrganizationDepartments()
+                    fetchHospitalDirectory()
                 ]);
 
                 if (!profileData) return;
@@ -60,24 +59,15 @@ export default function HospitalDashboard() {
                     return;
                 }
 
-                // Calculate total staff based on departments API
-                let totalStaffCount = 0;
-                for (let dept of orgDepartments) {
-                    const deptName = typeof dept === 'string' ? dept : (dept.name || dept.department_name);
-                    try {
-                        const deptDocs = await fetchDoctorsByDepartment(deptName);
-                        totalStaffCount += (deptDocs || []).length;
-                    } catch (e) {
-                        console.error(`Failed to fetch doctors for department ${deptName}`, e);
-                    }
-                }
+                const docs = Array.isArray(directoryData) ? directoryData : (directoryData?.doctors || []);
+                const uniqueDepts = [...new Set(docs.map(d => d.department || d.specialty).filter(Boolean))];
 
-                setOverviewData(overview);
+                setOverviewData(null);
                 setDoctorProfile(profileData);
                 setStatsData({
-                    totalStaff: totalStaffCount,
-                    departmentCount: orgDepartments.length,
-                    recentActivity: overview?.recent_activity || []
+                    totalStaff: docs.length,
+                    departmentCount: uniqueDepts.length,
+                    recentActivity: []
                 });
 
             } catch (err) {

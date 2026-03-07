@@ -55,7 +55,7 @@ export default function EditUserPermissionsPage() {
             const res = await fetch(`${API_BASE_URL}/admin/accounts/${params.id}`, {
                 method: "PATCH",
                 headers: getAuthHeaders(),
-                body: JSON.stringify({ role: selectedRole, full_name: userData.name }),
+                body: JSON.stringify({ role: selectedRole, name: userData.name })
             });
             if (res.ok) {
                 alert("Permissions updated successfully!");

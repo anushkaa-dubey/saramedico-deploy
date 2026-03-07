@@ -36,14 +36,26 @@ export default function AdminAppointments() {
         show: { opacity: 1, y: 0 }
     };
 
-    const getStatusStyle = (status) => {
-        const s = (status || "").toLowerCase();
-        if (s === "accepted" || s === "confirmed" || s === "completed") return { bg: "#f0fdf4", text: "#16a34a" };
-        if (s === "pending") return { bg: "#fef3c7", text: "#d97706" };
-        if (s === "cancelled" || s === "declined" || s === "rejected") return { bg: "#fef2f2", text: "#ef4444" };
-        return { bg: "#f1f5f9", text: "#64748b" };
-    };
+const getStatusStyle = (status) => {
 
+  const map = {
+    accepted: { bg: "#f0fdf4", text: "#16a34a" },
+    confirmed: { bg: "#f0fdf4", text: "#16a34a" },
+    completed: { bg: "#f0fdf4", text: "#16a34a" },
+
+    pending: { bg: "#fef3c7", text: "#d97706" },
+
+    cancelled: { bg: "#fef2f2", text: "#ef4444" },
+    rejected: { bg: "#fef2f2", text: "#ef4444" },
+    declined: { bg: "#fef2f2", text: "#ef4444" }
+  };
+
+  return map[(status || "").toLowerCase()] || {
+    bg: "#f1f5f9",
+    text: "#64748b"
+  };
+
+};
     return (
         <motion.div
             initial="hidden"
@@ -88,10 +100,9 @@ export default function AdminAppointments() {
                                 </td>
                             </tr>
                         ) : (
-                            appointments.map(app => {
-                                const statusStyle = getStatusStyle(app.status);
-                                const dateObj = app.requested_date ? new Date(app.requested_date) : null;
-
+appointments
+  .sort((a,b) => new Date(b.requested_date) - new Date(a.requested_date))
+  .map(app => {
                                 return (
                                     <tr key={app.id}>
                                         <td>

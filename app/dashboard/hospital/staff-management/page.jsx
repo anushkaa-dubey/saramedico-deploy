@@ -7,7 +7,7 @@ import CreatePatientModal from "./components/CreatePatientModal";
 import DoctorDetailsModal from "./components/DoctorDetailsModal";
 import { useState, useEffect } from "react";
 import { fetchHospitalDoctorStatus } from "@/services/hospital";
-import { adminRemoveMember } from "@/services/admin";
+// import { adminRemoveMember } from "@/services/admin";
 
 export default function StaffManagementPage() {
     const [doctorStatusList, setDoctorStatusList] = useState([]);
@@ -29,16 +29,16 @@ export default function StaffManagementPage() {
         }
     };
 
-    const handleRemoveStaff = async (id) => {
-        if (!confirm("Are you sure you want to remove this team member?")) return;
-        try {
-            await adminRemoveMember(id);
-            loadDoctorStatus();
-        } catch (err) {
-            console.error("Failed to remove staff:", err);
-            alert("Failed to remove staff member.");
-        }
-    };
+    // const handleRemoveStaff = async (id) => {
+    //     if (!confirm("Are you sure you want to remove this team member?")) return;
+    //     try {
+    //         await adminRemoveMember(id);
+    //         loadDoctorStatus();
+    //     } catch (err) {
+    //         console.error("Failed to remove staff:", err);
+    //         alert("Failed to remove staff member.");
+    //     }
+    // };
 
     useEffect(() => {
         loadDoctorStatus();
@@ -223,13 +223,13 @@ export default function StaffManagementPage() {
                                                     >
                                                         Manage
                                                     </button>
-                                                    <button
+                                                    {/* <button
                                                         onClick={() => handleRemoveStaff(d.id)}
                                                         className={styles.outlineBtn}
                                                         style={{ height: '32px', fontSize: '12px', color: '#ef4444', borderColor: '#fee2e2' }}
                                                     >
                                                         Remove
-                                                    </button>
+                                                    </button> */}
                                                 </div>
                                             </td>
                                         </tr>

@@ -6,25 +6,36 @@ import Topbar from "../../components/Topbar";
 import styles from "../../HospitalDashboard.module.css";
 import { motion } from "framer-motion";
 import {
-    fetchDoctorsByDepartment,
+    fetchHospitalDirectory,
     fetchPendingInvites,
     updateHospitalDoctor,
 } from "@/services/hospital";
 
-// Role editing modal
-function EditRoleModal({ doctor, onClose, onSaved }) {
-    const [role, setRole] = useState(doctor?.department_role || "");
+// Doctor Management Modal
+function ManageDoctorModal({ doctor, onClose, onSaved }) {
+    const [form, setForm] = useState({
+        name: doctor?.name || doctor?.full_name || "",
+        department: doctor?.department || "",
+        department_role: doctor?.department_role || doctor?.role || "",
+        specialty: doctor?.specialty || "",
+        license_number: doctor?.license_number || ""
+    });
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState("");
 
     const handleSave = async () => {
-        if (!role.trim()) { setError("Role cannot be empty."); return; }
         setSaving(true);
         try {
-            await updateHospitalDoctor(doctor.id, { department_role: role });
+            await updateHospitalDoctor(doctor.id, {
+                name: form.name,
+                department: form.department,
+                department_role: form.department_role,
+                specialty: form.specialty,
+                license_number: form.license_number
+            });
             onSaved();
         } catch (err) {
-            setError(err.message || "Failed to update role.");
+            setError(err.message || "Failed to update doctor.");
         } finally {
             setSaving(false);
         }
@@ -37,27 +48,39 @@ function EditRoleModal({ doctor, onClose, onSaved }) {
         }}>
             <div style={{
                 background: "#fff", borderRadius: "16px", padding: "28px",
-                minWidth: "340px", boxShadow: "0 20px 60px rgba(0,0,0,0.18)"
+                minWidth: "400px", boxShadow: "0 20px 60px rgba(0,0,0,0.18)"
             }}>
                 <h3 style={{ fontSize: "16px", fontWeight: "800", color: "#0f172a", marginBottom: "4px" }}>
-                    Update Role
+                    Update Doctor Account
                 </h3>
                 <p style={{ fontSize: "13px", color: "#64748b", marginBottom: "20px" }}>
                     {doctor?.name || doctor?.full_name}
                 </p>
-                <label style={{ fontSize: "11px", fontWeight: "700", color: "#94a3b8", display: "block", marginBottom: "6px" }}>
-                    NEW ROLE / TITLE
-                </label>
-                <input
-                    value={role}
-                    onChange={e => setRole(e.target.value)}
-                    placeholder="e.g. Head of Department"
-                    style={{
-                        width: "100%", padding: "10px 12px", borderRadius: "8px",
-                        border: "1px solid #e2e8f0", fontSize: "14px", boxSizing: "border-box"
-                    }}
-                />
-                {error && <div style={{ color: "#ef4444", fontSize: "12px", marginTop: "8px" }}>{error}</div>}
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <div>
+                        <label style={{ fontSize: "11px", fontWeight: "700", color: "#94a3b8", display: "block", marginBottom: "4px" }}>NAME</label>
+                        <input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} style={{ width: "100%", padding: "8px 12px", borderRadius: "8px", border: "1px solid #e2e8f0", fontSize: "13px", boxSizing: "border-box" }} />
+                    </div>
+                    <div>
+                        <label style={{ fontSize: "11px", fontWeight: "700", color: "#94a3b8", display: "block", marginBottom: "4px" }}>DEPARTMENT</label>
+                        <input value={form.department} onChange={e => setForm({ ...form, department: e.target.value })} style={{ width: "100%", padding: "8px 12px", borderRadius: "8px", border: "1px solid #e2e8f0", fontSize: "13px", boxSizing: "border-box" }} />
+                    </div>
+                    <div>
+                        <label style={{ fontSize: "11px", fontWeight: "700", color: "#94a3b8", display: "block", marginBottom: "4px" }}>DEPARTMENT ROLE</label>
+                        <input value={form.department_role} onChange={e => setForm({ ...form, department_role: e.target.value })} placeholder="e.g. Consultant" style={{ width: "100%", padding: "8px 12px", borderRadius: "8px", border: "1px solid #e2e8f0", fontSize: "13px", boxSizing: "border-box" }} />
+                    </div>
+                    <div>
+                        <label style={{ fontSize: "11px", fontWeight: "700", color: "#94a3b8", display: "block", marginBottom: "4px" }}>SPECIALTY</label>
+                        <input value={form.specialty} onChange={e => setForm({ ...form, specialty: e.target.value })} style={{ width: "100%", padding: "8px 12px", borderRadius: "8px", border: "1px solid #e2e8f0", fontSize: "13px", boxSizing: "border-box" }} />
+                    </div>
+                    <div>
+                        <label style={{ fontSize: "11px", fontWeight: "700", color: "#94a3b8", display: "block", marginBottom: "4px" }}>LICENSE NUMBER</label>
+                        <input value={form.license_number} onChange={e => setForm({ ...form, license_number: e.target.value })} style={{ width: "100%", padding: "8px 12px", borderRadius: "8px", border: "1px solid #e2e8f0", fontSize: "13px", boxSizing: "border-box" }} />
+                    </div>
+                </div>
+
+                {error && <div style={{ color: "#ef4444", fontSize: "12px", marginTop: "12px" }}>{error}</div>}
                 <div style={{ display: "flex", gap: "10px", marginTop: "20px" }}>
                     <button onClick={onClose} style={{
                         flex: 1, padding: "10px", border: "1px solid #e2e8f0",
@@ -99,11 +122,20 @@ export default function DepartmentPage({ params }) {
     const load = async () => {
         setLoading(true);
         try {
-            const [docs, invites] = await Promise.all([
-                fetchDoctorsByDepartment(displayName),
+            const [directoryData, invites] = await Promise.all([
+                fetchHospitalDirectory(),
                 fetchPendingInvites(),
             ]);
-            setDoctors(docs);
+
+            const docs = [
+                ...(directoryData.active_doctors || []),
+                ...(directoryData.inactive_doctors || [])
+            ];
+            const departmentDoctors = docs.filter(
+                d => (d.department || d.specialty) === displayName
+            );
+
+            setDoctors(departmentDoctors);
             setPendingInvites(invites);
         } catch (err) {
             console.error("DepartmentPage load error:", err);
@@ -139,7 +171,7 @@ export default function DepartmentPage({ params }) {
             <Topbar title={`${displayName} Department`} />
 
             {editingDoctor && (
-                <EditRoleModal
+                <ManageDoctorModal
                     doctor={editingDoctor}
                     onClose={() => setEditingDoctor(null)}
                     onSaved={() => { setEditingDoctor(null); load(); }}
@@ -267,7 +299,7 @@ export default function DepartmentPage({ params }) {
                                                             className={styles.outlineBtn}
                                                             style={{ height: "30px", fontSize: "12px" }}
                                                         >
-                                                            Edit Role
+                                                            Manage
                                                         </button>
                                                     </td>
                                                 </tr>

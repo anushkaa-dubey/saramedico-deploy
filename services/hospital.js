@@ -47,20 +47,19 @@ export const loginHospital = async (email, password) => {
 
 /**
  * 3. Fetch Home / Overview Page
- * Endpoint: GET /api/v1/admin/overview
+ * Endpoint: GET /api/v1/hospital/overview
  */
 export const fetchHospitalDashboardOverview = async () => {
     try {
-        const response = await fetch(`${API_BASE_URL}/admin/overview`, {
+        const response = await fetch(`${API_BASE_URL}/hospital/overview`, {
             headers: getAuthHeaders(),
         });
         return await handleResponse(response);
     } catch (err) {
         console.error("fetchHospitalDashboardOverview error:", err);
-        return { metrics: {}, recent_activity: [], alerts: [] };
+        return {};
     }
 };
-
 /**
  * 4. Fetch Directory Page
  * Endpoint: GET /api/v1/hospital/directory
@@ -211,13 +210,13 @@ export const fetchHospitalStats = async () => {
 
 // --- Team & Organization Exports (Aliased from Admin Service where available) ---
 
-export const fetchDepartmentStaff = async (params) => {
-    return fetchAdminDepartmentStaff(params);
-};
+// export const fetchDepartmentStaff = async (params) => {
+//     return fetchAdminDepartmentStaff(params);
+// };
 
-export const fetchOrganizationMembers = async () => {
-    return fetchOrgMembers();
-};
+// export const fetchOrganizationMembers = async () => {
+//     return fetchOrgMembers();
+// };
 
 export const fetchHospitalAppointments = async () => {
     return [];
@@ -245,18 +244,7 @@ export const fetchOrganizationDepartments = async () => {
     }
 };
 
-/**
- * Create a new department.
- * Endpoint: POST /api/v1/organization/departments
- */
-export const createOrganizationDepartment = async (departmentName) => {
-    const response = await fetch(`${API_BASE_URL}/organization/departments`, {
-        method: "POST",
-        headers: getAuthHeaders(),
-        body: JSON.stringify({ department_name: departmentName }),
-    });
-    return handleResponse(response);
-};
+
 
 /**
  * Fetch doctors in a specific department.
@@ -340,15 +328,46 @@ export const setDoctorStatus = async (status) => {
  */
 export const fetchHospitalDoctorStatus = async () => {
     try {
-        const response = await fetch(`${API_BASE_URL}/hospital/doctor/status`, {
+        const response = await fetch(`${API_BASE_URL}/hospital/doctors/status`, {
             headers: getAuthHeaders(),
         });
+
         const data = await handleResponse(response);
-        return Array.isArray(data) ? data : (data?.doctors || data?.results || []);
+
+        const active = data?.active_doctors || [];
+        const inactive = data?.inactive_doctors || [];
+
+        return [...active, ...inactive];
+
     } catch (err) {
         console.error("fetchHospitalDoctorStatus error:", err);
         return [];
     }
 };
 
+export const fetchDepartmentStaff = async (departmentName) => {
+    try {
+        const response = await fetch(
+            `${API_BASE_URL}/doctors/by-department?department=${encodeURIComponent(departmentName)}`,
+            { headers: getAuthHeaders() }
+        );
+        const data = await handleResponse(response);
+        return Array.isArray(data) ? data : (data?.results || []);
+    } catch (err) {
+        console.error("fetchDepartmentStaff error:", err);
+        return [];
+    }
+};
 
+export const fetchOrganizationMembers = async () => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/team/staff`, {
+            headers: getAuthHeaders(),
+        });
+        const data = await handleResponse(response);
+        return Array.isArray(data) ? data : (data?.staff || []);
+    } catch (err) {
+        console.error("fetchOrganizationMembers error:", err);
+        return [];
+    }
+};
