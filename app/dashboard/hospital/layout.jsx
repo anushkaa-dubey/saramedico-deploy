@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { fetchProfile } from "@/services/doctor";
 import styles from "./HospitalDashboard.module.css";
 import Sidebar from "./components/Sidebar";
 
@@ -10,42 +9,47 @@ export default function HospitalLayout({ children }) {
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        const checkAuth = async () => {
-            const token = localStorage.getItem("authToken");
-            if (!token) {
-                router.replace("/auth/login");
-                return;
-            }
+        // Check auth synchronously from localStorage — no network call
+        const token = localStorage.getItem("authToken");
+        if (!token) {
+            router.replace("/auth/login");
+            return;
+        }
 
-            try {
-                const profile = await fetchProfile().catch(() => null);
-                if (!profile) {
-                    router.replace("/auth/login");
-                    return;
-                }
-                
-                const role = (profile.role || "").toLowerCase();
-                if (role !== 'hospital') {
-                    if (role === 'doctor') router.replace("/dashboard/doctor");
-                    else if (role === 'patient') router.replace("/dashboard/patient");
-                    else if (role === 'admin' || role === 'administrator') router.replace("/dashboard/admin");
-                    else router.replace("/auth/login");
-                    return;
-                }
-                
-                setIsLoading(false);
-            } catch (err) {
-                console.error("Auth check failed:", err);
-                router.replace("/auth/login");
+        let role = "";
+        try {
+            const cached = localStorage.getItem("user");
+            if (cached) {
+                const user = JSON.parse(cached);
+                const rawRole = user?.role || "";
+                role = String(rawRole).split(".").pop().trim().toLowerCase();
             }
-        };
-        checkAuth();
+        } catch (_) { }
+
+        if (!role) {
+            // No cached user — just let them in if token exists
+            setIsLoading(false);
+            return;
+        }
+
+        if (role === "hospital") {
+            setIsLoading(false);
+            return;
+        }
+
+        // Wrong role — redirect to correct dashboard
+        if (role === "doctor") router.replace("/dashboard/doctor");
+        else if (role === "patient") router.replace("/dashboard/patient");
+        else if (role === "admin" || role === "administrator") router.replace("/dashboard/admin");
+        else router.replace("/auth/login");
     }, [router]);
 
     if (isLoading) {
-        return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#f8fafc', color: '#64748b', fontWeight: 'bold' }}>
-            Loading Dashboard...
-        </div>;
+        return (
+            <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh", background: "#f8fafc", color: "#64748b", fontWeight: "bold" }}>
+                Loading Dashboard...
+            </div>
+        );
     }
 
     return (

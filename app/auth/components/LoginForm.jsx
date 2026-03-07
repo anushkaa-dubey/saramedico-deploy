@@ -35,7 +35,13 @@ export default function LoginForm() {
     setLoading(true);
 
     try {
+      // Clear any stale auth data first to prevent stale-cache issues
+      localStorage.removeItem("authToken");
+      localStorage.removeItem("refreshToken");
+      localStorage.removeItem("user");
+
       const data = await loginUser({ email, password });
+      console.log("[Login] Raw API response:", data);
 
       const token = data.access_token || data.token;
 
@@ -47,26 +53,30 @@ export default function LoginForm() {
         localStorage.setItem("refreshToken", data.refresh_token);
       }
 
-      if (!data?.user) {
-        throw new Error("Login succeeded but user data missing.");
-      }
+      // Support both nested `data.user` and flat response shapes
+      const user = data?.user || data;
 
-      const user = data?.user;
-
-      if (!user) {
-        console.error("Login response missing user:", data);
-        throw new Error("User data missing from login response");
+      if (!user || (!user.role && !user.email)) {
+        console.error("[Login] Cannot identify user from response:", data);
+        throw new Error("Login succeeded but user data is missing. Please try again.");
       }
 
       localStorage.setItem("user", JSON.stringify(user));
 
-      const userRole = String(user.role || "").trim().toLowerCase();
-      console.log("ROLE:", userRole); if (userRole === "doctor") {
+      // Normalize role — handles "doctor", "UserRole.doctor", "DOCTOR", etc.
+      const rawRole = user.role || "";
+      const userRole = String(rawRole).split(".").pop().trim().toLowerCase();
+      console.log("[Login] Resolved role:", userRole);
+
+      // Use window.location.href for hard redirects — this guarantees
+      // localStorage is fully committed before the dashboard layout mounts
+      // and runs its own auth/role check.
+      if (userRole === "doctor") {
         if (user.onboarding_complete === false) {
-          router.push("/auth/signup/onboarding/doctor/step-1");
+          window.location.href = "/auth/signup/onboarding/doctor/step-1";
           return;
         }
-        router.push("/dashboard/doctor");
+        window.location.href = "/dashboard/doctor";
         return;
       }
 
@@ -74,17 +84,19 @@ export default function LoginForm() {
         window.location.href = "/dashboard/patient";
         return;
       }
+
       if (userRole === "admin" || userRole === "administrator") {
-        router.push("/dashboard/admin");
+        window.location.href = "/dashboard/admin";
         return;
       }
 
       if (userRole === "hospital") {
-        router.push("/dashboard/hospital");
+        window.location.href = "/dashboard/hospital";
         return;
       }
 
-      router.push("/dashboard/patient");
+      // Fallback
+      window.location.href = "/dashboard/patient";
     } catch (err) {
       console.error("[Login] Error:", err);
       const errorMessage =
