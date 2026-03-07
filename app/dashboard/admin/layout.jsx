@@ -9,7 +9,7 @@ export default function AdminLayout({ children }) {
     return (
         <div className={styles.container}>
             <AdminSidebar />
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: '100vh', overflow: 'hidden' }}>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
                 <AdminTopbar />
                 <main className={styles.main} style={{ flex: 1, overflowY: 'auto' }}>
                     {children}

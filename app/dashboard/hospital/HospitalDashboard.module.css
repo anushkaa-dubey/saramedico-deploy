@@ -1837,12 +1837,10 @@
 }
 
 .scheduleListWrapper {
-    /* responsive hook */
     display: flex;
 }
 
 .scheduleItem {
-    /* responsive hook */
     display: flex;
 }
 
@@ -1894,7 +1892,6 @@
 /* ---------- Tablet & small laptop (≤1024px) ---------- */
 @media (max-width: 1024px) {
 
-    /* Sidebar becomes a fixed slide-in drawer */
     .sidebar {
         position: fixed;
         left: 0;
@@ -1910,55 +1907,44 @@
         box-shadow: 4px 0 20px rgba(0, 0, 0, 0.08);
     }
 
-    /* Show hamburger button */
     .mobileToggleBtn {
         display: flex;
     }
 
-    /* Show overlay when sidebar is open */
     .mobileOverlay {
         display: block;
     }
 
-    /* Main content takes full width */
     .main {
         width: 100%;
     }
 
-    /* Two-column dashboard grid → single column */
     .dashboardGrid {
         grid-template-columns: 1fr !important;
     }
 
-    /* 4-col stats → 2 columns */
     .overviewSection {
         grid-template-columns: repeat(2, 1fr) !important;
     }
 
-    /* Content wrapper less padding */
     .contentWrapper {
         padding: 16px 20px;
-        /* Override any inline grid for contentWrapper used on cardiology etc. */
         grid-template-columns: 1fr !important;
         display: block !important;
     }
 
-    /* Topbar needs left space for hamburger */
     .topbar {
         padding-left: 64px;
     }
 
-    /* Calendar card full width on tablet */
     .calendarCard {
         max-width: 100%;
     }
 
-    /* Chart grid single col */
     .chartGrid {
         grid-template-columns: 1fr !important;
     }
 
-    /* Right column main stacks */
     .rightColMain {
         display: flex !important;
         flex-direction: column !important;
@@ -1968,7 +1954,6 @@
 /* ---------- Mobile (≤768px) ---------- */
 @media (max-width: 768px) {
 
-    /* Prevent any horizontal overflow globally */
     .container {
         --font-3xl: 22px;
         --font-2xl: 18px;
@@ -1984,7 +1969,6 @@
         overflow-x: hidden;
     }
 
-    /* Content wrapper tighter padding */
     .contentWrapper {
         padding: 14px 16px;
         max-width: 100%;
@@ -1992,7 +1976,6 @@
         box-sizing: border-box;
     }
 
-    /* Header stacks vertically */
     .header {
         flex-direction: column;
         align-items: flex-start;
@@ -2006,7 +1989,6 @@
         -webkit-overflow-scrolling: touch;
     }
 
-    /* Tables become horizontally scrollable inside their container */
     .activityTable {
         display: block;
         overflow-x: auto;
@@ -2019,13 +2001,11 @@
         -webkit-overflow-scrolling: touch;
     }
 
-    /* Cards responsive */
     .card {
         padding: 16px;
         overflow: hidden;
     }
 
-    /* Buttons slightly smaller */
     .outlineBtn,
     .primaryBtn {
         height: 34px;
@@ -2035,24 +2015,20 @@
         flex-shrink: 0;
     }
 
-    /* Dashboard actions wrap */
     .dashboardActions {
         flex-wrap: wrap;
     }
 
-    /* Pie chart smaller */
     .pieWrapper {
         width: 160px;
         height: 160px;
     }
 
-    /* Search bar responsive */
     .search {
         width: 100% !important;
         max-width: 200px;
     }
 
-    /* Hide profile text on mobile, show only avatar */
     .profileInfo {
         display: none;
     }
@@ -2118,13 +2094,11 @@
 
     /* ---- RESPONSIVE HELPER CLASS OVERRIDES ---- */
 
-    /* Dashboard header row: wrap on mobile */
     .dashboardHeaderRow {
         flex-wrap: wrap !important;
         gap: 12px !important;
     }
 
-    /* Dashboard header actions: wrap and full width */
     .dashboardHeaderActions {
         flex-wrap: wrap !important;
         width: 100% !important;
@@ -2139,7 +2113,6 @@
         padding: 0 16px !important;
     }
 
-    /* Sessions tab bar: horizontal scroll */
     .sessionsTabBar {
         overflow-x: auto !important;
         -webkit-overflow-scrolling: touch !important;
@@ -2147,38 +2120,32 @@
         max-width: 100% !important;
     }
 
-    /* Table scroll wrapper */
     .tableScrollWrapper {
         overflow-x: auto !important;
         -webkit-overflow-scrolling: touch !important;
         width: 100% !important;
     }
 
-    /* Schedule section header: wrap */
     .scheduleSectionHeader {
         flex-wrap: wrap !important;
         gap: 8px !important;
     }
 
-    /* Schedule list wrapper: ensure no overflow */
     .scheduleListWrapper {
         overflow: hidden !important;
     }
 
-    /* Page header row (generic for sub-pages): wrap */
     .pageHeaderRow {
         flex-wrap: wrap !important;
         gap: 12px !important;
     }
 
-    /* Page header actions: wrap */
     .pageHeaderActions {
         flex-wrap: wrap !important;
         width: 100% !important;
         gap: 8px !important;
     }
 
-    /* Inline grid overrides for any inline style grids */
     .inlineGrid4 {
         grid-template-columns: repeat(2, 1fr) !important;
         gap: 12px !important;
@@ -2199,14 +2166,12 @@
         gap: 12px !important;
     }
 
-    /* Appointment list items: stack columns */
     .appointmentListItem {
         flex-direction: column !important;
         align-items: flex-start !important;
         gap: 12px !important;
     }
 
-    /* Filter button row: wrap */
     .filterButtonRow {
         flex-wrap: wrap !important;
         gap: 8px !important;
@@ -2216,12 +2181,10 @@
 /* ---------- Small phone (≤480px) ---------- */
 @media (max-width: 480px) {
 
-    /* Stats go single column */
     .overviewSection {
         grid-template-columns: 1fr !important;
     }
 
-    /* Dashboard actions stack */
     .dashboardActions {
         flex-direction: column;
     }
@@ -2253,4 +2216,86 @@
         width: 120px;
         height: 120px;
     }
+}
+
+.staffHeaderBtns {
+    display: flex;
+    gap: 12px;
+}
+
+@media (max-width:768px) {
+
+    .pageHeaderRow {
+        flex-direction: column;
+        align-items: flex-start !important;
+    }
+
+    .staffHeaderBtns {
+        width: 100%;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .staffHeaderBtns button {
+        width: 100%;
+    }
+
+}
+
+/* ===== STAFF PAGE MOBILE FIX ===== */
+@media (max-width:768px) {
+
+    .overviewSection {
+        grid-template-columns: repeat(3, 1fr) !important;
+        gap: 8px !important;
+    }
+
+    .overviewSection>div {
+        padding: 12px !important;
+    }
+
+    .overviewSection svg {
+        width: 16px !important;
+        height: 16px !important;
+    }
+
+    .overviewSection div div:last-child {
+        font-size: 18px !important;
+    }
+
+    .activityTable {
+        min-width: 650px;
+    }
+
+    .tableScrollWrapper {
+        overflow-x: auto;
+    }
+
+    .activityTable th:nth-child(3),
+    .activityTable td:nth-child(3),
+    .activityTable th:nth-child(4),
+    .activityTable td:nth-child(4) {
+        display: none;
+    }
+
+}
+
+.staffHeaderBtns {
+    display: flex;
+    gap: 12px;
+}
+
+@media (max-width:768px) {
+
+    .staffHeaderBtns {
+        display: flex !important;
+        flex-direction: row !important;
+        gap: 10px;
+    }
+
+    .staffHeaderBtns button {
+        width: auto !important;
+        flex: 0 0 auto !important;
+    }
+
 }

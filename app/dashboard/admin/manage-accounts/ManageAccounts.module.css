@@ -15,12 +15,15 @@
     transform: translateY(0);
   }
 }
+
 .card {
   margin-left: 16px;
 }
+
 .heading {
   margin-left: 16px;
 }
+
 /* Main */
 .main {
   flex: 1;
@@ -90,9 +93,11 @@
   background: #f1f5f9;
   transform: scale(1.05);
 }
+
 .container {
   gap: 16px;
 }
+
 .profile {
   display: flex;
   flex-direction: column;
@@ -525,7 +530,7 @@
   }
 
   .table {
-    display: none;
+    display: table;
   }
 
   .mobileList {
@@ -622,5 +627,15 @@
   .userCell {
     flex-direction: column;
     align-items: flex-start;
+  }
+}
+
+.mobileToggleBtn {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mobileToggleBtn {
+    display: flex;
   }
 }

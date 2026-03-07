@@ -1,0 +1,23 @@
+.inviteGrid {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 24px;
+}
+
+.staffFormGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+@media (max-width: 768px) {
+    .staffFormGrid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 1024px) {
+    .inviteGrid {
+        grid-template-columns: 1fr;
+    }
+}

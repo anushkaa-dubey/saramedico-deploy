@@ -107,12 +107,14 @@ export default function StaffManagementPage() {
                         <h1 style={{ fontSize: '24px', fontWeight: '800', color: '#0f172a', margin: 0 }}>Staff Management</h1>
                         <p style={{ color: '#64748b', margin: '4px 0 0 0' }}>View doctor availability and manage hospital personnel.</p>
                     </div>
-                    <div style={{ display: 'flex', gap: '12px' }}>
-                        <button
-                            onClick={() => setIsPatientModalOpen(true)}
-                            className={styles.outlineBtn}
-                            style={{ background: '#ffffff', color: '#10b981', borderColor: '#10b981' }}
-                        >
+                    <div
+                        className="staffHeaderBtns"
+                        style={{ display: "flex", gap: "12px", flexDirection: "row" }}
+                    >                       <button
+                        onClick={() => setIsPatientModalOpen(true)}
+                        className={styles.outlineBtn}
+                        style={{ background: '#ffffff', color: '#10b981', borderColor: '#10b981' }}
+                    >
                             + Create Patient ID
                         </button>
                         <button

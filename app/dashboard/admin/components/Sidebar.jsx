@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import styles from "../AdminDashboard.module.css";
@@ -15,9 +15,9 @@ import {
   Calendar,
   Hospital,
   Settings,
-  LogOut
+  LogOut,
+  Menu
 } from "lucide-react";
-import path from "path";
 
 export default function AdminSidebar() {
 
@@ -25,11 +25,25 @@ export default function AdminSidebar() {
   const router = useRouter();
 
   const [isSignoutModalOpen, setIsSignoutModalOpen] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   const handleLogout = async () => {
     await logoutUser();
     router.push("/auth/login");
   };
+
   const isActive = (path) => {
     if (path === "/dashboard/admin") {
       return pathname === path;
@@ -72,9 +86,28 @@ export default function AdminSidebar() {
 
   return (
     <>
-      <aside className={styles.sidebar}>
+      {/* Mobile Hamburger */}
+      {isMobile && !isOpen && (
+        <button
+          className={styles.mobileToggleBtn}
+          onClick={() => setIsOpen(true)}
+          aria-label="Toggle Menu"
+        >
+          <Menu size={20} />
+        </button>
+      )}
 
-        {/* Top section */}
+      {/* Overlay */}
+      {isMobile && isOpen && (
+        <div
+          className={styles.mobileOverlay}
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside className={`${styles.sidebar} ${isMobile && isOpen ? styles.open : ""}`}>
+
         <div className={styles.sidebarTop}>
 
           {/* Logo */}
@@ -88,8 +121,8 @@ export default function AdminSidebar() {
               <Link
                 key={item.path}
                 href={item.path}
-                className={`${styles.navItem} ${isActive(item.path) ? styles.active : ""
-                  }`}
+                className={`${styles.navItem} ${isActive(item.path) ? styles.active : ""}`}
+                onClick={() => isMobile && setIsOpen(false)}
               >
                 {item.icon}
                 {item.label}
@@ -110,6 +143,7 @@ export default function AdminSidebar() {
 
       </aside>
 
+      {/* Signout Modal */}
       <SignoutModal
         isOpen={isSignoutModalOpen}
         onConfirm={handleLogout}

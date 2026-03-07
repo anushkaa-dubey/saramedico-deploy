@@ -169,11 +169,11 @@ export default function NotificationBell() {
                     } else {
                         targetUrl = `/dashboard/patient/appointments`;
                     }
-                } 
+                }
                 else if (targetUrl.includes("/tasks/") || targetUrl.startsWith("/doctor/tasks")) {
                     // Tasks are on the main dashboard home
                     targetUrl = role === "doctor" ? `/dashboard/doctor` : `/dashboard/patient`;
-                } 
+                }
                 else if (targetUrl.includes("/calendar") || targetUrl.includes("/events/")) {
                     // Redirect calendar/events to main dashboard home
                     targetUrl = role === "doctor" ? `/dashboard/doctor` : `/dashboard/patient`;
@@ -402,12 +402,11 @@ export default function NotificationBell() {
             {dropdownOpen && (
                 <div
                     style={{
-                        position: "absolute",
-                        top: "100%",
-                        right: "0",
-                        width: "340px",
+                        position: window.innerWidth <= 768 ? "fixed" : "absolute", top: window.innerWidth <= 768 ? "60px" : "100%",
+                        left: window.innerWidth <= 768 ? "10px" : "auto",
+                        right: window.innerWidth <= 768 ? "10px" : "0",
+                        width: window.innerWidth <= 768 ? "90vw" : "340px", boxShadow: "0 4px 24px rgba(0,0,0,0.12)",
                         background: "white",
-                        boxShadow: "0 4px 24px rgba(0,0,0,0.12)",
                         borderRadius: "12px",
                         zIndex: 1000,
                         border: "1px solid #e2e8f0",

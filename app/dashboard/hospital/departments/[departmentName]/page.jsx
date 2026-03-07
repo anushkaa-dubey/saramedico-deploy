@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Topbar from "../../components/Topbar";
 import styles from "../../HospitalDashboard.module.css";
+import pageStyles from "./DepartmentPage.module.css";
 import { motion } from "framer-motion";
 import {
     fetchHospitalDirectory,
@@ -180,24 +181,25 @@ export default function DepartmentPage({ params }) {
 
             <div className={styles.contentWrapper}>
                 {/* Page Header */}
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "28px" }}>
-                    <div>
-                        <h1 style={{ fontSize: "24px", fontWeight: "800", color: "#0f172a", margin: 0 }}>
-                            {displayName} Department
-                        </h1>
-                        <p style={{ color: "#64748b", margin: "4px 0 0 0", fontSize: "14px" }}>
-                            Manage roles, permissions, and staff assignments for the {displayName.toLowerCase()} wing.
-                        </p>
-                    </div>
+                <div className={pageStyles.departmentHeader}>                    <div>
+                    <h1 style={{ fontSize: "24px", fontWeight: "800", color: "#0f172a", margin: 0 }}>
+                        {displayName} Department
+                    </h1>
+                    <p style={{ color: "#64748b", margin: "4px 0 0 0", fontSize: "14px" }}>
+                        Manage roles, permissions, and staff assignments for the {displayName.toLowerCase()} wing.
+                    </p>
+                </div>
                     <div style={{ display: "flex", gap: "10px" }}>
-                        <Link href={`/dashboard/hospital/departments/${departmentName}/invite`}>
-                            <button style={{
-                                display: "flex", alignItems: "center", gap: "6px",
-                                padding: "0 18px", height: "38px", border: "none",
-                                borderRadius: "10px", background: "#3b82f6", color: "white",
-                                fontWeight: "700", fontSize: "13px", cursor: "pointer",
-                                boxShadow: "0 2px 8px rgba(59,130,246,0.3)"
-                            }}>
+                        <Link
+                            href={`/dashboard/hospital/departments/${departmentName}/invite`}
+                            style={{ textDecoration: "none" }}
+                        >                            <button style={{
+                            display: "flex", alignItems: "center", gap: "6px",
+                            padding: "0 18px", height: "38px", border: "none",
+                            borderRadius: "10px", background: "#3b82f6", color: "white",
+                            fontWeight: "700", fontSize: "13px", cursor: "pointer",
+                            boxShadow: "0 2px 8px rgba(59,130,246,0.3)"
+                        }}>
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                                     <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" />
                                     <line x1="19" y1="8" x2="19" y2="14" /><line x1="22" y1="11" x2="16" y2="11" />
@@ -216,15 +218,24 @@ export default function DepartmentPage({ params }) {
                                 <div className={styles.cardTitle} style={{ margin: 0 }}>
                                     Roles &amp; Permissions
                                 </div>
-                                <div style={{ display: "flex", gap: "8px" }}>
-                                    <input
+                                <div
+                                    style={{
+                                        display: "flex",
+                                        gap: "8px",
+                                        flexWrap: "wrap"
+                                    }}
+                                >                                    <input
                                         placeholder="Search staff, reports, notes..."
                                         value={searchTerm}
                                         onChange={e => setSearchTerm(e.target.value)}
                                         style={{
-                                            padding: "7px 12px", borderRadius: "8px",
-                                            border: "1px solid #e2e8f0", fontSize: "13px",
-                                            width: "220px", color: "#475569"
+                                            padding: "7px 12px",
+                                            borderRadius: "8px",
+                                            border: "1px solid #e2e8f0",
+                                            fontSize: "13px",
+                                            width: "100%",
+                                            maxWidth: "220px",
+                                            color: "#475569"
                                         }}
                                     />
                                     <select style={{

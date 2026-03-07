@@ -2,6 +2,7 @@
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import Topbar from "../../../components/Topbar";
+import "./Invite.css";
 import styles from "../../../HospitalDashboard.module.css";
 import { motion } from "framer-motion";
 import { createHospitalDoctor, fetchPendingInvites, fetchHospitalDirectory } from "@/services/hospital";
@@ -153,7 +154,7 @@ export default function InviteStaffPage({ params }) {
                     </motion.div>
                 )}
 
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: "24px", alignItems: "start" }}>
+                <div className="inviteGrid">
                     {/* Main Form */}
                     <form onSubmit={handleSubmit}>
                         <div className={styles.card}>
@@ -175,8 +176,7 @@ export default function InviteStaffPage({ params }) {
                                 </div>
                             </div>
 
-                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "20px" }}>
-                                {/* Full Name */}
+                            <div className="staffFormGrid">                                {/* Full Name */}
                                 <div>
                                     <label style={{ fontSize: "11px", fontWeight: "700", color: "#94a3b8", display: "block", marginBottom: "6px", textTransform: "uppercase", letterSpacing: "0.05em" }}>
                                         FULL NAME *
@@ -230,7 +230,7 @@ export default function InviteStaffPage({ params }) {
                                         DEPARTMENT
                                     </label>
                                     <input
-                                        value={`${displayName} Department`}
+                                        value={displayName}
                                         readOnly
                                         style={{
                                             width: "100%", padding: "10px 12px",
