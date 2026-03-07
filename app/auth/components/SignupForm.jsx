@@ -5,6 +5,7 @@ import Link from "next/link";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 import { registerUser, registerHospital, loginUser } from "@/services/auth";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function SignupForm() {
   const router = useRouter();
@@ -40,6 +41,8 @@ export default function SignupForm() {
   });
 
   const [errors, setErrors] = useState({});
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
@@ -291,42 +294,84 @@ export default function SignupForm() {
 
           {/* Password */}
           <label htmlFor="h_password" style={{ fontSize: "16px", fontWeight: "600", color: "#374151" }}>Password</label>
-          <input
-            id="h_password"
-            type="password"
-            autoComplete="new-password"
-            placeholder="Create a strong password"
-            value={hospitalForm.password}
-            onChange={e => handleHospitalChange("password", e.target.value)}
-            style={{ borderColor: errors.password ? "#ef4444" : "#ddd" }}
-            required
-          />
+          <div style={{ position: "relative" }}>
+            <input
+              id="h_password"
+              type={showPassword ? "text" : "password"}
+              autoComplete="new-password"
+              placeholder="Create a strong password"
+              value={hospitalForm.password}
+              onChange={e => handleHospitalChange("password", e.target.value)}
+              style={{ borderColor: errors.password ? "#ef4444" : "#ddd", width: "100%", paddingRight: "40px" }}
+              required
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              style={{
+                position: "absolute",
+                right: "10px",
+                top: "50%",
+                transform: "translateY(-50%)",
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                color: "#9ca3af",
+                padding: "4px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center"
+              }}
+            >
+              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+            </button>
+          </div>
+
           {errors.password && (
             <p style={{ color: "#ef4444", fontSize: "13px", fontWeight: "600", marginTop: "-8px", marginBottom: "12px" }}>{errors.password}</p>
           )}
 
           {/* Confirm Password */}
-          <label htmlFor="h_confirm" style={{ fontSize: "16px", fontWeight: "600", color: "#374151" }}>Confirm Password</label>
           <div style={{ position: "relative" }}>
             <input
               id="h_confirm"
-              type="password"
+              type={showConfirmPassword ? "text" : "password"}
               autoComplete="new-password"
               placeholder="Confirm your password"
               value={hospitalForm.confirm_password}
               onChange={e => handleHospitalChange("confirm_password", e.target.value)}
               style={{
                 borderColor: hospitalForm.confirm_password && !passwordsMatch ? "#ef4444" : passwordsMatch ? "#16a34a" : "#ddd",
-                paddingRight: "30px"
+                paddingRight: "50px",
+                width: "100%"
               }}
               required
             />
-            {hospitalForm.confirm_password && (
-              <span style={{ position: "absolute", right: "10px", top: "12px", color: passwordsMatch ? "#16a34a" : "#ef4444", fontWeight: "bold" }}>
-                {passwordsMatch ? "✓" : "✗"}
-              </span>
-            )}
+            <div style={{ position: "absolute", right: "10px", top: "50%", transform: "translateY(-50%)", display: "flex", alignItems: "center", gap: "8px" }}>
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                style={{
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  color: "#9ca3af",
+                  padding: "4px",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center"
+                }}
+              >
+                {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+              {hospitalForm.confirm_password && (
+                <span style={{ color: passwordsMatch ? "#16a34a" : "#ef4444", fontWeight: "bold", fontSize: "16px" }}>
+                  {passwordsMatch ? "✓" : "✗"}
+                </span>
+              )}
+            </div>
           </div>
+
           {errors.confirm_password && (
             <p style={{ color: "#ef4444", fontSize: "13px", fontWeight: "600", marginTop: "-8px", marginBottom: "12px" }}>{errors.confirm_password}</p>
           )}
@@ -526,17 +571,40 @@ export default function SignupForm() {
 
         {/* Password */}
         <label htmlFor="password" style={{ fontSize: "16px", fontWeight: "600", color: "#374151" }}>Password</label>
-        <input
-          id="password"
-          type="password"
-          name="new-password"
-          autoComplete="new-password"
-          placeholder="Create a strong password"
-          value={formData.password}
-          onChange={e => handleInputChange("password", e.target.value)}
-          style={{ borderColor: errors.password ? "#ef4444" : "#ddd" }}
-          required
-        />
+        <div style={{ position: "relative" }}>
+          <input
+            id="password"
+            type={showPassword ? "text" : "password"}
+            name="new-password"
+            autoComplete="new-password"
+            placeholder="Create a strong password"
+            value={formData.password}
+            onChange={e => handleInputChange("password", e.target.value)}
+            style={{ borderColor: errors.password ? "#ef4444" : "#ddd", width: "100%", paddingRight: "40px" }}
+            required
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            style={{
+              position: "absolute",
+              right: "10px",
+              top: "50%",
+              transform: "translateY(-50%)",
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              color: "#9ca3af",
+              padding: "4px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center"
+            }}
+          >
+            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+          </button>
+        </div>
+
         {errors.password && <p style={{ color: "#ef4444", fontSize: "13px", fontWeight: "600", marginTop: "-8px", marginBottom: "12px" }}>{errors.password}</p>}
 
         {/* Confirm Password */}
@@ -544,20 +612,43 @@ export default function SignupForm() {
         <div style={{ position: "relative" }}>
           <input
             id="confirm_password"
-            type="password"
+            type={showConfirmPassword ? "text" : "password"}
             name="new-password-confirm"
             placeholder="Confirm your password"
             value={formData.confirm_password}
             onChange={e => handleInputChange("confirm_password", e.target.value)}
-            style={{ borderColor: formData.confirm_password && !passwordsMatch ? "#ef4444" : passwordsMatch ? "#16a34a" : "#ddd", paddingRight: "30px" }}
+            style={{ 
+              borderColor: formData.confirm_password && !passwordsMatch ? "#ef4444" : passwordsMatch ? "#16a34a" : "#ddd", 
+              paddingRight: "50px",
+              width: "100%"
+            }}
             required
           />
-          {formData.confirm_password && (
-            <span style={{ position: "absolute", right: "10px", top: "12px", color: passwordsMatch ? "#16a34a" : "#ef4444", fontWeight: "bold" }}>
-              {passwordsMatch ? "✓" : "✗"}
-            </span>
-          )}
+          <div style={{ position: "absolute", right: "10px", top: "50%", transform: "translateY(-50%)", display: "flex", alignItems: "center", gap: "8px" }}>
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              style={{
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                color: "#9ca3af",
+                padding: "4px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center"
+              }}
+            >
+              {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+            </button>
+            {formData.confirm_password && (
+              <span style={{ color: passwordsMatch ? "#16a34a" : "#ef4444", fontWeight: "bold", fontSize: "16px" }}>
+                {passwordsMatch ? "✓" : "✗"}
+              </span>
+            )}
+          </div>
         </div>
+
         {errors.confirm_password && <p style={{ color: "#ef4444", fontSize: "13px", fontWeight: "600", marginTop: "-8px", marginBottom: "12px" }}>{errors.confirm_password}</p>}
 
         {/* Terms */}

@@ -27,34 +27,9 @@ function SoapNotesPage() {
     const pollTimerRef = useRef(null);
     const pollAttemptsRef = useRef(0);
 
-    // ── Load consultation on mount ──────────────────────────────────────────
-    useEffect(() => {
-        if (!consultationId) {
-            setLoading(false);
-            setError("No consultation selected. Please open the SOAP note from a valid appointment.");
-            return;
-        }
-        fetchConsultationById(consultationId)
-            .then((data) => {
-                setConsultation(data);
-                // If SOAP is already completed, fetch it immediately
-                if (data?.ai_status === "completed" || data?.soap_note) {
-                    setSoap(data.soap_note || null);
-                    setSoapStatus("completed");
-                }
-            })
-            .catch((err) => {
-                console.error("Failed to fetch consultation:", err);
-                setError("Could not load consultation. " + (err.message || ""));
-            })
-            .finally(() => setLoading(false));
-    }, [consultationId]);
-
-    // ── Cleanup polling on unmount ──────────────────────────────────────────
-    useEffect(() => () => clearInterval(pollTimerRef.current), []);
-
     // ── Polling function ────────────────────────────────────────────────────
     const startPolling = useCallback((consultationId) => {
+        if (pollTimerRef.current) clearInterval(pollTimerRef.current);
         pollAttemptsRef.current = 0;
         setDisplayAttempt(0);   // Reset display counter
         setSoapStatus("processing");
@@ -86,6 +61,48 @@ function SoapNotesPage() {
         }, POLL_INTERVAL_MS);
     }, []);
 
+    // ── Load consultation on mount ──────────────────────────────────────────
+    useEffect(() => {
+        if (!consultationId) {
+            setLoading(false);
+            setError("No consultation selected. Please open the SOAP note from a valid appointment.");
+            return;
+        }
+        fetchConsultationById(consultationId)
+            .then((data) => {
+                setConsultation(data);
+                
+                // 1. If SOAP content is already in the main object (unlikely per current schema, but safe)
+                // 2. Or if backend says it's already completed
+                // 3. Or if hasSoapNote flag is set
+                const isAiDone = data?.aiStatus === "completed" || data?.ai_status === "completed";
+                const hasSoap = data?.hasSoapNote || !!data?.soap_note;
+
+                if (isAiDone || hasSoap) {
+                    setSoapStatus("completed");
+                    // Fetch the full SOAP content if not already present
+                    if (data?.soap_note) {
+                        setSoap(data.soap_note);
+                    } else {
+                        fetchSoapNote(consultationId).then(res => {
+                            if (res.soap_note) setSoap(res.soap_note);
+                        });
+                    }
+                } else if (data?.status === "completed") {
+                    // It's marked complete but AI isn't done yet -> start polling automatically
+                    startPolling(consultationId);
+                }
+            })
+            .catch((err) => {
+                console.error("Failed to fetch consultation:", err);
+                setError("Could not load consultation. " + (err.message || ""));
+            })
+            .finally(() => setLoading(false));
+    }, [consultationId, startPolling]);
+
+    // ── Cleanup polling on unmount ──────────────────────────────────────────
+    useEffect(() => () => { if (pollTimerRef.current) clearInterval(pollTimerRef.current); }, []);
+
     // ── Mark consultation complete → trigger AI ─────────────────────────────
     const handleMarkComplete = async () => {
         if (!consultationId || marking) return;
@@ -103,7 +120,6 @@ function SoapNotesPage() {
 
     // ── Retry polling manually ──────────────────────────────────────────────
     const handleRetryPoll = () => {
-        clearInterval(pollTimerRef.current);
         if (consultationId) startPolling(consultationId);
     };
 
@@ -213,11 +229,11 @@ function SoapNotesPage() {
                                 borderRadius: "20px",
                                 fontSize: "11px",
                                 fontWeight: "700",
-                                background: soapStatus === "completed" ? "#f0fdf4" : soapStatus === "processing" ? "#eff6ff" : "#f8fafc",
-                                color: soapStatus === "completed" ? "#16a34a" : soapStatus === "processing" ? "#2563eb" : "#64748b",
+                                background: soapStatus === "completed" ? "#f0fdf4" : (soapStatus === "processing" || (consultation?.status === "completed" && soapStatus === "idle")) ? "#eff6ff" : "#f8fafc",
+                                color: soapStatus === "completed" ? "#16a34a" : (soapStatus === "processing" || (consultation?.status === "completed" && soapStatus === "idle")) ? "#2563eb" : "#64748b",
                             }}>
                                 {soapStatus === "completed" && "✓ Note Ready"}
-                                {soapStatus === "processing" && "⟳ Generating..."}
+                                {(soapStatus === "processing" || (consultation?.status === "completed" && soapStatus === "idle")) && "⟳ Generating..."}
                                 {soapStatus === "timeout" && "⚠ Timed Out"}
                                 {soapStatus === "error" && "✗ Error"}
                                 {soapStatus === "idle" && "Not Started"}
@@ -244,7 +260,7 @@ function SoapNotesPage() {
                                     <div className={styles.textBlock}>{soap.plan || "No plan recorded."}</div>
                                 </div>
                             </>
-                        ) : soapStatus === "processing" ? (
+                        ) : (soapStatus === "processing" || (consultation?.status === "completed" && soapStatus === "idle")) ? (
                             /* ── Processing / Polling state ── */
                             <div style={{ padding: "40px", textAlign: "center" }}>
                                 <div style={{ display: "flex", justifyContent: "center", marginBottom: "16px" }}>
@@ -284,7 +300,7 @@ function SoapNotesPage() {
                                 </button>
                             </div>
                         ) : (
-                            /* ── Idle: Show "Mark Complete" to trigger AI ── */
+                            /* ── Idle: Show "Mark Complete" if not already completed ── */
                             <div style={{ padding: "40px", textAlign: "center" }}>
                                 <div style={{ fontSize: "48px", marginBottom: "16px" }}>🩺</div>
                                 <p style={{ color: "#475569", fontSize: "14px", fontWeight: "500", marginBottom: "8px" }}>
@@ -370,6 +386,7 @@ function SoapNotesPage() {
         </motion.div>
     );
 }
+
 export default function Page() {
     return (
         <Suspense fallback={<div>Loading...</div>}>

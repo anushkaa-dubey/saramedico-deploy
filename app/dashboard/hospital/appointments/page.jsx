@@ -327,7 +327,7 @@ export default function AppointmentsPage() {
                                                 <div key={`ev-${idx}`} style={{ background: '#f8fafc', padding: '10px', borderRadius: '8px', borderLeft: '4px solid #3b82f6', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                                     <div>
                                                         <div style={{ fontSize: '13px', fontWeight: '700' }}>{ev.title || "Meeting"}</div>
-                                                        <div style={{ fontSize: '10px', color: '#64748b' }}>{ev.time || ev.scheduled_at?.split('T')[1].substring(0, 5)} • {ev.doctor_name || "Doctor"}</div>
+                                                        <div style={{ fontSize: '10px', color: '#64748b' }}>{ev.time || ev.start_time?.split('T')[1]?.substring(0, 5) || "All Day"} • {ev.doctor_name || "Staff"}</div>
                                                     </div>
                                                     <button onClick={() => { if (confirm("Delete event?")) deleteCalendarEvent(ev.id).then(() => loadDayData()); }} style={{ border: 'none', background: 'transparent', color: '#ef4444', cursor: 'pointer' }}>×</button>
                                                 </div>

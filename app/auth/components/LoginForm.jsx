@@ -3,12 +3,14 @@ import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { loginUser, getCurrentUser } from "@/services/auth";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
 
   const [loading, setLoading] = useState(false);
@@ -86,33 +88,36 @@ export default function LoginForm() {
 
   return (
     <>
-      <div style={{ display: "flex", borderBottom: "1px solid #eee", marginBottom: "24px" }}>
-        <div style={{
-          flex: 1,
-          padding: "14px",
-          textAlign: "center",
-          fontWeight: "600",
-          color: "#4361ee",
-          borderBottom: "2px solid #4361ee",
-          cursor: "default"
-        }}>
-          Login
-        </div>
-        <Link
-          href={`/auth/signup?role=${computedRole}`}
-          style={{
+      {(computedRole !== "patient" && computedRole !== "admin" && computedRole !== "administrator") && (
+        <div style={{ display: "flex", borderBottom: "1px solid #eee", marginBottom: "24px" }}>
+          <div style={{
             flex: 1,
             padding: "14px",
             textAlign: "center",
-            textDecoration: "none",
-            color: "#6b7280",
-            fontWeight: "500",
-            borderBottom: "2px solid transparent"
-          }}
-        >
-          Sign Up
-        </Link>
-      </div>
+            fontWeight: "600",
+            color: "#4361ee",
+            borderBottom: "2px solid #4361ee",
+            cursor: "default"
+          }}>
+            Login
+          </div>
+          <Link
+            href={`/auth/signup?role=${computedRole}`}
+            style={{
+              flex: 1,
+              padding: "14px",
+              textAlign: "center",
+              textDecoration: "none",
+              color: "#6b7280",
+              fontWeight: "500",
+              borderBottom: "2px solid transparent"
+            }}
+          >
+            Sign Up
+          </Link>
+        </div>
+      )}
+
 
       <h2>Welcome Back</h2>
       <p className="subtext">Access your workspace.</p>
@@ -134,16 +139,40 @@ export default function LoginForm() {
           Password
           <a className="forgot" href="/auth/forgot-password" style={{ fontSize: "13px" }}>Forgot Password?</a>
         </label>
-        <input
-          id="password"
-          type="password"
-          name="password"
-          autoComplete="current-password"
-          placeholder="Enter your password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
+        <div style={{ position: "relative" }}>
+          <input
+            id="password"
+            type={showPassword ? "text" : "password"}
+            name="password"
+            autoComplete="current-password"
+            placeholder="Enter your password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+            style={{ width: "100%", paddingRight: "40px" }}
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            style={{
+              position: "absolute",
+              right: "10px",
+              top: "50%",
+              transform: "translateY(-50%)",
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              color: "#9ca3af",
+              padding: "4px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center"
+            }}
+          >
+            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+          </button>
+        </div>
+
 
         {error && (
           <p style={{ color: "#ef4444", fontSize: "13px", fontWeight: "600", marginTop: "8px" }}>
@@ -171,11 +200,12 @@ export default function LoginForm() {
           Continue with Google
         </button>
 
-        {computedRole !== "patient" && (
+        {(computedRole !== "patient" && computedRole !== "admin" && computedRole !== "administrator") && (
           <div className="bottom-text">
             Don&apos;t have an account? <Link href={`/auth/signup?role=${computedRole}`}>Sign Up</Link>
           </div>
         )}
+
       </form>
     </>
   );

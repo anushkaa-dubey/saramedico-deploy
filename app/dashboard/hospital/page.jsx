@@ -47,7 +47,10 @@ export default function HospitalDashboard() {
                     fetchHospitalDirectory()
                 ]);
 
-                if (!profileData) return;
+                if (!profileData) {
+                    router.replace("/auth/login");
+                    return;
+                }
 
                 if (profileData.role !== "hospital") {
                     const r = (profileData.role || "").toLowerCase();
