@@ -253,11 +253,12 @@ function SoapNotesPage() {
                                     let parsedContent = content;
                                     if (typeof content === 'string') {
                                         try {
-                                            // Check if it's a JSON string
-                                            parsedContent = JSON.parse(content);
+                                            // Strip formatting if the AI enclosed it in markdown codeblocks
+                                            const cleanedString = content.replace(/```json/gi, '').replace(/```/g, '').trim();
+                                            parsedContent = JSON.parse(cleanedString);
                                         } catch (e) {
-                                            // It's just a regular string
-                                            return content;
+                                            // It's just a regular string, but let's map normal newlines just in case
+                                            return <div style={{ whiteSpace: 'pre-wrap' }}>{content}</div>;
                                         }
                                     }
                                     
