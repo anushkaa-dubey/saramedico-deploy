@@ -26,83 +26,113 @@ const roles = [
 
 export default function RolesPage() {
     return (
-        <div style={{
-            minHeight: "100vh",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            backgroundColor: "#fff",
-            color: "#000",
-            padding: "20px",
-            fontFamily: "'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
-        }}>
-            <div style={{
-                width: "100%",
-                maxWidth: "900px",
-                display: "grid",
-                gridTemplateColumns: "repeat(2, 1fr)",
-                gap: "24px",
-            }}>
-                {roles.map((role) => (
-                    <div key={role.title} style={{
-                        border: "2px solid #000",
-                        padding: "40px 24px",
-                        display: "flex",
-                        flexDirection: "column",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        backgroundColor: "#fff",
-                        textAlign: "center"
-                    }}>
-                        <h2 style={{
-                            fontSize: "24px",
-                            fontWeight: "700",
-                            marginBottom: "24px",
-                            textTransform: "uppercase",
-                            letterSpacing: "1px",
-                            color: "#000"
-                        }}>{role.title}</h2>
+        <div
+            style={{
+                minHeight: "100vh",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                background: "#f8fafc",
+                padding: "40px 20px",
+                fontFamily: "'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+            }}
+        >
+            <div style={{ width: "100%", maxWidth: "1000px" }}>
+                {/* Header */}
+                <div style={{ textAlign: "center", marginBottom: "40px" }}>
+                    <h1
+                        style={{
+                            fontSize: "32px",
+                            fontWeight: "800",
+                            color: "#0f172a",
+                            marginBottom: "8px",
+                        }}
+                    >
+                        Select Your Role
+                    </h1>
+                    <p style={{ color: "#64748b", fontSize: "14px" }}>
+                        Access the SaraMedico platform according to your role
+                    </p>
+                </div>
 
-                        <div style={{
-                            display: "flex",
-                            flexDirection: "column",
-                            gap: "12px",
-                            width: "100%"
-                        }}>
-                            <Link href={role.loginUrl} style={{
-                                display: "block",
-                                padding: "14px",
-                                textAlign: "center",
-                                backgroundColor: "#000",
-                                color: "#fff",
-                                textDecoration: "none",
-                                fontWeight: "700",
-                                fontSize: "14px",
-                                border: "2px solid #000",
-                                letterSpacing: "0.5px"
-                            }}>
-                                LOGIN
-                            </Link>
-
-                            {role.signupUrl && (
-                                <Link href={role.signupUrl} style={{
-                                    display: "block",
-                                    padding: "14px",
-                                    textAlign: "center",
-                                    backgroundColor: "#fff",
-                                    color: "#000",
-                                    textDecoration: "none",
+                {/* Role Grid */}
+                <div
+                    style={{
+                        display: "grid",
+                        gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                        gap: "24px",
+                    }}
+                >
+                    {roles.map((role) => (
+                        <div
+                            key={role.title}
+                            style={{
+                                background: "#ffffff",
+                                borderRadius: "14px",
+                                padding: "32px 24px",
+                                border: "1px solid #e2e8f0",
+                                display: "flex",
+                                flexDirection: "column",
+                                alignItems: "center",
+                                transition: "all 0.2s ease",
+                            }}
+                        >
+                            <h2
+                                style={{
+                                    fontSize: "20px",
                                     fontWeight: "700",
-                                    fontSize: "14px",
-                                    border: "2px solid #000",
-                                    letterSpacing: "0.5px"
-                                }}>
-                                    SIGNUP
+                                    marginBottom: "20px",
+                                    color: "#0f172a",
+                                }}
+                            >
+                                {role.title}
+                            </h2>
+
+                            <div
+                                style={{
+                                    width: "100%",
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    gap: "10px",
+                                }}
+                            >
+                                <Link
+                                    href={role.loginUrl}
+                                    style={{
+                                        padding: "12px",
+                                        textAlign: "center",
+                                        borderRadius: "8px",
+                                        background: "#3b82f6",
+                                        color: "white",
+                                        textDecoration: "none",
+                                        fontWeight: "600",
+                                        fontSize: "14px",
+                                    }}
+                                >
+                                    Login
                                 </Link>
-                            )}
+
+                                {role.signupUrl && (
+                                    <Link
+                                        href={role.signupUrl}
+                                        style={{
+                                            padding: "12px",
+                                            textAlign: "center",
+                                            borderRadius: "8px",
+                                            background: "#f1f5f9",
+                                            color: "#0f172a",
+                                            textDecoration: "none",
+                                            fontWeight: "600",
+                                            fontSize: "14px",
+                                        }}
+                                    >
+                                        Sign Up
+                                    </Link>
+                                )}
+                            </div>
                         </div>
-                    </div>
-                ))}
+                    ))}
+                </div>
             </div>
         </div>
     );
