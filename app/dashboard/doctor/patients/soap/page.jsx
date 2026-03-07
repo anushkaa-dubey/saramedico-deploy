@@ -250,10 +250,35 @@ function SoapNotesPage() {
                                 const renderSoapContent = (content, fallback) => {
                                     if (!content) return fallback;
                                     if (typeof content === 'string') return content;
+                                    
+                                    const formatObject = (obj) => {
+                                        if (Array.isArray(obj)) {
+                                            return (
+                                                <ul style={{ margin: "4px 0", paddingLeft: "20px" }}>
+                                                    {obj.map((item, i) => <li key={i}>{typeof item === 'object' ? formatObject(item) : item}</li>)}
+                                                </ul>
+                                            );
+                                        }
+                                        return (
+                                            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                                                {Object.entries(obj).map(([k, v]) => (
+                                                    <div key={k}>
+                                                        <strong style={{ textTransform: "capitalize", color: "#334155" }}>{k.replace(/_/g, ' ')}: </strong>
+                                                        {typeof v === 'object' && v !== null ? (
+                                                            <div style={{ paddingLeft: "12px", marginTop: "4px" }}>{formatObject(v)}</div>
+                                                        ) : (
+                                                            <span style={{ color: "#475569" }}>{v}</span>
+                                                        )}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        );
+                                    };
+
                                     try {
-                                        return <pre style={{ whiteSpace: 'pre-wrap', fontFamily: 'inherit', margin: 0 }}>{JSON.stringify(content, null, 2)}</pre>;
+                                        return formatObject(content);
                                     } catch (e) {
-                                        return fallback;
+                                        return <pre style={{ whiteSpace: 'pre-wrap', fontFamily: 'inherit', margin: 0 }}>{JSON.stringify(content, null, 2)}</pre>;
                                     }
                                 };
                                 return (
