@@ -249,7 +249,17 @@ function SoapNotesPage() {
                             (() => {
                                 const renderSoapContent = (content, fallback) => {
                                     if (!content) return fallback;
-                                    if (typeof content === 'string') return content;
+                                    
+                                    let parsedContent = content;
+                                    if (typeof content === 'string') {
+                                        try {
+                                            // Check if it's a JSON string
+                                            parsedContent = JSON.parse(content);
+                                        } catch (e) {
+                                            // It's just a regular string
+                                            return content;
+                                        }
+                                    }
                                     
                                     const formatObject = (obj) => {
                                         if (Array.isArray(obj)) {
@@ -276,9 +286,9 @@ function SoapNotesPage() {
                                     };
 
                                     try {
-                                        return formatObject(content);
+                                        return typeof parsedContent === 'object' ? formatObject(parsedContent) : String(parsedContent);
                                     } catch (e) {
-                                        return <pre style={{ whiteSpace: 'pre-wrap', fontFamily: 'inherit', margin: 0 }}>{JSON.stringify(content, null, 2)}</pre>;
+                                        return <pre style={{ whiteSpace: 'pre-wrap', fontFamily: 'inherit', margin: 0 }}>{JSON.stringify(parsedContent, null, 2)}</pre>;
                                     }
                                 };
                                 return (
