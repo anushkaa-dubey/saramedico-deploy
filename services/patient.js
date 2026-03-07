@@ -100,6 +100,19 @@ export const updateAppointmentStatus = async (appointmentId, status) => {
     return handleResponse(response);
 };
 
+// export const getMyConsultations = async (limit) => {
+//     const url = limit ? `${API_BASE_URL}/consultations?limit=${limit}` : `${API_BASE_URL}/consultations`;
+//     const response = await fetch(url, { headers: getAuthHeaders() });
+//     return handleResponse(response);
+// };
+
+export const getHealthMetrics = async (patientId) => {
+    const response = await fetch(`${API_BASE_URL}/patients/${patientId}/health`, {
+        headers: getAuthHeaders(),
+    });
+    return handleResponse(response);
+};
+
 /**
  * =========================
  * MEDICAL RECORDS
@@ -120,7 +133,7 @@ export const fetchMedicalRecords = async () => {
     const BACKEND_HOST = process.env.NEXT_PUBLIC_API_URL
         ? new URL(process.env.NEXT_PUBLIC_API_URL).hostname
         : 'localhost';
-    
+
     return rawDocs.map(doc => {
         // Normalise – carry camelCase through AND add snake_case aliases
         const url = doc.downloadUrl || doc.presigned_url || doc.url || doc.download_url;
@@ -140,6 +153,28 @@ export const fetchMedicalRecords = async () => {
             download_url: fixedUrl || null,
         };
     });
+};
+
+export const getMyDocuments = async (patientId) => {
+    const url = patientId
+        ? `${API_BASE_URL}/documents?patient_id=${patientId}`
+        : `${API_BASE_URL}/documents`;
+
+    const response = await fetch(url, { headers: getAuthHeaders() });
+    const data = await handleResponse(response);
+
+    return data?.documents || [];
+};
+export const uploadMedicalHistory = async (formData) => {
+    const headers = getAuthHeaders();
+    delete headers["Content-Type"];
+
+    const response = await fetch(`${API_BASE_URL}/documents/upload`, {
+        method: "POST",
+        headers,
+        body: formData,
+    });
+    return handleResponse(response);
 };
 
 /**

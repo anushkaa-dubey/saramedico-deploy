@@ -5,7 +5,6 @@ import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { fetchHospitalAppointments, fetchHospitalStats, fetchOrganizationMembers } from "@/services/hospital";
 import { fetchCalendarMonth, fetchCalendarDay, deleteCalendarEvent, createCalendarEvent } from "@/services/calendar";
-import { fetchTasks, addTask, deleteTask } from "@/services/doctor";
 import CalendarModal from "./components/CalendarModal";
 
 export default function AppointmentsPage() {
@@ -19,7 +18,6 @@ export default function AppointmentsPage() {
     const [statusFilter, setStatusFilter] = useState("All");
     const [selectedDate, setSelectedDate] = useState(new Date());
     const [dayEvents, setDayEvents] = useState([]);
-    const [dayTasks, setDayTasks] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [modalMode, setModalMode] = useState('event'); // 'event' or 'task'
 
@@ -37,12 +35,8 @@ export default function AppointmentsPage() {
     const loadDayData = async (date = selectedDate) => {
         try {
             const dateStr = date.toISOString().split('T')[0];
-            const [events, tasks] = await Promise.all([
-                fetchCalendarDay(dateStr),
-                fetchTasks()
-            ]);
+            const events = await fetchCalendarDay(dateStr);
             setDayEvents(events || []);
-            setDayTasks(tasks || []);
         } catch (err) {
             console.error("Failed to load day data:", err);
         }
@@ -142,17 +136,15 @@ export default function AppointmentsPage() {
 
                         {view === 'schedule' ? (
                             <div style={{ display: 'flex', gap: '8px' }}>
-                                <button className={styles.outlineBtn} style={{ background: '#ffffff', color: '#3b82f6', width: '40px', padding: 0, justifyContent: 'center' }}>
+                                {/* <button className={styles.outlineBtn} style={{ background: '#ffffff', color: '#3b82f6', width: '40px', padding: 0, justifyContent: 'center' }}>
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></svg>
-                                </button>
-                                <button className={styles.primaryBtn} style={{ background: '#3b82f6', color: 'white' }}>
+                                </button> */}
+                                {/* <button className={styles.primaryBtn} style={{ background: '#3b82f6', color: 'white' }}>
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" style={{ marginRight: '6px' }}><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                                     New Shift
-                                </button>
+                                </button> */}
                             </div>
-                        ) : (
-                            <button className={styles.primaryBtn}>+ Schedule Appt</button>
-                        )}
+                        ) : null}
                     </div>
                 </div>
 
@@ -324,12 +316,11 @@ export default function AppointmentsPage() {
                                     <div style={{ fontSize: '11px', fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase' }}>Selected Day Schedule</div>
                                     <div style={{ display: 'flex', gap: '8px' }}>
                                         <button onClick={() => { setModalMode('event'); setIsModalOpen(true); }} style={{ background: 'transparent', border: 'none', color: '#3b82f6', fontSize: '11px', fontWeight: '800', cursor: 'pointer' }}>+ EVENT</button>
-                                        <button onClick={() => { setModalMode('task'); setIsModalOpen(true); }} style={{ background: 'transparent', border: 'none', color: '#10b981', fontSize: '11px', fontWeight: '800', cursor: 'pointer' }}>+ TASK</button>
                                     </div>
                                 </div>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                                    {dayEvents.length === 0 && dayTasks.length === 0 ? (
-                                        <div style={{ color: '#94a3b8', fontSize: '12px', textAlign: 'center', padding: '20px 0' }}>No events or tasks for this day.</div>
+                                    {dayEvents.length === 0 ? (
+                                        <div style={{ color: '#94a3b8', fontSize: '12px', textAlign: 'center', padding: '20px 0' }}>No events for this day.</div>
                                     ) : (
                                         <>
                                             {dayEvents.map((ev, idx) => (
@@ -339,15 +330,6 @@ export default function AppointmentsPage() {
                                                         <div style={{ fontSize: '10px', color: '#64748b' }}>{ev.time || ev.scheduled_at?.split('T')[1].substring(0, 5)} • {ev.doctor_name || "Doctor"}</div>
                                                     </div>
                                                     <button onClick={() => { if (confirm("Delete event?")) deleteCalendarEvent(ev.id).then(() => loadDayData()); }} style={{ border: 'none', background: 'transparent', color: '#ef4444', cursor: 'pointer' }}>×</button>
-                                                </div>
-                                            ))}
-                                            {dayTasks.map((tk, idx) => (
-                                                <div key={`tk-${idx}`} style={{ background: '#f8fafc', padding: '10px', borderRadius: '8px', borderLeft: '4px solid #10b981', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                    <div>
-                                                        <div style={{ fontSize: '13px', fontWeight: '700' }}>{tk.title || tk.task_name || "Task"}</div>
-                                                        <div style={{ fontSize: '10px', color: '#64748b' }}>Task • {tk.status}</div>
-                                                    </div>
-                                                    <button onClick={() => { if (confirm("Delete task?")) deleteTask(tk.id).then(() => loadDayData()); }} style={{ border: 'none', background: 'transparent', color: '#ef4444', cursor: 'pointer' }}>×</button>
                                                 </div>
                                             ))}
                                         </>

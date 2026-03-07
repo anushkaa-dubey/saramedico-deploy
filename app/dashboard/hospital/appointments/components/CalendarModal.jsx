@@ -1,9 +1,8 @@
 "use client";
 import { useState } from "react";
 import { createCalendarEvent } from "@/services/calendar";
-import { addTask } from "@/services/doctor";
 
-export default function CalendarModal({ isOpen, onClose, mode, selectedDate, doctors, onSave }) {
+export default function CalendarModal({ isOpen, onClose, selectedDate, doctors, onSave }) {
     const [title, setTitle] = useState("");
     const [time, setTime] = useState("10:00");
     const [selectedDoctorId, setSelectedDoctorId] = useState("");
@@ -15,25 +14,16 @@ export default function CalendarModal({ isOpen, onClose, mode, selectedDate, doc
         e.preventDefault();
         setLoading(true);
         try {
-            if (mode === 'event') {
-                const scheduledAt = new Date(selectedDate);
-                const [hours, mins] = time.split(':');
-                scheduledAt.setHours(parseInt(hours), parseInt(mins));
+            const scheduledAt = new Date(selectedDate);
+            const [hours, mins] = time.split(':');
+            scheduledAt.setHours(parseInt(hours), parseInt(mins));
 
-                await createCalendarEvent({
-                    title,
-                    scheduled_at: scheduledAt.toISOString(),
-                    doctor_id: selectedDoctorId || null,
-                    event_type: "meeting"
-                });
-            } else {
-                await addTask({
-                    task_name: title,
-                    status: "pending",
-                    priority: "medium",
-                    due_date: selectedDate.toISOString()
-                });
-            }
+            await createCalendarEvent({
+                title,
+                scheduled_at: scheduledAt.toISOString(),
+                doctor_id: selectedDoctorId || null,
+                event_type: "meeting"
+            });
             onSave();
             setTitle("");
             setSelectedDoctorId("");
@@ -68,7 +58,7 @@ export default function CalendarModal({ isOpen, onClose, mode, selectedDate, doc
                 boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)'
             }}>
                 <h2 style={{ fontSize: '20px', fontWeight: '800', color: '#0f172a', marginBottom: '8px' }}>
-                    Create New {mode === 'event' ? 'Event' : 'Task'}
+                    Create New Event
                 </h2>
                 <p style={{ color: '#64748b', fontSize: '14px', marginBottom: '24px' }}>
                     {selectedDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
@@ -82,37 +72,33 @@ export default function CalendarModal({ isOpen, onClose, mode, selectedDate, doc
                             type="text"
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
-                            placeholder={mode === 'event' ? "Meeting with Patient" : "Review lab results"}
+                            placeholder="Meeting with Patient"
                             style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0', outline: 'none' }}
                         />
                     </div>
 
-                    {mode === 'event' && (
-                        <>
-                            <div>
-                                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '8px' }}>Time</label>
-                                <input
-                                    type="time"
-                                    value={time}
-                                    onChange={(e) => setTime(e.target.value)}
-                                    style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0', outline: 'none' }}
-                                />
-                            </div>
-                            <div>
-                                <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '8px' }}>Doctor (Optional)</label>
-                                <select
-                                    value={selectedDoctorId}
-                                    onChange={(e) => setSelectedDoctorId(e.target.value)}
-                                    style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0', outline: 'none', background: 'white' }}
-                                >
-                                    <option value="">Select Doctor</option>
-                                    {doctors.map(d => (
-                                        <option key={d.id} value={d.id}>{d.full_name}</option>
-                                    ))}
-                                </select>
-                            </div>
-                        </>
-                    )}
+                    <div>
+                        <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '8px' }}>Time</label>
+                        <input
+                            type="time"
+                            value={time}
+                            onChange={(e) => setTime(e.target.value)}
+                            style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0', outline: 'none' }}
+                        />
+                    </div>
+                    <div>
+                        <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#94a3b8', textTransform: 'uppercase', marginBottom: '8px' }}>Doctor (Optional)</label>
+                        <select
+                            value={selectedDoctorId}
+                            onChange={(e) => setSelectedDoctorId(e.target.value)}
+                            style={{ width: '100%', padding: '12px', borderRadius: '10px', border: '1px solid #e2e8f0', outline: 'none', background: 'white' }}
+                        >
+                            <option value="">Select Doctor</option>
+                            {doctors.map(d => (
+                                <option key={d.id} value={d.id}>{d.full_name}</option>
+                            ))}
+                        </select>
+                    </div>
 
                     <div style={{ display: 'flex', gap: '12px', marginTop: '12px' }}>
                         <button
@@ -130,14 +116,14 @@ export default function CalendarModal({ isOpen, onClose, mode, selectedDate, doc
                                 padding: '12px',
                                 borderRadius: '12px',
                                 border: 'none',
-                                background: mode === 'event' ? '#3b82f6' : '#10b981',
+                                background: '#3b82f6',
                                 color: 'white',
                                 fontWeight: '700',
                                 cursor: loading ? 'not-allowed' : 'pointer',
                                 opacity: loading ? 0.7 : 1
                             }}
                         >
-                            {loading ? 'Creating...' : `Create ${mode === 'event' ? 'Event' : 'Task'}`}
+                            {loading ? 'Creating...' : `Create Event`}
                         </button>
                     </div>
                 </form>
