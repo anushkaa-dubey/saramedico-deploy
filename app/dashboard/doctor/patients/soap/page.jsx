@@ -246,24 +246,37 @@ function SoapNotesPage() {
 
                         {/* ── SOAP sections when completed ── */}
                         {soapStatus === "completed" && soap ? (
-                            <>
+                            (() => {
+                                const renderSoapContent = (content, fallback) => {
+                                    if (!content) return fallback;
+                                    if (typeof content === 'string') return content;
+                                    try {
+                                        return <pre style={{ whiteSpace: 'pre-wrap', fontFamily: 'inherit', margin: 0 }}>{JSON.stringify(content, null, 2)}</pre>;
+                                    } catch (e) {
+                                        return fallback;
+                                    }
+                                };
+                                return (
+                                    <>
                                 <div className={styles.soapSection}>
                                     <span className={styles.sectionLabel}>SUBJECTIVE</span>
-                                    <div className={styles.textBlock}>{soap.subjective || "No subjective data recorded."}</div>
+                                    <div className={styles.textBlock}>{renderSoapContent(soap.subjective, "No subjective data recorded.")}</div>
                                 </div>
                                 <div className={styles.soapSection}>
                                     <span className={styles.sectionLabel}>OBJECTIVE</span>
-                                    <div className={styles.textBlock}>{soap.objective || "No objective data recorded."}</div>
+                                    <div className={styles.textBlock}>{renderSoapContent(soap.objective, "No objective data recorded.")}</div>
                                 </div>
                                 <div className={styles.soapSection}>
                                     <span className={styles.sectionLabel}>ASSESSMENT</span>
-                                    <div className={styles.textBlock}>{soap.assessment || "Assessment pending."}</div>
+                                    <div className={styles.textBlock}>{renderSoapContent(soap.assessment, "Assessment pending.")}</div>
                                 </div>
                                 <div className={styles.soapSection}>
                                     <span className={styles.sectionLabel}>PLAN</span>
-                                    <div className={styles.textBlock}>{soap.plan || "No plan recorded."}</div>
+                                    <div className={styles.textBlock}>{renderSoapContent(soap.plan, "No plan recorded.")}</div>
                                 </div>
-                            </>
+                                    </>
+                                );
+                            })()
                         ) : (soapStatus === "processing" || (consultation?.status === "completed" && soapStatus === "idle")) ? (
                             /* ── Processing / Polling state ── */
                             <div style={{ padding: "40px", textAlign: "center" }}>
