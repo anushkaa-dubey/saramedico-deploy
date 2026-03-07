@@ -51,9 +51,31 @@ export default function PatientsPage() {
             <Topbar title="Patient Directory" onSearch={setSearchQuery} />
 
             <div className={styles.contentWrapper}>
-                <div className={styles.pageHeaderRow} style={{ marginBottom: '32px' }}>
-                    <h1 style={{ fontSize: '24px', fontWeight: '800', color: '#0f172a', margin: 0 }}>Patients</h1>
-                    <p style={{ color: '#64748b', margin: '4px 0 0 0' }}>Comprehensive registry of all clinical patients across hospital wings.</p>
+                <div className={styles.pageHeaderRow} style={{ marginBottom: "32px", display: "flex", flexDirection: "column", gap: "6px" }}>
+
+                    <h1
+                        style={{
+                            fontSize: "24px",
+                            fontWeight: "800",
+                            color: "#0f172a",
+                            margin: 0
+                        }}
+                    >
+                        Patients
+                    </h1>
+
+                    <p
+                        style={{
+                            color: "#64748b",
+                            fontSize: "14px",
+                            fontWeight: "500",
+                            lineHeight: "1.5",
+                            margin: 0
+                        }}
+                    >
+                        Comprehensive registry of all clinical patients across hospital wings.
+                    </p>
+
                 </div>
 
                 <div className={styles.overviewSection} style={{ marginBottom: '32px' }}>

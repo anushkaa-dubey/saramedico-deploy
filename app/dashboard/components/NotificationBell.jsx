@@ -6,14 +6,12 @@ import { Bell, ShieldCheck, Check, X } from "lucide-react";
 
 /**
  * Approve a doctor's access request (Patient action).
- * POST /api/v1/permissions/grant-doctor-access
- * { doctor_id, ai_access_permission: true }
+ * POST /api/v1/notifications/{notification_id}/approve-ai-access
  */
-async function approveAccessRequest(doctorId) {
-    const response = await fetch(`${API_BASE_URL}/permissions/grant-doctor-access`, {
+async function approveAIAccess(notificationId) {
+    const response = await fetch(`${API_BASE_URL}/notifications/${notificationId}/approve-ai-access`, {
         method: "POST",
         headers: getAuthHeaders(),
-        body: JSON.stringify({ doctor_id: doctorId, ai_access_permission: true }),
     });
     if (!response.ok) throw new Error("Failed to approve access");
     return response.json();
@@ -21,17 +19,14 @@ async function approveAccessRequest(doctorId) {
 
 /**
  * Deny a doctor's access request (Patient action).
- * DELETE /api/v1/permissions/revoke-doctor-access
- * { doctor_id }
+ * POST /api/v1/notifications/{notification_id}/reject-ai-access
  */
-async function denyAccessRequest(doctorId) {
-    const response = await fetch(`${API_BASE_URL}/permissions/revoke-doctor-access`, {
-        method: "DELETE",
+async function rejectAIAccess(notificationId) {
+    const response = await fetch(`${API_BASE_URL}/notifications/${notificationId}/reject-ai-access`, {
+        method: "POST",
         headers: getAuthHeaders(),
-        body: JSON.stringify({ doctor_id: doctorId }),
     });
-    // 404 is fine — means no grant existed yet, which is effectively a denial
-    if (!response.ok && response.status !== 404) throw new Error("Failed to deny access");
+    if (!response.ok) throw new Error("Failed to deny access");
     return true;
 }
 
@@ -137,46 +132,11 @@ export default function NotificationBell() {
 
     /**
      * Handle patient approving a doctor's access request.
-     * Extracts doctor_id from the notification data/metadata.
      */
     const handleApprove = async (notif) => {
         setProcessingId(notif.id);
         try {
-            // 1. First check if doctor_id is present in notification data (if the backend provides it)
-            let doctorId = notif.data?.doctor_id || notif.metadata?.doctor_id;
-
-            // 2. Fallback: Search permissions for matching patient
-            if (!doctorId) {
-                const profRes = await fetch(`${API_BASE_URL}/auth/me`, { headers: getAuthHeaders() });
-                if (!profRes.ok) throw new Error("Could not verify your identity");
-                const profile = await profRes.json();
-
-                const permRes = await fetch(`${API_BASE_URL}/permissions/check?patient_id=${profile.id}`, { headers: getAuthHeaders() });
-                if (!permRes.ok) throw new Error("Failed to sync with permission records.");
-                const data = await permRes.json();
-
-                const pending = (Array.isArray(data) ? data : [data]).filter(g => g?.status === "pending");
-
-                if (pending.length === 0) throw new Error("No pending request found in backend.");
-
-                // Try to match notification message with doctor name in records
-                const match = pending.find(p => {
-                    const name = p.doctor_name || p.doctorName || "";
-                    return name && notif.message.toLowerCase().includes(name.toLowerCase());
-                }) || pending[0];
-
-                doctorId = match.doctor_id || match.doctorId;
-            }
-
-            if (!doctorId) throw new Error("Electronic identifier for doctor not found.");
-
-            await approveAccessRequest(doctorId);
-
-            await fetch(`${API_BASE_URL}/notifications/${notif.id}/read`, {
-                method: "PATCH",
-                headers: getAuthHeaders(),
-            });
-
+            await approveAIAccess(notif.id);
             setNotifications((prev) => prev.filter((n) => n.id !== notif.id));
             setUnreadCount((prev) => Math.max(0, prev - 1));
 
@@ -203,32 +163,15 @@ export default function NotificationBell() {
     const handleDeny = async (notif) => {
         setProcessingId(notif.id);
         try {
-            let doctorId = notif.data?.doctor_id || notif.metadata?.doctor_id;
-
-            if (!doctorId) {
-                const profRes = await fetch(`${API_BASE_URL}/auth/me`, { headers: getAuthHeaders() });
-                const profile = await profRes.json();
-                const permRes = await fetch(`${API_BASE_URL}/permissions/check?patient_id=${profile.id}`, { headers: getAuthHeaders() });
-                const data = await permRes.json();
-                const pending = (Array.isArray(data) ? data : [data]).filter(g => g?.status === "pending");
-                const match = pending.find(p => (p.doctor_name || p.doctorName || "").toLowerCase().includes(notif.message.toLowerCase())) || pending[0];
-                doctorId = match?.doctor_id || match?.doctorId;
-            }
-
-            if (doctorId) {
-                await denyAccessRequest(doctorId);
-            }
-
-            await fetch(`${API_BASE_URL}/notifications/${notif.id}/read`, {
-                method: "PATCH",
-                headers: getAuthHeaders(),
-            });
+            await rejectAIAccess(notif.id);
             setNotifications((prev) => prev.filter((n) => n.id !== notif.id));
             setUnreadCount((prev) => Math.max(0, prev - 1));
 
         } catch (err) {
             console.error("Deny failed:", err);
-            setNotifications((prev) => prev.filter((n) => n.id !== notif.id));
+            // Optionally, we could still hide it on failure so the user isn't stuck.
+            // setNotifications((prev) => prev.filter((n) => n.id !== notif.id));
+            alert("Failed to reject access.");
         } finally {
             setProcessingId(null);
         }

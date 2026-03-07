@@ -5,6 +5,7 @@ import Link from "next/link";
 import Topbar from "../components/Topbar";
 import DocumentsList from "./components/DocumentsList";
 import PatientAIChat from "./components/PatientAIChat";
+import PatientVitals from "./components/PatientVitals";
 import styles from "./Patients.module.css";
 import { motion } from "framer-motion";
 import { Users, Calendar, ChevronRight, MoreVertical } from "lucide-react";
@@ -490,6 +491,12 @@ function PatientsContent() {
                                         >
                                             AI Chat
                                         </div>
+                                        <div
+                                            className={`${styles.tab} ${activeTab === 'vitals' ? styles.active : ''}`}
+                                            onClick={() => setActiveTab('vitals')}
+                                        >
+                                            Vitals
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -544,6 +551,8 @@ function PatientsContent() {
                                             doctorId={doctorId}
                                         />
                                     </div>
+                                ) : activeTab === 'vitals' ? (
+                                    <PatientVitals patientId={selectedPatient.id} />
                                 ) : null}
                             </div>
                         </div>

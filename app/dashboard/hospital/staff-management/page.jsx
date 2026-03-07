@@ -217,9 +217,8 @@ export default function StaffManagementPage() {
                                             <td style={{ textAlign: 'right', paddingRight: '24px', whiteSpace: 'nowrap' }}>
                                                 <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
                                                     <button
-                                                        onClick={() => setSelectedDoctorId(d.id)}
+                                                        onClick={() => setSelectedDoctorId(d)}
                                                         className={styles.outlineBtn}
-                                                        style={{ height: '32px', fontSize: '12px' }}
                                                     >
                                                         Manage
                                                     </button>
@@ -251,13 +250,11 @@ export default function StaffManagementPage() {
                     onClose={() => setIsPatientModalOpen(false)}
                     onSuccess={() => { setIsPatientModalOpen(false); }}
                 />
-
                 <DoctorDetailsModal
                     isOpen={!!selectedDoctorId}
                     onClose={() => setSelectedDoctorId(null)}
-                    doctorId={selectedDoctorId}
-                />
-            </div>
+                    doctor={selectedDoctorId}
+                />            </div>
         </motion.div>
     );
 }

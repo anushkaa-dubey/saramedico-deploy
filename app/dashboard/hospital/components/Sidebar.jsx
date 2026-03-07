@@ -48,31 +48,11 @@ export default function Sidebar() {
 
     const loadDepartments = async () => {
         try {
-            const depts = await fetchOrganizationDepartments();
-
-            if (depts && depts.length > 0) {
-                setDepartments(depts);
-                return;
-            }
-
-            // fallback from doctors
-            const directory = await fetchHospitalDirectory();
-            const doctors = directory.doctors || [];
-
-            const uniqueDepts = [
-                ...new Set(
-                    doctors
-                        .map(d => d.department || d.specialty)
-                        .filter(Boolean)
-                )
-            ];
-            setDepartments(uniqueDepts);
-
+            setDepartments(SPECIALTY_OPTIONS);
         } catch (err) {
             console.error("Failed to load departments:", err);
         }
-    };
-    useEffect(() => {
+    }; useEffect(() => {
         loadDepartments();
     }, []);
 

@@ -47,11 +47,11 @@ export const loginHospital = async (email, password) => {
 
 /**
  * 3. Fetch Home / Overview Page
- * Endpoint: GET /api/v1/hospital/overview
+ * Endpoint: GET /api/v1/hospital/dashboard/overview
  */
 export const fetchHospitalDashboardOverview = async () => {
     try {
-        const response = await fetch(`${API_BASE_URL}/hospital/overview`, {
+        const response = await fetch(`${API_BASE_URL}/hospital/dashboard/overview`, {
             headers: getAuthHeaders(),
         });
         return await handleResponse(response);

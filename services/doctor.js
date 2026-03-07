@@ -584,9 +584,36 @@ export const uploadPatientDocument = async (patientId, file, metadata) => {
 
 
 /**
+ * Add a new health metric (vital sign) for a patient.
+ * Endpoint: POST /api/v1/doctor/patients/{patient_id}/health
+ */
+export const addPatientHealthMetric = async (patientId, payload) => {
+    const response = await fetch(`${API_BASE_URL}/doctor/patients/${patientId}/health`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(payload)
+    });
+    return handleResponse(response);
+};
+
+/**
+ * Edit an existing health metric for a patient.
+ * Endpoint: PUT /api/v1/doctor/patients/{patient_id}/health/{metric_id}
+ */
+export const updatePatientHealthMetric = async (patientId, metricId, payload) => {
+    const response = await fetch(`${API_BASE_URL}/doctor/patients/${patientId}/health/${metricId}`, {
+        method: "PUT",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(payload)
+    });
+    return handleResponse(response);
+};
+
+/**
  * Create a new consultation (Google Meet integrated)
  * Endpoint: POST /api/v1/consultations
  */
+
 export const createConsultation = async (payload) => {
     const response = await fetch(`${API_BASE_URL}/consultations`, {
         method: "POST",
