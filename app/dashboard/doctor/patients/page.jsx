@@ -189,7 +189,7 @@ function PatientsContent() {
 
     const handleDeleteConsultation = async (visitId) => {
         if (!confirm("Are you sure you want to delete this consultation record? This cannot be undone.")) return;
-        
+
         setDeletingVisitId(visitId);
         try {
             const { deleteConsultation } = await import("@/services/consultation");
@@ -271,8 +271,7 @@ function PatientsContent() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
-                style={{ padding: '0 24px 24px 24px' }}
-
+                style={{ padding: '0 24px 24px 0' }}
             >
                 <Topbar />
 
@@ -594,7 +593,7 @@ function PatientsContent() {
                                                                 }}
                                                                 onMouseEnter={(e) => {
                                                                     if (deletingVisitId !== visit.id) {
-                                                                        e.currentTarget.style.background = '#fef2f2';    
+                                                                        e.currentTarget.style.background = '#fef2f2';
                                                                     }
                                                                 }}
                                                                 onMouseLeave={(e) => e.currentTarget.style.background = '#fff'}

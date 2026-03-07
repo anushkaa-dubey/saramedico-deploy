@@ -281,6 +281,30 @@
     background: #2b6cb0;
 }
 
+.field input,
+.field select,
+.field textarea {
+    padding: 10px 12px;
+    border-radius: 6px;
+    border: 1px solid #e2e8f0;
+    font-size: 14px;
+    color: #1a202c;
+    transition: border-color 0.2s;
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+    outline: none;
+    border-color: #3182ce;
+    box-shadow: 0 0 0 3px rgba(49, 130, 206, 0.1);
+}
+
+.textarea {
+    min-height: 80px;
+    resize: vertical;
+}
+
 /* Responsiveness */
 @media (max-width: 640px) {
     .row {
