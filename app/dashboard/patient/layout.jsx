@@ -10,44 +10,48 @@ export default function Layout({ children }) {
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        const checkAuth = async () => {
-            const token = localStorage.getItem("authToken");
-            if (!token) {
-                router.replace("/auth/login");
-                return;
-            }
+        if (typeof window === "undefined") return;
 
+        const token = localStorage.getItem("authToken");
+
+        if (!token) {
+            router.replace("/auth/login");
+            return;
+        }
+
+        const checkAuth = async () => {
             try {
-                const profile = await fetchProfile().catch(() => null);
+                const profile = await fetchProfile();
                 if (!profile) {
                     router.replace("/auth/login");
                     return;
                 }
-                
+
                 const role = (profile.role || "").toLowerCase();
-                if (role !== 'patient') {
-                    if (role === 'doctor') router.replace("/dashboard/doctor");
-                    else if (role === 'admin' || role === 'administrator') router.replace("/dashboard/admin");
-                    else if (role === 'hospital') router.replace("/dashboard/hospital");
+
+                if (role !== "patient") {
+                    if (role === "doctor") router.replace("/dashboard/doctor");
+                    else if (role === "admin" || role === "administrator") router.replace("/dashboard/admin");
+                    else if (role === "hospital") router.replace("/dashboard/hospital");
                     else router.replace("/auth/login");
                     return;
                 }
-                
+
                 setIsLoading(false);
             } catch (err) {
-                console.error("Auth check failed:", err);
                 router.replace("/auth/login");
             }
         };
+
         checkAuth();
     }, [router]);
-
     if (isLoading) {
-        return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#f8fafc', color: '#64748b', fontWeight: 'bold' }}>
-            Loading Dashboard...
-        </div>;
+        return (
+            <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
+                Loading Dashboard...
+            </div>
+        );
     }
-
     return (
         <div className={styles.container}>
             <Sidebar />

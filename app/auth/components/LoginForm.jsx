@@ -2,7 +2,8 @@
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { loginUser, getCurrentUser } from "@/services/auth";
+// import { loginUser, getCurrentUser } from "@/services/auth";
+import { loginUser } from "@/services/auth";
 import { Eye, EyeOff } from "lucide-react";
 
 export default function LoginForm() {
@@ -34,44 +35,56 @@ export default function LoginForm() {
     setLoading(true);
 
     try {
-      // Step 1: Login to get tokens and user data
       const data = await loginUser({ email, password });
 
-      // Step 2: Resolve the user object
-      // Prefer the user object returned from login for immediate role/status checks
-      let user = data.user;
+      const token = data.access_token || data.token;
 
-      // Fallback to getCurrentUser if login didn't return user object (sessions restore pattern)
-      if (!user) {
-        user = await getCurrentUser();
+      if (token) {
+        localStorage.setItem("authToken", token);
       }
 
-      if (!user) {
-        throw new Error("Could not retrieve user profile after login. Please try again.");
+      if (data.refresh_token) {
+        localStorage.setItem("refreshToken", data.refresh_token);
       }
 
-      // Step 3: Persist user to localStorage for dashboard pages
+      if (!data?.user) {
+        throw new Error("Login succeeded but user data missing.");
+      }
+
+      const user = data?.user;
+
+      if (!user) {
+        console.error("Login response missing user:", data);
+        throw new Error("User data missing from login response");
+      }
+
       localStorage.setItem("user", JSON.stringify(user));
 
-      // Step 4: Resolve the dashboard path based on backend-provided role and onboarding status
-      const userRole = (user.role || "").toLowerCase();
-
-      if (userRole === "doctor") {
-        // Only redirect to onboarding if explicitly indicated as false by backend
+      const userRole = String(user.role || "").trim().toLowerCase();
+      console.log("ROLE:", userRole); if (userRole === "doctor") {
         if (user.onboarding_complete === false) {
-          router.replace("/auth/signup/onboarding/doctor/step-1");
-        } else {
-          router.replace("/dashboard/doctor");
+          router.push("/auth/signup/onboarding/doctor/step-1");
+          return;
         }
-      } else if (userRole === "patient") {
-        router.replace("/dashboard/patient");
-      } else if (userRole === "admin" || userRole === "administrator") {
-        router.replace("/dashboard/admin");
-      } else if (userRole === "hospital") {
-        router.replace("/dashboard/hospital");
-      } else {
-        router.replace("/dashboard/patient");
+        router.push("/dashboard/doctor");
+        return;
       }
+
+      if (userRole === "patient") {
+        window.location.href = "/dashboard/patient";
+        return;
+      }
+      if (userRole === "admin" || userRole === "administrator") {
+        router.push("/dashboard/admin");
+        return;
+      }
+
+      if (userRole === "hospital") {
+        router.push("/dashboard/hospital");
+        return;
+      }
+
+      router.push("/dashboard/patient");
     } catch (err) {
       console.error("[Login] Error:", err);
       const errorMessage =
@@ -122,13 +135,18 @@ export default function LoginForm() {
       <h2>Welcome Back</h2>
       <p className="subtext">Access your workspace.</p>
 
-      <form onSubmit={handleLogin} autoComplete="on">
-        <label htmlFor="email" style={{ fontSize: "16px", fontWeight: "600", color: "#374151" }}>Email Address</label>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleLogin(e);
+        }}
+        autoComplete="on"
+      >        <label htmlFor="email" style={{ fontSize: "16px", fontWeight: "600", color: "#374151" }}>Email Address</label>
         <input
           id="email"
           type="email"
-          name="username"
-          autoComplete="username"
+          name="email"
+          autoComplete="email"
           placeholder="dr.hops@gmail.org"
           value={email}
           onChange={(e) => setEmail(e.target.value)}

@@ -191,9 +191,10 @@ export const fetchProfile = async () => {
     const response = await fetch(`${API_BASE_URL}/auth/me`, {
         headers: getAuthHeaders(),
     });
-    return handleResponse(response);
-};
 
+    const data = await handleResponse(response);
+    return data?.user || data;
+};
 /**
  * Update profile
  * [DISCREPANCY FIX]: PATCH /api/v1/auth/me is missing in backend
