@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
-import { fetchPatients } from "@/services/doctor";
+// import { fetchPatients } from "@/services/doctor";
+import { fetchHospitalPatients } from "@/services/hospital";
 import { fetchHospitalStats } from "@/services/hospital";
 import { motion } from "framer-motion";
 import Topbar from "../components/Topbar";
@@ -17,7 +18,7 @@ export default function PatientsPage() {
             setLoading(true);
             try {
                 const [patientData, statData] = await Promise.all([
-                    fetchPatients(),
+                    fetchHospitalPatients(),
                     fetchHospitalStats()
                 ]);
                 setPatients(patientData || []);
