@@ -35,8 +35,8 @@ export default function AppointmentsPage() {
     const loadDayData = async (date = selectedDate) => {
         try {
             const dateStr = date.toISOString().split('T')[0];
-            const events = await fetchCalendarDay(dateStr);
-            setDayEvents(events || []);
+            const data = await fetchCalendarDay(dateStr);
+            setDayEvents(data?.events || []);
         } catch (err) {
             console.error("Failed to load day data:", err);
         }

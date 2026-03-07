@@ -343,17 +343,17 @@ export default function DepartmentPage({ params }) {
                         <div className={styles.card} style={{ marginBottom: "20px" }}>
                             <div className={styles.cardTitle}>Quick Actions</div>
                             <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "16px" }}>
-                                <Link href={`/dashboard/hospital/departments/${departmentName}/invite`}>
-                                    <button className={styles.primaryBtn} style={{ width: "100%", justifyContent: "flex-start", padding: "10px 16px", fontSize: "13px" }}>
+                                <Link
+                                    href={`/dashboard/hospital/departments/${departmentName}/invite`}
+                                    style={{ textDecoration: "none", display: "block" }}
+                                >
+                                    <button
+                                        className={styles.primaryBtn}
+                                        style={{ width: "100%", justifyContent: "flex-start", padding: "10px 16px", fontSize: "13px" }}
+                                    >
                                         + Invite Staff Member
                                     </button>
                                 </Link>
-                                <button className={styles.outlineBtn} style={{ width: "100%", justifyContent: "flex-start", padding: "10px 16px", fontSize: "13px" }}>
-                                    Schedule View
-                                </button>
-                                <button className={styles.outlineBtn} style={{ width: "100%", justifyContent: "flex-start", padding: "10px 16px", fontSize: "13px" }}>
-                                    Export Roster
-                                </button>
                             </div>
                         </div>
 
