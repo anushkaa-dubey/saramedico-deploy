@@ -224,8 +224,9 @@ export default function LiveConsultPage() {
             alert("Session ended successfully.");
             
             // Refresh data
+            const doctorId = doctorProfile?.doctor_profile?.id || doctorProfile?.id;
             const [recentData, activeData, aptRes] = await Promise.all([
-                fetchRecentPatients(),
+                doctorId ? fetchRecentPatients(doctorId).catch(() => []) : Promise.resolve([]),
                 fetchConsultations(),
                 fetchAppointments()
             ]);

@@ -254,7 +254,13 @@ function SoapNotesPage() {
                                     if (typeof content === 'string') {
                                         try {
                                             // Strip formatting if the AI enclosed it in markdown codeblocks
-                                            const cleanedString = content.replace(/```json/gi, '').replace(/```/g, '').trim();
+                                            let cleanedString = content.replace(/```json/gi, '').replace(/```/g, '').trim();
+                                            // Extract just the JSON map if the AI prefixed it with text
+                                            const firstBrace = cleanedString.indexOf('{');
+                                            const lastBrace = cleanedString.lastIndexOf('}');
+                                            if (firstBrace !== -1 && lastBrace !== -1 && lastBrace >= firstBrace) {
+                                                cleanedString = cleanedString.substring(firstBrace, lastBrace + 1);
+                                            }
                                             parsedContent = JSON.parse(cleanedString);
                                         } catch (e) {
                                             // It's just a regular string, but let's map normal newlines just in case
