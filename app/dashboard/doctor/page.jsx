@@ -82,7 +82,10 @@ export default function DoctorDashboard() {
         import("@/services/doctor").then(m => m.fetchDashboardMetrics().catch(() => null))
       ]);
 
-      if (!profile) return;
+      if (!profile) {
+        router.replace("/auth/login");
+        return;
+      }
 
       if (profile.role !== "doctor") {
         const r = (profile.role || "").toLowerCase();

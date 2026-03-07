@@ -52,7 +52,10 @@ export default function AdminDashboard() {
           fetchAdminOverview()
         ]);
 
-        if (!profile) return;
+        if (!profile) {
+          router.replace("/auth/login");
+          return;
+        }
 
         if (profile.role !== "admin") {
 

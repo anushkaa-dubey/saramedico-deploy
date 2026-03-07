@@ -5,7 +5,7 @@ import { onboardPatient, fetchDoctorProfile } from "@/services/doctor";
 import { requestAccess } from "@/services/permissions";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
-import { Check, X, ShieldCheck } from "lucide-react";
+import { Check, X, ShieldCheck, Eye, EyeOff } from "lucide-react";
 
 export default function OnboardPatientModal({ isOpen, onClose, onSuccess }) {
     const [formData, setFormData] = useState({
@@ -29,6 +29,7 @@ export default function OnboardPatientModal({ isOpen, onClose, onSuccess }) {
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
     const [onboardedData, setOnboardedData] = useState(null);
 
     // Conflict state — patient already exists
@@ -310,13 +311,37 @@ export default function OnboardPatientModal({ isOpen, onClose, onSuccess }) {
 
                             <div className={styles.field}>
                                 <label>Password <span className={styles.required}>*</span></label>
-                                <input
-                                    type="password"
-                                    placeholder="Min. 8 characters"
-                                    value={formData.password}
-                                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                                    required
-                                />
+                                <div style={{ position: "relative" }}>
+                                    <input
+                                        type={showPassword ? "text" : "password"}
+                                        placeholder="Min. 8 characters"
+                                        value={formData.password}
+                                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                        required
+                                        style={{ width: "100%", paddingRight: "40px" }}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        style={{
+                                            position: "absolute",
+                                            right: "10px",
+                                            top: "50%",
+                                            transform: "translateY(-50%)",
+                                            background: "none",
+                                            border: "none",
+                                            cursor: "pointer",
+                                            color: "#9ca3af",
+                                            padding: "4px",
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center"
+                                        }}
+                                    >
+                                        {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                    </button>
+                                </div>
+
                             </div>
 
                             <hr style={{ margin: "20px 0", border: "0", borderTop: "1px solid #e2e8f0" }} />

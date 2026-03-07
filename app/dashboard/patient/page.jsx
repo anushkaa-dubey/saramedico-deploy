@@ -66,7 +66,10 @@ export default function PatientDashboard() {
       try {
         const profile = await fetchProfile();
 
-        if (!profile) return;
+        if (!profile) {
+          router.replace("/auth/login");
+          return;
+        }
         if (profile.role !== "patient") {
           const path = roleToDashboard(profile.role);
           if (path) router.replace(path);

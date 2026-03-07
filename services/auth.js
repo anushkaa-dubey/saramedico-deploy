@@ -80,6 +80,7 @@ export const logoutUser = async () => {
         // Clear local session state entirely
         localStorage.removeItem("authToken");
         localStorage.removeItem("refreshToken");
+        localStorage.removeItem("user");
     }
 };
 
