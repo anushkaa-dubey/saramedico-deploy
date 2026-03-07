@@ -58,11 +58,6 @@ export default function AdminSidebar() {
       icon: <LayoutDashboard size={18} />
     },
     {
-      label: "Appointments",
-      path: "/dashboard/admin/appointments",
-      icon: <Calendar size={18} />
-    },
-    {
       label: "Clinic Management",
       path: "/dashboard/admin/clinic",
       icon: <Hospital size={18} />
@@ -109,7 +104,6 @@ export default function AdminSidebar() {
       <aside className={`${styles.sidebar} ${isMobile && isOpen ? styles.open : ""}`}>
 
         <div className={styles.sidebarTop}>
-
           {/* Logo */}
           <div className={styles.logoRow}>
             <img src={logo.src} alt="Logo" />
@@ -117,7 +111,12 @@ export default function AdminSidebar() {
 
           {/* Navigation */}
           <nav className={styles.navGroup}>
-            {navItems.map((item) => (
+            {[
+              { label: "Dashboard", path: "/dashboard/admin", icon: <LayoutDashboard size={18} /> },
+              { label: "Clinic Management", path: "/dashboard/admin/clinic", icon: <Hospital size={18} /> },
+              { label: "Manage Accounts", path: "/dashboard/admin/manage-accounts", icon: <Users size={18} /> },
+              { label: "Audit Logs", path: "/dashboard/admin/audit-logs", icon: <Calendar size={18} /> },
+            ].map((item) => (
               <Link
                 key={item.path}
                 href={item.path}
@@ -129,18 +128,27 @@ export default function AdminSidebar() {
               </Link>
             ))}
           </nav>
-
         </div>
 
-        {/* Logout */}
-        <button
-          className={styles.logoutBtn}
-          onClick={() => setIsSignoutModalOpen(true)}
-        >
-          <LogOut size={18} className={styles.logoutIcon} />
-          Logout
-        </button>
+        {/* Sidebar Bottom (Settings & Logout) */}
+        <div className={styles.sidebarBottom}>
+          <Link
+            href="/dashboard/admin/settings"
+            className={`${styles.navItem} ${isActive("/dashboard/admin/settings") ? styles.active : ""}`}
+            onClick={() => isMobile && setIsOpen(false)}
+          >
+            <Settings size={18} />
+            Settings
+          </Link>
 
+          <button
+            className={styles.logoutBtn}
+            onClick={() => setIsSignoutModalOpen(true)}
+          >
+            <LogOut size={18} className={styles.logoutIcon} />
+            Logout
+          </button>
+        </div>
       </aside>
 
       {/* Signout Modal */}

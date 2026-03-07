@@ -20,13 +20,17 @@ export const fetchAdminOverview = async () => {
 ========================= */
 
 export const fetchAdminAccounts = async () => {
-
   const response = await fetch(`${API_BASE_URL}/admin/accounts`, {
     headers: getAuthHeaders(),
   });
-
   return handleResponse(response);
+};
 
+export const fetchAdminAccountDetail = async (id) => {
+  const response = await fetch(`${API_BASE_URL}/admin/accounts/${id}`, {
+    headers: getAuthHeaders(),
+  });
+  return handleResponse(response);
 };
 
 export const updateAdminAccount = async (id, payload) => {

@@ -285,9 +285,9 @@ export default function AdminDashboard() {
 
               <tr>
                 <th>USER</th>
-                <th>EVENT</th>
-                <th>TIME</th>
-                <th>STATUS</th>
+                <th>ACTION</th>
+                <th>RESOURCE</th>
+                <th>TIMESTAMP</th>
               </tr>
 
             </thead>
@@ -337,27 +337,23 @@ export default function AdminDashboard() {
                     <td>{log.event_description}</td>
 
                     <td>
-                      {new Date(log.timestamp).toLocaleString()}
-                    </td>
-
-                    <td>
-
                       <span
-                        className={styles.success}
                         style={{
-                          background: "#eff6ff",
-                          color: "#3b82f6",
+                          background: "#f3f4f6",
+                          color: "#374151",
                           padding: "2px 8px",
                           borderRadius: "4px",
                           fontSize: "11px",
-                          fontWeight: "600"
+                          fontWeight: "600",
+                          textTransform: "capitalize"
                         }}
                       >
-
-                        {log.status}
-
+                        {log.resource_type || "System"}
                       </span>
+                    </td>
 
+                    <td style={{ fontSize: "12px", color: "#6b7280" }}>
+                      {new Date(log.timestamp).toLocaleString()}
                     </td>
 
                   </tr>
@@ -373,7 +369,7 @@ export default function AdminDashboard() {
         </motion.div>
 
 
-        {/* Alerts */}
+        {/* System Alerts */}
 
         <motion.div
           className={styles.card}
@@ -402,7 +398,7 @@ export default function AdminDashboard() {
 
           </div>
 
-          <div className={styles.alertList}>
+          <div className={styles.alertList} style={{ maxHeight: "300px", overflowY: "auto" }}>
 
             {loading ? (
 
@@ -419,13 +415,18 @@ export default function AdminDashboard() {
                   className={styles.alert}
                   style={{
                     borderLeft:
-                      `4px solid ${actionColors[alert.severity] || "#3b82f6"}`
+                      `4px solid ${alert.severity === "high" ? "#ef4444" : alert.severity === "medium" ? "#f59e0b" : "#3b82f6"}`,
+                    marginBottom: "10px",
+                    padding: "10px",
+                    background: "#f9fafb",
+                    borderRadius: "0 4px 4px 0"
                   }}
                 >
-
-                  <strong>{alert.title}</strong>
-
-                  <p>{alert.message}</p>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <strong style={{ fontSize: "13px" }}>{alert.title}</strong>
+                    <span style={{ fontSize: "10px", color: "#9ca3af" }}>{alert.time_ago}</span>
+                  </div>
+                  <p style={{ fontSize: "12px", margin: "4px 0 0", color: "#4b5563" }}>{alert.message}</p>
 
                 </div>
 
@@ -435,12 +436,17 @@ export default function AdminDashboard() {
 
               <div
                 className={styles.alert}
-                style={{ borderLeft: "4px solid #10b981" }}
+                style={{ 
+                  borderLeft: "4px solid #10b981",
+                  background: "#f0fdf4",
+                  padding: "15px",
+                  borderRadius: "0 4px 4px 0"
+                }}
               >
 
-                <strong>All Systems Operational</strong>
+                <strong style={{ color: "#065f46" }}>All Systems Operational</strong>
 
-                <p>No high priority alerts.</p>
+                <p style={{ color: "#059669", fontSize: "12px" }}>No high priority alerts.</p>
 
               </div>
 

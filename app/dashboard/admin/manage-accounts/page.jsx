@@ -22,7 +22,13 @@ export default function ManageAccountsPage() {
     name: "",
     email: "",
     role: "",
-    status: ""
+    status: "",
+    phone_number: "",
+    specialty: "",
+    license_number: "",
+    department: "",
+    organization_display_name: "",
+    gender: ""
   });
 
   useEffect(() => {
@@ -57,36 +63,46 @@ export default function ManageAccountsPage() {
     }
   };
 
-  const openEdit = (user) => {
-
-    setEditingUser(user);
-
-    setEditForm({
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      status: user.status
-    });
+  const openEdit = async (user) => {
+    setLoading(true);
+    try {
+      const { fetchAdminAccountDetail } = await import("@/services/admin");
+      const detail = await fetchAdminAccountDetail(user.id);
+      
+      setEditingUser(detail);
+      setEditForm({
+        name: detail.name || "",
+        email: detail.email || "",
+        role: detail.role || "",
+        status: detail.status || "",
+        phone_number: detail.phone_number || "",
+        specialty: detail.specialty || "",
+        license_number: detail.license_number || "",
+        department: detail.department || "",
+        organization_display_name: detail.organization_name || "",
+        gender: detail.gender || ""
+      });
+    } catch (err) {
+      console.error("Failed to fetch user details", err);
+      alert("Could not load full profile data.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSave = async () => {
-
     try {
-
       await updateAdminAccount(editingUser.id, editForm);
-
       setUsers(prev =>
         prev.map(u =>
           u.id === editingUser.id ? { ...u, ...editForm } : u
         )
       );
-
       setEditingUser(null);
-
+      alert("Account updated successfully!");
     } catch (err) {
-
       console.error("Update failed", err);
-
+      alert("Failed to update account: " + (err.message || "Unknown error"));
     }
   };
 
@@ -167,62 +183,157 @@ export default function ManageAccountsPage() {
 
 
       {editingUser && (
+        <div className={styles.modalOverlay} onClick={() => setEditingUser(null)}>
+          <div className={styles.modal} onClick={e => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h3>Edit Account Details</h3>
+              <p>Modify credentials and system access for <strong>{editingUser.email}</strong></p>
+            </div>
+            
+            <div className={styles.formGrid} style={{ 
+                display: "grid", 
+                gridTemplateColumns: "1fr 1fr", 
+                gap: "16px" 
+            }}>
+                <div className={styles.formGroup}>
+                  <label>Full Name</label>
+                  <input
+                    className={styles.input}
+                    value={editForm.name}
+                    onChange={e => setEditForm({ ...editForm, name: e.target.value })}
+                  />
+                </div>
 
-        <div className={styles.modalOverlay}>
+                <div className={styles.formGroup}>
+                  <label>Personal Phone</label>
+                  <input
+                    className={styles.input}
+                    value={editForm.phone_number}
+                    onChange={e => setEditForm({ ...editForm, phone_number: e.target.value })}
+                    placeholder="+1 (555) 000-0000"
+                  />
+                </div>
 
-          <div className={styles.modal}>
+                <div className={styles.formGroup}>
+                  <label>System Role</label>
+                  <select
+                    className={styles.input}
+                    value={editForm.role}
+                    onChange={e => setEditForm({ ...editForm, role: e.target.value })}
+                  >
+                    <option value="doctor">Doctor</option>
+                    <option value="admin">Administrator</option>
+                    <option value="patient">Patient</option>
+                    <option value="hospital">Hospital/Clinic Admin</option>
+                  </select>
+                </div>
 
-            <h3>Edit Account</h3>
+                <div className={styles.formGroup}>
+                  <label>Account Status</label>
+                  <select
+                    className={styles.input}
+                    value={editForm.status}
+                    onChange={e => setEditForm({ ...editForm, status: e.target.value })}
+                  >
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                  </select>
+                </div>
 
-            <input
-              value={editForm.name}
-              onChange={e =>
-                setEditForm({ ...editForm, name: e.target.value })
-              }
-            />
-
-            <input
-              value={editForm.email}
-              disabled
-            />
-
-            <select
-              value={editForm.role}
-              onChange={e =>
-                setEditForm({ ...editForm, role: e.target.value })
-              }
-            >
-              <option value="doctor">Doctor</option>
-              <option value="admin">Admin</option>
-              <option value="patient">Patient</option>
-            </select>
-
-            <select
-              value={editForm.status}
-              onChange={e =>
-                setEditForm({ ...editForm, status: e.target.value })
-              }
-            >
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-            </select>
-
-            <div style={{ display: "flex", gap: "10px" }}>
-
-              <button onClick={() => setEditingUser(null)}>
-                Cancel
-              </button>
-
-              <button onClick={handleSave}>
-                Save
-              </button>
-
+                <div className={styles.formGroup}>
+                  <label>Gender / Sex</label>
+                  <select
+                    className={styles.input}
+                    value={editForm.gender}
+                    onChange={e => setEditForm({ ...editForm, gender: e.target.value })}
+                  >
+                    <option value="">Not Specified</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
             </div>
 
+            {/* Doctor Specific Fields */}
+            {editForm.role === "doctor" && (
+                <div className={styles.roleFields} style={{ 
+                    marginTop: "16px", 
+                    padding: "16px", 
+                    background: "#f8fafc", 
+                    borderRadius: "12px",
+                    border: "1px solid #e2e8f0"
+                }}>
+                    <h4 style={{ margin: "0 0 12px 0", fontSize: "13px", color: "#334155" }}>Medical Professional Credentials</h4>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
+                        <div className={styles.formGroup}>
+                            <label>Medical Specialty</label>
+                            <input
+                                className={styles.input}
+                                value={editForm.specialty}
+                                onChange={e => setEditForm({ ...editForm, specialty: e.target.value })}
+                                placeholder="e.g. Cardiology"
+                            />
+                        </div>
+                        <div className={styles.formGroup}>
+                            <label>License Number</label>
+                            <input
+                                className={styles.input}
+                                value={editForm.license_number}
+                                onChange={e => setEditForm({ ...editForm, license_number: e.target.value })}
+                                placeholder="MD-XXXX-XXXX"
+                            />
+                        </div>
+                    </div>
+                    <div className={styles.formGroup} style={{ marginTop: "12px" }}>
+                        <label>Hospital Department</label>
+                        <input
+                            className={styles.input}
+                            value={editForm.department}
+                            onChange={e => setEditForm({ ...editForm, department: e.target.value })}
+                            placeholder="e.g. Emergency Medicine"
+                        />
+                    </div>
+                </div>
+            )}
+
+            {/* Hospital/Clinic Specific Fields */}
+            {editForm.role === "hospital" && (
+                <div className={styles.roleFields} style={{ 
+                    marginTop: "16px", 
+                    padding: "16px", 
+                    background: "#f0f9ff", 
+                    borderRadius: "12px",
+                    border: "1px solid #bae6fd"
+                }}>
+                    <h4 style={{ margin: "0 0 12px 0", fontSize: "13px", color: "#0369a1" }}>Organizational Identity</h4>
+                    <div className={styles.formGroup}>
+                        <label>Clinic/Hospital Name</label>
+                        <input
+                            className={styles.input}
+                            value={editForm.organization_display_name}
+                            onChange={e => setEditForm({ ...editForm, organization_display_name: e.target.value })}
+                        />
+                    </div>
+                </div>
+            )}
+
+            <div className={styles.modalActions}>
+              <button 
+                className={styles.cancelBtn} 
+                onClick={() => setEditingUser(null)}
+              >
+                Discard Changes
+              </button>
+              <button 
+                className={styles.saveBtn} 
+                onClick={handleSave}
+              >
+                Update Account
+              </button>
+            </div>
           </div>
-
         </div>
-
       )}
 
     </div>
