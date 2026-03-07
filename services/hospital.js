@@ -371,3 +371,20 @@ export const fetchOrganizationMembers = async () => {
         return [];
     }
 };
+export async function fetchPatientRecords(patientId) {
+    const token = localStorage.getItem("authToken");
+
+    const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/hospital/patients/${patientId}/records`,
+        {
+            headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+            },
+        }
+    );
+
+    if (!res.ok) throw new Error("Failed to fetch patient records");
+
+    return res.json();
+}

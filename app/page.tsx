@@ -1169,7 +1169,7 @@ export default function Home() {
                 <li><Link href="/privacy">Privacy Policy</Link></li>
                 <li><Link href="/terms">Terms of Service</Link></li>
                 <li><Link href="#security">BAA Request</Link></li>
-                <li><Link href="/accessibility">Accessibility</Link></li>
+                {/* <li><Link href="/accessibility">Accessibility</Link></li> */}
                 <li><Link href="/retention">Data Retention</Link></li>
               </ul>
             </motion.div>

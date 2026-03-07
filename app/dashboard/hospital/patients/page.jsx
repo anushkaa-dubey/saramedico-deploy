@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 // import { fetchPatients } from "@/services/doctor";
 import { fetchHospitalPatients } from "@/services/hospital";
 import { fetchHospitalStats } from "@/services/hospital";
@@ -8,6 +9,7 @@ import Topbar from "../components/Topbar";
 import styles from "../HospitalDashboard.module.css";
 
 export default function PatientsPage() {
+    const router = useRouter();
     const [patients, setPatients] = useState([]);
     const [stats, setStats] = useState({ patientsToday: 0 });
     const [loading, setLoading] = useState(true);
@@ -120,8 +122,13 @@ export default function PatientsPage() {
                                         <td style={{ textTransform: 'capitalize' }}>{p.gender || "Other"}</td>
                                         <td>{p.last_visit || "Today"}</td>
                                         <td style={{ textAlign: 'right', paddingRight: '24px' }}>
-                                            <button className={styles.outlineBtn} style={{ height: '32px', fontSize: '12px' }}>View Records</button>
-                                        </td>
+                                            <button
+                                                className={styles.outlineBtn}
+                                                style={{ height: "32px", fontSize: "12px" }}
+                                                onClick={() => router.push(`/dashboard/hospital/patients/${p.id}`)}
+                                            >
+                                                View Records
+                                            </button>                                        </td>
                                     </tr>
                                 ))}
                             </tbody>
