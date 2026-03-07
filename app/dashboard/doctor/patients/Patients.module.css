@@ -1,0 +1,495 @@
+.container {
+    display: flex;
+    min-height: 100vh;
+    background: #f8fafc;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.main {
+    flex: 1;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    animation: fadeIn 0.4s ease-out;
+}
+
+.title {
+    font-size: 24px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+}
+
+.pageHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 0 20px 0;
+    gap: 16px;
+}
+
+.headerControls {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.searchWrapper {
+    position: relative;
+}
+
+.searchInput {
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    width: 300px;
+    font-size: 14px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.searchInput:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.onboardBtn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    background: #3b82f6;
+    color: white;
+    font-size: 14px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.2s;
+}
+
+.onboardBtn:hover {
+    background: #2563eb;
+}
+
+@media (max-width: 768px) {
+    .pageHeader {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+        padding-right: 0;
+    }
+
+    .headerControls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .searchInput {
+        width: 100%;
+    }
+
+    .onboardBtn {
+        width: 100%;
+        text-align: center;
+    }
+}
+
+.contentRow {
+    display: flex;
+    gap: 24px;
+    min-height: calc(100vh - 120px);
+    height: auto;
+}
+
+.patientListCard {
+    flex: 4;
+    background: #ffffff;
+    border-radius: 12px;
+    border: 1px solid #eef2f7;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.listHeader {
+    display: flex;
+    padding: 16px;
+    border-bottom: 1px solid #eef2f7;
+    background: #f8fafc;
+    font-size: 11px;
+    font-weight: 600;
+    color: #64748b;
+    text-transform: uppercase;
+}
+
+.colName {
+    flex: 2;
+}
+
+.colDob {
+    flex: 1;
+}
+
+.colEmail {
+    flex: 1.5;
+}
+
+.colMrn {
+    flex: 1;
+}
+
+.colVisit {
+    flex: 1;
+}
+
+.colProblem {
+    flex: 1;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.statusCol {
+    flex: 0.5;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.patientItem {
+    display: flex;
+    padding: 16px;
+    border-bottom: 1px solid #eef2f7;
+    align-items: center;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.patientItem:hover {
+    background: #f8fafc;
+}
+
+.patientItem.active {
+    background: #eff6ff;
+}
+
+.nameGroup {
+    flex: 2;
+    display: flex;
+    flex-direction: column;
+}
+
+.pName {
+    font-size: 14px;
+    font-weight: 600;
+    color: #0f172a;
+}
+
+.pStatus {
+    font-size: 11px;
+    color: #64748b;
+    margin-top: 2px;
+}
+
+.pStatus.ready {
+    color: #3b82f6;
+}
+
+.pStatus.pending {
+    color: #94a3b8;
+}
+
+.pStatus.review {
+    color: #f97316;
+}
+
+.itemText {
+    flex: 1;
+    font-size: 13px;
+    color: #64748b;
+}
+
+.arrow {
+    color: #cbd5e1;
+    margin-left: auto;
+}
+
+/* Patient Details Section */
+.detailsPanel {
+    flex: 3;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.profileCard {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 24px;
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    border: 1px solid #eef2f7;
+}
+
+.avatarLarge {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: #e2e8f0;
+}
+
+.profileInfo {
+    flex: 1;
+}
+
+.profileName {
+    font-size: 18px;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 4px;
+}
+
+.profileMeta {
+    font-size: 13px;
+    color: #64748b;
+}
+
+.editProfileBtn {
+    padding: 6px 12px;
+    font-size: 12px;
+    border-radius: 8px;
+    background: #f1f5f9;
+    border: 1px solid #e2e8f0;
+    cursor: pointer;
+    color: #64748b;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.editProfileBtn:hover {
+    background: #e2e8f0;
+    color: #0f172a;
+    border-color: #cbd5e1;
+}
+
+.statsRow {
+    display: flex;
+    margin-top: 24px;
+    gap: 40px;
+}
+
+.statItem {
+    display: flex;
+    flex-direction: column;
+}
+
+.statLabel {
+    font-size: 11px;
+    color: #94a3b8;
+    text-transform: uppercase;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.statValue {
+    font-size: 14px;
+    color: #0f172a;
+    font-weight: 500;
+}
+
+/* Tabs */
+.tabs {
+    display: flex;
+    gap: 32px;
+    border-bottom: 2px solid #eef2f7;
+    padding-bottom: 12px;
+    margin-top: 20px;
+}
+
+.tab {
+    font-size: 14px;
+    font-weight: 600;
+    color: #94a3b8;
+    cursor: pointer;
+    position: relative;
+    padding-bottom: 12px;
+    margin-bottom: -14px;
+}
+
+.tab.active {
+    color: #3b82f6;
+    border-bottom: 2px solid #3b82f6;
+}
+
+/* Visits Section */
+.sectionHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.sectionTitle {
+    font-size: 16px;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.newVisitBtn {
+    font-size: 13px;
+    font-weight: 600;
+    color: #3b82f6;
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.visitList {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.visitCard {
+    background: #ffffff;
+    border: 1px solid #eef2f7;
+    border-radius: 12px;
+    padding: 16px;
+}
+
+.visitDateRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.visitDate {
+    font-size: 14px;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.visitArrow {
+    color: #cbd5e1;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+.visitType {
+    display: inline-block;
+    font-size: 10px;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: #3b82f6;
+    background: #eff6ff;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-bottom: 12px;
+}
+
+.visitNotes {
+    font-size: 13px;
+    color: #64748b;
+    line-height: 1.5;
+    margin-bottom: 16px;
+}
+
+.soapBtn {
+    width: 100%;
+    height: 36px;
+    background: #f1f5f9;
+    border: none;
+    border-radius: 8px;
+    color: #0f172a;
+    font-size: 13px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.soapBtn:hover {
+    background: linear-gradient(90deg, #359AFF, #9CCDFF);
+    color: #ffffff;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .contentRow {
+        flex-direction: column;
+        height: auto;
+    }
+
+    .patientListCard,
+    .detailsPanel {
+        flex: none;
+        width: 100%;
+    }
+}
+
+@media (max-width: 768px) {
+    .main {
+        padding: 16px;
+    }
+
+    .title {
+        font-size: 20px;
+        margin-bottom: 16px;
+    }
+
+    .listHeader {
+        display: none;
+    }
+
+    .patientItem {
+        padding: 12px;
+    }
+
+    .itemText {
+        display: none;
+    }
+
+    .nameGroup {
+        flex: 1;
+    }
+
+    .avatarLarge {
+        width: 48px;
+        height: 48px;
+    }
+
+    .profileCard {
+        padding: 16px;
+        gap: 12px;
+    }
+
+    .statsRow {
+        flex-direction: column;
+        gap: 12px;
+        margin-top: 16px;
+    }
+
+    .tabs {
+        gap: 16px;
+    }
+
+    .tab {
+        font-size: 13px;
+    }
+}

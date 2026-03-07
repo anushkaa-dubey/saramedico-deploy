@@ -1,0 +1,295 @@
+.sessionContainer {
+    height: 100vh;
+    background: #f8fafc;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.patientInfoBar {
+    background: #ffffff;
+    border-bottom: 1px solid #eef2f7;
+    padding: 12px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+    flex-shrink: 0;
+}
+
+.patientName {
+    font-size: 18px;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.patientMeta {
+    display: flex;
+    gap: 24px;
+}
+
+.metaItem {
+    display: flex;
+    flex-direction: column;
+}
+
+.metaLabel {
+    font-size: 10px;
+    color: #94a3b8;
+    text-transform: uppercase;
+    font-weight: 700;
+}
+
+.metaValue {
+    font-size: 13px;
+    font-weight: 600;
+    color: #475569;
+}
+
+/* 2-Column Main Layout */
+.mainGrid {
+    display: grid;
+    grid-template-columns: 2.2fr 1fr;
+    gap: 20px;
+    padding: 20px 24px;
+    flex: 1;
+    min-height: 0;
+    /* Critical for inner scrolling */
+}
+
+/* Left Column: Video & Chat */
+.leftColumn {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    min-height: 0;
+}
+
+.videoAreaWrapper {
+    height: 65%;
+    /* Fixed proportion for video */
+    min-height: 450px;
+    background: #fff;
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.chatAreaWrapper {
+    flex: 1;
+    min-height: 250px;
+    background: #fff;
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+/* Right Column: Tools */
+.rightColumn {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-height: 0;
+    overflow-y: auto;
+    padding-right: 4px;
+    /* Space for scrollbar */
+}
+
+.rightColumn::-webkit-scrollbar {
+    width: 6px;
+}
+
+.rightColumn::-webkit-scrollbar-thumb {
+    background: #e2e8f0;
+    border-radius: 3px;
+}
+
+.transcriptCard {
+    background: #ffffff;
+    border-radius: 16px;
+    border: 1px solid #eef2f7;
+    display: flex;
+    flex-direction: column;
+    height: 450px;
+    /* Fixed height for transcript scroll area */
+    flex-shrink: 0;
+}
+
+.toolCard {
+    background: #ffffff;
+    border-radius: 16px;
+    border: 1px solid #eef2f7;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+}
+
+.toolHeader {
+    padding: 14px 16px;
+    border-bottom: 1px solid #f1f5f9;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    font-size: 13px;
+    color: #0f172a;
+    background: #fcfdfe;
+}
+
+.toolContent {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+}
+
+/* Transcript Bubble */
+.bubble {
+    padding: 10px 14px;
+    border-radius: 12px;
+    font-size: 13px;
+    margin-bottom: 12px;
+    max-width: 90%;
+    line-height: 1.4;
+}
+
+.bubbleDoctor {
+    background: #eff6ff;
+    color: #1e40af;
+    align-self: flex-end;
+}
+
+.bubblePatient {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    align-self: flex-start;
+}
+
+/* Pre-call Screen */
+.screen {
+    width: 100vw;
+    height: 100vh;
+    background: #f8fafc;
+    background-image:
+        radial-gradient(at 0% 0%, rgba(53, 154, 255, 0.1) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(53, 154, 255, 0.05) 0px, transparent 50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.transitionContainer {
+    text-align: center;
+    color: #0f172a;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+}
+
+.callIcon {
+    width: 64px;
+    height: 64px;
+    filter: none;
+    opacity: 0.9;
+    animation: pulse 2s infinite ease-in-out;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    50% {
+        transform: scale(1.1);
+        opacity: 0.8;
+    }
+}
+
+.meetTag {
+    font-size: 11px;
+    font-weight: 700;
+    color: #3b82f6;
+    background: #eff6ff;
+    padding: 4px 10px;
+    border-radius: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-left: 12px;
+}
+
+.googleIcon {
+    width: 72px;
+    height: 72px;
+    background: #f8fafc;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 24px;
+    border: 1px solid #e2e8f0;
+}
+
+.meetJoinCard h3 {
+    font-size: 22px;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 8px;
+}
+
+.meetJoinCard p {
+    font-size: 14px;
+    color: #64748b;
+    margin-bottom: 32px;
+}
+
+.joinMeetBtn {
+    background: #3b82f6;
+    color: white;
+    border: none;
+    padding: 14px 28px;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.joinMeetBtn:hover {
+    background: #2563eb;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+}
+
+.emptyChat {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #94a3b8;
+    font-size: 13px;
+    font-style: italic;
+    padding: 24px;
+    text-align: center;
+}
+
+.liveBadge {
+    background: #ef4444;
+    color: white;
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-left: auto;
+    animation: blink 1.5s infinite;
+}
+
+@keyframes blink {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+}

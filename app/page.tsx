@@ -1,0 +1,1185 @@
+"use client";
+
+import React, { useState, useEffect } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { motion, AnimatePresence } from "framer-motion";
+import styles from "./page.module.css";
+
+
+const PlusIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 5V19M5 12H19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+const CheckIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M20 6L9 17L4 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+const ArrowRight = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+const UserIconBase = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
+  </svg>
+);
+
+const CalendarIconBase = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
+  </svg>
+);
+
+const HomeIconBase = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /><polyline points="9 22 9 12 15 12 15 22" />
+  </svg>
+);
+
+const ShieldIconBase = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z" />
+  </svg>
+);
+
+const DocIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+    <polyline points="14 2 14 8 20 8" />
+    <line x1="16" y1="13" x2="8" y2="13" />
+    <line x1="16" y1="17" x2="8" y2="17" />
+  </svg>
+);
+
+const GraphIcon = () => (
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M3 3v18h18" />
+    <path d="M18.7 8l-5.1 5.2-2.8-2.7L3.6 18.1" />
+  </svg>
+);
+
+const StartIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+)
+
+
+interface FeatureBase {
+  id: string;
+  title: string;
+  description: string;
+  details: string[];
+  icon: React.ReactNode;
+  image: string;
+  reverse: boolean;
+  helper?: string;
+}
+
+interface NormalFeature extends FeatureBase {
+  items: string[];
+  isPII?: false;
+}
+
+interface PIIFeature extends FeatureBase {
+  items: { label: string; icon: React.ReactNode }[];
+  isPII: true;
+}
+
+type Feature = NormalFeature | PIIFeature;
+type Tab = "Reviewers" | "Clinicians";
+
+export default function Home() {
+  const [activeTab, setActiveTab] = useState<Tab>("Clinicians");
+  const [isYearly, setIsYearly] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const testimonials = [
+    { name: "Dr. Avinash Sharma", role: "Orthopedics", company: "The application really eliminates all the clutter. Regardless of any hassle and time traffic" },
+    { name: "Dr. Sarah Mitchell", role: "Pediatrician", company: "Revolutionized how we handle patient records. The OCR is incredibly accurate." },
+    { name: "Dr. James Chen", role: "Cardiology", company: "Finally, clinical AI that actually understands medical context and saves time." },
+    { name: "Dr. Elena Rodriguez", role: "General Practice", company: "The automated SOAP notes have saved me hours of charting every week." },
+    { name: "Dr. Robert Wilson", role: "Neurology", company: "Seamless integration into our existing workflow. A must-have for modern practice." },
+  ];
+
+  const features: Record<Tab, Feature[]> = {
+
+    Reviewers: [
+      {
+        id: "ocr",
+        title: "Intelligent OCR & Data Extraction",
+        description: "Transform messy faxes and PDFs into searchable, structured data instantly. Our AI identifies key medical entities, lab results, and patient demographics, populating your database automatically with high accuracy.",
+        items: ["Handles handwritten doctor notes", "Smart categorization of document types", "Instant searchability across millions of pages"],
+        details: [
+          "Advanced handwriting recognition for clinician notes",
+          "Automated table extraction for lab results & vitals",
+          "ICD-10 Mapping for instant diagnostic coding",
+          "Multi-format support: Fax, physical scans, and PDFs"
+        ],
+        helper: "Requires clinician review before final chart entry.",
+
+        icon: <DocIcon />,
+        image: "/landing%20page%20images/OCR.jpg",
+        reverse: false
+      },
+      {
+        id: "chronology",
+        title: "Visual Patient Chronology",
+        description: "Stop scrolling through hundreds of pages. Our Timeline View aggregates every encounter, lab result, and prescription into an interactive visual history, allowing reviewers to grasp complex cases in seconds.",
+        items: ["60% faster chart review time", "Zero missed critical events", "Integrated lab trends", "Searchable patient timeline"],
+        details: [
+          "Event Correlation across multiple encounters",
+          "Visual Timelines of patient healthcare journeys",
+          "Automated Medication Reconciliation detection",
+          "Smart Filtering by specialty or date range"
+        ],
+
+        icon: <GraphIcon />,
+        image: "/landing%20page%20images/visualPatient.jpg",
+        reverse: true
+      },
+      {
+        id: "redaction",
+        title: "Automated PII Redaction",
+        description: "Share data securely for research or second opinions. Our AI automatically detects and redacts 18 types of identifiers, ensuring compliance before documents ever leave your secure environment.",
+        items: [
+          { label: "Patient Names", icon: <UserIconBase /> },
+          { label: "Dates & Birthdays", icon: <CalendarIconBase /> },
+          { label: "Addresses & Locations", icon: <HomeIconBase /> }
+        ],
+        details: [
+          "18 HIPAA-compliant Identifiers automatically detected",
+          "Contextual Anonymization maintaining medical logic",
+          "Batch Processing for large document scales",
+          "Audit Logging & Full Redaction Certificates"
+        ],
+
+        icon: <PlusIcon />,
+        image: "/landing%20page%20images/automate_PII.jpg",
+        reverse: false,
+        isPII: true
+      }
+    ],
+
+    Clinicians: [
+      {
+        id: "redaction-clinician",
+        title: "Automated PII Redaction",
+        description: "Share data securely for research or second opinions. Our AI automatically detects and redacts 18 types of identifiers, ensuring compliance before documents ever leave your secure environment.",
+        items: [
+          { label: "Patient Names", icon: <UserIconBase /> },
+          { label: "Dates & Birthdays", icon: <CalendarIconBase /> },
+          { label: "Addresses & Locations", icon: <HomeIconBase /> }
+        ],
+        details: [
+          "18 HIPAA-compliant Identifiers automatically detected",
+          "Contextual Anonymization maintaining medical logic",
+          "Batch Processing for large document scales",
+          "Audit Logging & Full Redaction Certificates"
+        ],
+        icon: <PlusIcon />,
+        image: "/landing%20page%20images/automate_PII.jpg",
+        reverse: false,
+        isPII: true
+      },
+      {
+        id: "soap-notes",
+        title: "AI SOAP Notes & Documentation",
+        description: "Record patient visits securely and let our AI generate structured SOAP notes, assessment plans, and visit summaries in seconds. Always giving you the final edit.",
+        items: ["Ambient listening for natural conversations", "Specialty-specific templates", "Multi-speaker diarization"],
+        details: [
+          "Role-based access controls",
+          "Export to PDF, DOCX, JSON",
+          "Customizable templates (H&P, SOAP)",
+          "Audit logs for all interactions"
+        ],
+        helper: "AI generates drafts. Clinicians must review and approve before use.",
+        icon: <DocIcon />,
+        image: "/landing%20page%20images/intelligentOCR.jpg", // Using valid image per request
+        reverse: true
+      }
+    ]
+  };
+
+  const faqs = [
+    {
+      question: "What is Saramedico?",
+      answer: "Saramedico is an AI-powered clinical documentation and decision-support platform designed to help healthcare providers reduce documentation burden, improve accuracy, and streamline patient care workflows—without disrupting existing clinical systems."
+    },
+    {
+      question: "Who is Saramedico designed for?",
+      answer: "Saramedico is designed for: Physicians (Primary care & specialists), Clinics and hospitals, Telehealth providers, and Care coordinators and clinical teams."
+    },
+    {
+      question: "Does Saramedico replace doctors or clinical judgment?",
+      answer: "No. Saramedico is a clinical support tool, not a diagnostic replacement. All outputs are meant to assist clinicians, who retain full medical responsibility and final decision-making authority."
+    },
+    {
+      question: "Is my data secure?",
+      answer: "Yes. Saramedico follows industry-standard security practices, including: End-to-end encryption (in transit and at rest), Role-based access control (RBAC), Secure audit logs, and Continuous monitoring and intrusion detection."
+    },
+    {
+      question: "Is Saramedico HIPAA compliant?",
+      answer: "Yes. Saramedico supports HIPAA-aligned workflows and offers BAA for eligible plans. We are fully committed to data security and compliance."
+    },
+    {
+      question: "Where is patient data stored?",
+      answer: "Patient data is stored in secure, HIPAA-compliant cloud infrastructure located in approved regions within the United States."
+    },
+    {
+      question: "Does Saramedico train AI models on my patient data?",
+      answer: "No. Patient data is never used to train shared or public AI models. Your data remains private to your organization."
+    },
+    {
+      question: "Can Saramedico support SOC 2 or enterprise security reviews?",
+      answer: "Yes. Enterprise customers can request security documentation, architecture summaries, and compliance attestations during onboarding."
+    },
+    {
+      question: "Does Saramedico record patient conversations?",
+      answer: "Only if explicitly enabled by the clinician. Recording starts and stops under full user control."
+    },
+    {
+      question: "Are patients notified when recording is active?",
+      answer: "Yes. Saramedico supports configurable consent prompts and visual indicators to ensure patient awareness and compliance with consent laws."
+    },
+    {
+      question: "How accurate is transcription?",
+      answer: "Saramedico uses advanced medical-grade transcription optimized for clinical terminology, accents, and conversational speech."
+    },
+    {
+      question: "Can I edit transcripts?",
+      answer: "Yes. All transcripts are fully editable before approval and storage."
+    },
+    {
+      question: "What types of notes can Saramedico generate?",
+      answer: "Saramedico can generate: SOAP notes, Visit summaries, Follow-up instructions, Assessment & plan drafts, and Patient-friendly summaries."
+    },
+    {
+      question: "Can I customize note formats?",
+      answer: "Yes. Templates are configurable by specialty, clinic, or individual provider."
+    },
+    {
+      question: "Are summaries auto-saved to the medical record?",
+      answer: "Only after clinician review and approval. Nothing is finalized automatically."
+    },
+    {
+      question: "Does it work for telehealth visits?",
+      answer: "Yes. Saramedico supports both in-person and virtual consultations."
+    },
+    {
+      question: "Can multiple clinicians use one account?",
+      answer: "Yes. Saramedico supports multi-user organizations with: Admin roles, Provider roles, and Read-only roles."
+    },
+    {
+      question: "Can I restrict access to specific patient records?",
+      answer: "Yes. Role-based permissions allow fine-grained access control."
+    },
+    {
+      question: "What plans does Saramedico offer?",
+      answer: "Saramedico offers: Starter (individual clinicians), Clinic / Team plans, and Enterprise plans (custom)."
+    },
+    {
+      question: "Do you offer a free trial?",
+      answer: "Yes. A 14-day free trial is available for Premium plans."
+    },
+    {
+      question: "Can I cancel anytime?",
+      answer: "Yes. There are no long-term contracts unless explicitly agreed for enterprise customers."
+    },
+    {
+      question: "Can I switch plans later?",
+      answer: "Yes. You can upgrade or downgrade your plan at any time. Changes take effect at the next billing cycle."
+    },
+    {
+      question: "What payment methods do you accept?",
+      answer: "We accept major credit cards (Visa, Mastercard, American Express) and invoice billing for eligible organizations."
+    },
+    {
+      question: "Who owns the data?",
+      answer: "You do. Saramedico does not claim ownership of your patient or clinical data."
+    },
+    {
+      question: "Can I export my data?",
+      answer: "Yes. You can export notes, transcripts, and summaries in standard formats at any time."
+    },
+    {
+      question: "What happens to my data if I cancel?",
+      answer: "Your data remains accessible for a limited retention period, after which it is securely deleted upon request."
+    },
+    {
+      question: "What support options are available?",
+      answer: "Email support (all plans), Priority support (Premium), and Dedicated account manager (Enterprise)."
+    },
+    {
+      question: "Is Saramedico reliable?",
+      answer: "Saramedico is built for high availability with redundancy, monitoring, and automated failover mechanisms."
+    },
+    {
+      question: "Do you provide onboarding or training?",
+      answer: "Yes. We offer guided onboarding, documentation, and optional live training for teams."
+    },
+    {
+      question: "Is Saramedico FDA-approved?",
+      answer: "Saramedico is classified as a clinical documentation and decision-support tool, not a medical device. Regulatory positioning is continuously reviewed as features evolve."
+    },
+    {
+      question: "Does Saramedico provide medical advice?",
+      answer: "No. Saramedico provides informational support only. All medical decisions remain with licensed clinicians."
+    },
+    {
+      question: "Will Saramedico add more AI features?",
+      answer: "Yes. Future features may include deeper specialty support, predictive insights, and advanced workflow automation—always with clinician oversight."
+    },
+    {
+      question: "Can customers request features?",
+      answer: "Yes. Customer feedback directly influences our roadmap."
+    }
+  ];
+
+  return (
+    <main className={styles.main}>
+      {/* Navbar */}
+      <nav className={`${styles.navbar} ${scrolled ? styles.navbarScrolled : ""}`}>
+        <div className={styles.navbarContainer}>
+          <Link href="/" className={styles.logo}>
+            <Image src="/logo-icon.svg" alt="SaraMedico" width={64} height={64} className={styles.logoIcon} priority />
+          </Link>
+
+          <div className={styles.navLinks}>
+            <a href="#features" className={styles.navLink}>Features</a>
+            <a href="#use-cases" className={styles.navLink}>Use Cases</a>
+            <a href="#pricing" className={styles.navLink}>Pricing</a>
+            <a href="#security" className={styles.navLink}>Security</a>
+            <a href="#security" className={styles.navLink}>Compliance / BAA</a>
+            <a href="#faq" className={styles.navLink}>FAQ</a>
+            <a href="#contact" className={styles.navLink}>Contact</a>
+          </div>
+
+          <div className={styles.navActions}>
+            <Link href="/roles" className={styles.getStartedBtn}>
+              Get Saramedico
+            </Link>
+          </div>
+
+          <button
+            className={styles.mobileMenuBtn}
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d={isMobileMenuOpen ? "M18 6L6 18M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} />
+            </svg>
+          </button>
+        </div>
+
+        {/* Mobile Menu */}
+        <AnimatePresence>
+          {isMobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className={styles.mobileMenu}
+            >
+              <Link href="#features" className={styles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>Features</Link>
+              <Link href="#use-cases" className={styles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>Use Cases</Link>
+              <Link href="#pricing" className={styles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>Pricing</Link>
+              <Link href="#security" className={styles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>Security</Link>
+              <Link href="#faq" className={styles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>FAQ</Link>
+              <Link href="#contact" className={styles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>Contact</Link>
+              <Link href="/roles" className={styles.mobileGetStartedBtn} onClick={() => setIsMobileMenuOpen(false)}>
+                Get Saramedico
+              </Link>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </nav>
+
+      {/* Hero Section */}
+      <section id="home" className={styles.hero}>
+        <div className={styles.heroContent}>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className={styles.badge}
+          >
+            <span style={{ fontWeight: 500, fontSize: '13px', letterSpacing: '0.02em', color: '#4cc9f0' }}>
+              HIPAA-ready &nbsp;•&nbsp; BAA Available &nbsp;•&nbsp; Audit Logs
+            </span>
+          </motion.div>
+
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className={styles.heroTitle}
+          >
+            The Operating System for <br />
+            <span className={styles.heroTitleHighlight}>Modern Medical</span> Practice.
+          </motion.h1>
+
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
+            style={{ fontSize: '18px', fontWeight: 600, color: '#93c5fd', marginBottom: '16px', marginTop: '-10px' }}
+          >
+            AI documentation + OCR intake + visit transcription + compliant reporting.
+          </motion.p>
+
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className={styles.heroSubtitle}
+          >
+            Clinical documentation was just the beginning. Get insights from patient records in seconds. SaraMedico&apos;s AI provides customizable reports from any clinical data across your practice, not just your own.
+          </motion.p>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className={styles.heroActions}
+          >
+            <Link href="/roles" className={styles.primaryBtn}>
+              Start Free 14-Day Trial
+            </Link>
+            <Link href="#pricing" className={styles.secondaryBtn}>
+              View Pricing
+            </Link>
+          </motion.div>
+
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4 }}
+            style={{ fontSize: '12px', color: '#64748b', marginTop: '16px' }}
+          >
+            Cancel anytime &nbsp;•&nbsp; BAA available for eligible plans
+          </motion.p>
+        </div>
+
+        {/* Ticker */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 1 }}
+          className={styles.tickerContainer}
+        >
+          <div className={styles.tickerTrack}>
+            {[...testimonials, ...testimonials].map((t, i) => (
+              <div key={i} className={styles.testimonialCard}>
+                <div className={styles.avatar}></div>
+                <div className={styles.testimonialInfo}>
+                  <h4>{t.name}</h4>
+                  <p>{t.role}</p>
+                  <p style={{ marginTop: '4px', fontSize: '11px', lineHeight: '1.2' }}>&quot;{t.company}&quot;</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      </section>
+
+      {/* Problems Section */}
+      <section id="use-cases" className={styles.problemsSection}>
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className={styles.sectionHeader}
+          style={{ textAlign: 'center' }}
+        >
+          <h2 className={styles.sectionTitle}>Stop Struggling. Start <span className={styles.sectionTitleHighlight}>Healing.</span></h2>
+          <p className={styles.sectionSubtitle}>We understand the challenges modern healthcare professionals face. Here&apos;s how we help.</p>
+        </motion.div>
+
+        <div className={styles.problemGrid}>
+          <motion.div
+            initial={{ opacity: 0, x: -30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            whileHover={{ y: -5 }}
+            className={styles.problemCard}
+          >
+            <div className={styles.problemIcon}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /></svg>
+            </div>
+            <span className={`${styles.cardLabel} ${styles.problemLabel}`}>Problem</span>
+            <h3 className={styles.cardTitle}>Drowning in Paperwork?</h3>
+            <div className={styles.dividerLine}></div>
+            <div className={styles.solutionIcon}>
+              <CheckIcon />
+            </div>
+            <span className={`${styles.cardLabel} ${styles.solutionLabel}`}>Solution</span>
+            <h3 className={styles.cardTitle}>Upload large PDFs and generate structured summaries.</h3>
+            <p className={styles.cardDescription}>Our OCR technology extracts and organizes patient data instantly.</p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, x: 30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            whileHover={{ y: -5 }}
+            className={styles.problemCard}
+          >
+            <div className={styles.problemIcon}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            </div>
+            <span className={`${styles.cardLabel} ${styles.problemLabel}`}>Problem</span>
+            <h3 className={styles.cardTitle}>Late Nights Charting?</h3>
+            <div className={styles.dividerLine}></div>
+            <div className={styles.solutionIcon}>
+              <CheckIcon />
+            </div>
+            <span className={`${styles.cardLabel} ${styles.solutionLabel}`}>Solution</span>
+            <h3 className={styles.cardTitle}>Record visits (with consent) and generate draft SOAP notes.</h3>
+            <p className={styles.cardDescription}>Focus on patients while AI handles documentation for clinician review.</p>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section id="features" className={styles.featuresSection}>
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className={styles.sectionHeader}
+          style={{ textAlign: 'center' }}
+        >
+          <h2 className={styles.sectionTitle}>Features & Solutions</h2>
+          <p className={styles.sectionSubtitle}>Powerful tools designed specifically for your role in healthcare</p>
+        </motion.div>
+
+        {/* <div className={styles.featureTabs}>
+          <button
+            className={`${styles.tabBtn} ${activeTab === "Reviewers" ? styles.tabBtnActive : ""}`}
+            onClick={() => setActiveTab("Reviewers")}
+          >
+            For Reviewers
+          </button>
+          <button
+            className={`${styles.tabBtn} ${activeTab === "Clinicians" ? styles.tabBtnActive : ""}`}
+            onClick={() => setActiveTab("Clinicians")}
+          >
+            For Clinicians
+          </button>
+        </div> */}
+
+        <div className={styles.featuresList}>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              {features["Clinicians"]?.map((f) =>
+                f.isPII ? (
+                  <div key={f.id} className={styles.featureGridPII}>
+                    <motion.div
+                      initial={{ opacity: 0, x: -40 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.6 }}
+                      className={styles.featureContentPII}
+                    >
+                      <div className={styles.redactionBadge} style={{ marginBottom: '24px' }}><ShieldIconBase /></div>
+                      <h2 className={styles.sectionTitle}>{f.title}</h2>
+                      <p className={styles.cardDescription} style={{ fontSize: '18px', margin: '24px 0' }}>{f.description}</p>
+
+                      {/* Compliance Helper */}
+                      {f.helper && <p style={{ fontSize: '13px', color: '#64748b', fontStyle: 'italic', marginBottom: '24px' }}>{f.helper}</p>}
+
+                      <div className={styles.redactionItems}>
+                        {f.items.map((item, idx) => (
+                          <motion.div
+                            key={idx}
+                            initial={{ opacity: 0, y: 10 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ delay: 0.1 * idx }}
+                            className={styles.redactionItem}
+                          >
+                            <div className={styles.redactionItemLeft}>
+                              {item.icon} <span>{item.label}</span>
+                            </div>
+                            <span className={styles.redactionTag}>REDACTED</span>
+                          </motion.div>
+                        ))}
+                      </div>
+                      <div className={styles.dropdownContainer}>
+                        <div
+                          className={styles.learnMore}
+                          style={{ marginTop: '32px', cursor: 'pointer' }}
+                          onClick={() => setOpenDropdown(openDropdown === f.id ? null : f.id)}
+                        >
+                          Learn about PII engine
+                          <motion.span animate={{ rotate: openDropdown === f.id ? 90 : 0 }}>
+                            <ArrowRight />
+                          </motion.span>
+                        </div>
+
+                        <AnimatePresence>
+                          {openDropdown === f.id && (
+                            <motion.div
+                              initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                              animate={{ opacity: 1, height: 'auto', marginTop: 16 }}
+                              exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                              className={styles.dropdownContent}
+                            >
+                              {f.details?.map((detail, idx) => (
+                                <div key={idx} className={styles.dropdownItem}>
+                                  <div style={{ color: 'var(--primary)', flexShrink: 0 }}>
+                                    <CheckIcon />
+                                  </div>
+                                  <span>{detail}</span>
+                                </div>
+                              ))}
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    </motion.div>
+                    <motion.div
+                      initial={{ opacity: 0, x: 40 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.6 }}
+                      className={styles.featureImagePII}
+                    >
+                      <div className={styles.redactionDoc} style={{ minHeight: '380px' }}>
+                        <p>
+                          <span className={styles.redactedBar} style={{ width: '80px' }}></span> presented to the clinic on <span className={styles.redactedBar} style={{ width: '60px' }}></span> from there complaining of severe chest pain.
+                        </p>
+                        <p style={{ marginTop: '24px' }}>
+                          Patient resides at <span className={styles.redactedBar} style={{ width: '120px' }}></span> rather<br />
+                          Contact number: <span className={styles.redactedBar} style={{ width: '70px' }}></span>
+                        </p>
+                        <p style={{ marginTop: '24px' }}>
+                          SSN: <span className={styles.redactedBar} style={{ width: '90px' }}></span> Referred by Dr. <span className={styles.redactedBar} style={{ width: '100px' }}></span> from <span className={styles.redactedBar} style={{ width: '60px' }}></span>
+                        </p>
+                        <p style={{ marginTop: '24px' }}>
+                          Patient resides at <span className={styles.redactedBar} style={{ width: '120px' }}></span> rather<br />
+                          Contact number: <span className={styles.redactedBar} style={{ width: '70px' }}></span>
+                        </p>
+                      </div>
+                    </motion.div>
+                  </div>
+                ) : (
+                  <div key={f.id} className={`${styles.featureDetail} ${f.reverse ? styles.featureDetailReverse : ""}`}>
+                    <motion.div
+                      initial={{ opacity: 0, x: f.reverse ? 40 : -40 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.6 }}
+                      className={styles.featureContent}
+                    >
+                      <div className={styles.featureIcon}>{f.icon}</div>
+                      <h2 className={styles.sectionTitle}>{f.title}</h2>
+                      <p className={styles.cardDescription} style={{ fontSize: '18px', margin: '24px 0' }}>{f.description}</p>
+
+                      {f.helper && <p style={{ fontSize: '13px', color: '#64748b', fontStyle: 'italic', marginBottom: '24px' }}>{f.helper}</p>}
+
+                      <ul className={styles.featureList}>
+                        {f.items.map((item, idx) => (
+                          <motion.li
+                            key={idx}
+                            initial={{ opacity: 0, x: -10 }}
+                            whileInView={{ opacity: 1, x: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ delay: 0.1 * idx }}
+                            className={styles.featureListItem}
+                          >
+                            {item}
+                          </motion.li>
+                        ))}
+                      </ul>
+                      <div className={styles.dropdownContainer}>
+                        <div
+                          className={styles.learnMore}
+                          style={{ cursor: 'pointer' }}
+                          onClick={() => setOpenDropdown(openDropdown === f.id ? null : f.id)}
+                        >
+                          Learn about {f.title} <ArrowRight />
+                        </div>
+
+                        <AnimatePresence>
+                          {openDropdown === f.id && (
+                            <motion.div
+                              initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                              animate={{ opacity: 1, height: 'auto', marginTop: 16 }}
+                              exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                              className={styles.dropdownContent}
+                            >
+                              {f.details?.map((detail, idx) => (
+                                <div key={idx} className={styles.dropdownItem}>
+                                  <div style={{ color: 'var(--primary)', flexShrink: 0 }}>
+                                    <CheckIcon />
+                                  </div>
+                                  <span>{detail}</span>
+                                </div>
+                              ))}
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    </motion.div>
+                    <motion.div
+                      initial={{ opacity: 0, x: f.reverse ? -40 : 40 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.6 }}
+                      className={styles.featureImage}
+                    >
+                      <Image
+                        src={f.image}
+                        alt={f.title}
+                        width={600}
+                        height={400}
+                        style={{ width: '100%', height: 'auto', borderRadius: '8px' }}
+                      />
+                    </motion.div>
+                  </div>
+                )
+              )}
+            </motion.div>
+          </AnimatePresence>
+        </div>
+      </section>
+
+      {/* Pricing Section */}
+      <section id="pricing" className={styles.pricingSection}>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }}
+          className={styles.sectionHeader}
+          style={{ textAlign: 'center' }}
+        >
+          <h2 className={styles.sectionTitle}>Transparent Pricing for Modern Healthcare</h2>
+          <p className={styles.sectionSubtitle}>Powerful tools designed specifically for your role in healthcare</p>
+        </motion.div>
+
+        <div className={styles.pricingToggle}>
+          <span className={`${styles.toggleLabel} ${!isYearly ? styles.toggleLabelActive : ""}`} onClick={() => setIsYearly(false)} style={{ cursor: 'pointer' }}>Bill Monthly</span>
+          <div className={styles.toggleSwitch} onClick={() => setIsYearly(!isYearly)}>
+            <div className={`${styles.toggleHandle} ${isYearly ? styles.toggleHandleActive : ""}`}></div>
+          </div>
+          <span className={`${styles.toggleLabel} ${isYearly ? styles.toggleLabelActive : ""}`} onClick={() => setIsYearly(true)} style={{ cursor: 'pointer' }}>Bill Yearly</span>
+          <span className={styles.saveBadge}>SAVE 20%</span>
+        </div>
+
+        <div className={styles.pricingGrid}>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className={styles.pricingCard}
+          >
+            <h3 className={styles.planName}>Standard</h3>
+            <p className={styles.planDescription}>Essential tools for solo practitioners.</p>
+            <div className={styles.planPrice}>$0<span>/mo</span></div>
+            <Link href="/roles" className={styles.planBtnSecondary} style={{ marginBottom: '32px' }}>Start Free</Link>
+            <h4 style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', marginBottom: '16px', letterSpacing: '0.05em', color: '#64748b' }}>Features</h4>
+            <ul className={styles.planFeatures}>
+              <motion.li initial={{ opacity: 0, x: -10 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: 0.1 }} className={styles.planFeature}><CheckIcon /> Solo notes & dictation (inside editor)</motion.li>
+              <motion.li initial={{ opacity: 0, x: -10 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: 0.2 }} className={styles.planFeature}><CheckIcon /> Basic PDF Analysis (OCR/summaries) (5/mo)</motion.li>
+              <motion.li initial={{ opacity: 0, x: -10 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: 0.3 }} className={styles.planFeature}><CheckIcon /> Community Support</motion.li>
+            </ul>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.1 }}
+            className={styles.pricingCard}
+          >
+            <h3 className={styles.planName}>Premium</h3>
+            <p className={styles.planDescription}>Advanced AI for growth clinics.</p>
+            <div className={styles.planPrice}>${isYearly ? "39" : "49"}<span>/mo</span></div>
+            <Link href="/roles" className={styles.planBtnPrimary} style={{ marginBottom: '32px' }}>Start 14-Day Free Trial</Link>
+            <h4 style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', marginBottom: '16px', letterSpacing: '0.05em', color: '#64748b' }}>Everything in Standard, Plus</h4>
+            <ul className={styles.planFeatures}>
+              <motion.li initial={{ opacity: 0, x: -10 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: 0.1 }} className={styles.planFeature}><CheckIcon /> Unlimited Audio Recording</motion.li>
+              <motion.li initial={{ opacity: 0, x: -10 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: 0.2 }} className={styles.planFeature}><CheckIcon /> Advanced AI Diagnostics</motion.li>
+              <motion.li initial={{ opacity: 0, x: -10 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: 0.3 }} className={styles.planFeature}><CheckIcon /> Priority Support</motion.li>
+              <motion.li initial={{ opacity: 0, x: -10 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: 0.4 }} className={styles.planFeature}><CheckIcon /> BAA Included</motion.li>
+            </ul>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.2 }}
+            className={styles.pricingCard}
+          >
+            <h3 className={styles.planName}>Clinic Team</h3>
+            <p className={styles.planDescription}>Collaboration for medical teams (Min. 5 seats).</p>
+            <div className={styles.planPrice}>$129<span>/seat/mo</span></div>
+            <Link href="/roles" className={styles.planBtnSecondary} style={{ marginBottom: '32px' }}>Contact Sales</Link>
+            <h4 style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', marginBottom: '16px', letterSpacing: '0.05em', color: '#64748b' }}>Everything in Premium, Plus</h4>
+            <ul className={styles.planFeatures}>
+              <motion.li initial={{ opacity: 0, x: -10 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: 0.1 }} className={styles.planFeature}><CheckIcon /> Centralized Billing</motion.li>
+              <motion.li initial={{ opacity: 0, x: -10 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: 0.2 }} className={styles.planFeature}><CheckIcon /> Team Collaboration & Sharing</motion.li>
+              <motion.li initial={{ opacity: 0, x: -10 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: 0.3 }} className={styles.planFeature}><CheckIcon /> Admin Dashboard</motion.li>
+              <motion.li initial={{ opacity: 0, x: -10 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: 0.4 }} className={styles.planFeature}><CheckIcon /> Dedicated Account Manager</motion.li>
+            </ul>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Feature Comparison Section */}
+      <section className={styles.comparisonSection}>
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className={styles.sectionHeader}
+          style={{ textAlign: 'center' }}
+        >
+          <h2 className={styles.sectionTitle}>Feature Comparison</h2>
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.2 }}
+          className={styles.comparisonCard}
+        >
+          <table className={styles.comparisonTable}>
+            <thead>
+              <tr>
+                <th>Features</th>
+                <th>Standard</th>
+                <th>Premium</th>
+                <th>Clinic Team</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr className={styles.categoryRow}>
+                <td colSpan={4}>Core AI Features</td>
+              </tr>
+              <tr>
+                <td className={styles.featureName}>PDF Analysis</td>
+                <td>5 /month</td>
+                <td>Unlimited</td>
+                <td>Unlimited</td>
+              </tr>
+              <tr>
+                <td className={styles.featureName}>Live Audio Recording</td>
+                <td>30 mins/Session</td>
+                <td>Unlimited</td>
+                <td>Unlimited</td>
+              </tr>
+              <tr>
+                <td className={styles.featureName}>Note Generation</td>
+                <td className={styles.checkIconGreen}><CheckIcon /></td>
+                <td className={styles.checkIconGreen}><CheckIcon /></td>
+                <td className={styles.checkIconGreen}><CheckIcon /></td>
+              </tr>
+              <tr className={styles.categoryRow}>
+                <td colSpan={4}>Collaboration & Admin</td>
+              </tr>
+              <tr>
+                <td className={styles.featureName}>Team Seats</td>
+                <td>1 Seat</td>
+                <td>1 Seat</td>
+                <td>Custom (5+)</td>
+              </tr>
+              <tr>
+                <td className={styles.featureName}>Role-based Access</td>
+                <td>-</td>
+                <td>-</td>
+                <td className={styles.checkIconGreen}><CheckIcon /></td>
+              </tr>
+              <tr>
+                <td className={styles.featureName}>Audit Logs</td>
+                <td>-</td>
+                <td className={styles.checkIconGreen}><CheckIcon /></td>
+                <td className={styles.checkIconGreen}><CheckIcon /></td>
+              </tr>
+              <tr>
+                <td className={styles.featureName}>Centralized Billing</td>
+                <td>-</td>
+                <td>-</td>
+                <td className={styles.checkIconGreen}><CheckIcon /></td>
+              </tr>
+              <tr>
+                <td className={styles.featureName}>Admin Dashboard</td>
+                <td>-</td>
+                <td>-</td>
+                <td className={styles.checkIconGreen}><CheckIcon /></td>
+              </tr>
+              <tr className={styles.categoryRow}>
+                <td colSpan={4}>Security & Compliance</td>
+              </tr>
+              <tr>
+                <td className={styles.featureName}>HIPAA</td>
+                <td className={styles.checkIconGreen}><CheckIcon /></td>
+                <td className={styles.checkIconGreen}><CheckIcon /></td>
+                <td className={styles.checkIconGreen}><CheckIcon /></td>
+              </tr>
+              <tr>
+                <td className={styles.featureName}>Encryption (At Rest & Transit)</td>
+                <td className={styles.checkIconGreen}><CheckIcon /></td>
+                <td className={styles.checkIconGreen}><CheckIcon /></td>
+                <td className={styles.checkIconGreen}><CheckIcon /></td>
+              </tr>
+              <tr>
+                <td className={styles.featureName}>Data Retention Controls</td>
+                <td>-</td>
+                <td className={styles.checkIconGreen}><CheckIcon /></td>
+                <td className={styles.checkIconGreen}><CheckIcon /></td>
+              </tr>
+              <tr>
+                <td className={styles.featureName}>SSO / SAML</td>
+                <td>-</td>
+                <td>-</td>
+                <td className={styles.checkIconGreen}><CheckIcon /></td>
+              </tr>
+              <tr className={styles.categoryRow}>
+                <td colSpan={4}>Integrations & Support</td>
+              </tr>
+              <tr>
+                <td className={styles.featureName}>Integrations / Exports</td>
+                <td>PDF</td>
+                <td>PDF, JSON</td>
+                <td>EHR, API</td>
+              </tr>
+              <tr>
+                <td className={styles.featureName}>Support SLA</td>
+                <td>Community</td>
+                <td>Priority Email</td>
+                <td>Dedicated Manager</td>
+              </tr>
+            </tbody>
+          </table>
+        </motion.div>
+      </section>
+
+      <section id="faq" className={styles.faqSection}>
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className={styles.sectionHeader}
+          style={{ textAlign: 'center' }}
+        >
+          <h2 className={styles.sectionTitle}>Frequently Asked Questions</h2>
+        </motion.div>
+        <div className={styles.faqContainer}>
+          {faqs.map((faq, i) => (
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: (i % 4) * 0.1 }}
+              className={styles.faqItem}
+            >
+              <div
+                className={styles.faqQuestion}
+                onClick={() => setOpenDropdown(openDropdown === `faq-${i}` ? null : `faq-${i}`)}
+                style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+              >
+                <span>{faq.question}</span>
+                <motion.svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  animate={{ rotate: openDropdown === `faq-${i}` ? 180 : 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <path d="M6 9l6 6 6-6" />
+                </motion.svg>
+              </div>
+              <AnimatePresence>
+                {openDropdown === `faq-${i}` && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                    animate={{ opacity: 1, height: 'auto', marginTop: 12 }}
+                    exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                    transition={{ duration: 0.2 }}
+                    style={{ overflow: 'hidden' }}
+                  >
+                    <p className={styles.faqAnswer}>{faq.answer}</p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      <section id="security" className={styles.problemsSection}>
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className={styles.sectionHeader}
+          style={{ textAlign: 'center' }}
+        >
+          <h2 className={styles.sectionTitle}>Security & Compliance</h2>
+          <p className={styles.sectionSubtitle}>Enterprise-grade security trusted by healthcare providers.</p>
+        </motion.div>
+        <div className={styles.problemGrid} style={{ gridTemplateColumns: '1fr 1fr', gap: '32px', maxWidth: '1000px', margin: '0 auto' }}>
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            className={styles.problemCard}
+          >
+            <div className={styles.solutionIcon} style={{ background: '#f0f9ff', color: '#0ea5e9' }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg>
+            </div>
+            <h3 className={styles.cardTitle}>HIPAA Compliant</h3>
+            <p className={styles.cardDescription}>All patient data is encrypted in transit and at rest. We sign BAAs with covered entities and undergo regular security audits to ensure compliance.</p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            className={styles.problemCard}
+          >
+            <div className={styles.solutionIcon} style={{ background: '#f5f3ff', color: '#8b5cf6' }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4" /></svg>
+            </div>
+            <h3 className={styles.cardTitle}>Data Privacy</h3>
+            <p className={styles.cardDescription}>We never train public AI models on your PHI. Your data remains completely segregated, and auto-redaction features scrub sensitive identifiers before processing.</p>
+          </motion.div>
+        </div>
+      </section>
+
+      <section id="contact">
+        <footer className={styles.mergedFooter}>
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className={styles.ctaContainer}
+          >
+            <div className={styles.ctaTextContent}>
+              <h2 className={styles.ctaTitle}>Need a custom enterprise solution?</h2>
+              <div style={{ color: '#94a3b8', marginTop: '12px', fontSize: '15px' }}>
+                <ul style={{ listStyleType: 'none', padding: 0, margin: 0 }}>
+                  <li style={{ marginBottom: '8px' }}>• SSO / SAML Integration</li>
+                  <li style={{ marginBottom: '8px' }}>• Custom Retention Policies</li>
+                  <li>• Dedicated Deployment Options</li>
+                </ul>
+              </div>
+            </div>
+            <Link href="/auth/signup" className={styles.ctaBtn}>Contact Sales Team</Link>
+          </motion.div>
+
+          <div className={styles.footerContainer}>
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className={styles.footerInfo}
+            >
+              <Link href="/" className={styles.logo} style={{ color: 'white' }}>
+                <Image src="/logo-icon.svg" alt="SaraMedico" width={64} height={64} />
+              </Link>
+              <p>The operating system for modern medical practice.</p>
+              <div className={styles.socials}>
+                <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className={styles.socialLink}>LN</a>
+              </div>
+              <p style={{ fontSize: '11px', color: '#64748b', marginTop: '24px', lineHeight: '1.4' }}>
+                Disclaimer: Not for emergency use. Saramedico is a documentation aid, not a medical device. Does not provide medical advice.
+              </p>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+              className={styles.footerColumn}
+            >
+              <h5>Product</h5>
+              <ul className={styles.footerLinks}>
+                <li><Link href="#features">Features</Link></li>
+                <li><Link href="#pricing">Pricing</Link></li>
+                <li><Link href="#security">Security</Link></li>
+              </ul>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className={styles.footerColumn}
+            >
+              <h5>Company</h5>
+              <ul className={styles.footerLinks}>
+                <li><Link href="#contact">Contact</Link></li>
+              </ul>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              className={styles.footerColumn}
+            >
+              <h5>Resources</h5>
+              <ul className={styles.footerLinks}>
+                <li><Link href="#faq">FAQ</Link></li>
+                <li><Link href="#use-cases">Use Cases</Link></li>
+              </ul>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+              className={styles.footerColumn}
+            >
+              <h5>Legal</h5>
+              <ul className={styles.footerLinks}>
+                <li><Link href="/privacy">Privacy Policy</Link></li>
+                <li><Link href="/terms">Terms of Service</Link></li>
+                <li><Link href="#security">BAA Request</Link></li>
+                <li><Link href="/accessibility">Accessibility</Link></li>
+                <li><Link href="/retention">Data Retention</Link></li>
+              </ul>
+            </motion.div>
+          </div>
+          <div className={styles.footerBottom}>
+            <p>© 2025 SaraMedico, Inc. All rights reserved.</p>
+            <p>Built with care for healthcare professionals everywhere.</p>
+          </div>
+        </footer>
+      </section>
+    </main>
+  );
+}
