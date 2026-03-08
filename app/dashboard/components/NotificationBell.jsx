@@ -151,7 +151,11 @@ export default function NotificationBell() {
 
             let targetUrl = action_url;
             const currentPath = window.location.pathname;
-            const role = currentPath.includes("/patient") || currentPath.includes("/p/") ? "patient" : "doctor";
+            let role = "doctor";
+            if (currentPath.includes("/patient") || currentPath.includes("/p/")) role = "patient";
+            else if (currentPath.includes("/hospital")) role = "hospital";
+            else if (currentPath.includes("/admin")) role = "admin";
+            
             const lowerTitle = title.toLowerCase();
 
             // 1. Comprehensive URL Normalization for Backend-provided paths
@@ -164,10 +168,8 @@ export default function NotificationBell() {
                     const appointmentId = targetUrl.split("/").pop();
                     if (type === "appointment_approved" || lowerTitle.includes("approved")) {
                         targetUrl = `/dashboard/${role}/video-call?appointmentId=${appointmentId}`;
-                    } else if (role === "doctor") {
-                        targetUrl = `/dashboard/doctor/appointments`;
                     } else {
-                        targetUrl = `/dashboard/patient/appointments`;
+                        targetUrl = `/dashboard/${role}/appointments`;
                     }
                 }
                 else if (targetUrl.includes("/tasks/") || targetUrl.startsWith("/doctor/tasks")) {
@@ -178,8 +180,8 @@ export default function NotificationBell() {
                     // Redirect calendar/events to main dashboard home
                     targetUrl = role === "doctor" ? `/dashboard/doctor` : `/dashboard/patient`;
                 }
-                else if (targetUrl === "/patients" || targetUrl === "/doctor/patients") {
-                    targetUrl = `/dashboard/doctor/patients`;
+                else if (targetUrl === "/patients" || targetUrl === "/doctor/patients" || targetUrl === "/hospital/patients") {
+                    targetUrl = `/dashboard/${role}/patients`;
                 }
                 else if (targetUrl.startsWith("/notifications/")) {
                     // Internal check — stay here

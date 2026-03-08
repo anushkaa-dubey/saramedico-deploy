@@ -196,7 +196,11 @@ function SoapNotesPage() {
 
                 <div className={styles.pDetailGroup} style={{ marginLeft: "auto" }}>
                     <span className={styles.pLabel}>REASON FOR VISIT</span>
-                    <span className={styles.pValue}>{consultation.chief_complaint || consultation.reason || "Consultation"}</span>
+                    <span className={styles.pValue}>
+                        {typeof (consultation.chief_complaint || consultation.reason) === 'object' 
+                          ? ((consultation.chief_complaint || consultation.reason)?.chief_complaint || "Consultation") 
+                          : (consultation.chief_complaint || consultation.reason || "Consultation")}
+                    </span>
                 </div>
                 <div className={styles.pDetailGroup}>
                     <span className={styles.pLabel}>VISIT TYPE</span>
@@ -242,24 +246,79 @@ function SoapNotesPage() {
 
                         {/* ── SOAP sections when completed ── */}
                         {soapStatus === "completed" && soap ? (
-                            <>
+                            (() => {
+                                const renderSoapContent = (content, fallback) => {
+                                    if (!content) return fallback;
+                                    
+                                    let parsedContent = content;
+                                    if (typeof content === 'string') {
+                                        try {
+                                            // Strip formatting if the AI enclosed it in markdown codeblocks
+                                            let cleanedString = content.replace(/```json/gi, '').replace(/```/g, '').trim();
+                                            // Extract just the JSON map if the AI prefixed it with text
+                                            const firstBrace = cleanedString.indexOf('{');
+                                            const lastBrace = cleanedString.lastIndexOf('}');
+                                            if (firstBrace !== -1 && lastBrace !== -1 && lastBrace >= firstBrace) {
+                                                cleanedString = cleanedString.substring(firstBrace, lastBrace + 1);
+                                            }
+                                            parsedContent = JSON.parse(cleanedString);
+                                        } catch (e) {
+                                            // It's just a regular string, but let's map normal newlines just in case
+                                            return <div style={{ whiteSpace: 'pre-wrap' }}>{content}</div>;
+                                        }
+                                    }
+                                    
+                                    const formatObject = (obj) => {
+                                        if (Array.isArray(obj)) {
+                                            return (
+                                                <ul style={{ margin: "4px 0", paddingLeft: "20px" }}>
+                                                    {obj.map((item, i) => <li key={i}>{typeof item === 'object' ? formatObject(item) : item}</li>)}
+                                                </ul>
+                                            );
+                                        }
+                                        return (
+                                            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+                                                {Object.entries(obj).map(([k, v]) => (
+                                                    <div key={k}>
+                                                        <strong style={{ textTransform: "capitalize", color: "#334155" }}>{k.replace(/_/g, ' ')}: </strong>
+                                                        {typeof v === 'object' && v !== null ? (
+                                                            <div style={{ paddingLeft: "12px", marginTop: "4px" }}>{formatObject(v)}</div>
+                                                        ) : (
+                                                            <span style={{ color: "#475569" }}>{v}</span>
+                                                        )}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        );
+                                    };
+
+                                    try {
+                                        return typeof parsedContent === 'object' ? formatObject(parsedContent) : String(parsedContent);
+                                    } catch (e) {
+                                        return <pre style={{ whiteSpace: 'pre-wrap', fontFamily: 'inherit', margin: 0 }}>{JSON.stringify(parsedContent, null, 2)}</pre>;
+                                    }
+                                };
+                                return (
+                                    <>
                                 <div className={styles.soapSection}>
                                     <span className={styles.sectionLabel}>SUBJECTIVE</span>
-                                    <div className={styles.textBlock}>{soap.subjective || "No subjective data recorded."}</div>
+                                    <div className={styles.textBlock}>{renderSoapContent(soap.subjective, "No subjective data recorded.")}</div>
                                 </div>
                                 <div className={styles.soapSection}>
                                     <span className={styles.sectionLabel}>OBJECTIVE</span>
-                                    <div className={styles.textBlock}>{soap.objective || "No objective data recorded."}</div>
+                                    <div className={styles.textBlock}>{renderSoapContent(soap.objective, "No objective data recorded.")}</div>
                                 </div>
                                 <div className={styles.soapSection}>
                                     <span className={styles.sectionLabel}>ASSESSMENT</span>
-                                    <div className={styles.textBlock}>{soap.assessment || "Assessment pending."}</div>
+                                    <div className={styles.textBlock}>{renderSoapContent(soap.assessment, "Assessment pending.")}</div>
                                 </div>
                                 <div className={styles.soapSection}>
                                     <span className={styles.sectionLabel}>PLAN</span>
-                                    <div className={styles.textBlock}>{soap.plan || "No plan recorded."}</div>
+                                    <div className={styles.textBlock}>{renderSoapContent(soap.plan, "No plan recorded.")}</div>
                                 </div>
-                            </>
+                                    </>
+                                );
+                            })()
                         ) : (soapStatus === "processing" || (consultation?.status === "completed" && soapStatus === "idle")) ? (
                             /* ── Processing / Polling state ── */
                             <div style={{ padding: "40px", textAlign: "center" }}>

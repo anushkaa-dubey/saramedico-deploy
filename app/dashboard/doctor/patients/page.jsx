@@ -271,8 +271,7 @@ function PatientsContent() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
-                style={{ padding: '0 24px 24px 24px' }}
-
+                style={{ padding: '0 24px 24px 0' }}
             >
                 <Topbar />
 
@@ -574,7 +573,9 @@ function PatientsContent() {
                                                             )}
                                                         </div>
                                                         <p className={styles.visitNotes}>
-                                                            {visit.chiefComplaint || visit.chief_complaint || visit.summary || visit.reason || "Patient encounter session recorded and processed."}
+                                                            {(typeof (visit.chiefComplaint || visit.chief_complaint || visit.summary || visit.reason) === 'object' 
+                                                                ? ((visit.chiefComplaint || visit.chief_complaint || visit.summary || visit.reason)?.chief_complaint || JSON.stringify(visit.chiefComplaint || visit.chief_complaint || visit.summary || visit.reason))
+                                                                : (visit.chiefComplaint || visit.chief_complaint || visit.summary || visit.reason)) || "Patient encounter session recorded and processed."}
                                                         </p>
                                                         <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
                                                             <Link href={`/dashboard/doctor/patients/soap?consultationId=${visit.id}`} style={{ textDecoration: 'none', flex: 1 }}>

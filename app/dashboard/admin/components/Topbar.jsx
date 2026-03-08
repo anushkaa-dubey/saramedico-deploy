@@ -16,7 +16,6 @@ export default function AdminTopbar() {
         const loadProfile = async () => {
             try {
                 const settings = await fetchAdminSettings();
-                // fetchAdminSettings returns { profile: { name, email, avatar_url }, organization: { name } }
                 if (settings?.profile) {
                     setAdminUser({
                         full_name: settings.profile.name || settings.profile.full_name,
@@ -31,7 +30,12 @@ export default function AdminTopbar() {
                 setLoading(false);
             }
         };
+
         loadProfile();
+
+        // Listen for profile updates from Settings page
+        window.addEventListener("profile-updated", loadProfile);
+        return () => window.removeEventListener("profile-updated", loadProfile);
     }, []);
 
     const adminInitial = adminUser?.full_name ? adminUser.full_name.charAt(0).toUpperCase() : "A";
@@ -42,7 +46,7 @@ export default function AdminTopbar() {
                 <NotificationBell />
 
                 <Link
-                    href="/dashboard/admin/profile"
+                    href="/dashboard/admin/settings"
                     className={styles.profile}
                     style={{ textDecoration: "none" }}
                 >

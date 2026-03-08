@@ -24,11 +24,19 @@
     animation: fadeIn 0.4s ease-out;
 }
 
+.main>div:first-child {
+    margin-top: 0;
+}
+
 .title {
     font-size: 24px;
     font-weight: 700;
     color: #0f172a;
     margin: 0;
+}
+
+.pageHeader {
+    padding-left: 24px;
 }
 
 .pageHeader {

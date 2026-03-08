@@ -95,7 +95,11 @@ export default function RecentActivity({ consultations, appointments }) {
                     </span>
                   </div>
                 </td>
-                <td>{item.chiefComplaint || item.chief_complaint || item.reason || "Consultation"}</td>
+                <td>
+                  {typeof (item.chiefComplaint || item.chief_complaint || item.reason) === 'object'
+                    ? ((item.chiefComplaint || item.chief_complaint || item.reason)?.chief_complaint || "Consultation")
+                    : (item.chiefComplaint || item.chief_complaint || item.reason || "Consultation")}
+                </td>
                 <td style={{ color: "#64748b" }}>
                   {item.date ? new Date(item.date).toLocaleDateString() : "—"}
                 </td>

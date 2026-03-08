@@ -477,7 +477,6 @@ export async function fetchPatientRecords(patientId) {
     );
 
     if (!res.ok) throw new Error("Failed to fetch patient records");
-
     return res.json();
 }
 

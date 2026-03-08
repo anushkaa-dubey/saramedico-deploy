@@ -90,6 +90,17 @@ export default function Sidebar() {
                         ))}
                     </nav>
                 </div>
+                
+                <div className={styles.sidebarBottom} style={{ marginTop: "auto", paddingBottom: "20px" }}>
+                    <Link
+                        href="/dashboard/hospital/settings"
+                        className={`${styles.navItem} ${isActive("/dashboard/hospital/settings") ? styles.active : ""}`}
+                        style={{ margin: "0 12px 8px", width: "calc(100% - 24px)" }}
+                        onClick={() => setIsOpen(false)}
+                    >
+                        <Building2 size={18} />
+                        Settings
+                    </Link>
 
                 {/* Logout */}
                 <button
@@ -109,6 +120,12 @@ export default function Sidebar() {
                     Logout
                 </button>
             </aside>
+
+            <SignoutModal 
+                isOpen={isSignoutModalOpen}
+                onConfirm={handleLogout}
+                onCancel={() => setIsSignoutModalOpen(false)}
+            />
         </>
     );
 }

@@ -55,6 +55,12 @@ export const loginUser = async (payload) => {
         localStorage.setItem("refreshToken", data.refresh_token);
     }
 
+    // Store user object — needed by dashboard layout guards
+    const user = data?.user || data;
+    if (user && (user.role || user.email)) {
+        localStorage.setItem("user", JSON.stringify(user));
+    }
+
     return data;
 };
 

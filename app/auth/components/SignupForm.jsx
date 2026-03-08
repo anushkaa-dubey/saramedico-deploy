@@ -141,7 +141,7 @@ export default function SignupForm() {
           password: hospitalForm.password
         });
         await loginUser({ email: hospitalForm.email, password: hospitalForm.password });
-        router.push("/dashboard/hospital");
+        window.location.href = "/dashboard/hospital";
 
       } else if (role === "doctor") {
         const cleanPhone = `+${formData.phone.replace(/\D/g, "")}`;
@@ -158,7 +158,7 @@ export default function SignupForm() {
           organization_name: formData.organization_name
         };
         sessionStorage.setItem("signup_data", JSON.stringify(payload));
-        router.push("/auth/signup/onboarding/doctor/step-1");
+        window.location.href = "/auth/signup/onboarding/doctor/step-1";
 
       } else {
         const cleanPhone = `+${formData.phone.replace(/\D/g, "")}`;
@@ -176,7 +176,7 @@ export default function SignupForm() {
         };
         await registerUser(payload);
         await loginUser({ email: formData.email, password: formData.password });
-        router.push(`/dashboard/${role}`);
+        window.location.href = `/dashboard/${role}`;
       }
     } catch (err) {
       console.error("Signup failed:", err);
@@ -617,8 +617,8 @@ export default function SignupForm() {
             placeholder="Confirm your password"
             value={formData.confirm_password}
             onChange={e => handleInputChange("confirm_password", e.target.value)}
-            style={{ 
-              borderColor: formData.confirm_password && !passwordsMatch ? "#ef4444" : passwordsMatch ? "#16a34a" : "#ddd", 
+            style={{
+              borderColor: formData.confirm_password && !passwordsMatch ? "#ef4444" : passwordsMatch ? "#16a34a" : "#ddd",
               paddingRight: "50px",
               width: "100%"
             }}

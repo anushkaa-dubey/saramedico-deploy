@@ -1,31 +1,36 @@
 "use client";
 import styles from "../HospitalDashboard.module.css";
 import { useState, useEffect } from "react";
-import { fetchProfile } from "@/services/doctor";
+import Link from "next/link";
+import { fetchHospitalSettings } from "@/services/hospital";
+import NotificationBell from "@/app/dashboard/components/NotificationBell";
 
-export default function Topbar({ title, onSearch }) {
-    const [searchTerm, setSearchTerm] = useState("");
+export default function Topbar({ title }) {
     const [user, setUser] = useState(null);
+    const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        const getProfile = async () => {
-            try {
-                const data = await fetchProfile();
-                setUser(data);
-            } catch (err) {
-                console.error("Failed to fetch profile in Topbar", err);
+    const getProfile = async () => {
+        try {
+            const data = await fetchHospitalSettings();
+            if (data?.profile) {
+                setUser({
+                    full_name: data.profile.name || data.profile.full_name || "Hospital Admin",
+                    avatar_url: data.profile.avatar_url,
+                    role: "Hospital Administrator",
+                });
             }
-        };
-        getProfile();
-    }, []);
+        } catch (err) {
+            console.error("Failed to fetch profile in Topbar", err);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const delayDebounceFn = setTimeout(() => {
-            if (onSearch) onSearch(searchTerm);
-        }, 500);
-
-        return () => clearTimeout(delayDebounceFn);
-    }, [searchTerm, onSearch]);
+        getProfile();
+        window.addEventListener("profile-updated", getProfile);
+        return () => window.removeEventListener("profile-updated", getProfile);
+    }, []);
 
     const displayName = user?.name || user?.full_name || "";
     const initials = displayName ? displayName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : "HA";
@@ -33,10 +38,8 @@ export default function Topbar({ title, onSearch }) {
     return (
         <header className={styles.topbar}>
             <div style={{ maxWidth: '1400px', margin: '0 auto', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ display: 'flex', alignItems: 'center' }}>
-                    <div style={{ position: 'relative' }}>
-                        {/* Global search removed per requirements */}
-                    </div>
+                <div>
+                   <h2 style={{ fontSize: '18px', fontWeight: '800', color: '#0f172a', margin: 0 }}>{title || "Overview"}</h2>
                 </div>
 
                 <div className={styles.topActions}>
@@ -47,7 +50,7 @@ export default function Topbar({ title, onSearch }) {
                                 <span style={{ fontSize: '11px', color: '#64748b' }}>{user?.role || user?.specialty || "Superuser"}</span>
                             )}
                         </div>
-                    </div>
+                    </Link>
                 </div>
             </div>
         </header>

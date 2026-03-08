@@ -59,7 +59,9 @@ export default function EditPatientModal({ isOpen, onClose, patientId, onSuccess
                     relationship: data.emergency_contact?.relationship || data.emergencyContact?.relationship || "",
                     phoneNumber: data.emergency_contact?.phone_number || data.emergencyContact?.phoneNumber || ""
                 },
-                medicalHistory: data.medical_history || data.medicalHistory || "",
+                medicalHistory: typeof (data.medical_history || data.medicalHistory) === 'object' 
+                    ? JSON.stringify(data.medical_history || data.medicalHistory, null, 2) 
+                    : (data.medical_history || data.medicalHistory || ""),
                 allergies: data.allergies || [],
                 medications: data.medications || []
             });
