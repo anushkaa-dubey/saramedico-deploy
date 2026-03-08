@@ -51,6 +51,13 @@ function SoapNotesPage() {
                     clearInterval(pollTimerRef.current);
                     setSoap(result.soap_note);
                     setSoapStatus("completed");
+                } else if (
+                    result.ai_status === "no_transcript" ||
+                    result.status === "no_transcript"
+                ) {
+                    // Terminal state: no speech was detected in the meeting
+                    clearInterval(pollTimerRef.current);
+                    setSoapStatus("no_transcript");
                 }
                 // On 202 — stay in "processing", poll resumes on next tick
             } catch (err) {
@@ -71,16 +78,18 @@ function SoapNotesPage() {
         fetchConsultationById(consultationId)
             .then((data) => {
                 setConsultation(data);
-                
-                // 1. If SOAP content is already in the main object (unlikely per current schema, but safe)
-                // 2. Or if backend says it's already completed
-                // 3. Or if hasSoapNote flag is set
-                const isAiDone = data?.aiStatus === "completed" || data?.ai_status === "completed";
-                const hasSoap = data?.hasSoapNote || !!data?.soap_note;
 
-                if (isAiDone || hasSoap) {
+                const aiStatus = data?.aiStatus || data?.ai_status;
+                const isAiDone = aiStatus === "completed";
+                const hasSoap = data?.hasSoapNote || !!data?.soap_note;
+                const hasNoTranscript = aiStatus === "no_transcript";
+                const isAwaitingTranscript = aiStatus === "awaiting_transcript" || aiStatus === "processing";
+
+                if (hasNoTranscript) {
+                    // The meeting had no real speech — show no_transcript state
+                    setSoapStatus("no_transcript");
+                } else if (isAiDone || hasSoap) {
                     setSoapStatus("completed");
-                    // Fetch the full SOAP content if not already present
                     if (data?.soap_note) {
                         setSoap(data.soap_note);
                     } else {
@@ -88,8 +97,8 @@ function SoapNotesPage() {
                             if (res.soap_note) setSoap(res.soap_note);
                         });
                     }
-                } else if (data?.status === "completed") {
-                    // It's marked complete but AI isn't done yet -> start polling automatically
+                } else if (isAwaitingTranscript || data?.status === "completed") {
+                    // Consultation is complete — AI is checking for transcript
                     startPolling(consultationId);
                 }
             })
@@ -233,11 +242,18 @@ function SoapNotesPage() {
                                 borderRadius: "20px",
                                 fontSize: "11px",
                                 fontWeight: "700",
-                                background: soapStatus === "completed" ? "#f0fdf4" : (soapStatus === "processing" || (consultation?.status === "completed" && soapStatus === "idle")) ? "#eff6ff" : "#f8fafc",
-                                color: soapStatus === "completed" ? "#16a34a" : (soapStatus === "processing" || (consultation?.status === "completed" && soapStatus === "idle")) ? "#2563eb" : "#64748b",
+                                background:
+                                    soapStatus === "completed" ? "#f0fdf4" :
+                                    soapStatus === "no_transcript" ? "#fefce8" :
+                                    (soapStatus === "processing" || (consultation?.status === "completed" && soapStatus === "idle")) ? "#eff6ff" : "#f8fafc",
+                                color:
+                                    soapStatus === "completed" ? "#16a34a" :
+                                    soapStatus === "no_transcript" ? "#a16207" :
+                                    (soapStatus === "processing" || (consultation?.status === "completed" && soapStatus === "idle")) ? "#2563eb" : "#64748b",
                             }}>
                                 {soapStatus === "completed" && "✓ Note Ready"}
-                                {(soapStatus === "processing" || (consultation?.status === "completed" && soapStatus === "idle")) && "⟳ Generating..."}
+                                {soapStatus === "no_transcript" && "⚠ No Transcript"}
+                                {(soapStatus === "processing" || (consultation?.status === "completed" && soapStatus === "idle")) && "⟳ Checking Transcript..."}
                                 {soapStatus === "timeout" && "⚠ Timed Out"}
                                 {soapStatus === "error" && "✗ Error"}
                                 {soapStatus === "idle" && "Not Started"}
@@ -335,6 +351,37 @@ function SoapNotesPage() {
                                 <p style={{ color: "#94a3b8", fontSize: "11px", fontWeight: "600" }}>
                                     Attempt {displayAttempt} / {MAX_POLL_ATTEMPTS}
                                 </p>
+                            </div>
+                        ) : soapStatus === "no_transcript" ? (
+                            /* ── No Transcript: Meeting had no speech ── */
+                            <div style={{ padding: "40px", textAlign: "center" }}>
+                                <div style={{ fontSize: "40px", marginBottom: "16px" }}>🎙️</div>
+                                <h3 style={{ color: "#92400e", marginBottom: "8px", fontSize: "16px" }}>
+                                    No Transcript Captured
+                                </h3>
+                                <p style={{ color: "#78350f", fontSize: "13px", lineHeight: "1.6", maxWidth: "380px", margin: "0 auto 16px" }}>
+                                    No speech was detected in this meeting session. A SOAP note cannot be generated
+                                    without a recorded conversation.
+                                </p>
+                                <div style={{
+                                    padding: "12px 16px",
+                                    background: "#fef9c3",
+                                    border: "1px solid #fde047",
+                                    borderRadius: "8px",
+                                    fontSize: "12px",
+                                    color: "#713f12",
+                                    textAlign: "left",
+                                    maxWidth: "400px",
+                                    margin: "0 auto",
+                                    lineHeight: "1.6"
+                                }}>
+                                    <strong>To generate a SOAP note:</strong>
+                                    <ul style={{ margin: "6px 0 0", paddingLeft: "18px" }}>
+                                        <li>Conduct the consultation with voice conversation in Google Meet</li>
+                                        <li>Ensure Google Meet transcription is enabled for your account</li>
+                                        <li>Mark the consultation complete only after the meeting ends</li>
+                                    </ul>
+                                </div>
                             </div>
                         ) : soapStatus === "timeout" ? (
                             <div style={{ padding: "40px", textAlign: "center" }}>
