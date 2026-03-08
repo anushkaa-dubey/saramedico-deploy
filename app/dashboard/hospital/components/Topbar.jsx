@@ -2,7 +2,7 @@
 import styles from "../HospitalDashboard.module.css";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { fetchHospitalSettings } from "@/services/hospital";
+import { fetchHospitalSettingsData } from "@/services/hospital";
 import NotificationBell from "@/app/dashboard/components/NotificationBell";
 
 export default function Topbar({ title }) {
@@ -11,7 +11,7 @@ export default function Topbar({ title }) {
 
     const getProfile = async () => {
         try {
-            const data = await fetchHospitalSettings();
+            const data = await fetchHospitalSettingsData();
             if (data?.profile) {
                 setUser({
                     full_name: data.profile.name || data.profile.full_name || "Hospital Admin",
@@ -50,7 +50,7 @@ export default function Topbar({ title }) {
                                 <span style={{ fontSize: '11px', color: '#64748b' }}>{user?.role || user?.specialty || "Superuser"}</span>
                             )}
                         </div>
-                    </Link>
+                    </div>
                 </div>
             </div>
         </header>

@@ -119,13 +119,8 @@ export default function Sidebar() {
                     <LogOut size={16} style={{ marginRight: "10px" }} />
                     Logout
                 </button>
+                </div>
             </aside>
-
-            <SignoutModal 
-                isOpen={isSignoutModalOpen}
-                onConfirm={handleLogout}
-                onCancel={() => setIsSignoutModalOpen(false)}
-            />
         </>
     );
 }

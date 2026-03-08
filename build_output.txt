@@ -1,0 +1,72 @@
+
+> temp-next@0.1.0 build
+> next build
+
+⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of /media/omkar/DATA/Omkar/CODE-111/Liomonk/Sara_medical_backend-main/package-lock.json as the root directory.
+ To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+ Detected additional lockfiles: 
+   * /media/omkar/DATA/Omkar/CODE-111/Liomonk/Sara_medical_backend-main/Frontend/saramedico-deploy-main/package-lock.json
+
+▲ Next.js 16.1.1 (Turbopack)
+- Environments: .env.local
+
+  Creating an optimized production build ...
+
+> Build error occurred
+Error: Turbopack build failed with 2 errors:
+./Frontend/saramedico-deploy-main/app/dashboard/hospital/components/Topbar.jsx:5:1
+Export fetchHospitalSettings doesn't exist in target module
+[0m [90m 3 |[39m [36mimport[39m { useState[33m,[39m useEffect } [36mfrom[39m [32m"react"[39m[33m;[39m
+ [90m 4 |[39m [36mimport[39m [33mLink[39m [36mfrom[39m [32m"next/link"[39m[33m;[39m
+[31m[1m>[22m[39m[90m 5 |[39m [36mimport[39m { fetchHospitalSettings } [36mfrom[39m [32m"@/services/hospital"[39m[33m;[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 6 |[39m [36mimport[39m [33mNotificationBell[39m [36mfrom[39m [32m"@/app/dashboard/components/NotificationBell"[39m[33m;[39m
+ [90m 7 |[39m
+ [90m 8 |[39m [36mexport[39m [36mdefault[39m [36mfunction[39m [33mTopbar[39m({ title }) {[0m
+
+The export fetchHospitalSettings was not found in module [project]/Frontend/saramedico-deploy-main/services/hospital.js [app-client] (ecmascript).
+Did you mean to import fetchHospitalSettingsData?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+Import traces:
+  Client Component Browser:
+    ./Frontend/saramedico-deploy-main/app/dashboard/hospital/components/Topbar.jsx [Client Component Browser]
+    ./Frontend/saramedico-deploy-main/app/dashboard/hospital/patients/page.jsx [Client Component Browser]
+    ./Frontend/saramedico-deploy-main/app/dashboard/hospital/patients/page.jsx [Server Component]
+
+  Client Component SSR:
+    ./Frontend/saramedico-deploy-main/app/dashboard/hospital/components/Topbar.jsx [Client Component SSR]
+    ./Frontend/saramedico-deploy-main/app/dashboard/hospital/patients/page.jsx [Client Component SSR]
+    ./Frontend/saramedico-deploy-main/app/dashboard/hospital/patients/page.jsx [Server Component]
+
+
+./Frontend/saramedico-deploy-main/app/dashboard/hospital/components/Topbar.jsx:5:1
+Export fetchHospitalSettings doesn't exist in target module
+[0m [90m 3 |[39m [36mimport[39m { useState[33m,[39m useEffect } [36mfrom[39m [32m"react"[39m[33m;[39m
+ [90m 4 |[39m [36mimport[39m [33mLink[39m [36mfrom[39m [32m"next/link"[39m[33m;[39m
+[31m[1m>[22m[39m[90m 5 |[39m [36mimport[39m { fetchHospitalSettings } [36mfrom[39m [32m"@/services/hospital"[39m[33m;[39m
+ [90m   |[39m [31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m[31m[1m^[22m[39m
+ [90m 6 |[39m [36mimport[39m [33mNotificationBell[39m [36mfrom[39m [32m"@/app/dashboard/components/NotificationBell"[39m[33m;[39m
+ [90m 7 |[39m
+ [90m 8 |[39m [36mexport[39m [36mdefault[39m [36mfunction[39m [33mTopbar[39m({ title }) {[0m
+
+The export fetchHospitalSettings was not found in module [project]/Frontend/saramedico-deploy-main/services/hospital.js [app-ssr] (ecmascript).
+Did you mean to import fetchHospitalSettingsData?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+Import traces:
+  Client Component Browser:
+    ./Frontend/saramedico-deploy-main/app/dashboard/hospital/components/Topbar.jsx [Client Component Browser]
+    ./Frontend/saramedico-deploy-main/app/dashboard/hospital/patients/page.jsx [Client Component Browser]
+    ./Frontend/saramedico-deploy-main/app/dashboard/hospital/patients/page.jsx [Server Component]
+
+  Client Component SSR:
+    ./Frontend/saramedico-deploy-main/app/dashboard/hospital/components/Topbar.jsx [Client Component SSR]
+    ./Frontend/saramedico-deploy-main/app/dashboard/hospital/patients/page.jsx [Client Component SSR]
+    ./Frontend/saramedico-deploy-main/app/dashboard/hospital/patients/page.jsx [Server Component]
+
+
+    at <unknown> (./Frontend/saramedico-deploy-main/app/dashboard/hospital/components/Topbar.jsx:5:1)
+    at <unknown> (./Frontend/saramedico-deploy-main/app/dashboard/hospital/components/Topbar.jsx:5:1)
