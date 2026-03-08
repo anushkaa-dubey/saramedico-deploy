@@ -34,7 +34,7 @@ export default function LiveConsultPage() {
             p.user?.full_name || p.user?.name || (p.user?.first_name ? [p.user.first_name, p.user.last_name].filter(Boolean).join(" ") : null) ||
             "Unknown Patient";
         const email = p.email || p.email_addr || p.contact_email || p.user?.email || "N/A";
-        const id = p.id || p.patient_id || p.user_id || p.uuid || "N/A";
+        const id = p.patient_id || p.patientId || p.user_id || p.id || p.uuid || "N/A";
         const mrn = p.mrn || p.medical_record_number || (id !== "N/A" && typeof id === 'string' ? `MRN-${id.substring(0, 6)}` : "N/A");
 
         return {
