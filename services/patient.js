@@ -53,6 +53,17 @@ export const fetchConsultationDetails = async (consultationId) => {
     });
     return handleResponse(response);
 };
+
+/**
+ * Fetch SOAP note for a consultation
+ * Endpoint: GET /api/v1/consultations/{id}/soap-note
+ */
+export const fetchSoapNote = async (consultationId) => {
+    const response = await fetch(`${API_BASE_URL}/consultations/${consultationId}/soap-note`, {
+        headers: getAuthHeaders(),
+    });
+    return handleResponse(response);
+};
 /**
  * Book new appointment
  *  Endpoint: POST /api/v1/appointments
@@ -222,10 +233,12 @@ export const fetchDoctors = async (filters = {}) => {
     try {
         const params = new URLSearchParams();
         if (filters.specialty) params.append("specialty", filters.specialty);
-        if (filters.query) params.append("query", filters.query);
+        if (typeof filters.query === "string" && filters.query.length >= 2) {
+            params.append("query", filters.query);
+        }
 
         const response = await fetch(
-            `${API_BASE_URL}/doctors/search?${params.toString()}`,
+            `${API_BASE_URL}/doctors/directory?${params.toString()}`,
             { headers: getAuthHeaders() }
         );
 

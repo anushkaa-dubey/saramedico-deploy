@@ -33,9 +33,11 @@ export default function AppointmentsPage() {
 
             // Create map of doctor id -> name
             const dMap = {};
-            if (Array.isArray(doctorsData)) {
-                doctorsData.forEach(d => {
-                    dMap[d.id] = d.name.startsWith("Dr.") ? d.name : `Dr. ${d.name}`;
+            const doctorsArr = Array.isArray(doctorsData) ? doctorsData : doctorsData?.results || doctorsData?.data || [];
+            if (Array.isArray(doctorsArr)) {
+                doctorsArr.forEach(d => {
+                    const name = d.full_name || d.name || "Doctor";
+                    dMap[d.id] = name.startsWith("Dr.") ? name : `Dr. ${name}`;
                 });
             }
             setDoctorsMap(dMap);
@@ -114,10 +116,14 @@ export default function AppointmentsPage() {
                                         {appointments.map((apt) => (
                                             <tr key={apt.id}>
                                                 <td>
-                                                    {apt.doctor_name ||
-                                                        (apt.doctor && (apt.doctor.full_name || `Dr. ${apt.doctor.first_name} ${apt.doctor.last_name}`)) ||
-                                                        doctorsMap[apt.doctor_id] ||
-                                                        "Unknown Doctor"}
+                                                    {(() => {
+                                                        const rawName = apt.doctor_name ||
+                                                            (apt.doctor && (apt.doctor.full_name || `${apt.doctor.first_name || ''} ${apt.doctor.last_name || ''}`).trim()) ||
+                                                            doctorsMap[apt.doctor_id] ||
+                                                            "Doctor";
+                                                        if (!rawName || rawName === "Doctor" || rawName === "Unknown Doctor") return "Doctor";
+                                                        return rawName.startsWith("Dr") ? rawName : `Dr. ${rawName}`;
+                                                    })()}
                                                 </td>
                                                 <td>{new Date(apt.requested_date).toLocaleString()}</td>
                                                 <td>
@@ -130,10 +136,10 @@ export default function AppointmentsPage() {
                                                                 fontWeight: '600',
                                                                 background: apt.status === 'accepted' || apt.status === 'scheduled' || apt.status === 'active' ? '#dcfce7' :
                                                                     apt.status === 'completed' ? '#e0f2fe' :
-                                                                    apt.status === 'declined' || apt.status === 'cancelled' ? '#fee2e2' : '#fef9c3',
+                                                                        apt.status === 'declined' || apt.status === 'cancelled' ? '#fee2e2' : '#fef9c3',
                                                                 color: apt.status === 'accepted' || apt.status === 'scheduled' || apt.status === 'active' ? '#166534' :
                                                                     apt.status === 'completed' ? '#0369a1' :
-                                                                    apt.status === 'declined' || apt.status === 'cancelled' ? '#991b1b' : '#854d0e',
+                                                                        apt.status === 'declined' || apt.status === 'cancelled' ? '#991b1b' : '#854d0e',
                                                                 width: 'fit-content'
                                                             }}
                                                         >
@@ -171,8 +177,8 @@ export default function AppointmentsPage() {
                                                     </div>
                                                 </td>
                                                 <td>
-                                                    <span style={{ 
-                                                        fontSize: '11px', 
+                                                    <span style={{
+                                                        fontSize: '11px',
                                                         color: apt.is_consultation ? '#3B82F6' : '#64748B',
                                                         background: apt.is_consultation ? '#EFF6FF' : '#F8FAFC',
                                                         padding: '2px 6px',

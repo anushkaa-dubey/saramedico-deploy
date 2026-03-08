@@ -16,15 +16,30 @@ export default function Vitals() {
     const loadVitals = async () => {
       try {
         const profile = await fetchProfile();
-        if (profile && profile.latest_vitals) {
-          const lv = profile.latest_vitals;
+        if (profile) {
+          const lv = profile.latest_vitals || {};
+          const hm = profile.health_metrics || [];
+
+          // Helper to find metric by looking at both latest_vitals and full history
+          const findMetric = (lvKeys, typePatterns) => {
+            // 1. Try latest_vitals first (comes from backend auth/me logic)
+            for (const key of lvKeys) {
+              if (lv[key] && lv[key] !== "N/A") return lv[key];
+            }
+            // 2. Fallback to full health_metrics history
+            const matched = hm.find(m =>
+              typePatterns.some(p => m.metric_type.toLowerCase().includes(p.toLowerCase()))
+            );
+            return matched ? matched.value : null;
+          };
+
           setVitals({
-            heartRate: lv.hr && lv.hr !== "N/A" ? lv.hr : null,
-            bloodPressure: lv.bp && lv.bp !== "N/A" ? lv.bp : null,
-            weight: lv.weight && lv.weight !== "N/A" ? lv.weight : null,
-            temperature: lv.temp && lv.temp !== "N/A" ? lv.temp : null,
-            respiratoryRate: lv.resp && lv.resp !== "N/A" ? lv.resp : null,
-            oxygenSaturation: lv.spo2 && lv.spo2 !== "N/A" ? lv.spo2 : null,
+            heartRate: findMetric(["hr"], ["heart_rate", "heart rate"]),
+            bloodPressure: findMetric(["bp"], ["blood_pressure", "blood pressure"]),
+            weight: findMetric(["weight"], ["weight"]),
+            temperature: findMetric(["temp"], ["temperature"]),
+            respiratoryRate: findMetric(["resp"], ["respiratory_rate", "respiratory rate"]),
+            oxygenSaturation: findMetric(["spo2"], ["oxygen_saturation", "oxygen saturation", "spo2"]),
           });
         }
       } catch (err) {

@@ -39,10 +39,12 @@ function DoctorVideoCallPage() {
 
     const normalizeAppointment = (data) => {
         if (!data) return null;
+        let meet_link = data.meet_link || data.meetLink || data.google_meet_link
+            || data.hangout_link || data.join_url || data.start_url || data.url;        // Fallback removed to rely entirely on Google API backend.
+
         return {
             ...data,
-            meet_link: data.meet_link || data.meetLink || data.google_meet_link
-                || data.hangout_link || data.join_url || data.start_url || data.url || null
+            meet_link
         };
     };
 
@@ -267,12 +269,17 @@ function DoctorVideoCallPage() {
                             Active Consultation
                         </h2>
                         <p style={{ fontSize: '15px', color: '#64748b', margin: 0, lineHeight: 1.5 }}>
-                            {appointment?.patientName || appointment?.patient_name ? `Session for: ${appointment?.patientName || appointment?.patient_name}` : "Launch the secure Google Meet session to begin your consultation."}
+                            {appointment?.patientName && !appointment.patientName.toLowerCase().includes('encryp')
+                                ? `Session for: ${appointment.patientName}`
+                                : appointment?.patient_name && !appointment.patient_name.toLowerCase().includes('encryp')
+                                    ? `Session for: ${appointment.patient_name}`
+                                    : "Launch the secure Google Meet session to begin your consultation."}
                         </p>
                     </div>
 
                     <button
-                        onClick={handleJoinMeet}
+                        className={styles.joinBtn}
+                        onClick={() => window.open(appointment?.meet_link, "_blank")}
                         disabled={!appointment?.meet_link}
                         style={{
                             background: !appointment?.meet_link ? '#cbd5e1' : '#3b82f6',

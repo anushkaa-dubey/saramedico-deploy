@@ -24,7 +24,7 @@ export default function Topbar() {
         const data = await fetchDoctorProfile();
         setUser(data);
         if (data) localStorage.setItem("doctorUser", JSON.stringify(data));
-        
+
         try {
           const ptList = await fetchPatients();
           setPatients(ptList || []);
@@ -82,7 +82,7 @@ export default function Topbar() {
   };
 
   const displayName =
-    user?.full_name
+    user?.full_name && !user.full_name.toLowerCase().includes('encryp')
       ? `Dr. ${user.full_name.split(" ")[0]}`
       : user?.first_name
         ? `Dr. ${user.first_name}`
@@ -90,7 +90,7 @@ export default function Topbar() {
           ? "Loading..."
           : "Doctor";
 
-  const filteredPatients = patients.filter(pt => 
+  const filteredPatients = patients.filter(pt =>
     pt.name?.toLowerCase().includes(search.toLowerCase()) ||
     pt.full_name?.toLowerCase().includes(search.toLowerCase()) ||
     pt.first_name?.toLowerCase().includes(search.toLowerCase()) ||
@@ -128,7 +128,7 @@ export default function Topbar() {
           }}>
             {filteredPatients.length > 0 ? (
               filteredPatients.map((pt, idx) => (
-                <div 
+                <div
                   key={pt.id || idx}
                   onClick={() => {
                     setShowSearchDropdown(false);
@@ -171,7 +171,7 @@ export default function Topbar() {
                 No patients found matching "{search}"
               </div>
             )}
-            <div 
+            <div
               onClick={() => {
                 setShowSearchDropdown(false);
                 router.push(`/dashboard/doctor/patients?search=${encodeURIComponent(search.trim())}`);
@@ -227,7 +227,7 @@ export default function Topbar() {
               {user?.avatar_url ? (
                 <img src={user.avatar_url} alt="Profile" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
               ) : (
-                user?.full_name ? user.full_name.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase() : "DR"
+                (user?.full_name && !user.full_name.toLowerCase().includes('encryp')) ? user.full_name.split(" ").map(n => n[0]).join("").substring(0, 2).toUpperCase() : "DR"
               )}
             </div>
           </div>

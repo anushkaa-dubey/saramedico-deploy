@@ -1,7 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import Topbar from "../components/Topbar";
 import RecordsTable from "./components/RecordsTable";
+import VisitHistory from "./components/VisitHistory";
 import styles from "./Records.module.css";
 import { motion } from "framer-motion";
 
@@ -22,6 +24,8 @@ const itemVariants = {
 };
 
 export default function RecordsPage() {
+  const [activeTab, setActiveTab] = useState("visits");
+
   return (
     <motion.div
       initial="hidden"
@@ -40,11 +44,27 @@ export default function RecordsPage() {
           </div>
         </motion.div>
 
-        <motion.div className={styles.card} variants={itemVariants}>
-          <div className={styles.cardHeader}>
-            <h3>Visit History</h3>
+        <div className={styles.tabs}>
+          <div
+            className={`${styles.tab} ${activeTab === 'visits' ? styles.active : ''}`}
+            onClick={() => setActiveTab('visits')}
+          >
+            Visit History
           </div>
-          <RecordsTable />
+          <div
+            className={`${styles.tab} ${activeTab === 'docs' ? styles.active : ''}`}
+            onClick={() => setActiveTab('docs')}
+          >
+            Documents
+          </div>
+        </div>
+
+        <motion.div className={styles.card} variants={itemVariants}>
+          {activeTab === 'visits' ? (
+            <VisitHistory />
+          ) : (
+            <RecordsTable />
+          )}
         </motion.div>
 
       </motion.section>

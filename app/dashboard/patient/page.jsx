@@ -11,7 +11,7 @@ import scheduleIcon from "@/public/icons/schedule.svg";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { fetchProfile } from "@/services/patient";
+import { fetchProfile, fetchAppointments, fetchDoctors } from "@/services/patient";
 import { fetchConsultations } from "@/services/consultation";
 
 const containerVariants = {
@@ -35,6 +35,8 @@ export default function PatientDashboard() {
   const router = useRouter();
   const [user, setUser] = useState(null);
   const [consultations, setConsultations] = useState([]);
+  const [appointments, setAppointments] = useState([]);
+  const [doctors, setDoctors] = useState([]);
   const [formattedDate, setFormattedDate] = useState("");
 
   /** Maps any backend role string to a safe dashboard path */
@@ -78,10 +80,42 @@ export default function PatientDashboard() {
 
         setUser(profile);
         localStorage.setItem("user", JSON.stringify(profile));
-        const cons = await fetchConsultations();
-        // API returns { consultations: [...], total: N }
+
+        // Fetch everything in parallel
+        const [cons, appts, docsList] = await Promise.all([
+          fetchConsultations().catch(() => ({ consultations: [] })),
+          fetchAppointments().catch(() => []),
+          fetchDoctors().catch(() => [])
+        ]);
+
+        // API returns { consultations: [...], total: N } for consultations
         const list = Array.isArray(cons) ? cons : (cons?.consultations || []);
-        setConsultations(list);
+
+        // Resolve names for consultations if they are "Unknown Doctor"
+        const resolvedList = list.map(c => {
+          if (!c.doctorName || c.doctorName === "Unknown Doctor" || c.doctorName === "Doctor") {
+            const matchedDoc = docsList.find(d => String(d.id) === String(c.doctorId));
+            if (matchedDoc) {
+              return { ...c, doctorName: matchedDoc.full_name || matchedDoc.name };
+            }
+          }
+          return c;
+        });
+
+        // Resolve names for appointments if they are "Unknown Doctor"
+        const resolvedAppts = (Array.isArray(appts) ? appts : []).map(a => {
+          if (!a.doctor_name || a.doctor_name === "Unknown Doctor" || a.doctor_name === "Doctor") {
+            const matchedDoc = docsList.find(d => String(d.id) === String(a.doctor_id));
+            if (matchedDoc) {
+              return { ...a, doctor_name: matchedDoc.full_name || matchedDoc.name };
+            }
+          }
+          return a;
+        });
+
+        setConsultations(resolvedList);
+        setAppointments(resolvedAppts);
+        setDoctors(docsList);
 
         setFormattedDate(new Date().toLocaleDateString("en-US", {
           weekday: "long",
@@ -168,13 +202,12 @@ export default function PatientDashboard() {
           </div>
 
           <motion.div variants={itemVariants}>
-            {/* <UpNextCard /> */}
-            <UpNextCard consultations={consultations} />
+            {/* Combine consultations and appointments for UpNextCard */}
+            <UpNextCard consultations={consultations} appointments={appointments} />
           </motion.div>
 
           <motion.div variants={itemVariants}>
-            {/* <RecentActivity /> */}
-            <RecentActivity consultations={consultations} />
+            <RecentActivity consultations={consultations} appointments={appointments} />
           </motion.div>
         </div>
       </section>

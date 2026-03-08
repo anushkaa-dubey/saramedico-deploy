@@ -280,7 +280,7 @@ export const fetchDocumentDetails = async (documentId) => {
     // Fix docker-internal minio URLs → public AWS IP:9000
     const BACKEND_HOST = process.env.NEXT_PUBLIC_API_URL
         ? new URL(process.env.NEXT_PUBLIC_API_URL).hostname
-        : '107.20.98.130';
+        : 'localhost';
     const url = doc.downloadUrl || doc.download_url || doc.presigned_url || doc.url;
     if (url && (url.includes('minio:9000') || url.includes(':9000'))) {
         doc.downloadUrl = url
@@ -552,7 +552,7 @@ export const uploadPatientDocument = async (patientId, file, metadata) => {
             // Fix docker-internal minio hostname → public AWS IP
             let publicUploadUrl = uploadUrl;
             if (uploadUrl && uploadUrl.includes("minio:")) {
-                publicUploadUrl = uploadUrl.replace("http://minio:", "http://107.20.98.130:");
+                publicUploadUrl = uploadUrl.replace("http://minio:", `http://${BACKEND_HOST}:`);
             }
 
             // MinIO port 9000/9010 is sometimes blocked on corporate networks — fall through to direct tunnel upload

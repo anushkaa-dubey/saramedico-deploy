@@ -10,7 +10,21 @@ import {
     fetchHospitalDirectory,
     fetchPendingInvites,
     updateHospitalDoctor,
+    fetchHospitalDoctorStatus,
 } from "@/services/hospital";
+
+const DEPT_OPTIONS = [
+    "Cardiology", "Neurology", "Pediatrics", "Orthopedics", "Radiology",
+    "General Surgery", "Emergency Medicine", "Dermatology", "Psychiatry",
+    "Oncology", "Internal Medicine", "Ophthalmology", "ENT", "Urology",
+    "Obstetrics & Gynecology",
+];
+
+const ROLE_OPTIONS = [
+    "Head of Department", "Senior Consultant", "Consultant", "Junior Consultant",
+    "Resident Doctor", "Intern", "Specialist", "Visiting Consultant",
+    "Surgeon", "Medical Officer"
+];
 
 // Doctor Management Modal
 function ManageDoctorModal({ doctor, onClose, onSaved }) {
@@ -65,11 +79,25 @@ function ManageDoctorModal({ doctor, onClose, onSaved }) {
                     </div>
                     <div>
                         <label style={{ fontSize: "11px", fontWeight: "700", color: "#94a3b8", display: "block", marginBottom: "4px" }}>DEPARTMENT</label>
-                        <input value={form.department} onChange={e => setForm({ ...form, department: e.target.value })} style={{ width: "100%", padding: "8px 12px", borderRadius: "8px", border: "1px solid #e2e8f0", fontSize: "13px", boxSizing: "border-box" }} />
+                        <select
+                            value={form.department}
+                            onChange={e => setForm({ ...form, department: e.target.value })}
+                            style={{ width: "100%", padding: "8px 12px", borderRadius: "8px", border: "1px solid #e2e8f0", fontSize: "13px", boxSizing: "border-box", appearance: "auto" }}
+                        >
+                            <option value="">Select Department</option>
+                            {DEPT_OPTIONS.map(d => <option key={d} value={d}>{d}</option>)}
+                        </select>
                     </div>
                     <div>
                         <label style={{ fontSize: "11px", fontWeight: "700", color: "#94a3b8", display: "block", marginBottom: "4px" }}>DEPARTMENT ROLE</label>
-                        <input value={form.department_role} onChange={e => setForm({ ...form, department_role: e.target.value })} placeholder="e.g. Consultant" style={{ width: "100%", padding: "8px 12px", borderRadius: "8px", border: "1px solid #e2e8f0", fontSize: "13px", boxSizing: "border-box" }} />
+                        <select
+                            value={form.department_role}
+                            onChange={e => setForm({ ...form, department_role: e.target.value })}
+                            style={{ width: "100%", padding: "8px 12px", borderRadius: "8px", border: "1px solid #e2e8f0", fontSize: "13px", boxSizing: "border-box", appearance: "auto" }}
+                        >
+                            <option value="">Select Role</option>
+                            {ROLE_OPTIONS.map(r => <option key={r} value={r}>{r}</option>)}
+                        </select>
                     </div>
                     <div>
                         <label style={{ fontSize: "11px", fontWeight: "700", color: "#94a3b8", display: "block", marginBottom: "4px" }}>SPECIALTY</label>
@@ -123,17 +151,13 @@ export default function DepartmentPage({ params }) {
     const load = async () => {
         setLoading(true);
         try {
-            const [directoryData, invites] = await Promise.all([
-                fetchHospitalDirectory(),
+            const [docs, invites] = await Promise.all([
+                fetchHospitalDoctorStatus(),
                 fetchPendingInvites(),
             ]);
 
-            const docs = [
-                ...(directoryData.active_doctors || []),
-                ...(directoryData.inactive_doctors || [])
-            ];
             const departmentDoctors = docs.filter(
-                d => (d.department || d.specialty) === displayName
+                d => (d.department || d.specialty || "").toLowerCase() === displayName.toLowerCase()
             );
 
             setDoctors(departmentDoctors);

@@ -83,18 +83,19 @@ export default function RecordsTable() {
       // and one has a valid downloadUrl/presigned_url but the other doesn't, keep only the valid one.
       const uniqueFiles = new Map();
       list.forEach(doc => {
-        const existing = uniqueFiles.get(doc.file_name);
+        const fileName = doc.fileName || doc.file_name || "Untitled Document";
+        const existing = uniqueFiles.get(fileName);
         const hasUrl = doc.downloadUrl || doc.presigned_url;
         const existingHasUrl = existing ? (existing.downloadUrl || existing.presigned_url) : false;
 
         if (!existing) {
           doc.allIds = [doc.id];
-          uniqueFiles.set(doc.file_name, doc);
+          uniqueFiles.set(fileName, doc);
         } else {
           existing.allIds.push(doc.id);
           if (hasUrl && !existingHasUrl) {
             doc.allIds = existing.allIds;
-            uniqueFiles.set(doc.file_name, doc);
+            uniqueFiles.set(fileName, doc);
           }
         }
       });

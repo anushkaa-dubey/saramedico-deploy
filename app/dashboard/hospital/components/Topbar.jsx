@@ -27,7 +27,8 @@ export default function Topbar({ title, onSearch }) {
         return () => clearTimeout(delayDebounceFn);
     }, [searchTerm, onSearch]);
 
-    const initials = user?.full_name ? user.full_name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : "HA";
+    const displayName = user?.name || user?.full_name || "";
+    const initials = displayName ? displayName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : "HA";
 
     return (
         <header className={styles.topbar}>
@@ -41,7 +42,7 @@ export default function Topbar({ title, onSearch }) {
                 <div className={styles.topActions}>
                     <div className={styles.profile}>
                         <div className={styles.profileInfo}>
-                            <span style={{ fontSize: '14px', fontWeight: '700', color: '#0f172a' }}>{user?.full_name || "Hospital Admin"}</span>
+                            <span style={{ fontSize: '14px', fontWeight: '700', color: '#0f172a' }}>{user?.name || user?.full_name || "Hospital Admin"}</span>
                             {user?.role !== user?.full_name && (
                                 <span style={{ fontSize: '11px', color: '#64748b' }}>{user?.role || user?.specialty || "Superuser"}</span>
                             )}

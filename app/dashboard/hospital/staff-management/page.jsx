@@ -197,7 +197,7 @@ export default function StaffManagementPage() {
                                                     <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#359aff15', color: '#359aff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', fontSize: '11px' }}>
                                                         {(d.full_name || d.name || "D").split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
                                                     </div>
-                                                    <div style={{ fontWeight: '700' }}>{d.full_name || d.name || '—'}</div>
+                                                    <div style={{ fontWeight: '700' }}>{d.name || d.full_name || 'Staff Member'}</div>
                                                 </div>
                                             </td>
                                             <td style={{ whiteSpace: 'nowrap', color: '#64748b' }}>{d.specialty || d.specialization || '—'}</td>
@@ -254,9 +254,10 @@ export default function StaffManagementPage() {
                 />
                 <DoctorDetailsModal
                     isOpen={!!selectedDoctorId}
-                    onClose={() => setSelectedDoctorId(null)}
+                    onClose={() => { setSelectedDoctorId(null); loadDoctorStatus(); }}
                     doctor={selectedDoctorId}
-                />            </div>
+                />
+            </div>
         </motion.div>
     );
 }

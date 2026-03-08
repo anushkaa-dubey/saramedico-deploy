@@ -11,13 +11,20 @@
  */
 
 const getApiBaseUrl = () => {
-    // During local development, the browser should talk to the Rails/FastAPI backend 
-    // running at localhost:8000. 
-    if (typeof process !== "undefined" && process.env.NEXT_PUBLIC_API_URL) {
+    // During local development in the browser, always use the relative path 
+    // to go through the Next.js reverse proxy (configured in next.config.ts).
+    // This avoids CORS issues and ensures the browser talks to the same origin.
+    if (typeof window !== "undefined") {
+        return "/api/v1";
+    }
+
+    // For server-side or non-browser environments, use the environment variable
+    // or fallback to localhost.
+    if (process.env.NEXT_PUBLIC_API_URL) {
         return process.env.NEXT_PUBLIC_API_URL.trim();
     }
-    // return "http://localhost:8000/api/v1";
-    return "http://107.20.98.130:8000/api/v1";
+
+    return "http://localhost:8000/api/v1";
 };
 
 export const API_BASE_URL = getApiBaseUrl();

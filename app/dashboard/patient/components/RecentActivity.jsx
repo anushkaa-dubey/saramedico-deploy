@@ -3,32 +3,57 @@ import { fetchAppointments } from "@/services/patient";
 import styles from "../PatientDashboard.module.css";
 import { useRouter } from "next/navigation";
 
-export default function RecentActivity({ consultations }) {
+export default function RecentActivity({ consultations, appointments }) {
   const router = useRouter();
   const [activities, setActivities] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // If consultations are passed from parent, use them; otherwise fetch
-    if (consultations !== undefined) {
-      // Map consultations to activity shape
-      const mapped = (Array.isArray(consultations) ? consultations : []).slice(0, 3);
-      setActivities(mapped);
-      setLoading(false);
-      return;
-    }
-    const loadActivities = async () => {
-      try {
-        const data = await fetchAppointments();
-        setActivities(data.slice(0, 3));
-      } catch (err) {
-        console.error("Failed to load patient activities:", err);
-      } finally {
-        setLoading(false);
+    const now = new Date();
+
+    const listCons = (Array.isArray(consultations) ? consultations : [])
+      .filter(c => {
+        const isPast = (c.visitState === "completed" || c.status === "completed" || new Date(c.scheduledAt || c.scheduled_at) < now);
+        return isPast;
+      })
+      .map(c => ({
+        id: c.id,
+        doctorName: c.doctorName || c.doctor_name || "Doctor",
+        chiefComplaint: c.chiefComplaint || c.chief_complaint || "Consultation",
+        date: c.scheduledAt || c.scheduled_at,
+        status: c.visitState || c.status,
+        type: 'Consultation'
+      }));
+
+    const listAppts = (Array.isArray(appointments) ? appointments : [])
+      .filter(a => {
+        const isPast = (a.status === "completed" || a.status === "cancelled" || a.status === "declined" || new Date(a.requested_date || a.appointment_date) < now);
+        return isPast;
+      })
+      .map(a => ({
+        id: a.id,
+        doctorName: a.doctor_name || "Doctor",
+        chiefComplaint: a.reason || "Appointment",
+        date: a.requested_date || a.appointment_date,
+        status: a.status,
+        type: 'Appointment'
+      }));
+
+    // Deduplicate if same ID exists (unlikely in different modules but possible in merged views)
+    const combinedMap = new Map();
+    [...listCons, ...listAppts].forEach(item => {
+      if (!combinedMap.has(item.id)) {
+        combinedMap.set(item.id, item);
       }
-    };
-    loadActivities();
-  }, [consultations]);
+    });
+
+    const combined = Array.from(combinedMap.values())
+      .sort((a, b) => new Date(b.date) - new Date(a.date))
+      .slice(0, 5); // Show top 5 recent activities
+
+    setActivities(combined);
+    setLoading(false);
+  }, [consultations, appointments]);
 
   if (loading) return <div className={styles.card}><p>Loading activity...</p></div>;
 
@@ -61,15 +86,18 @@ export default function RecentActivity({ consultations }) {
                 <td>
                   <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                     <div className={styles.avatarSmall}></div>
-                    <span>{item.doctorName || item.doctor_name || item.doctor?.full_name || "Doctor"}</span>
+                    <span>
+                      {(() => {
+                        let name = item.doctorName || item.doctor_name || "Doctor";
+                        if (name === "Doctor") return "Doctor";
+                        return name.startsWith('Dr. ') ? name : `Dr. ${name}`;
+                      })()}
+                    </span>
                   </div>
                 </td>
                 <td>{item.chiefComplaint || item.chief_complaint || item.reason || "Consultation"}</td>
                 <td style={{ color: "#64748b" }}>
-                  {(() => {
-                    const d = item.scheduledAt || item.scheduled_at || item.appointment_time || item.requested_date;
-                    return d ? new Date(d).toLocaleDateString() : "—";
-                  })()}
+                  {item.date ? new Date(item.date).toLocaleDateString() : "—"}
                 </td>
                 <td>
                   <span className={(item.visitState === 'scheduled' || item.status === 'accepted' || item.status === 'scheduled') ? styles.statusCompleted : styles.statusReview}>
@@ -91,9 +119,15 @@ export default function RecentActivity({ consultations }) {
             <div className={styles.doctorInfo}>
               <div className={styles.avatarCircle}></div>
               <div>
-                <span className={styles.docName}>{item.doctorName || item.doctor_name || item.doctor?.full_name || "Doctor"}</span>
+                <span className={styles.docName}>
+                  {(() => {
+                    let name = item.doctorName || item.doctor_name || "Doctor";
+                    if (name === "Doctor") return "Doctor";
+                    return name.startsWith('Dr. ') ? name : `Dr. ${name}`;
+                  })()}
+                </span>
                 <span className={styles.visitMeta}>
-                  {(() => { const d = item.scheduledAt || item.scheduled_at || item.requested_date; return d ? new Date(d).toLocaleDateString() : "—"; })()} • {item.chiefComplaint || item.chief_complaint || item.reason || "Consultation"}
+                  {item.date ? new Date(item.date).toLocaleDateString() : "—"} • {item.chiefComplaint}
                 </span>
               </div>
             </div>

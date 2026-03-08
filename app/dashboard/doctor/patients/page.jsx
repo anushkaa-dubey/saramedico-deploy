@@ -189,7 +189,7 @@ function PatientsContent() {
 
     const handleDeleteConsultation = async (visitId) => {
         if (!confirm("Are you sure you want to delete this consultation record? This cannot be undone.")) return;
-        
+
         setDeletingVisitId(visitId);
         try {
             const { deleteConsultation } = await import("@/services/consultation");
@@ -319,7 +319,6 @@ function PatientsContent() {
                         <div className={styles.listHeader}>
                             <div className={styles.colName}>NAME</div>
                             <div className={styles.colDob}>DOB / AGE</div>
-                            <div className={styles.colEmail}>EMAIL</div>
                             <div className={styles.colMrn}>MRN</div>
                             <div className={styles.colVisit}>LAST VISIT</div>
                             <div className={styles.colProblem}>STATUS</div>
@@ -354,7 +353,6 @@ function PatientsContent() {
                                             {patient.dob}
                                             {calcAge(patient.dob) !== null && <span style={{ opacity: 0.6, fontSize: "11px", marginLeft: "4px" }}>({calcAge(patient.dob)}y)</span>}
                                         </div>
-                                        <div className={styles.itemText} style={{ fontSize: "12px", color: "#64748b" }}>{patient.email}</div>
                                         <div className={styles.itemText}>{patient.mrn}</div>
                                         <div className={styles.itemText}>{patient.lastVisit}</div>
                                         <div className={styles.statusCol} style={{ display: "flex", alignItems: "center", gap: "6px" }}>
@@ -594,7 +592,7 @@ function PatientsContent() {
                                                                 }}
                                                                 onMouseEnter={(e) => {
                                                                     if (deletingVisitId !== visit.id) {
-                                                                        e.currentTarget.style.background = '#fef2f2';    
+                                                                        e.currentTarget.style.background = '#fef2f2';
                                                                     }
                                                                 }}
                                                                 onMouseLeave={(e) => e.currentTarget.style.background = '#fff'}

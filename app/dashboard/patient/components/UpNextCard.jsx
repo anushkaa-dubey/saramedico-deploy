@@ -3,24 +3,56 @@
 import styles from "../PatientDashboard.module.css";
 import { useRouter } from "next/navigation";
 
-export default function UpNextCard({ consultations = [] }) {
+export default function UpNextCard({ consultations = [], appointments = [] }) {
   const router = useRouter();
 
-  // API response shape (camelCase per spec):
-  // { id, scheduledAt, status, doctorId, doctorName, meetLink, chiefComplaint, visitState, notes, ... }
   const now = new Date();
 
-  const upcoming = consultations
+  // visitState is the UI state — "scheduled" means upcoming
+  // Also check status field as fallback
+  const upcomingCons = (Array.isArray(consultations) ? consultations : [])
     .filter(c => {
-      // visitState is the UI state — "scheduled" means upcoming
-      // Also check status field as fallback
-      const at = c.scheduledAt;
       const isUpcoming = (c.visitState === "scheduled" || c.status === "scheduled" || c.status === "accepted");
-      return isUpcoming && at && new Date(at) >= now;
+      return isUpcoming && c.scheduledAt && new Date(c.scheduledAt) >= now;
     })
+    .map(c => ({
+      id: c.id,
+      scheduledAt: c.scheduledAt,
+      doctorName: c.doctorName,
+      chiefComplaint: c.chiefComplaint,
+      meetLink: c.meetLink,
+      notes: c.notes,
+      type: "Consultation"
+    }));
+
+  const upcomingAppts = (Array.isArray(appointments) ? appointments : [])
+    .filter(a => {
+      const isUpcoming = (a.status === "scheduled" || a.status === "accepted" || a.status === "pending");
+      return isUpcoming && a.requested_date && new Date(a.requested_date) >= now;
+    })
+    .map(a => ({
+      id: a.id,
+      scheduledAt: a.requested_date,
+      doctorName: a.doctor_name,
+      chiefComplaint: a.reason,
+      meetLink: a.meet_link,
+      notes: null,
+      type: "Appointment"
+    }));
+
+  // Deduplicate: If an appointment and consultation exist for the same doctor at the same time, pick only one
+  const sessionMap = new Map();
+  [...upcomingCons, ...upcomingAppts].forEach(item => {
+    const key = `${item.scheduledAt}_${item.doctorName}`;
+    if (!sessionMap.has(key)) {
+      sessionMap.set(key, item);
+    }
+  });
+
+  const combined = Array.from(sessionMap.values())
     .sort((a, b) => new Date(a.scheduledAt) - new Date(b.scheduledAt));
 
-  if (upcoming.length === 0) {
+  if (combined.length === 0) {
     return (
       <div className={styles.upNextCard}>
         <p style={{ color: "#94a3b8", fontSize: "14px" }}>No upcoming appointments</p>
@@ -28,19 +60,24 @@ export default function UpNextCard({ consultations = [] }) {
     );
   }
 
-  const c = upcoming[0];
+  const c = combined[0];
   const date = new Date(c.scheduledAt);
   const isValid = !isNaN(date.getTime());
+
+  const doctorRaw = c.doctorName || "Doctor";
+  const doctorDisplayName = (!doctorRaw || doctorRaw === "Doctor")
+    ? "Doctor"
+    : (doctorRaw.startsWith('Dr. ') ? doctorRaw : `Dr. ${doctorRaw}`);
 
   const nextAppointment = {
     id: c.id,
     title: c.chiefComplaint || "Medical Consultation",
     date: isValid ? date.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" }) : "—",
     time: isValid ? date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—",
-    type: "Video Consultation",
-    doctor: c.doctorName || "Your Doctor",
+    type: c.type === "Consultation" ? "Video Consultation" : "Appointment",
+    doctor: doctorDisplayName,
     reason: c.chiefComplaint || c.notes || "Consultation",
-    join_url: c.meetLink || null,
+    join_url: c.meetLink || c.meet_link || null,
   };
 
   return (
@@ -61,12 +98,14 @@ export default function UpNextCard({ consultations = [] }) {
           <span>with {nextAppointment.doctor}</span>
         </div>
 
-        <div className={styles.upNextInfo}>
-          <div>
-            <div className={styles.infoLabel}>REASON FOR VISIT</div>
-            <div className={styles.infoValue}>{nextAppointment.reason}</div>
+        {nextAppointment.reason && nextAppointment.reason !== nextAppointment.title && (
+          <div className={styles.upNextInfo}>
+            <div>
+              <div className={styles.infoLabel}>REASON FOR VISIT</div>
+              <div className={styles.infoValue}>{nextAppointment.reason}</div>
+            </div>
           </div>
-        </div>
+        )}
 
         <div className={styles.upNextActions}>
           <button

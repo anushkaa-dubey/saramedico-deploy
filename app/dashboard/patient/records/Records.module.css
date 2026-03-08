@@ -260,15 +260,24 @@
 }
 
 .tab {
-  padding: 10px 4px;
-  font-size: 13px;
+  padding: 10px 16px;
+  font-size: 14px;
   color: #64748b;
   cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s ease;
+  font-weight: 500;
 }
 
 .tab.active {
   color: #2563eb;
-  font-weight: 600;
+  font-weight: 700;
+  border-bottom-color: #2563eb;
+}
+
+.tab:hover:not(.active) {
+  color: #0f172a;
+  background: #f8fafc;
 }
 
 
@@ -553,4 +562,213 @@
   .formGrid {
     grid-template-columns: 1fr;
   }
+}
+
+/* Modal & Visit Summary Styles */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 20px;
+}
+
+.modalContent {
+  background: #ffffff;
+  width: 100%;
+  max-width: 700px;
+  max-height: 90vh;
+  border-radius: 24px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  overflow: hidden;
+}
+
+.modalHeader {
+  padding: 20px 24px;
+  border-bottom: 1px solid #f1f5f9;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modalHeader h2 {
+  font-size: 20px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.closeBtn {
+  background: #f1f5f9;
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  font-size: 20px;
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.closeBtn:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.modalScroll {
+  padding: 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.visitHeader {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 32px;
+  background: #f8fafc;
+  padding: 20px;
+  border-radius: 20px;
+}
+
+.visitAvatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 20px;
+  overflow: hidden;
+  background: #e2e8f0;
+}
+
+.visitAvatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.visitInfo {
+  flex: 1;
+}
+
+.visitDoctor {
+  font-size: 18px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.visitDate {
+  font-size: 14px;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.visitBadge {
+  padding: 6px 12px;
+  background: #ecfdf5;
+  color: #10b981;
+  font-size: 11px;
+  font-weight: 800;
+  border-radius: 99px;
+  letter-spacing: 0.5px;
+}
+
+.visitSection {
+  margin-bottom: 32px;
+}
+
+.visitSection h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 16px;
+}
+
+.visitCard {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 20px;
+}
+
+.visitSubRow {
+  margin-bottom: 16px;
+}
+
+.visitSubRow:last-child {
+  margin-bottom: 0;
+}
+
+.visitSubRow label {
+  font-size: 10px;
+  font-weight: 800;
+  color: #3b82f6;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.visitSubRow p {
+  font-size: 15px;
+  color: #334155;
+  line-height: 1.5;
+}
+
+.soapCard {
+  background: #f0f7ff;
+  border-radius: 20px;
+  padding: 24px;
+  border: 1px solid #dbeafe;
+}
+
+.soapPart {
+  margin-bottom: 20px;
+}
+
+.soapPart:last-child {
+  margin-bottom: 0;
+}
+
+.soapPart label {
+  font-size: 11px;
+  font-weight: 900;
+  color: #1d4ed8;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.soapPart p {
+  font-size: 14px;
+  color: #1e3a8a;
+  line-height: 1.6;
+}
+
+.emptySoap {
+  padding: 32px;
+  background: #f8fafc;
+  border-radius: 20px;
+  text-align: center;
+  color: #94a3b8;
+  font-size: 14px;
+  border: 2px dashed #e2e8f0;
+}
+
+.modalLoading,
+.modalError {
+  padding: 60px;
+  text-align: center;
+  color: #64748b;
+  font-size: 16px;
 }

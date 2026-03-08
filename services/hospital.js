@@ -218,8 +218,43 @@ export const fetchHospitalStats = async () => {
 //     return fetchOrgMembers();
 // };
 
-export const fetchHospitalAppointments = async () => {
-    return [];
+export const fetchHospitalAppointments = async (filters = {}) => {
+    try {
+        const now = new Date();
+        const startStr = new Date(now.getFullYear(), 0, 1).toISOString(); // Full year range
+        const endStr = new Date(now.getFullYear(), 11, 31).toISOString();
+
+        const params = {
+            start_date: startStr,
+            end_date: endStr,
+            event_type: "appointment"
+        };
+
+        if (filters.doctor_id) params.doctor_id = filters.doctor_id;
+        if (filters.visit_type) params.visit_type = filters.visit_type;
+
+        const query = new URLSearchParams(params).toString();
+
+        const response = await fetch(`${API_BASE_URL}/calendar/organization/events?${query}`, {
+            method: "GET",
+            headers: getAuthHeaders(),
+        });
+
+        const events = await handleResponse(response);
+
+        // Return normalized data structure
+        return events.map(ev => ({
+            id: ev.appointment_id || ev.id,
+            ...ev,
+            scheduled_at: ev.start_time,
+            patient_name: ev.metadata?.patient_name || ev.user_name || "Patient",
+            doctor_name: ev.metadata?.doctor_name || "Practitioner",
+            visit_type: ev.metadata?.visit_type || (ev.title?.toLowerCase().includes("video") ? "video" : "in-person")
+        }));
+    } catch (error) {
+        console.error("fetchHospitalAppointments error:", error);
+        return [];
+    }
 };
 
 export const fetchReviewQueue = async () => {
@@ -227,7 +262,7 @@ export const fetchReviewQueue = async () => {
 };
 
 /**
- * Fetch departments for the organization.
+ * 13. Fetch Organization Departments
  * Endpoint: GET /api/v1/organization/departments
  */
 export const fetchOrganizationDepartments = async () => {
@@ -236,13 +271,74 @@ export const fetchOrganizationDepartments = async () => {
             headers: getAuthHeaders(),
         });
         const data = await handleResponse(response);
-        // Accepts { departments: [...] } or a plain array
         return Array.isArray(data) ? data : (data?.departments || []);
     } catch (err) {
         console.error("fetchOrganizationDepartments error:", err);
         return [];
     }
 };
+
+/**
+ * 14. Fetch Organization Settings
+ * Endpoint: GET /api/v1/admin/settings
+ */
+export const fetchHospitalSettingsData = async () => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/admin/settings`, {
+            headers: getAuthHeaders(),
+        });
+        return await handleResponse(response);
+    } catch (err) {
+        console.error("fetchHospitalSettingsData error:", err);
+        return {};
+    }
+};
+
+/**
+ * 15. Update Organization Settings
+ * Endpoint: PATCH /api/v1/admin/settings/organization
+ */
+export const updateHospitalOrgSettings = async (payload) => {
+    const response = await fetch(`${API_BASE_URL}/admin/settings/organization`, {
+        method: "PATCH",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(payload),
+    });
+    return await handleResponse(response);
+};
+
+/**
+ * 16. Update Admin Settings Profile
+ * Endpoint: PATCH /api/v1/admin/settings/profile
+ */
+export const updateHospitalAdminProfile = async (payload) => {
+    const response = await fetch(`${API_BASE_URL}/admin/settings/profile`, {
+        method: "PATCH",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(payload),
+    });
+    return await handleResponse(response);
+};
+
+/**
+ * 17. Upload Organization Avatar
+ * Endpoint: POST /api/v1/admin/settings/avatar
+ */
+export const uploadHospitalAvatar = async (file) => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const headers = getAuthHeaders();
+    delete headers["Content-Type"]; // Let fetch set boundary
+
+    const response = await fetch(`${API_BASE_URL}/admin/settings/avatar`, {
+        method: "POST",
+        headers,
+        body: formData,
+    });
+    return await handleResponse(response);
+};
+
 
 
 
@@ -253,10 +349,11 @@ export const fetchOrganizationDepartments = async () => {
 export const fetchDoctorsByDepartment = async (departmentName) => {
     try {
         const response = await fetch(
-            `${API_BASE_URL}/doctors/by-department?department=${encodeURIComponent(departmentName)}`,
+            `${API_BASE_URL}/doctor/by-department?department=${encodeURIComponent(departmentName)}`,
             { headers: getAuthHeaders() }
         );
         const data = await handleResponse(response);
+
         return Array.isArray(data) ? data : (data?.results || data?.doctors || []);
     } catch (err) {
         console.error("fetchDoctorsByDepartment error:", err);
@@ -372,19 +469,27 @@ export const fetchOrganizationMembers = async () => {
     }
 };
 export async function fetchPatientRecords(patientId) {
-    const token = localStorage.getItem("authToken");
-
     const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/hospital/patients/${patientId}/records`,
+        `${API_BASE_URL}/hospital/patients/${patientId}/records`,
         {
-            headers: {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "application/json",
-            },
+            headers: getAuthHeaders(),
         }
     );
 
     if (!res.ok) throw new Error("Failed to fetch patient records");
 
+    return res.json();
+}
+
+/**
+ * Fetch specific patient details
+ * Endpoint: GET /api/v1/patients/{patient_id}
+ */
+export async function fetchPatientDetails(patientId) {
+    const res = await fetch(`${API_BASE_URL}/patients/${patientId}`, {
+        headers: getAuthHeaders(),
+    });
+
+    if (!res.ok) throw new Error("Failed to fetch patient details");
     return res.json();
 }
