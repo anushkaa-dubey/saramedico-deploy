@@ -2,7 +2,7 @@
 import { Suspense } from "react";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
-import { fetchConsultationById, markConsultationComplete, fetchSoapNote } from "@/services/consultation";
+import { fetchConsultationById, markConsultationComplete, fetchSoapNote, generateDemoSoap } from "@/services/consultation";
 import Topbar from "../../components/Topbar";
 import styles from "./SoapNotes.module.css";
 import { motion } from "framer-motion";
@@ -20,8 +20,9 @@ function SoapNotesPage() {
 
     // SOAP state
     const [soap, setSoap] = useState(null);
-    const [soapStatus, setSoapStatus] = useState("idle"); // idle | processing | completed | timeout | error
+    const [soapStatus, setSoapStatus] = useState("idle"); // idle | processing | completed | timeout | error | no_transcript
     const [marking, setMarking] = useState(false);
+    const [generatingDemo, setGeneratingDemo] = useState(false); // Demo SOAP generation
     const [displayAttempt, setDisplayAttempt] = useState(0); // Separate state for UI re-render on each poll
 
     const pollTimerRef = useRef(null);
@@ -130,6 +131,28 @@ function SoapNotesPage() {
     // ── Retry polling manually ──────────────────────────────────────────────
     const handleRetryPoll = () => {
         if (consultationId) startPolling(consultationId);
+    };
+
+    // ── Generate Demo SOAP Note (using mock transcript) ─────────────────────
+    const handleGenerateDemo = async (scenario = null) => {
+        if (!consultationId || generatingDemo) return;
+        setGeneratingDemo(true);
+        setSoapStatus("processing");
+        try {
+            const result = await generateDemoSoap(consultationId, scenario);
+            if (result?.soap_note) {
+                setSoap(result.soap_note);
+                setSoapStatus("completed");
+            } else {
+                // Fallback: poll for it
+                startPolling(consultationId);
+            }
+        } catch (err) {
+            console.error("Demo SOAP generation failed:", err);
+            setSoapStatus("error");
+        } finally {
+            setGeneratingDemo(false);
+        }
     };
 
     // ── Render states ───────────────────────────────────────────────────────
@@ -372,7 +395,7 @@ function SoapNotesPage() {
                                     color: "#713f12",
                                     textAlign: "left",
                                     maxWidth: "400px",
-                                    margin: "0 auto",
+                                    margin: "0 auto 20px",
                                     lineHeight: "1.6"
                                 }}>
                                     <strong>To generate a SOAP note:</strong>
@@ -381,6 +404,33 @@ function SoapNotesPage() {
                                         <li>Ensure Google Meet transcription is enabled for your account</li>
                                         <li>Mark the consultation complete only after the meeting ends</li>
                                     </ul>
+                                </div>
+                                {/* Demo SOAP generation button */}
+                                <div style={{ borderTop: "1px solid #fde047", paddingTop: "16px", maxWidth: "400px", margin: "0 auto" }}>
+                                    <p style={{ fontSize: "11px", color: "#92400e", marginBottom: "10px", fontWeight: "600" }}>
+                                        🧪 FOR DEMO / TESTING
+                                    </p>
+                                    <button
+                                        onClick={() => handleGenerateDemo("chest_pain")}
+                                        disabled={generatingDemo}
+                                        style={{
+                                            padding: "10px 24px",
+                                            background: generatingDemo ? "#94a3b8" : "linear-gradient(135deg, #6366f1, #8b5cf6)",
+                                            color: "white",
+                                            border: "none",
+                                            borderRadius: "10px",
+                                            fontSize: "13px",
+                                            fontWeight: "700",
+                                            cursor: generatingDemo ? "not-allowed" : "pointer",
+                                            transition: "all 0.2s",
+                                            width: "100%"
+                                        }}
+                                    >
+                                        {generatingDemo ? "⟳ Generating AI SOAP Note..." : "✨ Generate Demo SOAP Note"}
+                                    </button>
+                                    <p style={{ fontSize: "10px", color: "#a16207", marginTop: "6px" }}>
+                                        Uses a realistic clinical case transcript with AWS Bedrock AI
+                                    </p>
                                 </div>
                             </div>
                         ) : soapStatus === "timeout" ? (
@@ -428,10 +478,38 @@ function SoapNotesPage() {
                                         fontWeight: "700",
                                         cursor: marking ? "not-allowed" : "pointer",
                                         transition: "background 0.2s",
+                                        width: "100%",
+                                        marginBottom: "12px"
                                     }}
                                 >
                                     {marking ? "Processing..." : "✓ Mark Consultation as Complete"}
                                 </button>
+                                <div style={{ borderTop: "1px solid #e2e8f0", paddingTop: "16px" }}>
+                                    <p style={{ fontSize: "11px", color: "#94a3b8", marginBottom: "10px", fontWeight: "600" }}>
+                                        🧪 FOR DEMO / TESTING (no Google Meet transcript needed)
+                                    </p>
+                                    <button
+                                        onClick={() => handleGenerateDemo("chest_pain")}
+                                        disabled={generatingDemo || marking}
+                                        style={{
+                                            padding: "10px 24px",
+                                            background: (generatingDemo || marking) ? "#94a3b8" : "linear-gradient(135deg, #6366f1, #8b5cf6)",
+                                            color: "white",
+                                            border: "none",
+                                            borderRadius: "10px",
+                                            fontSize: "13px",
+                                            fontWeight: "700",
+                                            cursor: (generatingDemo || marking) ? "not-allowed" : "pointer",
+                                            transition: "all 0.2s",
+                                            width: "100%"
+                                        }}
+                                    >
+                                        {generatingDemo ? "⟳ Generating AI SOAP Note..." : "✨ Generate Demo SOAP Note"}
+                                    </button>
+                                    <p style={{ fontSize: "10px", color: "#94a3b8", marginTop: "6px" }}>
+                                        Uses a realistic clinical case transcript with AWS Bedrock AI
+                                    </p>
+                                </div>
                             </div>
                         )}
                     </div>

@@ -108,3 +108,17 @@ export const deleteConsultation = async (consultationId) => {
     if (response.status === 204) return true;
     return handleResponse(response);
 };
+
+/**
+ * Generate a SOAP note using a mock clinical transcript (for demo/testing).
+ * Calls POST /api/v1/consultations/{id}/generate-demo-soap
+ * Returns the SOAP note directly in the response (no polling needed).
+ */
+export const generateDemoSoap = async (consultationId, scenario = null) => {
+    const params = scenario ? `?scenario=${encodeURIComponent(scenario)}` : "";
+    const response = await fetch(`${API_BASE_URL}/consultations/${consultationId}/generate-demo-soap${params}`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+    });
+    return handleResponse(response);
+};
