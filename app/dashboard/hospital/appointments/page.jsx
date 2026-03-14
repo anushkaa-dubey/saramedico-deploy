@@ -147,7 +147,7 @@ export default function AppointmentsPage() {
             <div className={styles.contentWrapper} style={{ padding: "32px", maxWidth: "1400px", margin: "0 auto", width: "100%" }}>
 
                 {/* ── Page Header & Stats ── */}
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "32px" }}>
+                <div className={styles.apptPageHeader} style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "32px" }}>
                     <div>
                         <h1 style={{ fontSize: "32px", fontWeight: "900", color: "#0f172a", margin: 0, letterSpacing: "-0.03em" }}>
                             {view === 'list' ? "Master Appointment Schedule" : "Staff Coverage Planner"}
@@ -157,7 +157,7 @@ export default function AppointmentsPage() {
                         </p>
                     </div>
 
-                    <div style={{ display: "flex", gap: "12px", background: "#fff", padding: "6px", borderRadius: "16px", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)", border: "1px solid #f1f5f9" }}>
+                    <div className={styles.apptViewToggle} style={{ display: "flex", gap: "12px", background: "#fff", padding: "6px", borderRadius: "16px", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)", border: "1px solid #f1f5f9" }}>
                         <button
                             onClick={() => setView('list')}
                             style={{
@@ -188,7 +188,7 @@ export default function AppointmentsPage() {
                 </div>
 
                 {/* ── Summary Stats Grid ── */}
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "20px", marginBottom: "32px" }}>
+                <div className={styles.apptStatsGrid} style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "20px", marginBottom: "32px" }}>
                     {[
                         { label: "Booked Today", value: stats.totalToday, icon: <CheckCircle2 size={20} />, color: "#3b82f6", bg: "#eff6ff" },
                         { label: "Transcription Queue", value: stats.transcriptionQueueStatus || 0, icon: <Clock size={20} />, color: "#f59e0b", bg: "#fffbeb" },
@@ -210,18 +210,18 @@ export default function AppointmentsPage() {
                 </div>
 
                 {/* ── Main View Area ── */}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: "24px" }}>
+                <div className={styles.apptMainGrid} style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: "24px" }}>
                     {/* Left Column: List or Calendar */}
                     <div style={{ background: "white", borderRadius: "32px", border: "1px solid #f1f5f9", boxShadow: "0 20px 25px -5px rgba(0,0,0,0.05)", overflow: "hidden" }}>
 
                         {view === 'list' ? (
                             <div style={{ display: "flex", flexDirection: "column" }}>
                                 {/* List Header/Filters */}
-                                <div style={{ padding: "32px", borderBottom: "1px solid #f1f5f9", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                <div className={styles.apptListHeader} style={{ padding: "32px", borderBottom: "1px solid #f1f5f9", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                                     <h2 style={{ fontSize: "20px", fontWeight: "900", color: "#1e293b", margin: 0 }}>
                                         {selectedDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
                                     </h2>
-                                    <div style={{ display: "flex", gap: "12px" }}>
+                                    <div className={styles.apptListFilters} style={{ display: "flex", gap: "12px" }}>
                                         <select
                                             value={doctorFilter}
                                             onChange={(e) => setDoctorFilter(e.target.value)}

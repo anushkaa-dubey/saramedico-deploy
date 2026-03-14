@@ -55,20 +55,22 @@ export default function SettingsPage() {
     setLoading(true);
     try {
       const data = await fetchHospitalSettingsData();
-      const org = data.organization || data || {};
-      const admin = data.admin || {};
+      // Backend /hospital/settings returns: { profile: {...}, organization: {...} }
+      const profile = data.profile || {};
+      const org = data.organization || {};
 
+      setUserRole("hospital"); // We are always hospital role on this page
       setHospitalInfo({
-        name: org.name || admin.name || "",
+        name: org.name || profile.name || "",
         org_email: org.org_email || "",
-        email: admin.email || "",
+        email: profile.email || "",
         timezone: org.timezone || "UTC",
         date_format: org.date_format || "MM/DD/YYYY",
-        avatar_url: org.logo_url || admin.avatar_url || null,
+        avatar_url: profile.avatar_url || org.logo_url || null,
       });
     } catch (err) {
       console.error("Failed to load settings:", err);
-      // Fallback: try auth/me if admin settings fails
+      // Fallback: try auth/me if settings fails
       try {
         const profile = await fetchProfile();
         setUserRole(profile?.role);
@@ -83,7 +85,7 @@ export default function SettingsPage() {
     }
   };
 
-  const isAdmin = userRole === "admin";
+  const canEdit = userRole === "admin" || userRole === "hospital";
 
   const showMsg = (type, text) => {
     setMessage({ type, text });
@@ -192,7 +194,7 @@ export default function SettingsPage() {
               Configure organization profile and administrative preferences.
             </p>
           </div>
-          {isAdmin && (
+          {canEdit && (
             <button
               type="button"
               onClick={handleSave}
@@ -258,7 +260,7 @@ export default function SettingsPage() {
             }}>
               <div
                 onClick={() => {
-                  if (isAdmin) fileInputRef.current?.click();
+                  if (canEdit) fileInputRef.current?.click();
                 }}
                 style={{
                   width: "100px", height: "100px", borderRadius: "30px",
@@ -266,7 +268,7 @@ export default function SettingsPage() {
                   margin: "0 auto 16px",
                   display: "flex", alignItems: "center", justifyContent: "center",
                   fontSize: "40px",
-                  cursor: isAdmin ? "pointer" : "default",
+                  cursor: canEdit ? "pointer" : "default",
                   position: "relative",
                   overflow: "hidden"
                 }}
@@ -275,7 +277,7 @@ export default function SettingsPage() {
                   <img src={hospitalInfo.avatar_url} alt="logo"
                     style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 ) : <Building2 size={40} color="white" />}
-                {isAdmin && (
+                {canEdit && (
                   <>
                     <div
                       style={{
@@ -382,8 +384,8 @@ export default function SettingsPage() {
                         value={hospitalInfo.name}
                         onChange={e => setHospitalInfo(p => ({ ...p, name: e.target.value }))}
                         placeholder="e.g. General Hospital"
-                        style={{ ...inputStyle, ...(isAdmin ? {} : { color: "#94a3b8", cursor: "not-allowed", background: "#f1f5f9" }) }}
-                        readOnly={!isAdmin}
+                        style={{ ...inputStyle, ...(canEdit ? {} : { color: "#94a3b8", cursor: "not-allowed", background: "#f1f5f9" }) }}
+                        readOnly={!canEdit}
                       />
                     </div>
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: "24px" }}>
@@ -393,8 +395,8 @@ export default function SettingsPage() {
                           value={hospitalInfo.org_email}
                           onChange={e => setHospitalInfo(p => ({ ...p, org_email: e.target.value }))}
                           placeholder="admin@hospital.com"
-                          style={{ ...inputStyle, ...(isAdmin ? {} : { color: "#94a3b8", cursor: "not-allowed", background: "#f1f5f9" }) }}
-                          readOnly={!isAdmin}
+                          style={{ ...inputStyle, ...(canEdit ? {} : { color: "#94a3b8", cursor: "not-allowed", background: "#f1f5f9" }) }}
+                          readOnly={!canEdit}
                         />
                       </div>
                       <div>
@@ -412,8 +414,8 @@ export default function SettingsPage() {
                         <select
                           value={hospitalInfo.timezone}
                           onChange={e => setHospitalInfo(p => ({ ...p, timezone: e.target.value }))}
-                          style={{ ...inputStyle, appearance: "auto", ...(isAdmin ? {} : { color: "#94a3b8", cursor: "not-allowed", background: "#f1f5f9" }) }}
-                          disabled={!isAdmin}
+                          style={{ ...inputStyle, appearance: "auto", ...(canEdit ? {} : { color: "#94a3b8", cursor: "not-allowed", background: "#f1f5f9" }) }}
+                          disabled={!canEdit}
                         >
                           <option value="UTC">Universal Coordinated Time (UTC)</option>
                           <option value="Asia/Kolkata">IST (UTC+5:30)</option>
@@ -425,8 +427,8 @@ export default function SettingsPage() {
                         <select
                           value={hospitalInfo.date_format}
                           onChange={e => setHospitalInfo(p => ({ ...p, date_format: e.target.value }))}
-                          style={{ ...inputStyle, appearance: "auto", ...(isAdmin ? {} : { color: "#94a3b8", cursor: "not-allowed", background: "#f1f5f9" }) }}
-                          disabled={!isAdmin}
+                          style={{ ...inputStyle, appearance: "auto", ...(canEdit ? {} : { color: "#94a3b8", cursor: "not-allowed", background: "#f1f5f9" }) }}
+                          disabled={!canEdit}
                         >
                           <option value="MM/DD/YYYY">MM/DD/YYYY</option>
                           <option value="DD/MM/YYYY">DD/MM/YYYY</option>

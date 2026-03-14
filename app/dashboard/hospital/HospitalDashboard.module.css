@@ -2280,11 +2280,6 @@
 
 }
 
-.staffHeaderBtns {
-    display: flex;
-    gap: 12px;
-}
-
 @media (max-width:768px) {
 
     .staffHeaderBtns {
@@ -2299,3 +2294,203 @@
     }
 
 }
+
+/* ══════════════════════════════════════════════════════
+   STAFF MANAGEMENT — Mobile UX
+   ══════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+
+    /* Page header: stack title + buttons */
+    .pageHeaderRow {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 12px !important;
+        margin-bottom: 20px !important;
+    }
+
+    .pageHeaderRow h1 {
+        font-size: 20px !important;
+    }
+
+    /* Stats grid: 2 cols on mobile */
+    .overviewSection {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 12px !important;
+        margin-bottom: 20px !important;
+    }
+
+    .overviewSection > div {
+        padding: 16px !important;
+    }
+
+    /* Filter tabs: scroll horizontally */
+    .staffFilterTabs {
+        display: flex;
+        gap: 8px;
+        overflow-x: auto;
+        padding-bottom: 4px;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Table wrapper: horizontal scroll */
+    .tableScrollWrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        border-radius: 16px;
+    }
+
+    /* Shrink table font on mobile */
+    .activityTable {
+        min-width: 540px;
+        font-size: 12px !important;
+    }
+
+    /* Hide secondary columns on small screens */
+    .activityTable th:nth-child(3),
+    .activityTable td:nth-child(3),
+    .activityTable th:nth-child(4),
+    .activityTable td:nth-child(4) {
+        display: none;
+    }
+
+    /* Tighter row padding */
+    .activityTable td,
+    .activityTable th {
+        padding: 10px 12px !important;
+    }
+
+    /* Buttons: smaller on mobile */
+    .outlineBtn,
+    .primaryBtn {
+        font-size: 12px !important;
+        padding: 0 10px !important;
+        height: 32px !important;
+    }
+}
+
+/* ══════════════════════════════════════════════════════
+   APPOINTMENTS — Mobile UX
+   ══════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+
+    /* Appointments inner padding */
+    .contentWrapper {
+        padding: 16px !important;
+    }
+
+    /* Page header: stack title + view toggle */
+    .apptPageHeader {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 12px !important;
+        margin-bottom: 20px !important;
+    }
+
+    .apptPageHeader h1 {
+        font-size: 22px !important;
+        letter-spacing: -0.02em !important;
+    }
+
+    /* View toggle pill: full width, stacked */
+    .apptViewToggle {
+        width: 100% !important;
+        flex-direction: row !important;
+    }
+
+    .apptViewToggle button {
+        flex: 1 !important;
+        justify-content: center !important;
+        font-size: 13px !important;
+        padding: 8px 12px !important;
+    }
+
+    /* Stats grid: 2×2 on mobile */
+    .apptStatsGrid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 10px !important;
+        margin-bottom: 20px !important;
+    }
+
+    .apptStatsGrid > div {
+        padding: 16px !important;
+        border-radius: 16px !important;
+    }
+
+    .apptStatsGrid > div > div:last-child > div:last-child {
+        font-size: 22px !important;
+    }
+
+    /* Main grid: single column (list on top, agenda below) */
+    .apptMainGrid {
+        grid-template-columns: 1fr !important;
+        gap: 16px !important;
+    }
+
+    /* Appointment list header: stack date + filters */
+    .apptListHeader {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 10px !important;
+        padding: 16px !important;
+    }
+
+    .apptListHeader h2 {
+        font-size: 16px !important;
+    }
+
+    .apptListFilters {
+        display: flex !important;
+        gap: 8px !important;
+        width: 100% !important;
+    }
+
+    .apptListFilters select {
+        flex: 1 !important;
+        font-size: 12px !important;
+        padding: 8px 10px !important;
+    }
+
+    /* Appointment rows: switch from grid to flex stack */
+    .apptRow {
+        grid-template-columns: 1fr !important;
+        gap: 6px !important;
+        padding: 16px !important;
+    }
+
+    /* Mini agenda card layout */
+    .apptAgendaCard {
+        border-radius: 20px !important;
+        padding: 16px !important;
+    }
+
+    /* Calendar grid: reduce cell height */
+    .apptCalCell {
+        min-height: 64px !important;
+        padding: 8px !important;
+        font-size: 12px !important;
+    }
+}
+
+@media (max-width: 480px) {
+
+    /* Stack stat tiles single column on very small screens */
+    .apptStatsGrid {
+        grid-template-columns: 1fr 1fr !important;
+    }
+
+    .overviewSection {
+        grid-template-columns: 1fr 1fr !important;
+    }
+
+    /* Narrower content padding */
+    .contentWrapper {
+        padding: 12px !important;
+    }
+
+    /* Shrink headings further */
+    .apptPageHeader h1 {
+        font-size: 18px !important;
+    }
+}

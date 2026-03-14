@@ -50,6 +50,14 @@ export default function HospitalDashboard() {
     const [stats, setStats] = useState({ doctors: 0, patients: 0, staff: 0, appointments: 0, departments: 0 });
     const [recentActivity, setRecentActivity] = useState([]);
     const [dailyAgenda, setDailyAgenda] = useState([]);
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+        const checkMobile = () => setIsMobile(window.innerWidth <= 768);
+        checkMobile();
+        window.addEventListener("resize", checkMobile);
+        return () => window.removeEventListener("resize", checkMobile);
+    }, []);
 
     useEffect(() => {
         const loadData = async () => {
@@ -90,13 +98,12 @@ export default function HospitalDashboard() {
 
                 setDailyAgenda(Array.isArray(agendaData) ? agendaData.slice(0, 6) : []);
 
+                // Only show activity if there are real meaningful entries (not just audit logs)
                 const activity = dashboardOverview?.recentActivities || [];
                 if (Array.isArray(activity) && activity.length > 0) {
                     setRecentActivity(activity.slice(0, 5));
-                } else {
-                    const logs = await fetchAuditActivity();
-                    setRecentActivity(Array.isArray(logs) ? logs.slice(0, 5) : []);
                 }
+                // Do NOT fall back to audit logs — they spam view_audit_logs entries
 
             } catch (err) {
                 console.error("Dashboard load error:", err);
@@ -148,9 +155,9 @@ export default function HospitalDashboard() {
 
             <div className={styles.contentWrapper}>
                 {/* Header */}
-                <motion.div variants={cardVariants} style={{ marginBottom: "28px", display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
+                <motion.div variants={cardVariants} style={{ marginBottom: "28px", display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: "8px" }}>
                     <div>
-                        <h1 style={{ fontSize: "28px", fontWeight: "900", color: "#0f172a", margin: 0, letterSpacing: "-0.02em" }}>
+                        <h1 style={{ fontSize: isMobile ? "22px" : "28px", fontWeight: "900", color: "#0f172a", margin: 0, letterSpacing: "-0.02em" }}>
                             Clinical Dashboard
                         </h1>
                         <p style={{ color: "#64748b", fontSize: "14px", margin: "4px 0 0 0", fontWeight: "500" }}>
@@ -160,60 +167,83 @@ export default function HospitalDashboard() {
                 </motion.div>
 
                 {/* Hero Stats */}
-                <motion.div variants={cardVariants} style={{ marginBottom: "32px" }}>
+                <motion.div variants={cardVariants} style={{ marginBottom: "24px" }}>
                     <div style={{
                         background: "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)",
-                        borderRadius: "24px",
-                        padding: "40px",
+                        borderRadius: "20px",
+                        padding: isMobile ? "24px 20px" : "40px",
                         color: "white",
                         position: "relative",
                         overflow: "hidden",
                         boxShadow: "0 20px 40px -12px rgba(37, 99, 235, 0.3)"
                     }}>
                         <div style={{ position: "relative", zIndex: 1 }}>
-                            <div style={{ fontSize: "14px", fontWeight: "800", opacity: 0.9, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "12px" }}>Appointments Today</div>
-                            <div style={{ fontSize: "56px", fontWeight: "900", marginBottom: "24px", letterSpacing: "-0.04em" }}>{stats.appointments}</div>
+                            <div style={{ fontSize: "13px", fontWeight: "800", opacity: 0.9, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "8px" }}>Appointments Today</div>
+                            <div style={{ fontSize: isMobile ? "40px" : "56px", fontWeight: "900", marginBottom: "20px", letterSpacing: "-0.04em" }}>{stats.appointments}</div>
                             <Link href="/dashboard/hospital/appointments" style={{
                                 display: "inline-flex",
                                 alignItems: "center",
                                 gap: "8px",
                                 color: "white",
                                 textDecoration: "none",
-                                fontSize: "14px",
+                                fontSize: "13px",
                                 fontWeight: "800",
                                 background: "rgba(255,255,255,0.15)",
-                                padding: "10px 20px",
-                                borderRadius: "12px",
+                                padding: "8px 16px",
+                                borderRadius: "10px",
                                 backdropFilter: "blur(10px)",
                                 transition: "all 0.2s"
                             }}
                                 onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.25)"}
                                 onMouseLeave={e => e.currentTarget.style.background = "rgba(255,255,255,0.15)"}
                             >
-                                View Full Schedule <Calendar size={16} />
+                                View Full Schedule <Calendar size={14} />
                             </Link>
                         </div>
-                        <Calendar size={120} style={{ position: "absolute", right: "30px", top: "50%", transform: "translateY(-50%) rotate(-15deg)", opacity: 0.1, zIndex: 0 }} />
+                        <Calendar size={isMobile ? 70 : 110} style={{ position: "absolute", right: "24px", top: "50%", transform: "translateY(-50%) rotate(-15deg)", opacity: 0.1, zIndex: 0 }} />
                     </div>
                 </motion.div>
 
-                {/* Stats Grid */}
-                <motion.div variants={cardVariants} className={styles.statCardsGrid} style={{ marginBottom: "28px", display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: "16px" }}>
-                    {statCards.map((s) => (
-                        <Link key={s.label} href={s.href} style={{ textDecoration: "none" }}>
+                {/* Stats Grid
+                    Desktop: 5 columns
+                    Mobile:  3 columns (row of 3, then row of 2 centered) via CSS grid auto-placement
+                */}
+                <motion.div
+                    variants={cardVariants}
+                    style={{
+                        marginBottom: "24px",
+                        display: "grid",
+                        gridTemplateColumns: isMobile ? "repeat(3, 1fr)" : "repeat(5, 1fr)",
+                        gap: isMobile ? "10px" : "16px",
+                    }}
+                >
+                    {statCards.map((s, idx) => (
+                        <Link
+                            key={s.label}
+                            href={s.href}
+                            style={{
+                                textDecoration: "none",
+                                // On mobile: 4th and 5th cards share the middle column area — center the last row
+                                gridColumn: isMobile && idx === 3 ? "1 / 2" : isMobile && idx === 4 ? "2 / 3" : undefined,
+                            }}
+                        >
                             <div style={{
-                                background: "#fff", padding: "20px", borderRadius: "16px",
-                                border: "1px solid #f1f5f9", cursor: "pointer",
+                                background: "#fff",
+                                padding: isMobile ? "14px 12px" : "20px",
+                                borderRadius: "14px",
+                                border: "1px solid #f1f5f9",
+                                cursor: "pointer",
                                 transition: "transform 0.15s, box-shadow 0.15s",
+                                height: "100%",
                             }}
                                 onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 8px 24px rgba(0,0,0,0.08)"; }}
                                 onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "none"; }}
                             >
-                                <div style={{ width: "40px", height: "40px", borderRadius: "10px", background: s.bg, color: s.color, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "14px" }}>
+                                <div style={{ width: "34px", height: "34px", borderRadius: "9px", background: s.bg, color: s.color, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "10px" }}>
                                     {s.icon}
                                 </div>
-                                <div style={{ fontSize: "11px", fontWeight: "800", color: "#94a3b8", letterSpacing: "0.05em" }}>{s.label}</div>
-                                <div style={{ fontSize: "30px", fontWeight: "800", color: "#1e293b", marginTop: "4px" }}>
+                                <div style={{ fontSize: "9px", fontWeight: "800", color: "#94a3b8", letterSpacing: "0.05em" }}>{s.label}</div>
+                                <div style={{ fontSize: isMobile ? "22px" : "30px", fontWeight: "800", color: "#1e293b", marginTop: "4px" }}>
                                     {s.value}
                                 </div>
                             </div>
@@ -221,27 +251,36 @@ export default function HospitalDashboard() {
                     ))}
                 </motion.div>
 
-                {/* Two column layout */}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: "24px" }}>
+                {/* Two column layout — stacked on mobile */}
+                <div style={{
+                    display: "grid",
+                    gridTemplateColumns: isMobile ? "1fr" : "1fr 320px",
+                    gap: "20px",
+                }}>
+                    {/* Recent Activity */}
                     <motion.div variants={cardVariants}>
                         <div style={{ background: "#fff", borderRadius: "16px", border: "1px solid #f1f5f9", overflow: "hidden" }}>
-                            <div style={{ padding: "20px 24px", borderBottom: "1px solid #f8fafc" }}>
-                                <h2 style={{ fontSize: "16px", fontWeight: "800", color: "#1e293b", margin: 0 }}>Recent Activity</h2>
+                            <div style={{ padding: "16px 20px", borderBottom: "1px solid #f8fafc" }}>
+                                <h2 style={{ fontSize: "15px", fontWeight: "800", color: "#1e293b", margin: 0 }}>Recent Activity</h2>
                             </div>
                             {recentActivity.length === 0 ? (
-                                <div style={{ padding: "40px", textAlign: "center", color: "#94a3b8" }}>
+                                <div style={{ padding: "36px 20px", textAlign: "center", color: "#94a3b8", fontSize: "13px" }}>
                                     No recent activity to display.
                                 </div>
                             ) : recentActivity.map((item, i) => {
                                 const timeStr = item.timestamp ? new Date(item.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "Recent";
                                 return (
-                                    <div key={i} style={{ display: "flex", padding: "18px 24px", borderBottom: i < recentActivity.length - 1 ? "1px solid #f8fafc" : "none", alignItems: "center" }}>
-                                        <div style={{ width: "80px", flexShrink: 0 }}>
-                                            <div style={{ fontSize: "13px", fontWeight: "700", color: "#1e293b" }}>{timeStr}</div>
+                                    <div key={i} style={{ display: "flex", padding: "14px 20px", borderBottom: i < recentActivity.length - 1 ? "1px solid #f8fafc" : "none", alignItems: "center" }}>
+                                        <div style={{ width: "68px", flexShrink: 0 }}>
+                                            <div style={{ fontSize: "12px", fontWeight: "700", color: "#1e293b" }}>{timeStr}</div>
                                         </div>
-                                        <div style={{ flex: 1, paddingLeft: "16px" }}>
-                                            <div style={{ fontWeight: "700", color: "#1e293b", fontSize: "14px" }}>{item.user_name || item.action || "System Event"}</div>
-                                            <div style={{ color: "#64748b", fontSize: "12px", marginTop: "2px" }}>{item.event_description || item.description || ""}</div>
+                                        <div style={{ flex: 1, paddingLeft: "12px", minWidth: 0 }}>
+                                            <div style={{ fontWeight: "700", color: "#1e293b", fontSize: "13px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                                {item.user_name || item.action || "System Event"}
+                                            </div>
+                                            <div style={{ color: "#64748b", fontSize: "11px", marginTop: "2px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                                {item.event_description || item.description || ""}
+                                            </div>
                                         </div>
                                     </div>
                                 );
@@ -249,33 +288,39 @@ export default function HospitalDashboard() {
                         </div>
                     </motion.div>
 
-                    {/* Right Column */}
-                    <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-                        {/* Quick Actions */}
-                        <motion.div variants={cardVariants}>
-                            <div style={{ background: "#fff", borderRadius: "16px", border: "1px solid #f1f5f9", padding: "20px" }}>
-                                <h3 style={{ fontSize: "14px", fontWeight: "800", color: "#1e293b", marginBottom: "16px", marginTop: 0 }}>Quick Actions</h3>
-                                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
-                                    {quickActions.map((a) => (
-                                        <Link key={a.label} href={a.href} style={{ textDecoration: "none" }}>
-                                            <div style={{
-                                                display: "flex", flexDirection: "column", alignItems: "center",
-                                                padding: "14px 10px", borderRadius: "12px",
-                                                border: "1.5px solid #f1f5f9", cursor: "pointer",
-                                                transition: "all 0.15s", gap: "8px",
-                                            }}
-                                                onMouseEnter={e => { e.currentTarget.style.borderColor = a.color; e.currentTarget.style.background = a.bg; }}
-                                                onMouseLeave={e => { e.currentTarget.style.borderColor = "#f1f5f9"; e.currentTarget.style.background = "transparent"; }}
-                                            >
-                                                <div style={{ color: a.color }}>{a.icon}</div>
-                                                <div style={{ fontSize: "11px", fontWeight: "700", color: "#475569", textAlign: "center" }}>{a.label}</div>
-                                            </div>
-                                        </Link>
-                                    ))}
-                                </div>
+                    {/* Quick Actions */}
+                    <motion.div variants={cardVariants}>
+                        <div style={{ background: "#fff", borderRadius: "16px", border: "1px solid #f1f5f9", padding: "16px 20px" }}>
+                            <h3 style={{ fontSize: "14px", fontWeight: "800", color: "#1e293b", marginBottom: "14px", marginTop: 0 }}>Quick Actions</h3>
+                            <div style={{
+                                display: "grid",
+                                gridTemplateColumns: "repeat(4, 1fr)",
+                                gap: "10px",
+                            }}>
+                                {quickActions.map((a) => (
+                                    <Link key={a.label} href={a.href} style={{ textDecoration: "none" }}>
+                                        <div style={{
+                                            display: "flex",
+                                            flexDirection: "column",
+                                            alignItems: "center",
+                                            padding: "12px 6px",
+                                            borderRadius: "12px",
+                                            border: "1.5px solid #f1f5f9",
+                                            cursor: "pointer",
+                                            transition: "all 0.15s",
+                                            gap: "6px",
+                                        }}
+                                            onMouseEnter={e => { e.currentTarget.style.borderColor = a.color; e.currentTarget.style.background = a.bg; }}
+                                            onMouseLeave={e => { e.currentTarget.style.borderColor = "#f1f5f9"; e.currentTarget.style.background = "transparent"; }}
+                                        >
+                                            <div style={{ color: a.color }}>{a.icon}</div>
+                                            <div style={{ fontSize: "9px", fontWeight: "700", color: "#475569", textAlign: "center", lineHeight: "1.3" }}>{a.label}</div>
+                                        </div>
+                                    </Link>
+                                ))}
                             </div>
-                        </motion.div>
-                    </div>
+                        </div>
+                    </motion.div>
                 </div>
             </div>
         </motion.div>

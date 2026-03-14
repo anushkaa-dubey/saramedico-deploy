@@ -50,29 +50,29 @@ export default function DoctorDetailsModal({ isOpen, onClose, doctor }) {
     setSuccess(false);
 
     try {
-      // Send all fields — backend ignores unchanged ones
-      // NOTE FOR BACKEND TEAM: 'status' needs to be added to
-      // PATCH /api/v1/hospital/doctor/{doctor_id} endpoint
-      const updates = {
-        name: form.name,
-        department: form.department,
-        department_role: form.department_role,
-        specialty: form.specialty,
-        license_number: form.license_number,
-        status: form.status,
-      };
+      const originalName = doctor.name || doctor.full_name || "";
 
-      // Remove empty strings to avoid overwriting with blank
-      Object.keys(updates).forEach(k => {
-        if (updates[k] === "") delete updates[k];
-      });
+      const updates = {};
+
+      // Only send name if user actually changed it (avoid double-encrypting)
+      if (form.name && form.name !== originalName) updates.name = form.name;
+
+      // Always send the other non-PII fields if they have a value
+      if (form.department) updates.department = form.department;
+      if (form.department_role) updates.department_role = form.department_role;
+      if (form.specialty) updates.specialty = form.specialty;
+      if (form.license_number && form.license_number !== (doctor.license_number || ""))
+        updates.license_number = form.license_number;
+
+      // Status is always sent — it's the primary management field
+      updates.status = form.status;
 
       await updateHospitalDoctor(doctor.id, updates);
       setSuccess(true);
       setTimeout(() => onClose(), 900);
     } catch (err) {
       console.error("Update failed:", err);
-      setError("Failed to update doctor profile. Please try again.");
+      setError(err?.message || "Failed to update doctor profile. Please try again.");
     } finally {
       setSaving(false);
     }

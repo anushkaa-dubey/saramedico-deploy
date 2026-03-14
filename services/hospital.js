@@ -279,12 +279,12 @@ export const fetchOrganizationDepartments = async () => {
 };
 
 /**
- * 14. Fetch Organization Settings
- * Endpoint: GET /api/v1/admin/settings
+ * 14. Fetch Hospital Settings
+ * Endpoint: GET /api/v1/hospital/settings
  */
 export const fetchHospitalSettingsData = async () => {
     try {
-        const response = await fetch(`${API_BASE_URL}/admin/settings`, {
+        const response = await fetch(`${API_BASE_URL}/hospital/settings`, {
             headers: getAuthHeaders(),
         });
         return await handleResponse(response);
@@ -295,11 +295,11 @@ export const fetchHospitalSettingsData = async () => {
 };
 
 /**
- * 15. Update Organization Settings
- * Endpoint: PATCH /api/v1/admin/settings/organization
+ * 15. Update Hospital Organization Settings
+ * Endpoint: PATCH /api/v1/hospital/settings/organization
  */
 export const updateHospitalOrgSettings = async (payload) => {
-    const response = await fetch(`${API_BASE_URL}/admin/settings/organization`, {
+    const response = await fetch(`${API_BASE_URL}/hospital/settings/organization`, {
         method: "PATCH",
         headers: getAuthHeaders(),
         body: JSON.stringify(payload),
@@ -308,11 +308,11 @@ export const updateHospitalOrgSettings = async (payload) => {
 };
 
 /**
- * 16. Update Admin Settings Profile
- * Endpoint: PATCH /api/v1/admin/settings/profile
+ * 16. Update Hospital Admin Profile
+ * Endpoint: PATCH /api/v1/hospital/settings/profile
  */
 export const updateHospitalAdminProfile = async (payload) => {
-    const response = await fetch(`${API_BASE_URL}/admin/settings/profile`, {
+    const response = await fetch(`${API_BASE_URL}/hospital/settings/profile`, {
         method: "PATCH",
         headers: getAuthHeaders(),
         body: JSON.stringify(payload),
@@ -321,8 +321,8 @@ export const updateHospitalAdminProfile = async (payload) => {
 };
 
 /**
- * 17. Upload Organization Avatar
- * Endpoint: POST /api/v1/admin/settings/avatar
+ * 17. Upload Hospital Avatar
+ * Endpoint: POST /api/v1/hospital/settings/avatar
  */
 export const uploadHospitalAvatar = async (file) => {
     const formData = new FormData();
@@ -331,12 +331,21 @@ export const uploadHospitalAvatar = async (file) => {
     const headers = getAuthHeaders();
     delete headers["Content-Type"]; // Let fetch set boundary
 
-    const response = await fetch(`${API_BASE_URL}/admin/settings/avatar`, {
+    const response = await fetch(`${API_BASE_URL}/hospital/settings/avatar`, {
         method: "POST",
         headers,
         body: formData,
     });
     return await handleResponse(response);
+};
+
+/**
+ * 18. Update doctor status (Hospital Admin shorthand)
+ * Endpoint: PATCH /api/v1/hospital/doctor/{doctor_id}
+ * payload: { status: "active" | "inactive" | "on_leave" }
+ */
+export const updateHospitalDoctorStatus = async (doctorId, newStatus) => {
+    return updateHospitalDoctor(doctorId, { status: newStatus });
 };
 
 
@@ -445,7 +454,7 @@ export const fetchHospitalDoctorStatus = async () => {
 export const fetchDepartmentStaff = async (departmentName) => {
     try {
         const response = await fetch(
-            `${API_BASE_URL}/doctors/by-department?department=${encodeURIComponent(departmentName)}`,
+            `${API_BASE_URL}/doctor/by-department?department=${encodeURIComponent(departmentName)}`,
             { headers: getAuthHeaders() }
         );
         const data = await handleResponse(response);

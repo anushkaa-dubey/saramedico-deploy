@@ -66,21 +66,29 @@ export default function Topbar({ title }) {
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
+                gap: "12px",
             }}>
-                <div>
-                    <h2 style={{ fontSize: "18px", fontWeight: "800", color: "#0f172a", margin: 0 }}>
-                        {title || "Overview"}
-                    </h2>
-                </div>
+                <h2 style={{
+                    fontSize: "18px",
+                    fontWeight: "800",
+                    color: "#0f172a",
+                    margin: 0,
+                    flex: 1,
+                    minWidth: 0,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                }}>
+                    {title || "Overview"}
+                </h2>
 
                 <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-
-                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px", flexShrink: 0 }}>
                         <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "2px" }}>
-                            <span style={{ fontSize: "14px", fontWeight: "700", color: "#0f172a", lineHeight: 1 }}>
+                            <span style={{ fontSize: "14px", fontWeight: "700", color: "#0f172a", lineHeight: 1, whiteSpace: "nowrap" }}>
                                 {displayName}
                             </span>
-                            <span style={{ fontSize: "11px", color: "#64748b", lineHeight: 1 }}>
+                            <span style={{ fontSize: "11px", color: "#64748b", lineHeight: 1, whiteSpace: "nowrap" }}>
                                 Hospital Administrator
                             </span>
                         </div>

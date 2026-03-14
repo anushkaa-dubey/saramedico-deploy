@@ -2,12 +2,12 @@
 import { motion } from "framer-motion";
 import Topbar from "../components/Topbar";
 import styles from "../HospitalDashboard.module.css";
+import staffStyles from "./StaffManagement.module.css";
 import InviteStaffModal from "./components/InviteStaffModal";
 import CreatePatientModal from "./components/CreatePatientModal";
 import DoctorDetailsModal from "./components/DoctorDetailsModal";
 import { useState, useEffect } from "react";
 import { fetchHospitalDoctorStatus } from "@/services/hospital";
-// import { adminRemoveMember } from "@/services/admin";
 
 export default function StaffManagementPage() {
     const [doctorStatusList, setDoctorStatusList] = useState([]);
@@ -15,7 +15,7 @@ export default function StaffManagementPage() {
     const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
     const [isPatientModalOpen, setIsPatientModalOpen] = useState(false);
     const [selectedDoctorId, setSelectedDoctorId] = useState(null);
-    const [activeTab, setActiveTab] = useState("all"); // "all" | "active" | "inactive"
+    const [activeTab, setActiveTab] = useState("all");
 
     const loadDoctorStatus = async () => {
         setLoading(true);
@@ -29,20 +29,7 @@ export default function StaffManagementPage() {
         }
     };
 
-    // const handleRemoveStaff = async (id) => {
-    //     if (!confirm("Are you sure you want to remove this team member?")) return;
-    //     try {
-    //         await adminRemoveMember(id);
-    //         loadDoctorStatus();
-    //     } catch (err) {
-    //         console.error("Failed to remove staff:", err);
-    //         alert("Failed to remove staff member.");
-    //     }
-    // };
-
-    useEffect(() => {
-        loadDoctorStatus();
-    }, []);
+    useEffect(() => { loadDoctorStatus(); }, []);
 
     const activeCount = doctorStatusList.filter(d => (d.status || "").toLowerCase() === "active").length;
     const inactiveCount = doctorStatusList.filter(d => (d.status || "").toLowerCase() !== "active").length;
@@ -55,41 +42,16 @@ export default function StaffManagementPage() {
 
     const stats = [
         {
-            label: "Total Staff",
-            value: doctorStatusList.length,
-            icon: (
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                    <circle cx="9" cy="7" r="4"></circle>
-                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                </svg>
-            ),
-            color: "#359aff"
+            label: "Total Staff", value: doctorStatusList.length, color: "#359aff",
+            icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M23 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>,
         },
         {
-            label: "Active",
-            value: activeCount,
-            icon: (
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
-                    <circle cx="9" cy="7" r="4"></circle>
-                    <polyline points="16 11 18 13 22 9"></polyline>
-                </svg>
-            ),
-            color: "#10b981"
+            label: "Active", value: activeCount, color: "#10b981",
+            icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><polyline points="16 11 18 13 22 9" /></svg>,
         },
         {
-            label: "Inactive",
-            value: inactiveCount,
-            icon: (
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <line x1="15" y1="9" x2="9" y2="15"></line>
-                    <line x1="9" y1="9" x2="15" y2="15"></line>
-                </svg>
-            ),
-            color: "#ef4444"
+            label: "Inactive", value: inactiveCount, color: "#ef4444",
+            icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" /></svg>,
         },
     ];
 
@@ -97,141 +59,111 @@ export default function StaffManagementPage() {
         <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            style={{ display: 'flex', flexDirection: 'column', background: 'transparent', padding: 0, minHeight: '100%' }}
+            style={{ display: "flex", flexDirection: "column", background: "transparent", padding: 0, minHeight: "100%" }}
         >
             <Topbar title="Staff Management" />
 
             <div className={styles.contentWrapper}>
-                <div className={styles.pageHeaderRow} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', flexWrap: 'wrap', gap: '16px' }}>
+
+                {/* ── Page Header ── */}
+                <div className={staffStyles.pageHeader}>
                     <div>
-                        <h1 style={{ fontSize: '24px', fontWeight: '800', color: '#0f172a', margin: 0 }}>Staff Management</h1>
-                        <p style={{ color: '#64748b', margin: '4px 0 0 0' }}>View doctor availability and manage hospital personnel.</p>
+                        <h1 className={staffStyles.pageTitle}>Staff Management</h1>
+                        <p className={staffStyles.pageSub}>View doctor availability and manage hospital personnel.</p>
                     </div>
-                    <div
-                        className="staffHeaderBtns"
-                        style={{ display: "flex", gap: "12px", flexDirection: "row" }}
-                    >                       <button
-                        onClick={() => setIsPatientModalOpen(true)}
-                        className={styles.outlineBtn}
-                        style={{ background: '#ffffff', color: '#10b981', borderColor: '#10b981' }}
-                    >
+                    <div className={staffStyles.headerBtns}>
+                        <button
+                            onClick={() => setIsPatientModalOpen(true)}
+                            className={staffStyles.outlineBtn}
+                        >
                             + Create Patient ID
                         </button>
                         <button
                             onClick={() => setIsInviteModalOpen(true)}
-                            className={styles.primaryBtn}
+                            className={staffStyles.primaryBtn}
                         >
                             + Invite Doctor
                         </button>
                     </div>
                 </div>
 
-                {/* Summary Stats */}
-                <div className={styles.overviewSection} style={{ marginBottom: '32px' }}>
+                {/* ── Stats ── */}
+                <div className={staffStyles.statsGrid}>
                     {stats.map((s, i) => (
-                        <div key={i} style={{ background: '#ffffff', padding: '24px', borderRadius: '16px', border: '1px solid #f1f5f9' }}>
-                            <div style={{ color: s.color, marginBottom: '12px' }}>{s.icon}</div>
-                            <div style={{ fontSize: '11px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase' }}>{s.label}</div>
-                            <div style={{ fontSize: '28px', fontWeight: '800', color: '#0f172a', marginTop: '4px' }}>
-                                {loading ? '...' : s.value}
+                        <div key={i} className={staffStyles.statCard}>
+                            <div className={staffStyles.statIcon} style={{ color: s.color, background: `${s.color}15` }}>
+                                {s.icon}
+                            </div>
+                            <div>
+                                <div className={staffStyles.statLabel}>{s.label}</div>
+                                <div className={staffStyles.statValue} style={{ color: s.color }}>
+                                    {loading ? "…" : s.value}
+                                </div>
                             </div>
                         </div>
                     ))}
                 </div>
 
-                {/* Status Filter Tabs */}
-                <div style={{ display: 'flex', gap: '10px', marginBottom: '16px' }}>
+                {/* ── Filter Tabs ── */}
+                <div className={staffStyles.tabs}>
                     {[
-                        { key: 'all', label: `All (${doctorStatusList.length})` },
-                        { key: 'active', label: `Active (${activeCount})` },
-                        { key: 'inactive', label: `Inactive (${inactiveCount})` },
+                        { key: "all", label: `All (${doctorStatusList.length})` },
+                        { key: "active", label: `Active (${activeCount})` },
+                        { key: "inactive", label: `Inactive (${inactiveCount})` },
                     ].map(tab => (
                         <button
                             key={tab.key}
                             onClick={() => setActiveTab(tab.key)}
-                            style={{
-                                padding: '7px 18px',
-                                borderRadius: '99px',
-                                border: '1px solid',
-                                fontSize: '13px',
-                                fontWeight: '700',
-                                cursor: 'pointer',
-                                transition: 'all 0.15s',
-                                borderColor: activeTab === tab.key ? '#359aff' : '#e2e8f0',
-                                background: activeTab === tab.key ? '#359aff' : '#fff',
-                                color: activeTab === tab.key ? '#fff' : '#64748b',
-                            }}
+                            className={`${staffStyles.tab} ${activeTab === tab.key ? staffStyles.tabActive : ""}`}
                         >
                             {tab.label}
                         </button>
                     ))}
                 </div>
 
-                {/* Doctor Status Table */}
-                <div className={styles.card} style={{ border: 'none', borderRadius: '16px', padding: '0', overflow: 'hidden' }}>
+                {/* ── Desktop Table ── */}
+                <div className={`${styles.card} ${staffStyles.tableCard}`}>
                     <div className={styles.tableScrollWrapper}>
-                        <table className={styles.activityTable} style={{ fontSize: '13px' }}>
+                        <table className={`${styles.activityTable} ${staffStyles.table}`}>
                             <thead>
                                 <tr className={styles.activityHeader}>
-                                    <th style={{ padding: '16px 24px', whiteSpace: 'nowrap' }}>DOCTOR</th>
-                                    <th style={{ whiteSpace: 'nowrap' }}>SPECIALTY</th>
-                                    <th style={{ whiteSpace: 'nowrap' }}>EMAIL</th>
-                                    <th style={{ whiteSpace: 'nowrap' }}>DEPARTMENT</th>
-                                    <th style={{ whiteSpace: 'nowrap' }}>STATUS</th>
-                                    <th style={{ textAlign: 'right', paddingRight: '24px', whiteSpace: 'nowrap' }}>ACTIONS</th>
+                                    <th>DOCTOR</th>
+                                    <th>SPECIALTY</th>
+                                    <th>EMAIL</th>
+                                    <th>DEPARTMENT</th>
+                                    <th>STATUS</th>
+                                    <th style={{ textAlign: "right", paddingRight: "24px" }}>ACTIONS</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {loading ? (
-                                    <tr><td colSpan="6" style={{ padding: '40px', textAlign: 'center', color: '#94a3b8' }}>Loading staff directory...</td></tr>
+                                    <tr><td colSpan="6" className={staffStyles.tableEmpty}>Loading staff directory...</td></tr>
                                 ) : filteredList.length === 0 ? (
-                                    <tr><td colSpan="6" style={{ padding: '40px', textAlign: 'center', color: '#94a3b8' }}>
-                                        {activeTab === 'active' ? 'No active doctors found.' : activeTab === 'inactive' ? 'No inactive doctors found.' : 'No staff members found.'}
-                                    </td></tr>
+                                    <tr><td colSpan="6" className={staffStyles.tableEmpty}>No staff members found.</td></tr>
                                 ) : filteredList.map((d, i) => {
                                     const isActive = (d.status || "").toLowerCase() === "active";
                                     return (
                                         <tr key={d.id || i} className={styles.activityRow}>
-                                            <td style={{ padding: '16px 24px', whiteSpace: 'nowrap' }}>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                                    <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: '#359aff15', color: '#359aff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700', fontSize: '11px' }}>
-                                                        {(d.full_name || d.name || "D").split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                                            <td style={{ padding: "16px 24px" }}>
+                                                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                                                    <div className={staffStyles.avatar}>
+                                                        {(d.full_name || d.name || "D").split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2)}
                                                     </div>
-                                                    <div style={{ fontWeight: '700' }}>{d.name || d.full_name || 'Staff Member'}</div>
+                                                    <span style={{ fontWeight: 700, whiteSpace: "nowrap" }}>{d.name || d.full_name || "Staff Member"}</span>
                                                 </div>
                                             </td>
-                                            <td style={{ whiteSpace: 'nowrap', color: '#64748b' }}>{d.specialty || d.specialization || '—'}</td>
-                                            <td style={{ whiteSpace: 'nowrap', color: '#64748b' }}>{d.email || '—'}</td>
-                                            <td style={{ whiteSpace: 'nowrap', color: '#64748b' }}>{d.department || '—'}</td>
-                                            <td style={{ whiteSpace: 'nowrap' }}>
-                                                <span style={{
-                                                    color: isActive ? '#10b981' : '#ef4444',
-                                                    background: isActive ? '#10b98115' : '#ef444415',
-                                                    padding: '4px 12px',
-                                                    borderRadius: '20px',
-                                                    fontWeight: '700',
-                                                    fontSize: '11px',
-                                                    textTransform: 'uppercase'
-                                                }}>
-                                                    {d.status || 'Unknown'}
+                                            <td className={staffStyles.muted}>{d.specialty || d.specialization || "—"}</td>
+                                            <td className={staffStyles.muted}>{d.email || "—"}</td>
+                                            <td className={staffStyles.muted}>{d.department || "—"}</td>
+                                            <td>
+                                                <span className={`${staffStyles.badge} ${isActive ? staffStyles.badgeActive : staffStyles.badgeInactive}`}>
+                                                    {d.status || "Unknown"}
                                                 </span>
                                             </td>
-                                            <td style={{ textAlign: 'right', paddingRight: '24px', whiteSpace: 'nowrap' }}>
-                                                <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-                                                    <button
-                                                        onClick={() => setSelectedDoctorId(d)}
-                                                        className={styles.outlineBtn}
-                                                    >
-                                                        Manage
-                                                    </button>
-                                                    {/* <button
-                                                        onClick={() => handleRemoveStaff(d.id)}
-                                                        className={styles.outlineBtn}
-                                                        style={{ height: '32px', fontSize: '12px', color: '#ef4444', borderColor: '#fee2e2' }}
-                                                    >
-                                                        Remove
-                                                    </button> */}
-                                                </div>
+                                            <td style={{ textAlign: "right", paddingRight: "24px" }}>
+                                                <button onClick={() => setSelectedDoctorId(d)} className={styles.outlineBtn}>
+                                                    Manage
+                                                </button>
                                             </td>
                                         </tr>
                                     );
@@ -241,23 +173,62 @@ export default function StaffManagementPage() {
                     </div>
                 </div>
 
-                <InviteStaffModal
-                    isOpen={isInviteModalOpen}
-                    onClose={() => setIsInviteModalOpen(false)}
-                    onSuccess={() => { setIsInviteModalOpen(false); loadDoctorStatus(); }}
-                />
+                {/* ── Mobile Cards (hidden on desktop) ── */}
+                <div className={staffStyles.mobileList}>
+                    {loading ? (
+                        <div className={staffStyles.tableEmpty}>Loading staff directory...</div>
+                    ) : filteredList.length === 0 ? (
+                        <div className={staffStyles.tableEmpty}>No staff members found.</div>
+                    ) : filteredList.map((d, i) => {
+                        const isActive = (d.status || "").toLowerCase() === "active";
+                        return (
+                            <div key={d.id || i} className={staffStyles.mobileCard}>
+                                <div className={staffStyles.mobileCardTop}>
+                                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                                        <div className={staffStyles.avatar}>
+                                            {(d.full_name || d.name || "D").split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2)}
+                                        </div>
+                                        <div>
+                                            <div className={staffStyles.mobileName}>{d.name || d.full_name || "Staff Member"}</div>
+                                            <div className={staffStyles.mobileSpecialty}>{d.specialty || d.specialization || "—"}</div>
+                                        </div>
+                                    </div>
+                                    <span className={`${staffStyles.badge} ${isActive ? staffStyles.badgeActive : staffStyles.badgeInactive}`}>
+                                        {d.status || "Unknown"}
+                                    </span>
+                                </div>
+                                <div className={staffStyles.mobileCardMeta}>
+                                    {d.email && <span>✉ {d.email}</span>}
+                                    {d.department && <span>🏥 {d.department}</span>}
+                                </div>
+                                <button
+                                    onClick={() => setSelectedDoctorId(d)}
+                                    className={staffStyles.manageBtn}
+                                >
+                                    Manage
+                                </button>
+                            </div>
+                        );
+                    })}
+                </div>
 
-                <CreatePatientModal
-                    isOpen={isPatientModalOpen}
-                    onClose={() => setIsPatientModalOpen(false)}
-                    onSuccess={() => { setIsPatientModalOpen(false); }}
-                />
-                <DoctorDetailsModal
-                    isOpen={!!selectedDoctorId}
-                    onClose={() => { setSelectedDoctorId(null); loadDoctorStatus(); }}
-                    doctor={selectedDoctorId}
-                />
             </div>
+
+            <InviteStaffModal
+                isOpen={isInviteModalOpen}
+                onClose={() => setIsInviteModalOpen(false)}
+                onSuccess={() => { setIsInviteModalOpen(false); loadDoctorStatus(); }}
+            />
+            <CreatePatientModal
+                isOpen={isPatientModalOpen}
+                onClose={() => setIsPatientModalOpen(false)}
+                onSuccess={() => setIsPatientModalOpen(false)}
+            />
+            <DoctorDetailsModal
+                isOpen={!!selectedDoctorId}
+                onClose={() => { setSelectedDoctorId(null); loadDoctorStatus(); }}
+                doctor={selectedDoctorId}
+            />
         </motion.div>
     );
 }

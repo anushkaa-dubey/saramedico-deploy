@@ -2,25 +2,32 @@
 
 import { useState, useEffect } from "react";
 import Topbar from "../components/Topbar";
-import styles from "../records/Records.module.css";
+import recordStyles from "../records/Records.module.css";
+import aptStyles from "./Appointments.module.css";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { fetchAppointments, fetchDoctors, fetchMyConsultations } from "@/services/patient";
-import CalendarView from "../components/CalendarView";
+import {
+    CalendarDays,
+    FileText,
+    Video,
+    Plus,
+    Stethoscope,
+} from "lucide-react";
 
 export default function AppointmentsPage() {
     const router = useRouter();
     const [appointments, setAppointments] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+    const [doctorsMap, setDoctorsMap] = useState({});
 
     useEffect(() => {
         loadAppointments();
     }, []);
 
-    const [doctorsMap, setDoctorsMap] = useState({});
-
+    // ── All API & backend logic is untouched ──────────────────────────────────
     const loadAppointments = async () => {
         setLoading(true);
         setError("");
@@ -31,7 +38,6 @@ export default function AppointmentsPage() {
                 fetchDoctors()
             ]);
 
-            // Create map of doctor id -> name
             const dMap = {};
             const doctorsArr = Array.isArray(doctorsData) ? doctorsData : doctorsData?.results || doctorsData?.data || [];
             if (Array.isArray(doctorsArr)) {
@@ -42,7 +48,6 @@ export default function AppointmentsPage() {
             }
             setDoctorsMap(dMap);
 
-            // Format consultations to match appointment structure
             const consults = (consultationsData?.consultations || []).map(c => ({
                 id: c.id,
                 doctor_name: c.doctorName || dMap[c.doctorId] || "Doctor",
@@ -67,6 +72,35 @@ export default function AppointmentsPage() {
         }
     };
 
+    const getDoctorName = (apt) => {
+        const rawName = apt.doctor_name ||
+            (apt.doctor && (apt.doctor.full_name || `${apt.doctor.first_name || ''} ${apt.doctor.last_name || ''}`).trim()) ||
+            doctorsMap[apt.doctor_id] ||
+            "Doctor";
+        if (!rawName || rawName === "Doctor" || rawName === "Unknown Doctor") return "Doctor";
+        return rawName.startsWith("Dr") ? rawName : `Dr. ${rawName}`;
+    };
+
+    const handleJoin = (apt) => {
+        const link = apt.meetLink || apt.meet_link || apt.join_url;
+        if (link) {
+            window.open(link, "_blank");
+        } else {
+            router.push(`/dashboard/patient/video-call${apt.is_consultation ? `?consultationId=${apt.id}` : ''}`);
+        }
+    };
+    // ─────────────────────────────────────────────────────────────────────────
+
+    const isActive = (status) =>
+        status === 'accepted' || status === 'scheduled' || status === 'active';
+
+    const getStatusClass = (status) => {
+        if (isActive(status)) return aptStyles.statusActive;
+        if (status === 'completed') return aptStyles.statusCompleted;
+        if (status === 'declined' || status === 'cancelled') return aptStyles.statusDeclined;
+        return aptStyles.statusPending;
+    };
+
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -75,38 +109,45 @@ export default function AppointmentsPage() {
         >
             <Topbar />
 
-            <section className={styles.wrapper}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+            <section className={recordStyles.wrapper}>
+
+                {/* ── Page Header ── */}
+                <div className={aptStyles.pageHeader}>
                     <div>
-                        <h2 style={{ fontSize: '24px', fontWeight: '700', color: '#0f172a' }}>Personal Health Workspace</h2>
-                        <p style={{ color: '#64748b' }}>Manage your appointments, track status, and join sessions.</p>
+                        <h2 className={aptStyles.pageTitle}>Personal Health Workspace</h2>
+                        <p className={aptStyles.pageSubtitle}>
+                            Manage your appointments, track status, and join sessions.
+                        </p>
                     </div>
                     <Link href="/dashboard/patient/appointments/request">
-                        <button className={styles.requestCTA} style={{ background: "linear-gradient(90deg, #359AFF, #9CCDFF)", border: "none", color: "white", padding: "10px 20px", fontWeight: "600", borderRadius: "10px", cursor: "pointer", textDecoration: "none", display: "inline-block" }}>
+                        <button className={aptStyles.requestBtn}>
+                            <Plus size={15} />
                             Request Appointment
                         </button>
                     </Link>
                 </div>
 
-                {error && <p style={{ color: "red", padding: "0 24px" }}>{error}</p>}
+                {error && <p className={aptStyles.errorMsg}>{error}</p>}
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '24px', alignItems: 'start' }}>
-                    <div className={styles.card}>
-                        <div className={styles.cardHeader}>
-                            <h3>Session Tracking</h3>
-                        </div>
+                {/* ── Session Tracking Card ── */}
+                <div className={recordStyles.card}>
+                    <div className={recordStyles.cardHeader}>
+                        <h3 className={aptStyles.cardTitle}>Session Tracking</h3>
+                    </div>
 
-                        {loading ? (
-                            <div style={{ padding: '40px', textAlign: 'center' }}>Loading appointments...</div>
-                        ) : appointments.length === 0 ? (
-                            <div style={{ padding: '40px', textAlign: 'center' }}>You have no appointment requests.</div>
-                        ) : (
-                            <div className={styles.tableContainer}>
-                                <table className={styles.table}>
+                    {loading ? (
+                        <div className={aptStyles.stateMessage}>Loading appointments...</div>
+                    ) : appointments.length === 0 ? (
+                        <div className={aptStyles.stateMessage}>You have no appointment requests.</div>
+                    ) : (
+                        <>
+                            {/* ── Desktop table ── */}
+                            <div className={aptStyles.tableWrap}>
+                                <table className={recordStyles.table}>
                                     <thead>
                                         <tr>
                                             <th>DOCTOR</th>
-                                            <th>DATE & TIME</th>
+                                            <th>DATE &amp; TIME</th>
                                             <th>STATUS</th>
                                             <th>TYPE</th>
                                             <th>NOTES</th>
@@ -115,80 +156,34 @@ export default function AppointmentsPage() {
                                     <tbody>
                                         {appointments.map((apt) => (
                                             <tr key={apt.id}>
-                                                <td>
-                                                    {(() => {
-                                                        const rawName = apt.doctor_name ||
-                                                            (apt.doctor && (apt.doctor.full_name || `${apt.doctor.first_name || ''} ${apt.doctor.last_name || ''}`).trim()) ||
-                                                            doctorsMap[apt.doctor_id] ||
-                                                            "Doctor";
-                                                        if (!rawName || rawName === "Doctor" || rawName === "Unknown Doctor") return "Doctor";
-                                                        return rawName.startsWith("Dr") ? rawName : `Dr. ${rawName}`;
-                                                    })()}
+                                                <td className={aptStyles.doctorCell}>
+                                                    {getDoctorName(apt)}
                                                 </td>
-                                                <td>{new Date(apt.requested_date).toLocaleString()}</td>
+                                                <td className={aptStyles.dateCell}>
+                                                    {new Date(apt.requested_date).toLocaleString()}
+                                                </td>
                                                 <td>
-                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                                        <span
-                                                            style={{
-                                                                padding: '4px 8px',
-                                                                borderRadius: '4px',
-                                                                fontSize: '12px',
-                                                                fontWeight: '600',
-                                                                background: apt.status === 'accepted' || apt.status === 'scheduled' || apt.status === 'active' ? '#dcfce7' :
-                                                                    apt.status === 'completed' ? '#e0f2fe' :
-                                                                        apt.status === 'declined' || apt.status === 'cancelled' ? '#fee2e2' : '#fef9c3',
-                                                                color: apt.status === 'accepted' || apt.status === 'scheduled' || apt.status === 'active' ? '#166534' :
-                                                                    apt.status === 'completed' ? '#0369a1' :
-                                                                        apt.status === 'declined' || apt.status === 'cancelled' ? '#991b1b' : '#854d0e',
-                                                                width: 'fit-content'
-                                                            }}
-                                                        >
+                                                    <div className={aptStyles.statusCell}>
+                                                        <span className={`${aptStyles.statusBadge} ${getStatusClass(apt.status)}`}>
                                                             {(apt.status || "PENDING").toUpperCase()}
                                                         </span>
-                                                        {(apt.status === 'accepted' || apt.status === 'scheduled' || apt.status === 'active') && (
+                                                        {isActive(apt.status) && (
                                                             <button
-                                                                onClick={() => {
-                                                                    const link = apt.meetLink || apt.meet_link || apt.join_url;
-                                                                    if (link) {
-                                                                        window.open(link, "_blank");
-                                                                    } else {
-                                                                        router.push(`/dashboard/patient/video-call${apt.is_consultation ? `?consultationId=${apt.id}` : ''}`);
-                                                                    }
-                                                                }}
-                                                                style={{
-                                                                    display: "inline-flex",
-                                                                    alignItems: "center",
-                                                                    justifyContent: "center",
-                                                                    padding: "6px 14px",
-                                                                    width: "fit-content",
-                                                                    background: "#82c0ff",
-                                                                    color: "white",
-                                                                    border: "none",
-                                                                    borderRadius: "6px",
-                                                                    fontSize: "12px",
-                                                                    fontWeight: "600",
-                                                                    cursor: "pointer",
-                                                                    marginTop: "4px"
-                                                                }}
+                                                                className={aptStyles.joinBtn}
+                                                                onClick={() => handleJoin(apt)}
                                                             >
+                                                                <Video size={12} />
                                                                 Join Meeting
                                                             </button>
                                                         )}
                                                     </div>
                                                 </td>
                                                 <td>
-                                                    <span style={{
-                                                        fontSize: '11px',
-                                                        color: apt.is_consultation ? '#3B82F6' : '#64748B',
-                                                        background: apt.is_consultation ? '#EFF6FF' : '#F8FAFC',
-                                                        padding: '2px 6px',
-                                                        borderRadius: '4px',
-                                                        border: `1px solid ${apt.is_consultation ? '#DBEAFE' : '#E2E8F0'}`
-                                                    }}>
+                                                    <span className={`${aptStyles.typeBadge} ${apt.is_consultation ? aptStyles.typeConsultation : aptStyles.typeAppointment}`}>
                                                         {apt.is_consultation ? 'Instant Meeting' : 'Appointment'}
                                                     </span>
                                                 </td>
-                                                <td style={{ fontSize: '14px', color: '#64748b' }}>
+                                                <td className={aptStyles.notesCell}>
                                                     {apt.display_notes || "No notes yet"}
                                                 </td>
                                             </tr>
@@ -196,14 +191,56 @@ export default function AppointmentsPage() {
                                     </tbody>
                                 </table>
                             </div>
-                        )}
-                    </div>
 
-                    {/* Calendar View Hidden - Backend domain missing */}
-                    {/* <CalendarView appointments={appointments} /> */}
+                            {/* ── Mobile cards ── */}
+                            <div className={aptStyles.cardList}>
+                                {appointments.map((apt) => (
+                                    <div key={apt.id} className={aptStyles.mobileCard}>
+
+                                        <div className={aptStyles.mobileCardTop}>
+                                            <span className={aptStyles.mobileCardDoctor}>
+                                                {getDoctorName(apt)}
+                                            </span>
+                                            <span className={`${aptStyles.statusBadge} ${getStatusClass(apt.status)}`}>
+                                                {(apt.status || "PENDING").toUpperCase()}
+                                            </span>
+                                        </div>
+
+                                        <div className={aptStyles.mobileCardRow}>
+                                            <CalendarDays size={13} />
+                                            {new Date(apt.requested_date).toLocaleString()}
+                                        </div>
+
+                                        <div className={aptStyles.mobileCardRow}>
+                                            <Stethoscope size={13} />
+                                            <span className={`${aptStyles.typeBadge} ${apt.is_consultation ? aptStyles.typeConsultation : aptStyles.typeAppointment}`}>
+                                                {apt.is_consultation ? 'Instant Meeting' : 'Appointment'}
+                                            </span>
+                                        </div>
+
+                                        {apt.display_notes && (
+                                            <div className={aptStyles.mobileCardNotes}>
+                                                <FileText size={13} style={{ marginTop: 1, flexShrink: 0 }} />
+                                                {apt.display_notes}
+                                            </div>
+                                        )}
+
+                                        {isActive(apt.status) && (
+                                            <button
+                                                className={aptStyles.mobileJoinBtn}
+                                                onClick={() => handleJoin(apt)}
+                                            >
+                                                <Video size={14} />
+                                                Join Meeting
+                                            </button>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        </>
+                    )}
                 </div>
             </section>
         </motion.div>
     );
 }
-
