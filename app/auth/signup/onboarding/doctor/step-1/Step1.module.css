@@ -1,7 +1,6 @@
 .container {
   min-height: 100vh;
   background: #f1f5f9;
-  /* Light gray background */
   display: flex;
   flex-direction: column;
 }
@@ -58,7 +57,6 @@
   font-size: 12px;
   font-weight: 700;
   color: #3b82f6;
-  /* Blue step color */
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -99,8 +97,11 @@
 }
 
 /* Main Content Area */
-.headerBlock {
-  margin-bottom: 24px;
+.mainContent {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 32px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .heading {
@@ -113,33 +114,39 @@
 .subheading {
   font-size: 15px;
   color: #64748b;
-  margin: 0 0 32px 0;
+  margin: 0 0 24px 0;
 }
 
+/* Search Box — fixed icon alignment */
 .searchBox {
   position: relative;
-  margin-bottom: 32px;
+  margin-bottom: 24px;
 }
 
 .searchIcon {
   position: absolute;
-  left: 16px;
-  top: 50%;
-  transform: translateY(-50%);
+  left: 14px;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: #94a3b8;
-  font-size: 16px;
+  pointer-events: none;
+  line-height: 0;
 }
 
 .searchInput {
   width: 100%;
-  height: 48px;
-  padding: 0 16px 0 44px;
+  height: 44px;
+  padding: 0 16px 0 42px;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
   font-size: 14px;
   color: #0f172a;
   outline: none;
   transition: all 0.2s;
+  box-sizing: border-box;
 }
 
 .searchInput:focus {
@@ -156,24 +163,41 @@
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 16px;
-  margin-bottom: 32px;
+  margin-bottom: 24px;
+  max-height: 420px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+/* Subtle scrollbar */
+.grid::-webkit-scrollbar {
+  width: 4px;
+}
+
+.grid::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+
+.grid::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
 }
 
 .gridItem {
   position: relative;
   aspect-ratio: 1.4;
   background: #ffffff;
-  border: 1px solid #94a3b8;
   border: 1px solid #cbd5e1;
   border-radius: 12px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 10px;
   cursor: pointer;
   transition: all 0.2s;
-  padding: 16px;
+  padding: 12px;
 }
 
 .gridItem:hover {
@@ -195,8 +219,8 @@
 
 .gridItem.selected .checkMark {
   position: absolute;
-  top: 12px;
-  right: 12px;
+  top: 10px;
+  right: 10px;
   width: 10px;
   height: 10px;
   background: #3b82f6;
@@ -206,22 +230,22 @@
 }
 
 .iconWrapper {
-  width: 60px;
-  height: 60px;
+  width: 52px;
+  height: 52px;
   background: #f1f5f9;
   border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  flex-shrink: 0;
 }
 
 .iconWrapper img {
-  width: 40px;
-  height: 40px;
+  width: 36px;
+  height: 36px;
   object-fit: contain;
 }
-
 
 .gridItem.selected .iconWrapper {
   background: #eff6ff;
@@ -229,18 +253,19 @@
 }
 
 .gridLabel {
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
   color: #0f172a;
   text-align: center;
+  line-height: 1.3;
 }
 
-/* Footer / Actions */
+/* "Can't find" link */
 .cantFind {
   text-align: center;
   font-size: 13px;
   color: #64748b;
-  margin-bottom: 40px;
+  margin-bottom: 32px;
 }
 
 .cantFind a {
@@ -253,6 +278,103 @@
   text-decoration: underline;
 }
 
+/* Manual input section */
+.manualInputSection {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin-bottom: 32px;
+}
+
+.manualLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0 0 10px 0;
+}
+
+.manualInputRow {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.manualInput {
+  flex: 1;
+  height: 40px;
+  padding: 0 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #0f172a;
+  outline: none;
+  transition: all 0.2s;
+  background: #ffffff;
+}
+
+.manualInput:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.manualInput::placeholder {
+  color: #cbd5e1;
+}
+
+.manualAddBtn {
+  height: 40px;
+  padding: 0 20px;
+  background: #3b82f6;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+
+.manualAddBtn:hover {
+  background: #2563eb;
+}
+
+.manualCancelBtn {
+  height: 40px;
+  width: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.manualCancelBtn:hover {
+  border-color: #94a3b8;
+  color: #0f172a;
+}
+
+.manualError {
+  font-size: 12px;
+  color: #ef4444;
+  margin: 8px 0 0 0;
+}
+
+/* Error text */
+.errorText {
+  font-size: 13px;
+  color: #ef4444;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+/* Footer / Actions */
 .footerActions {
   display: flex;
   justify-content: flex-end;
@@ -291,10 +413,16 @@
   background: #2563eb;
 }
 
+.continueBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .grid {
     grid-template-columns: repeat(2, 1fr);
+    max-height: 360px;
   }
 
   .header {
@@ -302,6 +430,10 @@
   }
 
   .content {
+    padding: 16px;
+  }
+
+  .mainContent {
     padding: 20px;
   }
 

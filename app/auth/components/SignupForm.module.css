@@ -1,0 +1,254 @@
+/* ─── Tabs ─── */
+.tabs {
+    display: flex;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 24px;
+}
+
+.tabActive {
+    flex: 1;
+    padding: 14px;
+    text-align: center;
+    font-weight: 600;
+    color: #4361ee;
+    border-bottom: 2px solid #4361ee;
+    cursor: default;
+}
+
+.tabInactive {
+    flex: 1;
+    padding: 14px;
+    text-align: center;
+    text-decoration: none;
+    color: #6b7280;
+    font-weight: 500;
+    border-bottom: 2px solid transparent;
+}
+
+/* ─── Role Badge ─── */
+.roleBadge {
+    background: #f0f9ff;
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border: 1px solid #e0f2fe;
+}
+
+.roleBadgeTitle {
+    margin: 0 0 4px 0;
+    font-size: 13px;
+    color: #0c4a6e;
+    font-weight: 600;
+}
+
+.roleBadgeSub {
+    margin: 0;
+    font-size: 12px;
+    color: #0369a1;
+    opacity: 0.9;
+}
+
+.roleBadgeNote {
+    margin: 4px 0 0 0;
+    font-size: 11px;
+    color: #64748b;
+    font-style: italic;
+}
+
+/* ─── Labels ─── */
+.label {
+    font-size: 16px;
+    font-weight: 600;
+    color: #374151;
+}
+
+/* ─── Errors ─── */
+.fieldError {
+    color: #ef4444;
+    font-size: 13px;
+    font-weight: 600;
+    margin-top: -8px;
+    margin-bottom: 12px;
+}
+
+.fieldErrorTop {
+    color: #ef4444;
+    font-size: 13px;
+    font-weight: 600;
+    margin-top: -12px;
+    margin-bottom: 12px;
+}
+
+.fieldErrorTerms {
+    color: #ef4444;
+    font-size: 13px;
+    font-weight: 600;
+    margin-top: -16px;
+    margin-bottom: 16px;
+}
+
+.apiError {
+    color: #ef4444;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 16px;
+}
+
+/* ─── Phone hint ─── */
+.phoneHint {
+    font-size: 12px;
+    color: #6b7280;
+    margin-top: 4px;
+    margin-bottom: 16px;
+}
+
+/* ─── Password Requirements Box ─── */
+.passwordReqs {
+    background: #f3f4f6;
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    border: 1px solid #e5e7eb;
+}
+
+.passwordReqsTitle {
+    margin: 0 0 8px 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: #374151;
+}
+
+.passwordReqsList {
+    margin: 0;
+    padding-left: 20px;
+    font-size: 12px;
+    color: #4b5563;
+}
+
+.reqMet {
+    color: #16a34a;
+    transition: color 0.2s;
+}
+
+.reqUnmet {
+    transition: color 0.2s;
+}
+
+/* ─── Password Wrapper ─── */
+.passwordWrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.passwordWrapper input {
+    width: 100%;
+    margin-bottom: 0;
+    padding-right: 44px;
+    box-sizing: border-box;
+}
+
+.passwordToggleBtn {
+    position: absolute;
+    right: 10px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #9ca3af;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+/* Confirm password: icon + tick/cross together */
+.passwordConfirmActions {
+    position: absolute;
+    right: 10px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.passwordConfirmActions .passwordToggleBtn {
+    position: static;
+}
+
+/* ─── Match indicator ─── */
+.matchIndicator {
+    color: #16a34a;
+    font-weight: bold;
+    font-size: 16px;
+    line-height: 1;
+}
+
+.noMatchIndicator {
+    color: #ef4444;
+    font-weight: bold;
+    font-size: 16px;
+    line-height: 1;
+}
+
+/* ─── Terms ─── */
+.termsRow {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    align-items: flex-start;
+    margin-top: 12px;
+}
+
+.termsCheckbox {
+    width: 18px;
+    height: 18px;
+    margin-top: 2px;
+    cursor: pointer;
+}
+
+.termsLabel {
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.4;
+    margin-bottom: 0;
+    cursor: pointer;
+    color: #374151;
+}
+
+.termsLink {
+    color: #4361ee;
+}
+
+/* ─── Submit Button ─── */
+.submitBtn {
+    font-size: 15px;
+    font-weight: 600;
+    padding: 12px;
+}
+
+/* ─── HIPAA note ─── */
+.hipaaNote {
+    font-size: 12px;
+    color: #6b7280;
+    text-align: center;
+    margin-top: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.hipaaIcon {
+    font-size: 14px;
+}
+
+/* ─── Gender select ─── */
+.genderSelect {
+    width: 100%;
+    height: 42px;
+    font-size: 15px;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+    margin-bottom: 16px;
+    padding: 0 10px;
+}

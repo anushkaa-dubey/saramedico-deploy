@@ -97,10 +97,11 @@ export default function Sidebar() {
 
         <Link
           href="/dashboard/patient/profile"
+          onClick={() => setIsOpen(false)}
           style={{
             display: "flex",
             alignItems: "center",
-            justifyContent: "center",
+            justifyContent: "flex-start",
             gap: "10px",
             padding: "12px 16px",
             margin: "0 0 10px 0",

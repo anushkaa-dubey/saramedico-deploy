@@ -223,7 +223,6 @@ export default function HospitalDashboard() {
 
                 {/* Two column layout */}
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: "24px" }}>
-                    {/* Left: Recent Activity */}
                     <motion.div variants={cardVariants}>
                         <div style={{ background: "#fff", borderRadius: "16px", border: "1px solid #f1f5f9", overflow: "hidden" }}>
                             <div style={{ padding: "20px 24px", borderBottom: "1px solid #f8fafc" }}>

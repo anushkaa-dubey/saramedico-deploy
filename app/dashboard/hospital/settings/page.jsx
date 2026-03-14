@@ -12,7 +12,16 @@ import {
 import { fetchProfile } from "@/services/doctor"; // Use as fallback for admin name/email
 import { logoutUser } from "@/services/auth";
 import { useRouter } from "next/navigation";
-
+import {
+  Building2,
+  Shield,
+  HelpCircle,
+  Info,
+  LogOut,
+  CheckCircle,
+  AlertTriangle,
+  Camera
+} from "lucide-react";
 // ── Component ──────────────────────────────────────────────────────────────
 export default function SettingsPage() {
   const router = useRouter();
@@ -136,7 +145,7 @@ export default function SettingsPage() {
   };
 
   const tabs = [
-    { id: "profile", label: "Institutional Profile", icon: "🏥" },
+    { id: "profile", label: "Institutional Profile", icon: Building2 },
   ];
 
   const inputStyle = {
@@ -220,8 +229,11 @@ export default function SettingsPage() {
               gap: "10px",
             }}
           >
-            <span>{message.type === "success" ? "✅" : "⚠️"}</span>
-            {message.text}
+            {message.type === "success" ? (
+              <CheckCircle size={18} />
+            ) : (
+              <AlertTriangle size={18} />
+            )}            {message.text}
           </motion.div>
         )}
 
@@ -262,15 +274,26 @@ export default function SettingsPage() {
                 {hospitalInfo.avatar_url ? (
                   <img src={hospitalInfo.avatar_url} alt="logo"
                     style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                ) : "🏥"}
+                ) : <Building2 size={40} color="white" />}
                 {isAdmin && (
                   <>
-                    <div style={{
-                      position: "absolute", bottom: 0, left: 0, right: 0,
-                      background: "rgba(0,0,0,0.3)", height: "30%",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      fontSize: "12px", color: "white", fontWeight: "700"
-                    }}>EDIT</div>
+                    <div
+                      style={{
+                        position: "absolute",
+                        bottom: "8px",
+                        right: "8px",
+                        background: "#3b82f6",
+                        borderRadius: "50%",
+                        width: "32px",
+                        height: "32px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        boxShadow: "0 4px 10px rgba(0,0,0,0.2)"
+                      }}
+                    >
+                      <Camera size={16} color="white" />
+                    </div>
                     <input
                       type="file"
                       ref={fileInputRef}
@@ -322,8 +345,7 @@ export default function SettingsPage() {
                     transition: "all 0.15s",
                   }}
                 >
-                  <span style={{ fontSize: "18px" }}>{tab.icon}</span>
-                  {tab.label}
+                  <tab.icon size={18} />                  {tab.label}
                 </button>
               ))}
             </div>
@@ -425,9 +447,9 @@ export default function SettingsPage() {
                 </p>
                 <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
                   {[
-                    { label: "Security & Privacy", sub: "Manage data encryption and privacy policies", icon: "🛡️" },
-                    { label: "Help Center", sub: "Search documentation and FAQs", icon: "❓" },
-                    { label: "About SaraMedico", sub: "Operating on Core v1.4.2 (Production)", icon: "ℹ️" },
+                    { label: "Security & Privacy", sub: "Manage data encryption and privacy policies", icon: Shield },
+                    { label: "Help Center", sub: "Search documentation and FAQs", icon: HelpCircle },
+                    { label: "About SaraMedico", sub: "Operating on Core v1.4.2 (Production)", icon: Info }
                   ].map((item, idx) => (
                     <div
                       key={idx}
@@ -440,8 +462,7 @@ export default function SettingsPage() {
                         cursor: "pointer",
                       }}
                     >
-                      <div style={{ fontSize: "24px" }}>{item.icon}</div>
-                      <div style={{ flex: 1 }}>
+                      <item.icon size={22} color="#64748b" />                      <div style={{ flex: 1 }}>
                         <div style={{ fontWeight: "800", color: "#1e293b", fontSize: "15px" }}>{item.label}</div>
                         <div style={{ color: "#64748b", fontSize: "13px", marginTop: "2px" }}>{item.sub}</div>
                       </div>
@@ -460,8 +481,7 @@ export default function SettingsPage() {
                         cursor: "pointer", transition: "all 0.15s",
                       }}
                     >
-                      <span>🚪</span>
-                      Sign Out from System
+                      <LogOut size={18} />                      Sign Out from System
                     </button>
                   </div>
                 </div>

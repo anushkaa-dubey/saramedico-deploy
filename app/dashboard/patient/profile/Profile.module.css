@@ -1,0 +1,358 @@
+/* ─── Page Wrapper ─── */
+.wrapper {
+    padding: 24px 24px 48px;
+    max-width: 960px;
+    margin: 0 auto;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* ─── Page Header ─── */
+.pageHeader {
+    margin-bottom: 24px;
+}
+
+.pageHeader h2 {
+    font-size: 22px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0 0 4px;
+}
+
+.pageHeader p {
+    font-size: 14px;
+    color: #64748b;
+    margin: 0;
+}
+
+/* ─── Main Card ─── */
+.detailsCard {
+    background: #ffffff;
+    border-radius: 16px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    display: flex;
+    flex-direction: row;
+    gap: 0;
+    overflow: hidden;
+}
+
+/* ─── Avatar / Left Column ─── */
+.avatarSection {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 32px 24px;
+    background: linear-gradient(160deg, #f8faff 0%, #f1f5f9 100%);
+    border-right: 1px solid #e2e8f0;
+    min-width: 200px;
+    max-width: 220px;
+    width: 220px;
+    box-sizing: border-box;
+}
+
+.avatarRing {
+    position: relative;
+    width: 88px;
+    height: 88px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #3b82f6, #6366f1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 32px;
+    font-weight: 700;
+    overflow: hidden;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(59, 130, 246, 0.35);
+    transition: box-shadow 0.2s;
+}
+
+.avatarRing:hover {
+    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.45);
+}
+
+.avatarRing img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.cameraOverlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5px 0;
+}
+
+.profileName {
+    margin: 12px 0 4px;
+    font-size: 16px;
+    font-weight: 700;
+    color: #0f172a;
+    text-align: center;
+}
+
+.mrn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    color: #64748b;
+    text-align: center;
+}
+
+.uploadArea {
+    margin-top: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.uploadLink {
+    font-size: 13px;
+    color: #4f46e5;
+    cursor: pointer;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: color 0.15s;
+}
+
+.uploadLink:hover {
+    color: #3730a3;
+}
+
+.saveBtn {
+    padding: 6px 18px;
+    background: #3730a3;
+    color: #fff;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    transition: background 0.2s;
+}
+
+.saveBtn:hover:not(:disabled) {
+    background: #312e81;
+}
+
+.saveBtn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.errorMsg {
+    color: #ef4444;
+    font-size: 12px;
+    text-align: center;
+}
+
+.successMsg {
+    color: #22c55e;
+    font-size: 12px;
+    text-align: center;
+}
+
+/* ─── Right / Form Column ─── */
+.formSection {
+    flex: 1;
+    padding: 32px 28px;
+    box-sizing: border-box;
+    min-width: 0;
+}
+
+/* ─── Section Headers ─── */
+.sectionHeader {
+    margin-bottom: 16px;
+}
+
+.sectionHeader+.sectionHeader,
+.formGrid+.sectionHeader {
+    margin-top: 28px;
+}
+
+.sectionTitle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 15px;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.iconPill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    flex-shrink: 0;
+}
+
+.iconPillBlue {
+    background: linear-gradient(135deg, #dbeafe, #ede9fe);
+}
+
+.iconPillGreen {
+    background: linear-gradient(135deg, #dcfce7, #d1fae5);
+}
+
+/* ─── Form Grid ─── */
+.formGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.formGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.fullWidth {
+    grid-column: 1 / -1;
+}
+
+.label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #94a3b8;
+    letter-spacing: 0.05em;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.input {
+    height: 44px;
+    padding: 0 12px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    background: #f8fafc;
+    color: #475569;
+    font-size: 14px;
+    font-weight: 500;
+    outline: none;
+    box-sizing: border-box;
+    width: 100%;
+}
+
+/* ─── Divider between sections ─── */
+.sectionDivider {
+    height: 1px;
+    background: #f1f5f9;
+    margin: 24px 0;
+}
+
+/* ─── TABLET (≤ 768px) ─── */
+@media (max-width: 768px) {
+    .wrapper {
+        padding: 16px 16px 40px;
+    }
+
+    .detailsCard {
+        flex-direction: column;
+    }
+
+    .avatarSection {
+        min-width: unset;
+        max-width: unset;
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid #e2e8f0;
+        padding: 24px 20px;
+        flex-direction: row;
+        align-items: center;
+        gap: 20px;
+    }
+
+    .avatarMeta {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .profileName {
+        margin: 0 0 4px;
+        text-align: left;
+    }
+
+    .mrn {
+        text-align: left;
+    }
+
+    .uploadArea {
+        margin-top: 8px;
+        align-items: flex-start;
+    }
+
+    .formSection {
+        padding: 20px 16px;
+    }
+
+    .formGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .fullWidth {
+        grid-column: 1;
+    }
+}
+
+/* ─── MOBILE (≤ 480px) ─── */
+@media (max-width: 480px) {
+    .wrapper {
+        padding: 12px 12px 32px;
+    }
+
+    .pageHeader h2 {
+        font-size: 18px;
+    }
+
+    .avatarSection {
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .avatarMeta {
+        align-items: center;
+    }
+
+    .profileName {
+        text-align: center;
+    }
+
+    .mrn {
+        justify-content: center;
+    }
+
+    .uploadArea {
+        align-items: center;
+    }
+
+    .formSection {
+        padding: 16px 12px;
+    }
+
+    .sectionTitle {
+        font-size: 14px;
+    }
+
+    .formGrid {
+        gap: 12px;
+    }
+}

@@ -170,6 +170,7 @@ export default function LoginForm() {
           <a className="forgot" href="/auth/forgot-password" style={{ fontSize: "13px" }}>Forgot Password?</a>
         </label>
         <div style={{ position: "relative" }}>
+          <div className="password-wrapper"></div>
           <input
             id="password"
             type={showPassword ? "text" : "password"}
@@ -179,7 +180,7 @@ export default function LoginForm() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            style={{ width: "100%", paddingRight: "40px" }}
+            style={{ paddingRight: "40px" }}
           />
           <button
             type="button"
@@ -196,7 +197,8 @@ export default function LoginForm() {
               padding: "4px",
               display: "flex",
               alignItems: "center",
-              justifyContent: "center"
+              justifyContent: "center",
+              height: "100%"
             }}
           >
             {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}

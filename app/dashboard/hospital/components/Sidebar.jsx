@@ -1,19 +1,20 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import { logoutUser } from "@/services/auth";
 import { usePathname, useRouter } from "next/navigation";
 import styles from "../HospitalDashboard.module.css";
 import logo from "@/public/logo2.svg";
+import { API_BASE_URL, getAuthHeaders } from "@/services/apiConfig";
 import {
     LayoutDashboard, Calendar, Users, Menu, LogOut,
-    Building2, Stethoscope, BarChart2, MessageSquare, Settings
+    Building2, Stethoscope, Settings
 } from "lucide-react";
 
 export default function Sidebar() {
     const pathname = usePathname();
     const router = useRouter();
     const [isOpen, setIsOpen] = useState(false);
+    const [loggingOut, setLoggingOut] = useState(false);
 
     const isActive = (path) => {
         if (path === "/dashboard/hospital") return pathname === path;
@@ -21,8 +22,28 @@ export default function Sidebar() {
     };
 
     const handleLogout = async () => {
-        await logoutUser();
-        router.push("/auth/login");
+        setLoggingOut(true);
+        try {
+            const refreshToken =
+                localStorage.getItem("refreshToken") ||
+                localStorage.getItem("refresh_token") ||
+                "";
+
+            await fetch(`${API_BASE_URL}/auth/logout`, {
+                method: "POST",
+                headers: getAuthHeaders(),
+                body: JSON.stringify({ refresh_token: refreshToken }),
+            });
+        } catch (err) {
+            console.error("Logout error:", err);
+        } finally {
+            // Always clear and redirect even if API fails
+            localStorage.removeItem("authToken");
+            localStorage.removeItem("refreshToken");
+            localStorage.removeItem("refresh_token");
+            localStorage.removeItem("user");
+            router.replace("/auth/login");
+        }
     };
 
     const navItems = [
@@ -32,21 +53,18 @@ export default function Sidebar() {
         { label: "Doctors", path: "/dashboard/hospital/doctors", icon: <Stethoscope size={18} /> },
         { label: "Departments & Roles", path: "/dashboard/hospital/departments", icon: <Building2 size={18} /> },
         { label: "Staff Management", path: "/dashboard/hospital/staff-management", icon: <Users size={18} /> },
-        // { label: "Analytics", path: "/dashboard/hospital/analytics", icon: <BarChart2 size={18} /> },
-        // { label: "Messages", path: "/dashboard/hospital/messages", icon: <MessageSquare size={18} /> },
         { label: "Settings", path: "/dashboard/hospital/settings", icon: <Settings size={18} /> },
     ];
 
-
     return (
         <>
-            {/* Mobile hamburger button */}
+            {/* Mobile hamburger */}
             {!isOpen && (
                 <button
                     className={styles.mobileToggleBtn}
                     onClick={() => setIsOpen(true)}
                     aria-label="Toggle Menu"
-                    style={{ background: "white", border: "1px solid #e2e8f0", display: "flex" }}
+                    style={{ background: "white", border: "1px solid #e2e8f0" }}
                 >
                     <Menu size={20} color="#64748b" />
                 </button>
@@ -58,17 +76,30 @@ export default function Sidebar() {
             )}
 
             <aside className={`${styles.sidebar} ${isOpen ? styles.open : ""}`}>
+                {/* Top: Logo + Nav */}
                 <div style={{ flex: 1 }}>
                     {/* Logo */}
                     <div className={styles.logoRow} style={{ marginBottom: "32px" }}>
                         <div className={styles.iconPlaceholder}>
                             <img src={logo.src} alt="SaraMedico Logo" style={{ width: "130px" }} />
                         </div>
-                        {/* Mobile close button */}
                         {isOpen && (
                             <button
                                 onClick={() => setIsOpen(false)}
-                                style={{ marginLeft: "auto", border: "none", background: "#f1f5f9", width: "30px", height: "30px", borderRadius: "8px", cursor: "pointer", color: "#64748b", fontSize: "16px", display: "flex", alignItems: "center", justifyContent: "center" }}
+                                style={{
+                                    marginLeft: "auto",
+                                    border: "none",
+                                    background: "#f1f5f9",
+                                    width: "30px",
+                                    height: "30px",
+                                    borderRadius: "8px",
+                                    cursor: "pointer",
+                                    color: "#64748b",
+                                    fontSize: "16px",
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                }}
                             >
                                 ×
                             </button>
@@ -90,35 +121,28 @@ export default function Sidebar() {
                         ))}
                     </nav>
                 </div>
-                
-                <div className={styles.sidebarBottom} style={{ marginTop: "auto", paddingBottom: "20px" }}>
-                    <Link
-                        href="/dashboard/hospital/settings"
-                        className={`${styles.navItem} ${isActive("/dashboard/hospital/settings") ? styles.active : ""}`}
-                        style={{ margin: "0 12px 8px", width: "calc(100% - 24px)" }}
-                        onClick={() => setIsOpen(false)}
-                    >
-                        <Building2 size={18} />
-                        Settings
-                    </Link>
 
-                {/* Logout */}
-                <button
-                    className={styles.logoutBtn}
-                    onClick={handleLogout}
-                    style={{
-                        margin: "16px 0 8px",
-                        background: "transparent",
-                        border: "1px solid #e2e8f0",
-                        color: "#64748b",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                    }}
-                >
-                    <LogOut size={16} style={{ marginRight: "10px" }} />
-                    Logout
-                </button>
+                {/* Bottom: Logout only */}
+                <div style={{ marginTop: "auto", paddingBottom: "20px" }}>
+                    <button
+                        onClick={handleLogout}
+                        disabled={loggingOut}
+                        className={styles.logoutBtn}
+                        style={{
+                            margin: "16px 0 8px",
+                            background: "transparent",
+                            border: "1px solid #e2e8f0",
+                            color: "#64748b",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            opacity: loggingOut ? 0.6 : 1,
+                            cursor: loggingOut ? "not-allowed" : "pointer",
+                        }}
+                    >
+                        <LogOut size={16} style={{ marginRight: "10px" }} />
+                        {loggingOut ? "Logging out..." : "Logout"}
+                    </button>
                 </div>
             </aside>
         </>

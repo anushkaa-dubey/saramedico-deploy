@@ -227,6 +227,18 @@ input:focus {
   cursor: pointer;
 }
 
+.password-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.password-wrapper input {
+  margin-bottom: 0;
+}
+
+
 /* RESPONSIVE MEDIA QUERIES */
 
 /* Tablet and smaller (< 1024px) */
