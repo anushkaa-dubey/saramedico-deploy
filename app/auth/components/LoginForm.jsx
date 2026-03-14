@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 // import { loginUser, getCurrentUser } from "@/services/auth";
-import { loginUser } from "@/services/auth";
+import { loginUser, googleLogin } from "@/services/auth";
 import { Eye, EyeOff } from "lucide-react";
 
 export default function LoginForm() {
@@ -15,6 +15,7 @@ export default function LoginForm() {
   const [error, setError] = useState("");
 
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [computedRole, setComputedRole] = useState("doctor");
   const [isClient, setIsClient] = useState(false);
 
@@ -107,6 +108,15 @@ export default function LoginForm() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleGoogleLogin = () => {
+    setGoogleLoading(true);
+    // Redirect to the backend Google OAuth endpoint.
+    // The backend handles the full OAuth dance and returns tokens.
+    googleLogin(computedRole);
+    // Note: setGoogleLoading(false) is not called because the page
+    // will navigate away to Google's login screen.
   };
 
   if (!isClient) return null;
@@ -227,9 +237,16 @@ export default function LoginForm() {
           Continue with Apple ID
         </button>
 
-        <button type="button" className="social-btn">
+        <button
+          type="button"
+          className="social-btn"
+          id="google-login-btn"
+          onClick={handleGoogleLogin}
+          disabled={googleLoading || loading}
+          style={googleLoading ? { opacity: 0.7, cursor: "not-allowed" } : {}}
+        >
           <img src="/icons/google.svg" alt="Google" />
-          Continue with Google
+          {googleLoading ? "Redirecting to Google..." : "Continue with Google"}
         </button>
 
         {(computedRole !== "patient" && computedRole !== "admin" && computedRole !== "administrator") && (

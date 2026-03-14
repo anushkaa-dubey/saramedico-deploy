@@ -133,6 +133,61 @@ export const forgotPassword = async (payload) => {
     return handleResponse(response);
 };
 /**
+ * Initiate Google OAuth login
+ * Redirects the browser to the backend Google SSO login endpoint.
+ * The backend handles the full OAuth flow and the callback.
+ *
+ * @param {string} [role] - Optional role hint to pass as state (e.g. "doctor", "patient")
+ */
+export const googleLogin = (role) => {
+    // Determine the backend base URL (direct backend URL for OAuth redirect flow)
+    // We bypass the Next.js proxy here because the OAuth redirect chain must
+    // go through the backend's own origin so Google's redirect_uri matches.
+    const backendOrigin =
+        process.env.NEXT_PUBLIC_API_URL
+            ? new URL(process.env.NEXT_PUBLIC_API_URL).origin
+            : "http://localhost:8000";
+
+    const googleLoginUrl = `${backendOrigin}/api/v1/auth/google/login`;
+
+    // Store the role hint so the callback page can use it for routing hints
+    if (role && typeof window !== "undefined") {
+        sessionStorage.setItem("googleAuthRole", role);
+    }
+
+    // Full page redirect — required for the OAuth flow
+    window.location.href = googleLoginUrl;
+};
+
+/**
+ * Handle the Google OAuth callback data.
+ * Called by the /auth/google/callback frontend page after the backend
+ * redirects with access_token and refresh_token in the query params.
+ *
+ * @param {object} data - The LoginResponse data (access_token, refresh_token, user)
+ * @returns {{ userRole: string }} - The resolved role for routing
+ */
+export const handleGoogleCallback = (data) => {
+    const token = data.access_token || data.token;
+    if (token) {
+        localStorage.setItem("authToken", token);
+    }
+    if (data.refresh_token) {
+        localStorage.setItem("refreshToken", data.refresh_token);
+    }
+
+    const user = data?.user || data;
+    if (user && (user.role || user.email)) {
+        localStorage.setItem("user", JSON.stringify(user));
+    }
+
+    const rawRole = user?.role || "";
+    const userRole = String(rawRole).split(".").pop().trim().toLowerCase();
+
+    return { userRole, user };
+};
+
+/**
  * Upload profile avatar
  * POST /api/v1/users/me/avatar
  */
