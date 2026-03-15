@@ -137,7 +137,7 @@ export default function ChartReviewPage() {
             const file = files[0];
             await uploadPatientDocument(patientId, file, {
                 title: file.name,
-                category: "Chart Review"
+                category: "other"
             });
 
             // Reset the file input so the same file can be re-uploaded if needed

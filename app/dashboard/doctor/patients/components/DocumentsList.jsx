@@ -95,7 +95,7 @@ export default function DocumentsList({ patientId }) {
         setUploading(true);
         setError("");
         try {
-            await uploadPatientDocument(patientId, file, { title: file.name, category: "medical_record" });
+            await uploadPatientDocument(patientId, file, { title: file.name, category: "other" });
             await loadDocuments();
         } catch (err) {
             console.error("Upload error:", err);

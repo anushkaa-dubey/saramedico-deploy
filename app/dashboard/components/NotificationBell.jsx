@@ -79,8 +79,20 @@ export default function NotificationBell() {
                 return;
             }
 
-            const host = API_BASE_URL.replace(/^http/, "ws");
-            const ws = new WebSocket(`${host}/ws?token=${token}`);
+            // WebSocket MUST connect directly to the backend (port 8000), not through Next.js proxy
+            // Next.js rewrites do not support WebSocket proxying.
+            // 1. Try NEXT_PUBLIC_API_URL (e.g. http://107.20.98.130:8000/api/v1) → convert to ws://
+            // 2. Fallback: same hostname as the page but port 8000
+            let wsUrl;
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
+            if (apiUrl && apiUrl.startsWith("http")) {
+                wsUrl = apiUrl.replace(/^http/, "ws").replace(/\/api\/v1\/?$/, "");
+            } else {
+                // Running behind proxy — connect directly with the host's public IP on port 8000
+                const pageHost = window.location.hostname;
+                wsUrl = `ws://${pageHost}:8000`;
+            }
+            const ws = new WebSocket(`${wsUrl}/api/v1/ws?token=${token}`);
             wsRef.current = ws;
 
             ws.onmessage = (event) => {
