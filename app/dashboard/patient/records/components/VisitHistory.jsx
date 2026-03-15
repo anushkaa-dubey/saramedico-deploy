@@ -65,7 +65,6 @@ export default function VisitHistory() {
                                 <th>DOCTOR</th>
                                 <th>STATUS</th>
                                 <th>DIAGNOSIS</th>
-                                <th>ACTION</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -92,26 +91,6 @@ export default function VisitHistory() {
                                     </td>
                                     <td style={{ maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                         {c.diagnosis || "General Consultation"}
-                                    </td>
-                                    <td className={styles.action}>
-                                        <button
-                                            onClick={() => setSelectedVisitId(c.id)}
-                                            style={{
-                                                background: "none",
-                                                border: "none",
-                                                color: "#2563eb",
-                                                fontWeight: "600",
-                                                fontSize: "13px",
-                                                cursor: "pointer",
-                                                padding: 0,
-                                                textDecoration: "none",
-                                                display: "flex",
-                                                alignItems: "center",
-                                                gap: "4px"
-                                            }}
-                                        >
-                                            View Summary →
-                                        </button>
                                     </td>
                                 </tr>
                             ))}
