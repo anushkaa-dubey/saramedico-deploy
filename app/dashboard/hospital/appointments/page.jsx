@@ -52,8 +52,22 @@ export default function AppointmentsPage() {
 
     const loadDayData = async (date = selectedDate) => {
         try {
-            const data = await fetchCalendarDay(date.toISOString().split('T')[0]);
-            setDayEvents(data?.events || []);
+            // Use local date parts to avoid timezone shift from toISOString() in UTC
+            const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+            const data = await fetchCalendarDay(dateStr);
+            const events = data?.events || [];
+            
+            // De-duplicate appointments for org view (where doctor & patient both in same org)
+            const seenAppts = new Set();
+            const uniqueEvents = events.filter(ev => {
+                if (ev.appointment_id) {
+                    if (seenAppts.has(ev.appointment_id)) return false;
+                    seenAppts.add(ev.appointment_id);
+                }
+                return true;
+            });
+
+            setDayEvents(uniqueEvents);
         } catch (err) { console.error(err); }
     };
 
@@ -238,7 +252,6 @@ export default function AppointmentsPage() {
                                                         </div>
                                                     </div>
                                                     {badge}
-                                                    <button className={appt.apptMenuBtn}><MoreHorizontal size={16} /></button>
                                                 </div>
 
                                                 {/* Mobile card */}
@@ -255,7 +268,6 @@ export default function AppointmentsPage() {
                                                             <div className={appt.apptCardName}>{a.patient_name || "Anonymous"}</div>
                                                             <div className={appt.apptCardDoctor}>{a.doctor_name || "Care Provider"}</div>
                                                         </div>
-                                                        <button className={appt.apptMenuBtn}><MoreHorizontal size={16} /></button>
                                                     </div>
                                                 </div>
                                             </motion.div>
@@ -352,7 +364,7 @@ export default function AppointmentsPage() {
                                         <div className={appt.dayGrid}>
                                             {HOUR_SLOTS.map(hour => {
                                                 const slotAppts = appointments.filter(a => { const ad = new Date(a.scheduled_at); return ad.toDateString() === selectedDate.toDateString() && ad.getHours() === hour; });
-                                                const slotEvents = dayEvents.filter(e => new Date(e.start_time).getHours() === hour);
+                                                const slotEvents = dayEvents.filter(e => new Date(e.start_time).getHours() === hour && e.event_type !== 'appointment');
                                                 const allItems = [...slotAppts.map(a => ({ type: 'appt', label: a.patient_name || "Patient", sub: a.doctor_name || "" })), ...slotEvents.map(e => ({ type: 'event', label: e.title || "Event", sub: e.metadata?.doctor_name || "" }))];
                                                 const isCurrent = new Date().getHours() === hour && selectedDate.toDateString() === new Date().toDateString();
                                                 return (

@@ -9,7 +9,7 @@ import PatientVitals from "./components/PatientVitals";
 import styles from "./Patients.module.css";
 import { motion } from "framer-motion";
 import { Users, Calendar, ChevronRight, MoreVertical, Trash2, Search } from "lucide-react";
-import { fetchAppointments, fetchPatients, fetchDoctorProfile, fetchPatientProfile } from "@/services/doctor";
+import { fetchAppointments, fetchPatients, fetchDoctorProfile, fetchPatientForDoctor } from "@/services/doctor";
 import { checkPermissions, requestAccess, revokeDoctorAccess } from "@/services/permissions";
 import OnboardPatientModal from "./components/OnboardPatientModal";
 import EditPatientModal from "./components/EditPatientModal";
@@ -28,6 +28,7 @@ function PatientsContent() {
     const [actionLoading, setActionLoading] = useState(null);
     const [actionToast, setActionToast] = useState(null);
     const [permissionDenied, setPermissionDenied] = useState(false);
+    const [accessStatus, setAccessStatus] = useState(null); // 'checking' | 'granted' | 'denied' | null
     const menuRef = useRef(null);
 
     const calcAge = (dob) => {
@@ -68,24 +69,23 @@ function PatientsContent() {
         }
     };
 
-    const handleCheckPermission = async (patient) => {
+    const handleCheckPermission = async (patientId, patientName) => {
         if (!doctorId) return;
-        setActionLoading(patient.id);
-        setOpenMenuId(null);
+        setAccessStatus('checking');
         try {
-            const result = await checkPermissions(patient.id, doctorId);
-            const hasAccess = result?.has_access ?? result?.access ?? result?.allowed ?? false;
+            const result = await checkPermissions(patientId, doctorId);
+            const hasAccess = result?.has_permission ?? result?.success ?? false;
+            
             if (hasAccess) {
-                showToast(`✅ You have access to ${patient.name}'s records.`, "success");
+                setAccessStatus('granted');
                 setPermissionDenied(false);
             } else {
-                showToast(`🔒 No access to ${patient.name}'s records.`, "error");
-                if (selectedId === patient.id) setPermissionDenied(true);
+                setAccessStatus('denied');
+                setPermissionDenied(true);
             }
         } catch (err) {
-            showToast(`Error checking permission: ${err.message}`, "error");
-        } finally {
-            setActionLoading(null);
+            console.error("Permission check error:", err);
+            setAccessStatus(null);
         }
     };
 
@@ -94,8 +94,26 @@ function PatientsContent() {
         setActionLoading(patient.id);
         setOpenMenuId(null);
         try {
+            // Check if already has access first
+            const check = await checkPermissions(patient.id, doctorId);
+            const hasAccess = check?.has_permission ?? check?.success ?? false;
+            
+            if (hasAccess) {
+                showToast(`✅ You already have access to ${patient.name}'s records.`, "info");
+                if (selectedId === patient.id) {
+                    setAccessStatus('granted');
+                    setPermissionDenied(false);
+                }
+                return;
+            }
+
             await requestAccess({ patient_id: patient.id, doctor_id: doctorId, access_level: "read_analyze", ai_access_permission: true });
             showToast(`📨 Access request sent to ${patient.name}.`, "success");
+            // After requesting, we can immediately reset status to help UI
+            if (selectedId === patient.id) {
+                setAccessStatus(null);
+                setPermissionDenied(false);
+            }
         } catch (err) {
             showToast(`Failed: ${err.message}`, "error");
         } finally {
@@ -110,6 +128,12 @@ function PatientsContent() {
         try {
             await revokeDoctorAccess({ patient_id: patient.id, doctor_id: doctorId });
             showToast(`Access to ${patient.name} revoked.`, "info");
+            
+            // Sync UI status if the revoked patient is the currently selected one
+            if (selectedId === patient.id) {
+                setAccessStatus('denied');
+                setPermissionDenied(true);
+            }
         } catch (err) {
             showToast(`Failed: ${err.message}`, "error");
         } finally {
@@ -194,11 +218,12 @@ function PatientsContent() {
     useEffect(() => {
         if (selectedId) {
             loadVisits(selectedId);
-            fetchPatientProfile(selectedId)
+            handleCheckPermission(selectedId);
+            fetchPatientForDoctor(selectedId)
                 .then(profile => setSelectedPatientDetail(profile))
-                .catch(err => { console.warn("fetchPatientProfile failed:", err); setSelectedPatientDetail(null); });
+                .catch(err => { console.warn("fetchPatientForDoctor failed:", err); setSelectedPatientDetail(null); });
         }
-    }, [selectedId]);
+    }, [selectedId, doctorId]);
 
     const loadVisits = async (pId) => {
         setLoadingVisits(true);
@@ -236,9 +261,10 @@ function PatientsContent() {
             age: computedAge !== null ? computedAge : p.age,
             gender: detail?.gender || p.gender || "N/A",
             phone: detail?.phoneNumber || detail?.phone_number || detail?.phone || detail?.user?.phoneNumber || detail?.user?.phone || detail?.contact?.phone || p.phone || "N/A",
+            homePhone: detail?.home_phone || detail?.homePhone || "N/A",
             email: detail?.email || detail?.email_address || detail?.user?.email || detail?.contact?.email || p.email || "N/A",
             mrn: detail?.mrn || detail?.medical_record_number || p.mrn || "N/A",
-            avatar: detail?.avatar || detail?.profile_image || p.avatar || null,
+            avatar: detail?.avatar_url || detail?.avatar || detail?.profile_image || p.avatar || null,
         };
     };
 
@@ -323,10 +349,15 @@ function PatientsContent() {
                                 {filteredPatients.map((patient) => (
                                     <div
                                         key={patient.id}
-                                        className={`${styles.patientItem} ${selectedId === patient.id ? styles.active : ''}`}
-                                        onClick={() => { setSelectedId(patient.id); setPermissionDenied(false); }}
+                                        className={`${styles.patientItem} ${selectedId === patient.id ? styles.selected : ''}`}
+                                        onClick={() => { setSelectedId(patient.id); setPermissionDenied(false); setAccessStatus(null); }}
                                         style={{ position: "relative" }}
                                     >
+                                        <div className={styles.patientAvatar}>
+                                            {patient.avatar 
+                                                ? <img src={patient.avatar} alt={patient.name} style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "8px" }} />
+                                                : (patient.name ? patient.name.split(" ").map(w => w[0]).slice(0, 2).join("").toUpperCase() : "?")}
+                                        </div>
                                         <div className={styles.nameGroup}>
                                             <span className={styles.pName}>{patient.name}</span>
                                             <span className={`${styles.pStatus} ${styles[patient.statusClass]}`}>{patient.status}</span>
@@ -357,7 +388,6 @@ function PatientsContent() {
                                                     {[
                                                         { label: "📂 View Documents", action: () => { setSelectedId(patient.id); setActiveTab("documents"); setOpenMenuId(null); } },
                                                         { label: "📨 Request Access", action: () => handleRequestAccess(patient) },
-                                                        { label: "🔍 Check Permission", action: () => handleCheckPermission(patient) },
                                                         { label: "🚫 Revoke Access", action: () => handleRevokeAccess(patient), danger: true },
                                                     ].map((item) => (
                                                         <button key={item.label} onClick={item.action} style={{ display: "block", width: "100%", textAlign: "left", padding: "10px 14px", background: "none", border: "none", fontSize: "13px", cursor: "pointer", color: item.danger ? "#ef4444" : "#1e293b", fontWeight: "500", borderBottom: "1px solid #f8fafc", transition: "background 0.1s" }}
@@ -380,22 +410,33 @@ function PatientsContent() {
                     {/* Patient Details */}
                     {selectedPatient && enrichedSelectedPatient && (
                         <div className={styles.detailsPanel}>
+                            {accessStatus === 'granted' && (
+                                <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: "10px", padding: "12px 16px", marginBottom: "4px", display: "flex", alignItems: "center", gap: "10px" }}>
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" /><polyline points="22 4 12 14.01 9 11.01" /></svg>
+                                    <div>
+                                        <div style={{ fontSize: "13px", fontWeight: "700", color: "#166534" }}>Access Granted</div>
+                                        <div style={{ fontSize: "12px", color: "#14532d" }}>You have full authorization to view and manage this patient&apos;s records.</div>
+                                    </div>
+                                    <button onClick={() => setAccessStatus(null)} style={{ marginLeft: "auto", background: "none", border: "none", cursor: "pointer", color: "#94a3b8" }}>✕</button>
+                                </div>
+                            )}
+
                             {permissionDenied && (
                                 <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "10px", padding: "12px 16px", marginBottom: "4px", display: "flex", alignItems: "center", gap: "10px" }}>
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2"><circle cx="12" cy="12" r="10" /><line x1="4.93" y1="4.93" x2="19.07" y2="19.07" /></svg>
                                     <div>
                                         <div style={{ fontSize: "13px", fontWeight: "700", color: "#dc2626" }}>Access Restricted</div>
-                                        <div style={{ fontSize: "12px", color: "#91231c" }}>Access to this patient's records requires patient approval.</div>
+                                        <div style={{ fontSize: "12px", color: "#91231c" }}>Access to this patient&apos;s records requires patient approval.</div>
                                     </div>
                                     <button onClick={() => setPermissionDenied(false)} style={{ marginLeft: "auto", background: "none", border: "none", cursor: "pointer", color: "#94a3b8" }}>✕</button>
                                 </div>
                             )}
 
                             <div className={styles.profileCard}>
-                                <div className={styles.avatarLarge} style={{ display: "flex", alignItems: "center", justifyContent: "center", background: "linear-gradient(135deg, #359AFF, #9CCDFF)", color: "#fff", fontSize: "20px", fontWeight: "700", userSelect: "none" }}>
-                                    {selectedPatient.avatar
-                                        ? <img src={selectedPatient.avatar} alt={selectedPatient.name} style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "50%" }} />
-                                        : (selectedPatient.name ? selectedPatient.name.split(" ").map(w => w[0]).slice(0, 2).join("").toUpperCase() : "?")}
+                                <div className={styles.avatarLarge} style={{ display: "flex", alignItems: "center", justifyContent: "center", background: "linear-gradient(135deg, #359AFF, #9CCDFF)", color: "#fff", fontSize: "20px", fontWeight: "700", userSelect: "none", overflow: "hidden" }}>
+                                    {enrichedSelectedPatient.avatar
+                                        ? <img src={enrichedSelectedPatient.avatar} alt={enrichedSelectedPatient.name} style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "50%" }} />
+                                        : (enrichedSelectedPatient.name ? enrichedSelectedPatient.name.split(" ").map(w => w[0]).slice(0, 2).join("").toUpperCase() : "?")}
                                 </div>
 
                                 <div className={styles.profileInfo}>
@@ -412,7 +453,8 @@ function PatientsContent() {
                                         {[
                                             { label: "MRN", value: enrichedSelectedPatient.mrn },
                                             { label: "DOB", value: enrichedSelectedPatient.dob },
-                                            { label: "PHONE", value: enrichedSelectedPatient.phone },
+                                            { label: "MOBILE", value: enrichedSelectedPatient.phone },
+                                            { label: "HOME", value: enrichedSelectedPatient.homePhone },
                                             { label: "EMAIL", value: enrichedSelectedPatient.email },
                                         ].map(s => (
                                             <div key={s.label} className={styles.statItem}>

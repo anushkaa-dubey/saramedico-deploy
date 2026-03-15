@@ -23,6 +23,7 @@ export default function OnboardPatientModal({ isOpen, onClose, onSuccess }) {
         emergency_name: "",
         emergency_relationship: "",
         emergency_phone: "",
+        home_phone: "",
         medicalHistory: "",
         allergies: "",
         medications: ""
@@ -66,11 +67,12 @@ export default function OnboardPatientModal({ isOpen, onClose, onSuccess }) {
                 phone_number: `+${formData.phone_number.replace(/\D/g, "")}`,
                 date_of_birth: formData.date_of_birth,
                 gender: formData.gender,
+                home_phone: formData.home_phone ? `+${formData.home_phone.replace(/\D/g, "")}` : null,
                 address: {
                     street: formData.address_street,
                     city: formData.address_city,
                     state: formData.address_state,
-                    zip: formData.address_zipCode
+                    zipCode: formData.address_zipCode
                 },
                 medical_history: formData.medicalHistory || "None",
                 allergies: formData.allergies
@@ -285,28 +287,53 @@ export default function OnboardPatientModal({ isOpen, onClose, onSuccess }) {
                                 </div>
                             </div>
 
-                            <div className={styles.field}>
-                                <label>Phone Number <span className={styles.required}>*</span></label>
-                                <PhoneInput
-                                    country={"in"}
-                                    value={formData.phone_number}
-                                    onChange={(phone) => setFormData({ ...formData, phone_number: phone })}
-                                    inputStyle={{
-                                        width: "100%",
-                                        height: "42px",
-                                        fontSize: "14px",
-                                        borderRadius: "6px",
-                                        border: "1px solid #e2e8f0",
-                                    }}
-                                    buttonStyle={{
-                                        border: "1px solid #e2e8f0",
-                                        borderRadius: "6px 0 0 6px",
-                                        backgroundColor: "#fff"
-                                    }}
-                                    containerStyle={{ marginBottom: "0px" }}
-                                    enableSearch={true}
-                                    placeholder="+1 (555) 000-0000"
-                                />
+                            <div className={styles.row}>
+                                <div className={styles.field}>
+                                    <label>Mobile Phone <span className={styles.required}>*</span></label>
+                                    <PhoneInput
+                                        country={"in"}
+                                        value={formData.phone_number}
+                                        onChange={(phone) => setFormData({ ...formData, phone_number: phone })}
+                                        inputStyle={{
+                                            width: "100%",
+                                            height: "42px",
+                                            fontSize: "14px",
+                                            borderRadius: "6px",
+                                            border: "1px solid #e2e8f0",
+                                        }}
+                                        buttonStyle={{
+                                            border: "1px solid #e2e8f0",
+                                            borderRadius: "6px 0 0 6px",
+                                            backgroundColor: "#fff"
+                                        }}
+                                        containerStyle={{ marginBottom: "0px" }}
+                                        enableSearch={true}
+                                        placeholder="+1 (555) 000-0000"
+                                    />
+                                </div>
+                                <div className={styles.field}>
+                                    <label>Home Phone</label>
+                                    <PhoneInput
+                                        country={"in"}
+                                        value={formData.home_phone}
+                                        onChange={(phone) => setFormData({ ...formData, home_phone: phone })}
+                                        inputStyle={{
+                                            width: "100%",
+                                            height: "42px",
+                                            fontSize: "14px",
+                                            borderRadius: "6px",
+                                            border: "1px solid #e2e8f0",
+                                        }}
+                                        buttonStyle={{
+                                            border: "1px solid #e2e8f0",
+                                            borderRadius: "6px 0 0 6px",
+                                            backgroundColor: "#fff"
+                                        }}
+                                        containerStyle={{ marginBottom: "0px" }}
+                                        enableSearch={true}
+                                        placeholder="+1 (555) 000-0000"
+                                    />
+                                </div>
                             </div>
 
                             <div className={styles.field}>

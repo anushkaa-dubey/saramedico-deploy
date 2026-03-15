@@ -242,8 +242,19 @@ export const fetchHospitalAppointments = async (filters = {}) => {
 
         const events = await handleResponse(response);
 
+        const seenAppts = new Set();
+        const uniqueEvents = [];
+
+        for (const ev of events) {
+            if (ev.appointment_id) {
+                if (seenAppts.has(ev.appointment_id)) continue;
+                seenAppts.add(ev.appointment_id);
+            }
+            uniqueEvents.push(ev);
+        }
+
         // Return normalized data structure
-        return events.map(ev => ({
+        return uniqueEvents.map(ev => ({
             id: ev.appointment_id || ev.id,
             ...ev,
             scheduled_at: ev.start_time,
@@ -499,5 +510,18 @@ export async function fetchPatientDetails(patientId) {
     });
 
     if (!res.ok) throw new Error("Failed to fetch patient details");
+    return res.json();
+}
+
+/**
+ * Fetch presigned URL for a patient document
+ * Endpoint: GET /api/v1/hospital/patients/documents/{document_id}/url
+ */
+export async function fetchDocumentUrl(documentId, disposition = "inline") {
+    const res = await fetch(
+        `${API_BASE_URL}/hospital/patients/documents/${documentId}/url?disposition=${disposition}`,
+        { headers: getAuthHeaders() }
+    );
+    if (!res.ok) throw new Error("Failed to fetch document URL");
     return res.json();
 }

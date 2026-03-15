@@ -400,6 +400,50 @@
     color: #94a3b8;
 }
 
+/* Renaming UI */
+.sessionItemContainer {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.sessionItemContainer .sessionItem {
+    flex: 1;
+    margin-bottom: 0;
+}
+
+.editTitleInput {
+    border: 1px solid #3b82f6;
+    border-radius: 6px;
+    padding: 2px 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #0081FE;
+    width: 100%;
+    outline: none;
+    background: white;
+}
+
+.renameBtn {
+    padding: 8px;
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.renameBtn:hover {
+    background: #eff6ff;
+    color: #3b82f6;
+}
+
 @keyframes slideDown {
     from {
         opacity: 0;

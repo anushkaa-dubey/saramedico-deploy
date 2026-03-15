@@ -85,7 +85,7 @@ export default function LiveConsultPage() {
                 id: pId,
                 full_name: c.patientName || c.patient_name || fallback?.full_name || "Patient",
                 email: fallback?.email || "N/A",
-                mrn: fallback?.mrn || "N/A",
+                mrn: c.patientMrn || fallback?.mrn || "N/A",
                 last_activity: "Active Meeting",
                 last_visit_date: c.scheduledAt || c.scheduled_at,
                 consultation_id: c.id,
@@ -96,29 +96,59 @@ export default function LiveConsultPage() {
         });
 
         const activeApts = (Array.isArray(appointmentList) ? appointmentList : []).filter(a =>
-            (a.status === 'accepted' || a.status === 'scheduled' || a.status === 'active') &&
-            !(a.completion_time || a.completionTime)
+            (a.status === 'accepted' || a.status === 'scheduled' || a.status === 'active')
         );
         const aptPatients = activeApts.map(a => {
-            const pId = a.patient_id || a.patient?.id || a.user_id || "N/A";
+            const pId = a.patient_id || a.patient?.id || "N/A";
             const fallback = dirMap[pId];
-            const name = a.patient_name || a.patientName || a.patient?.full_name || a.patient?.name || (a.patient?.first_name ? `${a.patient.first_name} ${a.patient.last_name || ''}` : null) || a.user?.full_name || a.user?.name || fallback?.full_name || "Patient";
+            // Backend sets patient_name in the appointment response (decrypted)
+            const name = a.patient_name || a.patientName || fallback?.full_name || "Patient";
+            const meetLink = a.meet_link || a.join_url || a.start_url || a.meetLink;
             return {
                 id: pId,
                 full_name: name,
-                email: a.patient?.email || fallback?.email || "N/A",
-                mrn: a.patient?.mrn || fallback?.mrn || "N/A",
-                last_activity: "Scheduled Appointment",
+                email: fallback?.email || "N/A",
+                mrn: fallback?.mrn || "N/A",
+                last_activity: a.status === 'accepted' ? "Confirmed Appointment" : "Scheduled Appointment",
                 last_visit_date: a.requested_date || a.appointment_time || a.date,
                 appointment_id: a.id,
-                meet_link: a.meet_link || a.join_url || a.start_url || a.meetLink,
+                meet_link: meetLink,
                 status: a.status,
                 type: 'appointment'
             };
         });
 
-        const merged = [...consultPatients, ...aptPatients, ...mappedRecent];
-        return Array.from(new Map(merged.map(p => [p.id, p])).values());
+        // Merge: consultation patients take priority over appointments for the same patient
+        const merged = [];
+        const seen = new Set();
+
+        // Consultations (doctor-initiated Live Consults) first
+        consultPatients.forEach(p => {
+            if (p.id && p.id !== "N/A" && !seen.has(p.id)) {
+                seen.add(p.id);
+                merged.push(p);
+            }
+        });
+
+        // Accepted appointments (patient-initiated)
+        aptPatients.forEach(p => {
+            if (p.id && p.id !== "N/A") {
+                if (!seen.has(p.id)) {
+                    seen.add(p.id);
+                    merged.push(p);
+                }
+            }
+        });
+
+        // Add recent patients who aren't already in merged
+        mappedRecent.forEach(p => {
+            if (!seen.has(p.id)) {
+                seen.add(p.id);
+                merged.push(p);
+            }
+        });
+
+        return merged;
     };
 
     useEffect(() => {

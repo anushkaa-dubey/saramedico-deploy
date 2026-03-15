@@ -19,6 +19,7 @@ export default function RecentActivity({ consultations, appointments }) {
       .map(c => ({
         id: c.id,
         doctorName: c.doctorName || c.doctor_name || "Doctor",
+        doctorAvatar: c.doctorAvatar || c.doctor_avatar || null,
         chiefComplaint: c.chiefComplaint || c.chief_complaint || "Consultation",
         date: c.scheduledAt || c.scheduled_at,
         status: c.visitState || c.status,
@@ -33,6 +34,7 @@ export default function RecentActivity({ consultations, appointments }) {
       .map(a => ({
         id: a.id,
         doctorName: a.doctor_name || "Doctor",
+        doctorAvatar: a.doctor_avatar || null,
         chiefComplaint: a.reason || "Appointment",
         date: a.requested_date || a.appointment_date,
         status: a.status,
@@ -54,6 +56,14 @@ export default function RecentActivity({ consultations, appointments }) {
     setActivities(combined);
     setLoading(false);
   }, [consultations, appointments]);
+
+  const getStatusClass = (statusStr) => {
+    if (!statusStr) return styles.statusReview;
+    const str = statusStr.toLowerCase();
+    if (str === "completed" || str === "accepted" || str === "scheduled") return styles.statusCompleted;
+    if (str === "declined" || str === "cancelled") return styles.statusDeclined;
+    return styles.statusReview; // pending, needs review, etc.
+  };
 
   if (loading) return <div className={styles.card}><p>Loading activity...</p></div>;
 
@@ -85,7 +95,20 @@ export default function RecentActivity({ consultations, appointments }) {
               <tr className={styles.activityRow} key={idx}>
                 <td>
                   <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                    <div className={styles.avatarSmall}></div>
+                    <div className={styles.avatarSmall} style={{ overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      {item.doctorAvatar ? (
+                        <img
+                          src={item.doctorAvatar}
+                          alt="Doctor"
+                          style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
+                          onError={(e) => { e.target.style.display = 'none'; }}
+                        />
+                      ) : (
+                        <span style={{ fontSize: '11px', fontWeight: '700', color: '#64748b', textTransform: 'uppercase' }}>
+                          {(item.doctorName || 'D').charAt(0)}
+                        </span>
+                      )}
+                    </div>
                     <span>
                       {(() => {
                         let name = item.doctorName || item.doctor_name || "Doctor";
@@ -104,7 +127,7 @@ export default function RecentActivity({ consultations, appointments }) {
                   {item.date ? new Date(item.date).toLocaleDateString() : "—"}
                 </td>
                 <td>
-                  <span className={(item.visitState === 'scheduled' || item.status === 'accepted' || item.status === 'scheduled') ? styles.statusCompleted : styles.statusReview}>
+                  <span className={getStatusClass(item.visitState || item.status)}>
                     {(item.visitState || item.status)
                       ? (item.visitState || item.status).charAt(0).toUpperCase() + (item.visitState || item.status).slice(1)
                       : "—"}
@@ -135,7 +158,7 @@ export default function RecentActivity({ consultations, appointments }) {
                 </span>
               </div>
             </div>
-            <span className={`${styles.statusBadge} ${(item.visitState === 'scheduled' || item.status === 'accepted' || item.status === 'scheduled') ? styles.ready : styles.pending}`}>
+            <span className={`${styles.statusBadge} ${getStatusClass(item.visitState || item.status)}`}>
               {item.visitState || item.status || "—"}
             </span>
           </div>

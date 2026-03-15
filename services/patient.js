@@ -37,7 +37,7 @@ export const fetchAppointmentById = async (appointmentId) => {
 
 
 export const fetchMyConsultations = async () => {
-    const response = await fetch(`${API_BASE_URL}/consultations`, {
+    const response = await fetch(`${API_BASE_URL}/patients/my-consultations`, {
         headers: getAuthHeaders(),
     });
     return handleResponse(response);

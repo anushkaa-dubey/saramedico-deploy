@@ -211,8 +211,25 @@
     background: #eff6ff;
 }
 
+.patientAvatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #e2e8f0, #cbd5e1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #475569;
+    font-size: 11px;
+    font-weight: 700;
+    margin-right: 12px;
+    flex-shrink: 0;
+    overflow: hidden;
+    user-select: none;
+}
+
 .nameGroup {
-    flex: 2;
+    flex: 1.5;
     display: flex;
     flex-direction: column;
     min-width: 0;

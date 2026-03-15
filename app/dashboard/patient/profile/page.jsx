@@ -50,6 +50,7 @@ export default function ProfilePage() {
         email: "",
         mobilePhone: "",
         homePhone: "",
+        streetAddress: "N/A",
         avatar: "",
     });
 
@@ -80,7 +81,8 @@ export default function ProfilePage() {
                 ssn: data.ssn || "***-**-****",
                 email: data.email || "",
                 mobilePhone: data.phone_number || data.phoneNumber || data.phone || "",
-                homePhone: data.homePhone || data.home_phone || "",
+                homePhone: data.home_phone || data.homePhone || "",
+                streetAddress: data.address?.street || data.address?.address_street || "N/A",
                 avatar: avatarUrl,
             });
         } catch (error) {
@@ -248,9 +250,9 @@ export default function ProfilePage() {
                             </div>
                             <div className={styles.formGroup}>
                                 <label className={styles.label}>
-                                    <ShieldCheck size={12} color="#94a3b8" /> SOCIAL SECURITY NUMBER
+                                    <Home size={12} color="#94a3b8" /> STREET ADDRESS
                                 </label>
-                                <input type="text" className={styles.input} value={profileData.ssn} readOnly />
+                                <input type="text" className={styles.input} value={profileData.streetAddress} readOnly />
                             </div>
                         </div>
 

@@ -2,7 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState, use } from "react";
-import { fetchPatientRecords, fetchPatientDetails } from "@/services/hospital";
+import { fetchPatientRecords, fetchPatientDetails, fetchDocumentUrl } from "@/services/hospital";
 import Topbar from "../../components/Topbar";
 import styles from "../../HospitalDashboard.module.css";
 import { motion, AnimatePresence } from "framer-motion";
@@ -26,6 +26,15 @@ import {
     Zap,
     ExternalLink
 } from "lucide-react";
+
+// --- URL Rewrite Helper (Common for Local Development) ---
+const REWRITE_URL = (url) => {
+    if (!url) return url;
+    // Redirect internal minio/s3 requests to our exposed port 9010
+    return url
+        .replace("http://minio:9000", "http://localhost:9010")
+        .replace("http://localhost:9000", "http://localhost:9010");
+};
 
 // ── Theme Mapping ──────────────────────────────────────────────────────────
 const METRIC_CONFIG = {
@@ -67,6 +76,35 @@ export default function PatientRecordPage({ params: paramsPromise }) {
         };
         loadRecords();
     }, [patientId]);
+
+    const handleViewDocument = async (documentId) => {
+        try {
+            const { url } = await fetchDocumentUrl(documentId, "inline");
+            const finalUrl = REWRITE_URL(url);
+            if (finalUrl) window.open(finalUrl, "_blank");
+        } catch (err) {
+            console.error("Failed to view document", err);
+            alert("Failed to open document. Please try again.");
+        }
+    };
+
+    const handleDownloadDocument = async (documentId, fileName) => {
+        try {
+            const { url } = await fetchDocumentUrl(documentId, "attachment");
+            const finalUrl = REWRITE_URL(url);
+            if (finalUrl) {
+                const link = document.createElement("a");
+                link.href = finalUrl;
+                link.setAttribute("download", fileName || "document");
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+            }
+        } catch (err) {
+            console.error("Failed to download document", err);
+            alert("Failed to download document. Please try again.");
+        }
+    };
 
     // Grouping metrics by recording session (timestamp)
     const getGroupedMetrics = () => {
@@ -150,7 +188,7 @@ export default function PatientRecordPage({ params: paramsPromise }) {
 
                             <div style={{ display: "flex", gap: "10px" }}>
                                 <span style={{ background: "rgba(16, 185, 129, 0.2)", color: "#10b981", padding: "6px 14px", borderRadius: "10px", fontSize: "11px", fontWeight: "900", textTransform: "uppercase" }}>Active Case</span>
-                                <span style={{ background: "rgba(255, 255, 255, 0.1)", color: "white", padding: "6px 14px", borderRadius: "10px", fontSize: "11px", fontWeight: "900", textTransform: "uppercase" }}>{patient?.mrn || "ORG-SECURE"}</span>
+                                <span style={{ background: "rgba(255, 255, 255, 0.1)", color: "white", padding: "6px 14px", borderRadius: "10px", fontSize: "11px", fontWeight: "900", textTransform: "uppercase" }}>{records?.patient_info?.mrn || patient?.mrn || "ORG-SECURE"}</span>
                             </div>
                         </div>
 
@@ -163,7 +201,7 @@ export default function PatientRecordPage({ params: paramsPromise }) {
                                     fontSize: "40px", fontWeight: "900", border: "4px solid rgba(255,255,255,0.1)",
                                     boxShadow: "0 10px 15px -3px rgba(0,0,0,0.3)"
                                 }}>
-                                    {patient?.full_name?.[0] || patient?.name?.[0] || "P"}
+                                    {records?.patient_info?.full_name?.[0] || patient?.full_name?.[0] || patient?.name?.[0] || "P"}
                                 </div>
                                 <div style={{ position: "absolute", bottom: "-2px", right: "-2px", width: "28px", height: "28px", background: "#10b981", borderRadius: "8px", display: "flex", alignItems: "center", justifyContent: "center", border: "3px solid #0f172a" }}>
                                     <Shield size={14} color="white" />
@@ -172,13 +210,13 @@ export default function PatientRecordPage({ params: paramsPromise }) {
 
                             <div style={{ marginLeft: "12px" }}>
                                 <h1 style={{ fontSize: "36px", fontWeight: "900", margin: 0, letterSpacing: "-0.04em", lineHeight: 1 }}>
-                                    {patient?.full_name || patient?.name || "Patient Record"}
+                                    {records?.patient_info?.full_name || patient?.full_name || patient?.name || "Patient Record"}
                                 </h1>
                                 <div style={{ display: "flex", flexWrap: "wrap", gap: "20px", marginTop: "16px", opacity: 0.9, fontSize: "15px", fontWeight: "600" }}>
-                                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}><User size={16} opacity={0.6} /> {patient?.gender || "Not Specified"}</div>
-                                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}><Clock size={16} opacity={0.6} /> {patient?.age || "Age N/A"} Years</div>
-                                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}><Calendar size={16} opacity={0.6} /> DOB: {patient?.date_of_birth || "Unavailable"}</div>
-                                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}><Droplets size={16} opacity={0.6} /> MRN: {patient?.mrn || "ORG-SECURE"}</div>
+                                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}><User size={16} opacity={0.6} /> {records?.patient_info?.gender || patient?.gender || "Not Specified"}</div>
+                                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}><Clock size={16} opacity={0.6} /> {records?.patient_info?.age || patient?.age || "Age N/A"} Years</div>
+                                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}><Calendar size={16} opacity={0.6} /> DOB: {records?.patient_info?.date_of_birth || patient?.date_of_birth || "Unavailable"}</div>
+                                    <div style={{ display: "flex", alignItems: "center", gap: "6px" }}><Droplets size={16} opacity={0.6} /> MRN: {records?.patient_info?.mrn || patient?.mrn || "ORG-SECURE"}</div>
                                 </div>
                             </div>
                         </div>
@@ -263,9 +301,12 @@ export default function PatientRecordPage({ params: paramsPromise }) {
                                                 </div>
                                                 <div style={{ flex: 1, overflow: "hidden" }}>
                                                     <div style={{ fontWeight: "800", color: "#1e293b", fontSize: "13px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{doc.file_name}</div>
-                                                    <div style={{ fontSize: "11px", color: "#94a3b8", fontWeight: "600" }}>Added {new Date().toLocaleDateString()}</div>
+                                                    <div style={{ fontSize: "11px", color: "#94a3b8", fontWeight: "600" }}>Added {new Date(doc.uploaded_at).toLocaleDateString()}</div>
                                                 </div>
-                                                <Download size={16} color="#cbd5e1" style={{ cursor: "pointer" }} />
+                                                <div style={{ display: "flex", gap: "4px" }}>
+                                                    <ExternalLink size={14} color="#3b82f6" style={{ cursor: "pointer" }} onClick={() => handleViewDocument(doc.id)} />
+                                                    <Download size={14} color="#cbd5e1" style={{ cursor: "pointer" }} onClick={() => handleDownloadDocument(doc.id, doc.file_name)} />
+                                                </div>
                                             </div>
                                         ))}
                                     </div>
@@ -364,7 +405,10 @@ export default function PatientRecordPage({ params: paramsPromise }) {
                                                 <div style={{ width: "56px", height: "56px", borderRadius: "18px", background: "#eff6ff", color: "#3b82f6", display: "flex", alignItems: "center", justifyContent: "center" }}>
                                                     <FileText size={28} />
                                                 </div>
-                                                <button style={{ background: "#f8fafc", border: "1px solid #e2e8f0", padding: "8px", borderRadius: "10px", color: "#64748b", cursor: "pointer" }}>
+                                                <button 
+                                                    onClick={() => handleViewDocument(doc.id)}
+                                                    style={{ background: "#f8fafc", border: "1px solid #e2e8f0", padding: "8px", borderRadius: "10px", color: "#64748b", cursor: "pointer" }}
+                                                >
                                                     <ExternalLink size={16} />
                                                 </button>
                                             </div>
@@ -376,10 +420,16 @@ export default function PatientRecordPage({ params: paramsPromise }) {
                                                 </div>
                                             </div>
                                             <div style={{ display: "flex", gap: "10px", marginTop: "10px" }}>
-                                                <button style={{ flex: 1, padding: "12px", borderRadius: "12px", background: "#1e293b", color: "#fff", border: "none", fontWeight: "800", fontSize: "13px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
+                                                <button 
+                                                    onClick={() => handleDownloadDocument(doc.id, doc.file_name)}
+                                                    style={{ flex: 1, padding: "12px", borderRadius: "12px", background: "#1e293b", color: "#fff", border: "none", fontWeight: "800", fontSize: "13px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
+                                                >
                                                     <Download size={14} /> Download
                                                 </button>
-                                                <button style={{ padding: "12px", borderRadius: "12px", background: "#f8fafc", color: "#1e293b", border: "1px solid #e2e8f0", fontWeight: "800", fontSize: "13px", cursor: "pointer" }}>
+                                                <button 
+                                                    onClick={() => handleViewDocument(doc.id)}
+                                                    style={{ padding: "12px", borderRadius: "12px", background: "#f8fafc", color: "#1e293b", border: "1px solid #e2e8f0", fontWeight: "800", fontSize: "13px", cursor: "pointer" }}
+                                                >
                                                     View
                                                 </button>
                                             </div>

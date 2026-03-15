@@ -1,5 +1,18 @@
 import { API_BASE_URL, getAuthHeaders, handleResponse } from "./apiConfig";
 
+const REWRITE_URL = (url) => {
+    if (!url) return url;
+    const BACKEND_HOST = process.env.NEXT_PUBLIC_API_URL
+        ? new URL(process.env.NEXT_PUBLIC_API_URL).hostname
+        : 'localhost';
+    if (url.includes('minio:9000') || url.includes(':9000')) {
+        return url
+            .replace(/^https?:\/\/minio:9000\//, `http://${BACKEND_HOST}:9010/`)
+            .replace(/^https?:\/\/[^/]+:9000\//, `http://${BACKEND_HOST}:9010/`);
+    }
+    return url;
+};
+
 /**
  * Fetch doctor's tasks
  * Endpoint: GET /api/v1/doctor/tasks
@@ -183,8 +196,12 @@ export const fetchPatients = async () => {
     });
 
     const data = await handleResponse(response);
-
-    return data?.all_patients || [];
+    const list = data?.all_patients || [];
+    
+    return list.map(p => ({
+        ...p,
+        avatar: REWRITE_URL(p.avatar)
+    }));
 };
 /**
  * Fetch patient profile details
@@ -194,7 +211,10 @@ export const fetchPatientProfile = async (patientId) => {
     const response = await fetch(`${API_BASE_URL}/patients/${patientId}`, {
         headers: getAuthHeaders(),
     });
-    return handleResponse(response);
+    const data = await handleResponse(response);
+    if (data && data.avatar_url) data.avatar_url = REWRITE_URL(data.avatar_url);
+    if (data && data.avatar) data.avatar = REWRITE_URL(data.avatar);
+    return data;
 };
 
 /**
@@ -205,7 +225,10 @@ export const fetchPatientForDoctor = async (patientId) => {
     const response = await fetch(`${API_BASE_URL}/doctor/patients/${patientId}`, {
         headers: getAuthHeaders(),
     });
-    return handleResponse(response);
+    const data = await handleResponse(response);
+    if (data && data.avatar_url) data.avatar_url = REWRITE_URL(data.avatar_url);
+    if (data && data.avatar) data.avatar = REWRITE_URL(data.avatar);
+    return data;
 };
 
 /**

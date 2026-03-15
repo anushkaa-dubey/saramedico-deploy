@@ -1,8 +1,8 @@
-"use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Check, Copy, User, Phone, Calendar, Mail, Lock, ShieldCheck } from "lucide-react";
-import { onboardPatient, fetchDoctorProfile } from "@/services/doctor";
+import { X, Check, Copy, User, Phone, Calendar, Mail, Lock, ShieldCheck, Stethoscope } from "lucide-react";
+import { onboardPatient } from "@/services/doctor";
+import { fetchHospitalStaff } from "@/services/hospital";
 
 export default function CreatePatientModal({ isOpen, onClose, onSuccess }) {
     const [formData, setFormData] = useState({
@@ -12,15 +12,75 @@ export default function CreatePatientModal({ isOpen, onClose, onSuccess }) {
         phone_number: "",
         date_of_birth: "",
         gender: "male",
+        doctorId: "",
         password: Math.random().toString(36).slice(-8) + "!" // Generate temp password
     });
 
     const [loading, setLoading] = useState(false);
     const [result, setResult] = useState(null);
     const [error, setError] = useState(null);
+    const [doctors, setDoctors] = useState([]);
+    const [loadingDoctors, setLoadingDoctors] = useState(false);
+
+    useEffect(() => {
+        if (isOpen) {
+            const loadDoctors = async () => {
+                setLoadingDoctors(true);
+                try {
+                    let staff = await fetchHospitalStaff();
+                    console.log("Fetched staff for modal:", staff);
+                    
+                    // Helper to check if a staff member is a doctor
+                    const isDoctor = (s) => {
+                        const role = (s.system_role || s.role || "").toLowerCase();
+                        return role.includes('doctor') || role.includes('member') || 
+                               (!["patient", "hospital", "admin"].includes(role) && role.length > 0);
+                    };
+
+                    let staffList = [];
+                    if (Array.isArray(staff)) {
+                        staffList = staff;
+                    } else if (staff?.staff && Array.isArray(staff.staff)) {
+                        staffList = staff.staff;
+                    }
+
+                    let filteredDoctors = staffList.filter(isDoctor);
+                    
+                    // FALLBACK: If no doctors found via fetchHospitalStaff, try fetchHospitalDoctorStatus
+                    if (filteredDoctors.length === 0) {
+                        console.log("No doctors found via fetchHospitalStaff, trying fetchHospitalDoctorStatus...");
+                        try {
+                            const { fetchHospitalDoctorStatus } = await import("@/services/hospital");
+                            const statusList = await fetchHospitalDoctorStatus();
+                            if (Array.isArray(statusList) && statusList.length > 0) {
+                                filteredDoctors = statusList;
+                                console.log("Doctors found via status fallback:", filteredDoctors);
+                            }
+                        } catch (fallbackErr) {
+                            console.error("Fallback doctor fetch failed:", fallbackErr);
+                        }
+                    }
+
+                    console.log("Final doctors list for modal:", filteredDoctors);
+                    setDoctors(filteredDoctors);
+                } catch (err) {
+                    console.error("Failed to load doctors:", err);
+                } finally {
+                    setLoadingDoctors(false);
+                }
+            };
+            loadDoctors();
+        }
+    }, [isOpen]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        
+        if (!formData.doctorId) {
+            setError("Please select a doctor to link this patient to.");
+            return;
+        }
+
         setLoading(true);
         setError(null);
 
@@ -33,6 +93,7 @@ export default function CreatePatientModal({ isOpen, onClose, onSuccess }) {
                 phoneNumber: formData.phone_number.startsWith('+') ? formData.phone_number : `+91${formData.phone_number.replace(/\D/g, "")}`,
                 dateOfBirth: formData.date_of_birth,
                 gender: formData.gender,
+                doctorId: formData.doctorId
             };
 
             const data = await onboardPatient(payload);
@@ -45,7 +106,7 @@ export default function CreatePatientModal({ isOpen, onClose, onSuccess }) {
         } catch (err) {
             console.error("Patient creation failed:", err);
             // Enhanced error message reporting
-            const errorMsg = err?.detail || err?.message || "Failed to create patient. Note: This action typically requires a Doctor role in the system.";
+            const errorMsg = err?.detail || err?.message || "Failed to create patient. Check your role permissions.";
             setError(errorMsg);
         } finally {
             setLoading(false);
@@ -109,6 +170,43 @@ export default function CreatePatientModal({ isOpen, onClose, onSuccess }) {
                 <div style={{ padding: '24px' }}>
                     {!result ? (
                         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                            {/* Doctor Selection - NEW */}
+                            <div className="field">
+                                <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', color: '#64748b', marginBottom: '6px', textTransform: 'uppercase' }}>Assigned Doctor</label>
+                                <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                                    <Stethoscope size={16} style={{ position: 'absolute', left: '16px', color: '#94a3b8', zIndex: 1 }} />
+                                    <select
+                                        required
+                                        value={formData.doctorId}
+                                        onChange={(e) => setFormData({ ...formData, doctorId: e.target.value })}
+                                        style={{ 
+                                            width: '100%', 
+                                            padding: '12px 16px 12px 44px', 
+                                            background: '#f8fafc', 
+                                            border: '1px solid #e2e8f0', 
+                                            borderRadius: '12px', 
+                                            fontSize: '14px', 
+                                            outline: 'none',
+                                            appearance: 'none',
+                                            backgroundImage: 'url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2\' stroke-linecap=\'round\' stroke-linejoin=\'round\'%3e%3cpolyline points=\'6 9 12 15 18 9\'%3e%3c/polyline%3e%3c/svg%3e")',
+                                            backgroundRepeat: 'no-repeat',
+                                            backgroundPosition: 'right 12px center',
+                                            backgroundSize: '16px'
+                                        }}
+                                        disabled={loadingDoctors}
+                                    >
+                                        <option value="">{loadingDoctors ? "Loading doctors..." : "Select a Doctor"}</option>
+                                        {doctors.length > 0 ? doctors.map(doc => (
+                                            <option key={doc.id} value={doc.id}>
+                                                Dr. {doc.full_name || doc.name} ({doc.specialty || "General"})
+                                            </option>
+                                        )) : (
+                                            <option disabled>No doctors found in your hospital staff</option>
+                                        )}
+                                    </select>
+                                </div>
+                            </div>
+
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                                 <div className="field">
                                     <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', color: '#64748b', marginBottom: '6px', textTransform: 'uppercase' }}>First Name</label>
@@ -190,6 +288,28 @@ export default function CreatePatientModal({ isOpen, onClose, onSuccess }) {
                                         style={{ width: '100%', padding: '12px 16px 12px 44px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', fontSize: '14px', outline: 'none' }}
                                     />
                                 </div>
+                            </div>
+
+                            {/* Patient Login Password */}
+                            <div className="field">
+                                <label style={{ display: 'block', fontSize: '11px', fontWeight: '700', color: '#64748b', marginBottom: '6px', textTransform: 'uppercase' }}>
+                                    Patient Login Password
+                                </label>
+                                <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                                    <Lock size={16} style={{ position: 'absolute', left: '16px', color: '#94a3b8' }} />
+                                    <input
+                                        required
+                                        type="text"
+                                        placeholder="Set a password for patient login"
+                                        value={formData.password}
+                                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                        style={{ width: '100%', padding: '12px 16px 12px 44px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '12px', fontSize: '14px', outline: 'none', fontFamily: 'monospace' }}
+                                        minLength={8}
+                                    />
+                                </div>
+                                <p style={{ fontSize: '11px', color: '#94a3b8', marginTop: '4px', marginLeft: '4px' }}>
+                                    Minimum 8 characters. Share this with the patient so they can log in.
+                                </p>
                             </div>
 
                             {error && (

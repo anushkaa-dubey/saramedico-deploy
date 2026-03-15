@@ -39,6 +39,21 @@ export const fetchAIChatHistory = async (sessionId) => {
 };
 
 /**
+ * Rename an existing AI Chat Session
+ * PATCH /api/v1/doctor/ai/chat/session/{session_id}
+ */
+export const renameAIChatSession = async (sessionId, newTitle) => {
+    const response = await fetch(`${API_BASE_URL}/doctor/ai/chat/session/${sessionId}`, {
+        method: "PATCH",
+        headers: getAuthHeaders(),
+        body: JSON.stringify({
+            title: newTitle
+        }),
+    });
+    return handleResponse(response);
+};
+
+/**
  * Send a message to the AI Chat (Streaming/SSE)
  * POST /api/v1/doctor/ai/chat/message
  * Note: This returns a raw response for the consumer to handle SSE stream.

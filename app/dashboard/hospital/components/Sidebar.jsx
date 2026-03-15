@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import styles from "../HospitalDashboard.module.css";
@@ -55,6 +55,23 @@ export default function Sidebar() {
         { label: "Staff Management", path: "/dashboard/hospital/staff-management", icon: <Users size={18} /> },
         { label: "Settings", path: "/dashboard/hospital/settings", icon: <Settings size={18} /> },
     ];
+
+    // Load user for profile section
+    const [user, setUser] = useState(null);
+    useEffect(() => {
+        const load = () => {
+            try {
+                const cached = localStorage.getItem("user");
+                if (cached) setUser(JSON.parse(cached));
+            } catch (_) {}
+        };
+        load();
+        window.addEventListener("profile-updated", load);
+        return () => window.removeEventListener("profile-updated", load);
+    }, []);
+
+    const displayName = user?.full_name || user?.name || "Hospital Admin";
+    const initials = displayName.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
 
     return (
         <>
@@ -122,14 +139,50 @@ export default function Sidebar() {
                     </nav>
                 </div>
 
-                {/* Bottom: Logout only */}
-                <div style={{ marginTop: "auto", paddingBottom: "20px" }}>
+                {/* Bottom: Profile + Logout */}
+                <div style={{ marginTop: "auto", padding: "20px 0" }}>
+                    {/* Profile Summary */}
+                    <div style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "12px",
+                        padding: "12px",
+                        background: "#f8fafc",
+                        borderRadius: "12px",
+                        marginBottom: "8px",
+                        border: "1px solid #f1f5f9"
+                    }}>
+                        <div style={{
+                            width: "32px",
+                            height: "32px",
+                            borderRadius: "8px",
+                            background: "linear-gradient(135deg, #3b82f6, #2563eb)",
+                            color: "white",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontSize: "12px",
+                            fontWeight: "700",
+                            overflow: "hidden"
+                        }}>
+                            {user?.avatar_url ? (
+                                <img src={user.avatar_url} style={{ width: "100%", height: "100%", objectFit: "cover" }} alt="User" />
+                            ) : initials}
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: "13px", fontWeight: "700", color: "#0f172a", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                                {displayName}
+                            </div>
+                            <div style={{ fontSize: "10px", color: "#64748b" }}>Administrator</div>
+                        </div>
+                    </div>
+
                     <button
                         onClick={handleLogout}
                         disabled={loggingOut}
                         className={styles.logoutBtn}
                         style={{
-                            margin: "16px 0 8px",
+                            width: "100%",
                             background: "transparent",
                             border: "1px solid #e2e8f0",
                             color: "#64748b",

@@ -7,10 +7,11 @@ import {
     createAIChatSession,
     fetchAIChatSessions,
     fetchAIChatHistory,
+    renameAIChatSession,
 } from "@/services/ai";
 import { checkAIPermission, requestAIAccess } from "@/services/doctor";
 import { getAuthHeaders, API_BASE_URL } from "@/services/apiConfig";
-import { MessageSquare, History, ChevronRight, Check, AlertCircle, Send, Plus } from "lucide-react";
+import { MessageSquare, History, ChevronRight, Check, AlertCircle, Send, Plus, Pencil } from "lucide-react";
 
 export default function AIChat({ onCitationClick, patientId, doctorId, documentId }) {
     const [messages, setMessages] = useState([]);
@@ -24,6 +25,8 @@ export default function AIChat({ onCitationClick, patientId, doctorId, documentI
     const [requestSent, setRequestSent] = useState(false);
     const [sessions, setSessions] = useState([]);
     const [showHistory, setShowHistory] = useState(false);
+    const [editingSessionId, setEditingSessionId] = useState(null);
+    const [editingTitle, setEditingTitle] = useState("");
 
     const sampleQuestions = [
         "What are the key findings?",
@@ -87,6 +90,24 @@ export default function AIChat({ onCitationClick, patientId, doctorId, documentI
         setSessionId(sId);
         loadHistory(sId);
         setShowHistory(false);
+        setEditingSessionId(null);
+    };
+
+    const handleRenameSubmit = async (sId) => {
+        if (!editingTitle.trim()) {
+            setEditingSessionId(null);
+            return;
+        }
+
+        try {
+            await renameAIChatSession(sId, editingTitle);
+            const updatedSessions = await fetchAIChatSessions(patientId);
+            setSessions(updatedSessions || []);
+        } catch (err) {
+            console.error("Failed to rename session:", err);
+        } finally {
+            setEditingSessionId(null);
+        }
     };
 
     const loadHistory = async (sId) => {
@@ -289,18 +310,56 @@ Use bullet points and markdown for structure. Do not include this instruction in
                             </div>
                         ) : (
                             sessions.map((s) => (
-                                <div
-                                    key={s.session_id}
-                                    className={`${styles.sessionItem} ${sessionId === s.session_id ? styles.activeSession : ""}`}
-                                    onClick={() => switchSession(s.session_id)}
-                                >
-                                    <div className={styles.sessionInfo}>
-                                        <span className={styles.sessionTitle}>{s.title || "Untitled Session"}</span>
-                                        <span className={styles.sessionDate}>
-                                            {new Date(s.created_at || Date.now()).toLocaleDateString()}
-                                        </span>
+                                <div key={s.session_id} className={styles.sessionItemContainer}>
+                                    <div
+                                        className={`${styles.sessionItem} ${sessionId === s.session_id ? styles.activeSession : ""}`}
+                                        onClick={() => switchSession(s.session_id)}
+                                    >
+                                        {editingSessionId === s.session_id ? (
+                                            <input
+                                                className={styles.editTitleInput}
+                                                value={editingTitle}
+                                                onChange={(e) => setEditingTitle(e.target.value)}
+                                                onBlur={() => handleRenameSubmit(s.session_id)}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter') handleRenameSubmit(s.session_id);
+                                                    if (e.key === 'Escape') setEditingSessionId(null);
+                                                }}
+                                                autoFocus
+                                                onClick={(e) => e.stopPropagation()}
+                                            />
+                                        ) : (
+                                            <>
+                                                <div className={styles.sessionInfo}>
+                                                    <span className={styles.sessionTitle}>{s.title || "Untitled Session"}</span>
+                                                    <span className={styles.sessionDate}>
+                                                        {new Date(s.created_at || Date.now()).toLocaleDateString()}
+                                                    </span>
+                                                </div>
+                                                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                                    {!editingSessionId && (
+                                                        <button
+                                                            className={styles.renameBtn}
+                                                            title="Rename Session"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setEditingSessionId(s.session_id);
+                                                                setEditingTitle(s.title || "Untitled Session");
+                                                            }}
+                                                            style={{ color: "#0081FE" }}
+                                                        >
+                                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                                                <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
+                                                            </svg>
+                                                        </button>
+                                                    )}
+                                                    {editingSessionId !== s.session_id && (
+                                                        <ChevronRight size={14} />
+                                                    )}
+                                                </div>
+                                            </>
+                                        )}
                                     </div>
-                                    <ChevronRight size={14} />
                                 </div>
                             ))
                         )}

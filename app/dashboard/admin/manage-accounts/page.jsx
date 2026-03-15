@@ -28,7 +28,8 @@ export default function ManageAccountsPage() {
     license_number: "",
     department: "",
     organization_display_name: "",
-    gender: ""
+    gender: "",
+    password: ""
   });
 
   useEffect(() => {
@@ -80,7 +81,8 @@ export default function ManageAccountsPage() {
         license_number: detail.license_number || "",
         department: detail.department || "",
         organization_display_name: detail.organization_name || "",
-        gender: detail.gender || ""
+        gender: detail.gender || "",
+        password: ""
       });
     } catch (err) {
       console.error("Failed to fetch user details", err);
@@ -93,12 +95,9 @@ export default function ManageAccountsPage() {
   const handleSave = async () => {
     try {
       await updateAdminAccount(editingUser.id, editForm);
-      setUsers(prev =>
-        prev.map(u =>
-          u.id === editingUser.id ? { ...u, ...editForm } : u
-        )
-      );
       setEditingUser(null);
+      // ✅ Always re-fetch from server so we see the real saved state
+      await loadAccounts();
       alert("Account updated successfully!");
     } catch (err) {
       console.error("Update failed", err);
@@ -253,6 +252,17 @@ export default function ManageAccountsPage() {
                     <option value="Other">Other</option>
                   </select>
                 </div>
+
+                <div className={styles.formGroup}>
+                  <label>System Password Override</label>
+                  <input
+                    className={styles.input}
+                    type="password"
+                    value={editForm.password}
+                    onChange={e => setEditForm({ ...editForm, password: e.target.value })}
+                    placeholder="Leave blank to keep current"
+                  />
+                </div>
             </div>
 
             {/* Doctor Specific Fields */}
@@ -297,26 +307,26 @@ export default function ManageAccountsPage() {
                 </div>
             )}
 
-            {/* Hospital/Clinic Specific Fields */}
-            {editForm.role === "hospital" && (
-                <div className={styles.roleFields} style={{ 
-                    marginTop: "16px", 
-                    padding: "16px", 
-                    background: "#f0f9ff", 
-                    borderRadius: "12px",
-                    border: "1px solid #bae6fd"
-                }}>
-                    <h4 style={{ margin: "0 0 12px 0", fontSize: "13px", color: "#0369a1" }}>Organizational Identity</h4>
-                    <div className={styles.formGroup}>
-                        <label>Clinic/Hospital Name</label>
-                        <input
-                            className={styles.input}
-                            value={editForm.organization_display_name}
-                            onChange={e => setEditForm({ ...editForm, organization_display_name: e.target.value })}
-                        />
-                    </div>
+            {/* Organization Name — visible for ALL roles */}
+            <div className={styles.roleFields} style={{ 
+                marginTop: "16px", 
+                padding: "16px", 
+                background: "#f0f9ff", 
+                borderRadius: "12px",
+                border: "1px solid #bae6fd"
+            }}>
+                <h4 style={{ margin: "0 0 12px 0", fontSize: "13px", color: "#0369a1" }}>Organization / Clinic Name</h4>
+                <p style={{ margin: "0 0 12px 0", fontSize: "12px", color: "#64748b"}}>⚠️ Renaming this will update the clinic name for ALL users in the same organization.</p>
+                <div className={styles.formGroup}>
+                    <label>Clinic/Hospital/Organization Name</label>
+                    <input
+                        className={styles.input}
+                        value={editForm.organization_display_name}
+                        onChange={e => setEditForm({ ...editForm, organization_display_name: e.target.value })}
+                        placeholder="e.g. City General Hospital"
+                    />
                 </div>
-            )}
+            </div>
 
             <div className={styles.modalActions}>
               <button 

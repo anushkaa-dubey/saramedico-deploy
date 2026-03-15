@@ -120,10 +120,13 @@ export default function DoctorDashboard() {
       setAppointments(appts || []);
       setDoctorProfile(profile);
 
+      const pendingRequests = (appts || []).filter(a => a.status === 'pending').length;
+      const completedVisits = (appts || []).filter(a => a.status === 'completed').length;
+
       setMetrics({
-        pending_review: clinicalMetrics?.pending_notes || queueData.pending_review || 0,
+        pending_review: pendingRequests, // Total appointment requests pending from patients
         high_urgency: urgentTasks,
-        cleared_today: queueData.cleared_today || 0,
+        cleared_today: completedVisits, // Total successfully completed appointments
         today_meetings: todayAppts.length,
         total_patients: patients.length,
         total_records: consultations.length
@@ -327,9 +330,9 @@ export default function DoctorDashboard() {
                 <ClipboardList size={22} />
               </div>
               <div className={styles.summaryInfo}>
-                <span className={styles.summaryLabel}>Pending Review</span>
+                <span className={styles.summaryLabel}>Pending Requests</span>
                 <h3 className={styles.summaryValue}>{metrics.pending_review}</h3>
-                <span className={styles.summaryTrend} style={{ color: '#3b82f6' }}>Awaiting Sign-off</span>
+                <span className={styles.summaryTrend} style={{ color: '#3b82f6' }}>Awaiting Your Approval</span>
               </div>
             </div>
 
@@ -349,7 +352,7 @@ export default function DoctorDashboard() {
                 <CheckCircle size={22} />
               </div>
               <div className={styles.summaryInfo}>
-                <span className={styles.summaryLabel}>Cleared Today</span>
+                <span className={styles.summaryLabel}>Completed Meetings</span>
                 <h3 className={styles.summaryValue}>{metrics.cleared_today}</h3>
                 <span className={styles.summaryTrend} style={{ color: '#16a34a' }}>Successfully Processed</span>
               </div>
@@ -391,7 +394,20 @@ export default function DoctorDashboard() {
                         <tr key={app.id || idx}>
                           <td>
                             <div className={styles.userCell}>
-                              <div className={styles.avatarSmall}></div>
+                              <div className={styles.avatarSmall}>
+                                {app.patient_avatar ? (
+                                  <img
+                                    src={app.patient_avatar}
+                                    alt="Patient"
+                                    className={styles.avatarSmallImg}
+                                    onError={(e) => { e.target.style.display = 'none'; }}
+                                  />
+                                ) : (
+                                  <span className={styles.avatarSmallInitials}>
+                                    {(app.patient_name || app.patientName || '?').charAt(0)}
+                                  </span>
+                                )}
+                              </div>
                               <span>
                                 {
                                   app.patient_name ||

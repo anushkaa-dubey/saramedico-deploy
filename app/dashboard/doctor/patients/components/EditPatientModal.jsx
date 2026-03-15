@@ -11,6 +11,7 @@ export default function EditPatientModal({ isOpen, onClose, patientId, onSuccess
         dateOfBirth: "",
         gender: "male",
         phoneNumber: "",
+        homePhone: "",
         email: "",
         address: {
             street: "",
@@ -47,6 +48,7 @@ export default function EditPatientModal({ isOpen, onClose, patientId, onSuccess
                 dateOfBirth: data.dob || data.dateOfBirth || data.date_of_birth || "",
                 gender: data.gender || "male",
                 phoneNumber: data.phone_number || data.phoneNumber || "",
+                homePhone: data.home_phone || data.homePhone || "",
                 email: data.email || "",
                 address: {
                     street: data.address?.street || "",
@@ -84,6 +86,7 @@ export default function EditPatientModal({ isOpen, onClose, patientId, onSuccess
             const payload = {
                 ...formData,
                 phoneNumber: formData.phoneNumber.startsWith("+") ? formData.phoneNumber : `+${formData.phoneNumber}`,
+                homePhone: formData.homePhone ? (formData.homePhone.startsWith("+") ? formData.homePhone : `+${formData.homePhone}`) : null,
             };
             await updatePatientForDoctor(patientId, payload);
             if (onSuccess) onSuccess();
@@ -152,11 +155,20 @@ export default function EditPatientModal({ isOpen, onClose, patientId, onSuccess
                                     />
                                 </div>
                                 <div className={styles.field}>
-                                    <label>Phone Number <span className={styles.required}>*</span></label>
+                                    <label>Mobile Phone <span className={styles.required}>*</span></label>
                                     <PhoneInput
                                         country={"in"}
                                         value={formData.phoneNumber}
                                         onChange={(phone) => setFormData({ ...formData, phoneNumber: phone })}
+                                        inputStyle={{ width: "100%", height: "42px" }}
+                                    />
+                                </div>
+                                <div className={styles.field}>
+                                    <label>Home Phone</label>
+                                    <PhoneInput
+                                        country={"in"}
+                                        value={formData.homePhone}
+                                        onChange={(phone) => setFormData({ ...formData, homePhone: phone })}
                                         inputStyle={{ width: "100%", height: "42px" }}
                                     />
                                 </div>

@@ -50,6 +50,7 @@ export default function AppointmentsPage() {
 
             const consults = (consultationsData?.consultations || []).map(c => ({
                 id: c.id,
+                doctor_id: c.doctorId || c.doctor_id,
                 doctor_name: c.doctorName || dMap[c.doctorId] || "Doctor",
                 requested_date: c.scheduledAt,
                 status: c.status,
@@ -60,7 +61,17 @@ export default function AppointmentsPage() {
 
             const combined = [
                 ...appointmentsData.map(a => ({ ...a, is_consultation: false, display_notes: a.doctor_notes || a.reason })),
-                ...consults
+                ...consults.filter(c => {
+                    // Skip this consultation if it has a matching appointment with the same doctor & scheduled time
+                    // Backend creates linked consultations when an appointment is approved, so they will share the same time.
+                    const cTime = new Date(c.requested_date).getTime();
+                    return !appointmentsData.find(a => {
+                        const aTime = new Date(a.requested_date).getTime();
+                        const sameDr = a.doctor_id === c.doctor_id;
+                        const sameTime = Math.abs(aTime - cTime) < 60000; // within 1 minute
+                        return sameDr && sameTime;
+                    });
+                })
             ].sort((a, b) => new Date(b.requested_date) - new Date(a.requested_date));
 
             setAppointments(combined);

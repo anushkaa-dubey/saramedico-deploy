@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import styles from "./AIChat.module.css";
-import { createAIChatSession, fetchAIChatSessions, fetchAIChatHistory } from "@/services/ai";
+import { createAIChatSession, fetchAIChatSessions, fetchAIChatHistory, renameAIChatSession } from "@/services/ai";
 import { getAuthHeaders, API_BASE_URL } from "@/services/apiConfig";
 import { checkAIPermission, grantAIAccess } from "@/services/doctor";
 
@@ -24,6 +24,8 @@ export default function PatientAIChat({ patientId, documentId = null, doctorId =
     const [sessions, setSessions] = useState([]);
     const [isSessionsLoading, setIsSessionsLoading] = useState(false);
     const [showHistory, setShowHistory] = useState(false);
+    const [editingSessionId, setEditingSessionId] = useState(null);
+    const [editingTitle, setEditingTitle] = useState("");
     const messagesEndRef = useRef(null);
     const activeMode = "doctor";
 
@@ -101,6 +103,26 @@ export default function PatientAIChat({ patientId, documentId = null, doctorId =
     const switchSession = (sessionId) => {
         loadChatHistory(sessionId);
         setShowHistory(false);
+        setEditingSessionId(null);
+    };
+
+    const handleRenameSubmit = async (sessionId) => {
+        if (!editingTitle.trim()) {
+            setEditingSessionId(null);
+            return;
+        }
+
+        try {
+            await renameAIChatSession(sessionId, editingTitle);
+            // Refresh sessions list
+            const updatedSessions = await fetchAIChatSessions(patientId);
+            setSessions(updatedSessions || []);
+        } catch (err) {
+            console.error("Failed to rename session:", err);
+            setError("Failed to rename session");
+        } finally {
+            setEditingSessionId(null);
+        }
     };
 
     const scrollToBottom = () => {
@@ -351,20 +373,72 @@ Use bullet points for findings and markdown for structure. Do not include this i
                             </div>
                         ) : (
                             sessions.map((s) => (
-                                <div
-                                    key={s.session_id}
-                                    className={`${styles.sessionItem} ${conversationId === s.session_id ? styles.activeSession : ""}`}
-                                    onClick={() => switchSession(s.session_id)}
-                                >
-                                    <div className={styles.sessionInfo}>
-                                        <span className={styles.sessionTitle}>{s.title || "Untitled Chat"}</span>
-                                        <span className={styles.sessionDate}>
-                                            {new Date(s.created_at || Date.now()).toLocaleDateString()}
-                                        </span>
+                                <div key={s.session_id} className={styles.sessionItemContainer}>
+                                    <div
+                                        className={`${styles.sessionItem} ${conversationId === s.session_id ? styles.activeSession : ""}`}
+                                        onClick={() => switchSession(s.session_id)}
+                                    >
+                                        {editingSessionId === s.session_id ? (
+                                            <input
+                                                className={styles.editTitleInput}
+                                                value={editingTitle}
+                                                onChange={(e) => setEditingTitle(e.target.value)}
+                                                onBlur={() => handleRenameSubmit(s.session_id)}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter') handleRenameSubmit(s.session_id);
+                                                    if (e.key === 'Escape') setEditingSessionId(null);
+                                                }}
+                                                autoFocus
+                                                onClick={(e) => e.stopPropagation()}
+                                            />
+                                        ) : (
+                                            <>
+                                                <div style={{ display: "flex", alignItems: "center", gap: "10px", width: "100%" }}>
+                                                    <div className={styles.sessionInfo} style={{ flex: 1 }}>
+                                                        <span className={styles.sessionTitle}>{s.title || "Untitled Chat"}</span>
+                                                        <span className={styles.sessionDate}>
+                                                            {new Date(s.created_at || Date.now()).toLocaleDateString()}
+                                                        </span>
+                                                    </div>
+                                                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                                        {!editingSessionId && (
+                                                            <button
+                                                                className={styles.renameBtn}
+                                                                title="Rename Session"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    setEditingSessionId(s.session_id);
+                                                                    setEditingTitle(s.title || "Untitled Chat");
+                                                                }}
+                                                                style={{ 
+                                                                    color: "#0081FE", 
+                                                                    display: "flex", 
+                                                                    alignItems: "center", 
+                                                                    gap: "4px",
+                                                                    fontSize: "11px",
+                                                                    fontWeight: "600",
+                                                                    padding: "4px 8px",
+                                                                    borderRadius: "6px",
+                                                                    background: "rgba(0,129,254,0.08)",
+                                                                    border: "1px solid rgba(0,129,254,0.1)"
+                                                                }}
+                                                            >
+                                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                                                    <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
+                                                                </svg>
+                                                                Rename
+                                                            </button>
+                                                        )}
+                                                        {editingSessionId !== s.session_id && (
+                                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: "#cbd5e0" }}>
+                                                                <path d="M9 18l6-6-6-6" />
+                                                            </svg>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </>
+                                        )}
                                     </div>
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                        <path d="M9 18l6-6-6-6" />
-                                    </svg>
                                 </div>
                             ))
                         )}

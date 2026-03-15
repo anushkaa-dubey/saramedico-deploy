@@ -131,7 +131,7 @@ export default function DoctorAppointments() {
                                                 <span
                                                     className={
                                                         apt.status === 'pending' ? styles.inReview : 
-                                                        apt.status === 'accepted' ? styles.completed :
+                                                        (apt.status === 'accepted' || apt.status === 'completed') ? styles.completed :
                                                         styles.pending
                                                     }
                                                     style={{ padding: "4px 10px", borderRadius: "20px", fontSize: "12px", width: "fit-content", fontWeight: "600" }}

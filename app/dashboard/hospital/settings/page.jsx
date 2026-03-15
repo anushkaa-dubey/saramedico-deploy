@@ -68,6 +68,22 @@ export default function SettingsPage() {
         date_format: org.date_format || "MM/DD/YYYY",
         avatar_url: profile.avatar_url || org.logo_url || null,
       });
+
+      // Update localStorage for Topbar/Sidebar sync
+      const cached = localStorage.getItem("user");
+      let userData = {};
+      try { userData = cached ? JSON.parse(cached) : {}; } catch(_) {}
+      
+      const newUserData = {
+        ...userData,
+        full_name: profile.full_name || profile.name || org.name || userData.full_name,
+        avatar_url: profile.avatar_url || org.logo_url || userData.avatar_url,
+        organization_name: org.name || userData.organization_name
+      };
+      
+      localStorage.setItem("user", JSON.stringify(newUserData));
+      window.dispatchEvent(new Event("profile-updated"));
+
     } catch (err) {
       console.error("Failed to load settings:", err);
       // Fallback: try auth/me if settings fails
@@ -130,9 +146,10 @@ export default function SettingsPage() {
 
     setSaving(true);
     try {
-      const res = await uploadHospitalAvatar(file);
+      await uploadHospitalAvatar(file);
       showMsg("success", "Logo updated successfully.");
-      setHospitalInfo(prev => ({ ...prev, avatar_url: res.url || res.logo_url }));
+      // Reload everything to get the fresh presigned URL and sync localStorage
+      loadSettings();
     } catch (err) {
       showMsg("error", "Failed to upload logo.");
     } finally {
