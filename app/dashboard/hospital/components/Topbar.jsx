@@ -28,27 +28,6 @@ export default function Topbar({ title }) {
         return () => window.removeEventListener("profile-updated", loadFromStorage);
     }, []);
 
-    // const handleLogout = async () => {
-    //     setLoggingOut(true);
-    //     try {
-    //         const refreshToken = localStorage.getItem("refreshToken") || localStorage.getItem("refresh_token");
-    //         await fetch(`${API_BASE_URL}/auth/logout`, {
-    //             method: "POST",
-    //             headers: getAuthHeaders(),
-    //             body: JSON.stringify({ refresh_token: refreshToken || "" }),
-    //         });
-    //     } catch (err) {
-    //         console.error("Logout error:", err);
-    //     } finally {
-    //         // Always clear local storage and redirect regardless of API response
-    //         localStorage.removeItem("authToken");
-    //         localStorage.removeItem("refreshToken");
-    //         localStorage.removeItem("refresh_token");
-    //         localStorage.removeItem("user");
-    //         router.replace("/auth/login");
-    //     }
-    // };
-
     const displayName = user?.full_name || "Hospital Admin";
     const initials = displayName
         .split(" ")
@@ -65,96 +44,44 @@ export default function Topbar({ title }) {
                 width: "100%",
                 display: "flex",
                 alignItems: "center",
-                justifyContent: "space-between",
+                justifyContent: "flex-end",
                 gap: "12px",
             }}>
-                <h2 style={{
-                    fontSize: "18px",
-                    fontWeight: "800",
-                    color: "#0f172a",
-                    margin: 0,
-                    flex: 1,
-                    minWidth: 0,
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                }}>
-                    {title || "Overview"}
-                </h2>
-
-                <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "10px", flexShrink: 0 }}>
-                        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "2px" }}>
-                            <span style={{ fontSize: "14px", fontWeight: "700", color: "#0f172a", lineHeight: 1, whiteSpace: "nowrap" }}>
-                                {displayName}
-                            </span>
-                            <span style={{ fontSize: "11px", color: "#64748b", lineHeight: 1, whiteSpace: "nowrap" }}>
-                                Hospital Administrator
-                            </span>
-                        </div>
-
-                        {/* Avatar */}
-                        <div style={{
-                            width: "36px",
-                            height: "36px",
-                            borderRadius: "50%",
-                            background: "linear-gradient(135deg, #359AFF, #9CCDFF)",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            fontSize: "13px",
-                            fontWeight: "700",
-                            color: "#fff",
-                            flexShrink: 0,
-                            overflow: "hidden",
-                        }}>
-                            {user?.avatar_url ? (
-                                <img
-                                    src={user.avatar_url}
-                                    alt={displayName}
-                                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                                />
-                            ) : (
-                                initials
-                            )}
-                        </div>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px", flexShrink: 0 }}>
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "2px" }}>
+                        <span style={{ fontSize: "14px", fontWeight: "700", color: "#0f172a", lineHeight: 1, whiteSpace: "nowrap" }}>
+                            {displayName}
+                        </span>
+                        <span style={{ fontSize: "11px", color: "#64748b", lineHeight: 1, whiteSpace: "nowrap" }}>
+                            Hospital Administrator
+                        </span>
                     </div>
 
-                    {/* Logout Button
-                    <button
-                        onClick={handleLogout}
-                        disabled={loggingOut}
-                        title="Logout"
-                        style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "6px",
-                            padding: "8px 14px",
-                            borderRadius: "10px",
-                            border: "1px solid #e2e8f0",
-                            background: "transparent",
-                            color: "#64748b",
-                            fontSize: "13px",
-                            fontWeight: "600",
-                            cursor: loggingOut ? "not-allowed" : "pointer",
-                            opacity: loggingOut ? 0.6 : 1,
-                            transition: "all 0.2s",
-                            whiteSpace: "nowrap",
-                        }}
-                        onMouseEnter={e => {
-                            e.currentTarget.style.background = "#fee2e2";
-                            e.currentTarget.style.borderColor = "#fecaca";
-                            e.currentTarget.style.color = "#991b1b";
-                        }}
-                        onMouseLeave={e => {
-                            e.currentTarget.style.background = "transparent";
-                            e.currentTarget.style.borderColor = "#e2e8f0";
-                            e.currentTarget.style.color = "#64748b";
-                        }}
-                    >
-                        <LogOut size={15} />
-                        {loggingOut ? "Logging out..." : "Logout"}
-                    </button> */}
+                    {/* Avatar */}
+                    <div style={{
+                        width: "36px",
+                        height: "36px",
+                        borderRadius: "50%",
+                        background: "linear-gradient(135deg, #359AFF, #9CCDFF)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: "13px",
+                        fontWeight: "700",
+                        color: "#fff",
+                        flexShrink: 0,
+                        overflow: "hidden",
+                    }}>
+                        {user?.avatar_url ? (
+                            <img
+                                src={user.avatar_url}
+                                alt={displayName}
+                                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                            />
+                        ) : (
+                            initials
+                        )}
+                    </div>
                 </div>
             </div>
         </header>

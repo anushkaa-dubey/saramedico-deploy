@@ -1,33 +1,35 @@
 "use client";
 
 import Topbar from "../components/Topbar";
-import styles from "../HospitalDashboard.module.css";
-import { motion, AnimatePresence } from "framer-motion";
+import appt from "./Appointments.module.css";
+import dashStyles from "../HospitalDashboard.module.css";
+import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { fetchHospitalAppointments, fetchHospitalStats, fetchOrganizationMembers } from "@/services/hospital";
-import { fetchCalendarMonth, fetchCalendarDay, deleteCalendarEvent, createCalendarEvent } from "@/services/calendar";
+import { fetchCalendarMonth, fetchCalendarDay, deleteCalendarEvent } from "@/services/calendar";
 import CalendarModal from "./components/CalendarModal";
 import {
-    Calendar as CalendarIcon,
-    List,
-    Users,
-    User,
-    Video,
-    Building2,
-    Clock,
-    Plus,
-    Filter,
-    MoreHorizontal,
-    ChevronLeft,
-    ChevronRight,
-    Search,
-    MapPin,
-    CheckCircle2,
-    CalendarDays
+    Calendar as CalendarIcon, List, Users, User, Video,
+    Building2, Clock, Plus, MoreHorizontal, ChevronLeft,
+    ChevronRight, MapPin, CheckCircle2, CalendarDays
 } from "lucide-react";
 
+// ── Helpers ──────────────────────────────────────────────────────────────────
+function getWeekDays(date) {
+    const start = new Date(date);
+    start.setDate(start.getDate() - start.getDay());
+    return Array.from({ length: 7 }, (_, i) => {
+        const d = new Date(start);
+        d.setDate(start.getDate() + i);
+        return d;
+    });
+}
+
+const HOUR_SLOTS = Array.from({ length: 13 }, (_, i) => i + 7); // 7am – 7pm
+const WEEK_LABELS = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+
 export default function AppointmentsPage() {
-    const [view, setView] = useState('list'); // 'list' | 'schedule'
+    const [view, setView] = useState('list');
     const [appointments, setAppointments] = useState([]);
     const [loading, setLoading] = useState(true);
     const [monthData, setMonthData] = useState({});
@@ -35,30 +37,24 @@ export default function AppointmentsPage() {
     const [doctors, setDoctors] = useState([]);
     const [doctorFilter, setDoctorFilter] = useState("All");
     const [statusFilter, setStatusFilter] = useState('All');
-    const [calendarMode, setCalendarMode] = useState('month'); // 'month' | 'week' | 'day'
+    const [calendarMode, setCalendarMode] = useState('month');
     const [selectedDate, setSelectedDate] = useState(new Date());
     const [dayEvents, setDayEvents] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
+    // ── API (unchanged) ──────────────────────────────────────────────────────
     const loadMonthData = async (date = selectedDate) => {
         try {
-            const year = date.getFullYear();
-            const month = date.getMonth() + 1;
-            const data = await fetchCalendarMonth(year, month);
+            const data = await fetchCalendarMonth(date.getFullYear(), date.getMonth() + 1);
             setMonthData(data || {});
-        } catch (err) {
-            console.error("Failed to load month data:", err);
-        }
+        } catch (err) { console.error(err); }
     };
 
     const loadDayData = async (date = selectedDate) => {
         try {
-            const dateStr = date.toISOString().split('T')[0];
-            const data = await fetchCalendarDay(dateStr);
+            const data = await fetchCalendarDay(date.toISOString().split('T')[0]);
             setDayEvents(data?.events || []);
-        } catch (err) {
-            console.error("Failed to load day data:", err);
-        }
+        } catch (err) { console.error(err); }
     };
 
     const loadInitialData = async () => {
@@ -71,425 +67,351 @@ export default function AppointmentsPage() {
             const [statData, apptData, teamData] = await Promise.all([
                 fetchHospitalStats(),
                 fetchHospitalAppointments(filters),
-                fetchOrganizationMembers()
+                fetchOrganizationMembers(),
             ]);
 
-            // Filter appointments for today to get a real count for stats
             const today = new Date().toDateString();
             const todayAppts = (apptData || []).filter(a => new Date(a.scheduled_at).toDateString() === today);
 
-            setStats({
-                ...statData,
-                totalToday: todayAppts.length
-            });
+            setStats({ ...statData, totalToday: todayAppts.length });
             setAppointments(apptData || []);
             setDoctors(teamData || []);
             await Promise.all([loadMonthData(), loadDayData()]);
-        } catch (err) {
-            console.error("Failed to load appointments data:", err);
-        } finally {
-            setLoading(false);
-        }
+        } catch (err) { console.error(err); }
+        finally { setLoading(false); }
     };
 
-    useEffect(() => {
-        loadInitialData();
-    }, [doctorFilter, statusFilter]);
+    useEffect(() => { loadInitialData(); }, [doctorFilter, statusFilter]);
+    useEffect(() => { loadMonthData(selectedDate); }, [selectedDate.getMonth(), selectedDate.getFullYear()]);
+    useEffect(() => { loadDayData(selectedDate); }, [selectedDate.toDateString()]);
 
-    useEffect(() => {
-        loadMonthData(selectedDate);
-    }, [selectedDate.getMonth(), selectedDate.getFullYear()]);
+    // ── Navigation ───────────────────────────────────────────────────────────
+    const navigate = (dir) => {
+        const d = new Date(selectedDate);
+        if (calendarMode === 'month') d.setMonth(d.getMonth() + dir);
+        else if (calendarMode === 'week') d.setDate(d.getDate() + dir * 7);
+        else d.setDate(d.getDate() + dir);
+        setSelectedDate(d);
+    };
 
-    useEffect(() => {
-        loadDayData(selectedDate);
-    }, [selectedDate]);
+    const navLabel = () => {
+        if (calendarMode === 'month')
+            return selectedDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+        if (calendarMode === 'week') {
+            const w = getWeekDays(selectedDate);
+            return `${w[0].toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} – ${w[6].toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+        }
+        return selectedDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+    };
 
+    // ── Calendar days builder ────────────────────────────────────────────────
     const getCalendarDays = () => {
         const year = selectedDate.getFullYear();
         const month = selectedDate.getMonth();
         const firstDay = new Date(year, month, 1).getDay();
         const daysInMonth = new Date(year, month + 1, 0).getDate();
         const days = [];
-        // Fill previous month padding
-        const prevMonthLastDay = new Date(year, month, 0).getDate();
-        for (let i = firstDay - 1; i >= 0; i--) {
-            days.push({ day: prevMonthLastDay - i, isCurrentMonth: false });
-        }
-        // Current month
-        for (let i = 1; i <= daysInMonth; i++) {
-            days.push({ day: i, isCurrentMonth: true });
-        }
-        // Next month padding
-        while (days.length % 7 !== 0) {
-            const nextDay = (days.length - (firstDay + daysInMonth)) + 1;
-            days.push({ day: nextDay, isCurrentMonth: false });
-        }
+        const prevLast = new Date(year, month, 0).getDate();
+        for (let i = firstDay - 1; i >= 0; i--) days.push({ day: prevLast - i, cur: false });
+        for (let i = 1; i <= daysInMonth; i++) days.push({ day: i, cur: true });
+        while (days.length % 7 !== 0) days.push({ day: days.length - (firstDay + daysInMonth) + 1, cur: false });
         return days;
     };
 
-    const calendarDays = getCalendarDays();
-    const weekDays = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+    const calDays = getCalendarDays();
+    const weekDays = getWeekDays(selectedDate);
 
-    // ── Filtered Data ────────────────────────────────────────────────────────
-    const filteredAppointments = appointments.filter(a => {
-        const matchesDate = !selectedDate || new Date(a.scheduled_at).toDateString() === selectedDate.toDateString();
-        return matchesDate;
-    });
+    const filteredAppts = appointments.filter(a =>
+        new Date(a.scheduled_at).toDateString() === selectedDate.toDateString()
+    );
+
+    const statCards = [
+        { label: "Booked Today", value: stats.totalToday, icon: <CheckCircle2 size={16} />, color: "#3b82f6", bg: "#eff6ff" },
+        { label: "Transcription Queue", value: stats.transcriptionQueueStatus || 0, icon: <Clock size={16} />, color: "#f59e0b", bg: "#fffbeb" },
+        { label: "Care Providers", value: doctors.length, icon: <Users size={16} />, color: "#10b981", bg: "#f0fdf4" },
+        { label: "Pending Notes", value: stats.notesPendingSignature || 0, icon: <MoreHorizontal size={16} />, color: "#ec4899", bg: "#fdf2f8" },
+    ];
 
     return (
-        <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            style={{ display: 'flex', flexDirection: 'column', background: '#f8fafc', minHeight: '100vh', padding: 0 }}
-        >
-            <Topbar title="Clinical Master Schedule" />
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className={appt.page}>
+            <Topbar title="" />
 
-            <div className={styles.contentWrapper} style={{ padding: "32px", maxWidth: "1400px", margin: "0 auto", width: "100%" }}>
+            <div className={appt.content}>
 
-                {/* ── Page Header & Stats ── */}
-                <div className={styles.apptPageHeader} style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", marginBottom: "32px" }}>
-                    <div>
-                        <h1 style={{ fontSize: "32px", fontWeight: "900", color: "#0f172a", margin: 0, letterSpacing: "-0.03em" }}>
-                            {view === 'list' ? "Master Appointment Schedule" : "Staff Coverage Planner"}
-                        </h1>
-                        <p style={{ color: "#64748b", margin: "8px 0 0 0", fontSize: "16px", fontWeight: "500" }}>
-                            Real-time synchronization across all departments and practitioners.
-                        </p>
-                    </div>
+                {/* Heading */}
+                <h1 className={appt.heading}>{view === 'list' ? "Appointments" : "Staff Schedule"}</h1>
+                <p className={appt.subheading}>Real-time synchronization across all departments and practitioners.</p>
 
-                    <div className={styles.apptViewToggle} style={{ display: "flex", gap: "12px", background: "#fff", padding: "6px", borderRadius: "16px", boxShadow: "0 4px 6px -1px rgba(0,0,0,0.05)", border: "1px solid #f1f5f9" }}>
-                        <button
-                            onClick={() => setView('list')}
-                            style={{
-                                display: "flex", alignItems: "center", gap: "8px",
-                                padding: "10px 20px", borderRadius: "12px", border: "none",
-                                background: view === 'list' ? "#3b82f6" : "transparent",
-                                color: view === 'list' ? "#fff" : "#64748b",
-                                fontWeight: "800", fontSize: "14px", cursor: "pointer",
-                                transition: "all 0.2s"
-                            }}
-                        >
-                            <List size={18} /> Appointments
-                        </button>
-                        <button
-                            onClick={() => setView('schedule')}
-                            style={{
-                                display: "flex", alignItems: "center", gap: "8px",
-                                padding: "10px 20px", borderRadius: "12px", border: "none",
-                                background: view === 'schedule' ? "#3b82f6" : "transparent",
-                                color: view === 'schedule' ? "#fff" : "#64748b",
-                                fontWeight: "800", fontSize: "14px", cursor: "pointer",
-                                transition: "all 0.2s"
-                            }}
-                        >
-                            <CalendarIcon size={18} /> Staff Schedule
-                        </button>
+                {/* View toggle */}
+                <div className={appt.viewToggleBar}>
+                    <div className={appt.viewToggle}>
+                        {[
+                            { id: 'list', icon: <List size={14} />, label: "Appointments" },
+                            { id: 'schedule', icon: <CalendarIcon size={14} />, label: "Staff Schedule" },
+                        ].map(t => (
+                            <button
+                                key={t.id}
+                                onClick={() => setView(t.id)}
+                                className={`${appt.viewBtn} ${view === t.id ? appt.viewBtnActive : ''}`}
+                            >
+                                {t.icon} {t.label}
+                            </button>
+                        ))}
                     </div>
                 </div>
 
-                {/* ── Summary Stats Grid ── */}
-                <div className={styles.apptStatsGrid} style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "20px", marginBottom: "32px" }}>
-                    {[
-                        { label: "Booked Today", value: stats.totalToday, icon: <CheckCircle2 size={20} />, color: "#3b82f6", bg: "#eff6ff" },
-                        { label: "Transcription Queue", value: stats.transcriptionQueueStatus || 0, icon: <Clock size={20} />, color: "#f59e0b", bg: "#fffbeb" },
-                        { label: "Care Providers", value: doctors.length, icon: <Users size={20} />, color: "#10b981", bg: "#f0fdf4" },
-                        { label: "Pending Notes", value: stats.notesPendingSignature || 0, icon: <MoreHorizontal size={20} />, color: "#ec4899", bg: "#fdf2f8" }
-                    ].map((s, i) => (
-                        <div key={i} style={{ background: "white", padding: "24px", borderRadius: "24px", border: "1px solid #f1f5f9", boxShadow: "0 10px 15px -3px rgba(0,0,0,0.05)" }}>
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                                <div style={{ width: "44px", height: "44px", borderRadius: "12px", background: s.bg, color: s.color, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                                    {s.icon}
-                                </div>
-                            </div>
-                            <div style={{ marginTop: "16px" }}>
-                                <div style={{ fontSize: "12px", fontWeight: "800", color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.05em" }}>{s.label}</div>
-                                <div style={{ fontSize: "28px", fontWeight: "900", color: "#1e293b", marginTop: "4px" }}>{s.value}</div>
-                            </div>
+                {/* Stat cards */}
+                <div className={appt.statsGrid}>
+                    {statCards.map((s, i) => (
+                        <div key={i} className={appt.statCard}>
+                            <div className={appt.statIcon} style={{ background: s.bg, color: s.color }}>{s.icon}</div>
+                            <div className={appt.statLabel}>{s.label}</div>
+                            <div className={appt.statValue}>{s.value}</div>
                         </div>
                     ))}
                 </div>
 
-                {/* ── Main View Area ── */}
-                <div className={styles.apptMainGrid} style={{ display: "grid", gridTemplateColumns: "1fr 340px", gap: "24px" }}>
-                    {/* Left Column: List or Calendar */}
-                    <div style={{ background: "white", borderRadius: "32px", border: "1px solid #f1f5f9", boxShadow: "0 20px 25px -5px rgba(0,0,0,0.05)", overflow: "hidden" }}>
+                {/* Main grid */}
+                <div className={appt.mainGrid}>
+
+                    {/* ══ LEFT PANEL ══ */}
+                    <div className={appt.leftPanel}>
 
                         {view === 'list' ? (
-                            <div style={{ display: "flex", flexDirection: "column" }}>
-                                {/* List Header/Filters */}
-                                <div className={styles.apptListHeader} style={{ padding: "32px", borderBottom: "1px solid #f1f5f9", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                    <h2 style={{ fontSize: "20px", fontWeight: "900", color: "#1e293b", margin: 0 }}>
+                            <>
+                                {/* Filters bar */}
+                                <div className={appt.listFiltersBar}>
+                                    <h2 className={appt.listDateTitle}>
                                         {selectedDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
                                     </h2>
-                                    <div className={styles.apptListFilters} style={{ display: "flex", gap: "12px" }}>
-                                        <select
-                                            value={doctorFilter}
-                                            onChange={(e) => setDoctorFilter(e.target.value)}
-                                            style={{
-                                                padding: "10px 16px", borderRadius: "12px", border: "1px solid #e2e8f0",
-                                                background: "#f8fafc", fontSize: "13px", fontWeight: "700", color: "#475569"
-                                            }}
-                                        >
+                                    <div className={appt.listFilters}>
+                                        <select value={doctorFilter} onChange={e => setDoctorFilter(e.target.value)} className={appt.filterSelect}>
                                             <option value="All">All Practitioners</option>
                                             {doctors.map(d => <option key={d.id} value={d.id}>{d.name || d.full_name || "Doctor"}</option>)}
                                         </select>
-                                        <select
-                                            value={statusFilter}
-                                            onChange={(e) => setStatusFilter(e.target.value)}
-                                            style={{
-                                                padding: "10px 16px", borderRadius: "12px", border: "1px solid #e2e8f0",
-                                                background: "#f8fafc", fontSize: "13px", fontWeight: "700", color: "#475569"
-                                            }}
-                                        >
+                                        <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className={appt.filterSelect}>
                                             <option value="All">All Modes</option>
                                             <option value="video">Remote (Video)</option>
-                                            <option value="in-person">On-Site (In-Person)</option>
+                                            <option value="in-person">On-Site</option>
                                         </select>
                                     </div>
                                 </div>
 
-                                {/* List Content */}
-                                <div style={{ minHeight: "500px" }}>
+                                <div style={{ minHeight: "260px" }}>
                                     {loading ? (
-                                        <div style={{ padding: "100px", textAlign: "center" }}>
-                                            <div className={styles.spinner}></div>
-                                            <p style={{ marginTop: "16px", color: "#94a3b8", fontWeight: "700" }}>Synchronizing clinical data...</p>
+                                        <div className={appt.loadingWrap}>
+                                            <div className={dashStyles.spinner} />
+                                            <p className={appt.loadingText}>Loading appointments...</p>
                                         </div>
-                                    ) : filteredAppointments.length === 0 ? (
-                                        <div style={{ padding: "140px 40px", textAlign: "center" }}>
-                                            <CalendarDays size={64} style={{ color: "#e2e8f0", marginBottom: "20px" }} />
-                                            <h3 style={{ fontSize: "18px", fontWeight: "800", color: "#1e293b", margin: 0 }}>No Appointments Found</h3>
-                                            <p style={{ color: "#94a3b8", marginTop: "8px" }}>Try selecting a different date or clearing filters.</p>
+                                    ) : filteredAppts.length === 0 ? (
+                                        <div className={appt.listEmpty}>
+                                            <CalendarDays size={44} style={{ color: "#e2e8f0" }} />
+                                            <p className={appt.listEmptyTitle}>No Appointments</p>
+                                            <p className={appt.listEmptyText}>Try a different date or clear filters.</p>
                                         </div>
-                                    ) : (
-                                        <div>
-                                            {filteredAppointments.map((appt, i) => {
-                                                const time = new Date(appt.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                                                const isVideo = appt.visit_type === "video";
-                                                return (
-                                                    <motion.div
-                                                        key={appt.id}
-                                                        initial={{ opacity: 0, x: -10 }}
-                                                        animate={{ opacity: 1, x: 0 }}
-                                                        transition={{ delay: i * 0.05 }}
-                                                        style={{
-                                                            padding: "24px 32px",
-                                                            borderBottom: i < filteredAppointments.length - 1 ? "1px solid #f8fafc" : "none",
-                                                            display: "grid",
-                                                            gridTemplateColumns: "100px 1fr 1fr 180px 120px",
-                                                            alignItems: "center",
-                                                            transition: "background 0.2s"
-                                                        }}
-                                                        onMouseEnter={e => e.currentTarget.style.background = "#fcfcfd"}
-                                                        onMouseLeave={e => e.currentTarget.style.background = "transparent"}
-                                                    >
-                                                        <div style={{ fontSize: "16px", fontWeight: "900", color: "#0f172a" }}>{time}</div>
-
-                                                        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                                                            <div style={{ width: "40px", height: "40px", borderRadius: "10px", background: "#f1f5f9", display: "flex", alignItems: "center", justifyContent: "center", color: "#64748b" }}>
-                                                                <User size={20} />
-                                                            </div>
-                                                            <div>
-                                                                <div style={{ fontSize: "10px", fontWeight: "800", color: "#94a3b8", textTransform: "uppercase" }}>Patient</div>
-                                                                <div style={{ fontWeight: "800", color: "#1e293b" }}>{appt.patient_name || "Anonymous"}</div>
-                                                            </div>
+                                    ) : filteredAppts.map((a, i) => {
+                                        const time = new Date(a.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                                        const isVideo = a.visit_type === "video";
+                                        const badge = (
+                                            <span className={appt.apptTypeBadge} style={{ background: isVideo ? "#f5f3ff" : "#f0fdf4", color: isVideo ? "#8b5cf6" : "#10b981" }}>
+                                                {isVideo ? <Video size={11} /> : <MapPin size={11} />}
+                                                {isVideo ? "Remote" : "On-Site"}
+                                            </span>
+                                        );
+                                        return (
+                                            <motion.div key={a.id} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.04 }}>
+                                                {/* Desktop row */}
+                                                <div className={appt.apptRow}>
+                                                    <div className={appt.apptTime}>{time}</div>
+                                                    <div className={appt.apptPersonCell}>
+                                                        <div className={appt.apptAvatar} style={{ background: "#f1f5f9", color: "#64748b" }}><User size={15} /></div>
+                                                        <div className={appt.apptPersonMeta}>
+                                                            <div className={appt.apptPersonRole}>Patient</div>
+                                                            <div className={appt.apptPersonName}>{a.patient_name || "Anonymous"}</div>
                                                         </div>
-
-                                                        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                                                            <div style={{ width: "40px", height: "40px", borderRadius: "10px", background: "#eef2ff", display: "flex", alignItems: "center", justifyContent: "center", color: "#6366f1" }}>
-                                                                <Building2 size={20} />
-                                                            </div>
-                                                            <div>
-                                                                <div style={{ fontSize: "10px", fontWeight: "800", color: "#94a3b8", textTransform: "uppercase" }}>Practitioner</div>
-                                                                <div style={{ fontWeight: "700", color: "#1e293b" }}>{appt.doctor_name || "Care Provider"}</div>
-                                                            </div>
+                                                    </div>
+                                                    <div className={appt.apptPersonCell}>
+                                                        <div className={appt.apptAvatar} style={{ background: "#eef2ff", color: "#6366f1" }}><Building2 size={15} /></div>
+                                                        <div className={appt.apptPersonMeta}>
+                                                            <div className={appt.apptPersonRole}>Practitioner</div>
+                                                            <div className={appt.apptPersonName}>{a.doctor_name || "Care Provider"}</div>
                                                         </div>
+                                                    </div>
+                                                    {badge}
+                                                    <button className={appt.apptMenuBtn}><MoreHorizontal size={16} /></button>
+                                                </div>
 
-                                                        <div>
-                                                            <span style={{
-                                                                display: "inline-flex", alignItems: "center", gap: "6px",
-                                                                padding: "6px 12px", borderRadius: "10px",
-                                                                background: isVideo ? "#f5f3ff" : "#f0fdf4",
-                                                                color: isVideo ? "#8b5cf6" : "#10b981",
-                                                                fontSize: "12px", fontWeight: "800"
-                                                            }}>
-                                                                {isVideo ? <Video size={14} /> : <MapPin size={14} />}
-                                                                {isVideo ? "Remote" : "On-Site"}
-                                                            </span>
+                                                {/* Mobile card */}
+                                                <div className={appt.apptCard}>
+                                                    <div className={appt.apptCardTop}>
+                                                        <span className={appt.apptCardTime}>{time}</span>
+                                                        {badge}
+                                                    </div>
+                                                    <div className={appt.apptCardBody}>
+                                                        <div className={appt.apptAvatar} style={{ background: "#f1f5f9", color: "#64748b", width: 32, height: 32, borderRadius: 8 }}>
+                                                            <User size={14} />
                                                         </div>
-
-                                                        <div style={{ textAlign: "right" }}>
-                                                            <button style={{ background: "none", border: "none", color: "#cbd5e1", cursor: "pointer", padding: "8px" }}>
-                                                                <MoreHorizontal size={20} />
-                                                            </button>
+                                                        <div className={appt.apptCardInfo}>
+                                                            <div className={appt.apptCardName}>{a.patient_name || "Anonymous"}</div>
+                                                            <div className={appt.apptCardDoctor}>{a.doctor_name || "Care Provider"}</div>
                                                         </div>
-                                                    </motion.div>
-                                                );
-                                            })}
-                                        </div>
-                                    )}
+                                                        <button className={appt.apptMenuBtn}><MoreHorizontal size={16} /></button>
+                                                    </div>
+                                                </div>
+                                            </motion.div>
+                                        );
+                                    })}
                                 </div>
-                            </div>
+                            </>
                         ) : (
-                            /* ── Staff Schedule (Calendar) View ── */
-                            <div style={{ padding: "32px" }}>
-                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "32px" }}>
-                                    <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
-                                        <h2 style={{ fontSize: "24px", fontWeight: "900", color: "#1e293b", margin: 0 }}>
-                                            {selectedDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
-                                        </h2>
-                                        <div style={{ display: "flex", gap: "8px" }}>
-                                            <button onClick={() => {
-                                                const d = new Date(selectedDate);
-                                                d.setMonth(d.getMonth() - 1);
-                                                setSelectedDate(d);
-                                            }} style={{ padding: "8px", borderRadius: "10px", border: "1px solid #e2e8f0", background: "white", cursor: "pointer" }}>
-                                                <ChevronLeft size={18} />
-                                            </button>
-                                            <button onClick={() => {
-                                                const d = new Date(selectedDate);
-                                                d.setMonth(d.getMonth() + 1);
-                                                setSelectedDate(d);
-                                            }} style={{ padding: "8px", borderRadius: "10px", border: "1px solid #e2e8f0", background: "white", cursor: "pointer" }}>
-                                                <ChevronRight size={18} />
-                                            </button>
-                                        </div>
+                            /* ══ SCHEDULE VIEW ══ */
+                            <>
+                                <div className={appt.calToolbar}>
+                                    <div className={appt.calNavGroup}>
+                                        <button className={appt.calNavBtn} onClick={() => navigate(-1)}><ChevronLeft size={15} /></button>
+                                        <span className={appt.calNavLabel}>{navLabel()}</span>
+                                        <button className={appt.calNavBtn} onClick={() => navigate(1)}><ChevronRight size={15} /></button>
+                                        <button className={appt.calTodayBtn} onClick={() => setSelectedDate(new Date())}>Today</button>
                                     </div>
-
-                                    <div style={{ display: "flex", background: "#f1f5f9", padding: "4px", borderRadius: "12px" }}>
-                                        {['month', 'week', 'day'].map(mode => (
-                                            <button
-                                                key={mode}
-                                                onClick={() => setCalendarMode(mode)}
-                                                style={{
-                                                    padding: "8px 20px", borderRadius: "10px", border: "none",
-                                                    background: calendarMode === mode ? "white" : "transparent",
-                                                    color: calendarMode === mode ? "#3b82f6" : "#64748b",
-                                                    fontWeight: "800", fontSize: "13px", cursor: "pointer",
-                                                    boxShadow: calendarMode === mode ? "0 2px 4px rgba(0,0,0,0.05)" : "none"
-                                                }}
-                                            >
-                                                {mode.charAt(0).toUpperCase() + mode.slice(1)}
+                                    <div className={appt.calModeToggle}>
+                                        {['month', 'week', 'day'].map(m => (
+                                            <button key={m} onClick={() => setCalendarMode(m)} className={`${appt.calModeBtn} ${calendarMode === m ? appt.calModeBtnActive : ''}`}>
+                                                {m.charAt(0).toUpperCase() + m.slice(1)}
                                             </button>
                                         ))}
                                     </div>
                                 </div>
 
-                                <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: "1px", background: "#f1f5f9", borderRadius: "24px", overflow: "hidden", border: "1px solid #f1f5f9" }}>
-                                    {weekDays.map(w => (
-                                        <div key={w} style={{ background: "#f8fafc", padding: "16px", textAlign: "center", fontSize: "11px", fontWeight: "900", color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.1em" }}>
-                                            {w}
-                                        </div>
-                                    ))}
-                                    {calendarDays.map((dayObj, i) => {
-                                        const { day, isCurrentMonth } = dayObj;
-                                        const dateKey = `${selectedDate.getFullYear()}-${String(selectedDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                                        const hasItems = monthData?.days?.find(d => d.day === day && isCurrentMonth);
-                                        const isSelected = selectedDate.getDate() === day && isCurrentMonth;
-
-                                        return (
-                                            <div
-                                                key={i}
-                                                onClick={() => isCurrentMonth && setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth(), day))}
-                                                style={{
-                                                    minHeight: "120px", background: isSelected ? "#f5f3ff" : "white",
-                                                    padding: "16px", cursor: isCurrentMonth ? "pointer" : "default",
-                                                    transition: "background 0.2s"
-                                                }}
-                                            >
-                                                <div style={{
-                                                    fontSize: "14px", fontWeight: "800",
-                                                    color: isCurrentMonth ? (isSelected ? "#7c3aed" : "#1e293b") : "#cbd5e1"
-                                                }}>
-                                                    {day}
-                                                </div>
-                                                {isCurrentMonth && hasItems && (
-                                                    <div style={{ display: "flex", flexDirection: "column", gap: "4px", marginTop: "12px" }}>
-                                                        {hasItems.has_appointments && (
-                                                            <div style={{ height: "6px", width: "100%", borderRadius: "4px", background: "#3b82f6" }} title="Appointments"></div>
-                                                        )}
-                                                        {hasItems.has_tasks && (
-                                                            <div style={{ height: "6px", width: "100%", borderRadius: "4px", background: "#f59e0b" }} title="Tasks"></div>
-                                                        )}
-                                                    </div>
-                                                )}
+                                <div className={appt.calBody}>
+                                    {/* MONTH */}
+                                    {calendarMode === 'month' && (
+                                        <div className={appt.monthGrid}>
+                                            <div className={appt.monthDayLabels}>
+                                                {WEEK_LABELS.map(w => <div key={w} className={appt.monthDayLabel}>{w}</div>)}
                                             </div>
-                                        );
-                                    })}
+                                            <div className={appt.monthCells}>
+                                                {calDays.map(({ day, cur }, i) => {
+                                                    const hasItems = monthData?.days?.find(d => d.day === day && cur);
+                                                    const isSel = cur && selectedDate.getDate() === day;
+                                                    const isToday = cur && new Date().getDate() === day && new Date().getMonth() === selectedDate.getMonth() && new Date().getFullYear() === selectedDate.getFullYear();
+                                                    return (
+                                                        <div key={i} onClick={() => cur && setSelectedDate(new Date(selectedDate.getFullYear(), selectedDate.getMonth(), day))}
+                                                            className={`${appt.monthCell} ${!cur ? appt.monthCellOther : ''} ${isSel ? appt.monthCellSelected : ''}`}>
+                                                            <div className={`${appt.monthDateNum} ${isToday ? appt.monthDateNumToday : isSel ? appt.monthDateNumSelected : !cur ? appt.monthDateNumOther : ''}`}>{day}</div>
+                                                            {cur && hasItems && (
+                                                                <>
+                                                                    {hasItems.has_appointments && <div className={appt.monthDot} style={{ background: "#3b82f6" }} />}
+                                                                    {hasItems.has_tasks && <div className={appt.monthDot} style={{ background: "#f59e0b" }} />}
+                                                                </>
+                                                            )}
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* WEEK */}
+                                    {calendarMode === 'week' && (
+                                        <div className={appt.weekGrid}>
+                                            <div className={appt.weekHeader}>
+                                                <div />
+                                                {weekDays.map((d, i) => {
+                                                    const isToday = d.toDateString() === new Date().toDateString();
+                                                    const isSel = d.toDateString() === selectedDate.toDateString();
+                                                    return (
+                                                        <div key={i} className={appt.weekHeaderCell} onClick={() => setSelectedDate(new Date(d))}>
+                                                            <div className={appt.weekHeaderDay}>{WEEK_LABELS[i]}</div>
+                                                            <div className={appt.weekHeaderDate} style={{ background: isToday ? "#3b82f6" : isSel ? "#eff6ff" : "transparent", color: isToday ? "#fff" : isSel ? "#3b82f6" : "#1e293b" }}>
+                                                                {d.getDate()}
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                            <div className={appt.weekBody}>
+                                                {HOUR_SLOTS.map(hour => (
+                                                    <div key={hour} className={appt.weekRow}>
+                                                        <div className={appt.weekTimeLabel}>{hour % 12 || 12}{hour < 12 ? "am" : "pm"}</div>
+                                                        {weekDays.map((d, di) => {
+                                                            const slotAppts = appointments.filter(a => { const ad = new Date(a.scheduled_at); return ad.toDateString() === d.toDateString() && ad.getHours() === hour; });
+                                                            return (
+                                                                <div key={di} className={appt.weekCell}>
+                                                                    {slotAppts.map((a, ai) => <div key={ai} className={appt.weekApptChip}>{a.patient_name || "Patient"}</div>)}
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* DAY */}
+                                    {calendarMode === 'day' && (
+                                        <div className={appt.dayGrid}>
+                                            {HOUR_SLOTS.map(hour => {
+                                                const slotAppts = appointments.filter(a => { const ad = new Date(a.scheduled_at); return ad.toDateString() === selectedDate.toDateString() && ad.getHours() === hour; });
+                                                const slotEvents = dayEvents.filter(e => new Date(e.start_time).getHours() === hour);
+                                                const allItems = [...slotAppts.map(a => ({ type: 'appt', label: a.patient_name || "Patient", sub: a.doctor_name || "" })), ...slotEvents.map(e => ({ type: 'event', label: e.title || "Event", sub: e.metadata?.doctor_name || "" }))];
+                                                const isCurrent = new Date().getHours() === hour && selectedDate.toDateString() === new Date().toDateString();
+                                                return (
+                                                    <div key={hour} className={`${appt.dayRow} ${isCurrent ? appt.dayRowCurrent : ''}`}>
+                                                        <div className={appt.dayTimeLabel}>{hour % 12 || 12}:00{hour < 12 ? "am" : "pm"}</div>
+                                                        <div className={appt.dayCell}>
+                                                            {allItems.map((item, ii) => (
+                                                                <div key={ii} className={`${appt.dayChip} ${item.type === 'appt' ? appt.dayChipAppt : appt.dayChipEvent}`}>
+                                                                    <div className={appt.dayChipName}>{item.label}</div>
+                                                                    {item.sub && <div className={appt.dayChipSub}>{item.sub}</div>}
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
                                 </div>
-                            </div>
+                            </>
                         )}
                     </div>
 
-                    {/* Right Column: Daily Agenda / Mini Sidebar */}
-                    <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
-                        <div style={{ background: "white", borderRadius: "32px", padding: "32px", border: "1px solid #f1f5f9", boxShadow: "0 10px 15px -3px rgba(0,0,0,0.05)" }}>
-                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px" }}>
-                                <h3 style={{ fontSize: "16px", fontWeight: "900", color: "#1e293b", margin: 0 }}>Clinical Agenda</h3>
-                                <button
-                                    onClick={() => setIsModalOpen(true)}
-                                    style={{
-                                        width: "36px", height: "36px", borderRadius: "12px", background: "#1e293b", color: "#fff",
-                                        display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", border: "none"
-                                    }}
-                                >
-                                    <Plus size={20} />
-                                </button>
+                    {/* ══ RIGHT SIDEBAR ══ */}
+                    <div className={appt.rightSidebar}>
+                        <div className={appt.agendaCard}>
+                            <div className={appt.agendaHeader}>
+                                <h3 className={appt.agendaTitle}>Clinical Agenda</h3>
+                                <button className={appt.agendaAddBtn} onClick={() => setIsModalOpen(true)}><Plus size={15} /></button>
                             </div>
-
-                            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-                                {dayEvents.length === 0 ? (
-                                    <div style={{ padding: "40px 20px", textAlign: "center", background: "#f8fafc", borderRadius: "24px", border: "2px dashed #e2e8f0" }}>
-                                        <p style={{ color: "#94a3b8", fontSize: "13px", fontWeight: "700" }}>Clear schedule for this period.</p>
+                            {dayEvents.length === 0 ? (
+                                <div className={appt.agendaEmpty}>Clear schedule.</div>
+                            ) : dayEvents.map((ev, idx) => (
+                                <div key={idx} className={appt.agendaEvent}>
+                                    <div className={appt.agendaEventHeader}>
+                                        <span className={appt.agendaEventTime}><Clock size={10} />{new Date(ev.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                        <button className={appt.agendaCancelBtn} onClick={() => deleteCalendarEvent(ev.id).then(() => loadDayData())}>Cancel</button>
                                     </div>
-                                ) : (
-                                    dayEvents.map((ev, idx) => (
-                                        <div key={idx} style={{
-                                            padding: "16px", background: "#f8fafc", borderRadius: "20px", borderLeft: "4px solid #3b82f6"
-                                        }}>
-                                            <div style={{ display: "flex", justifyContent: "space-between" }}>
-                                                <div style={{ fontSize: "12px", fontWeight: "900", color: "#3b82f6", display: "flex", alignItems: "center", gap: "4px" }}>
-                                                    <Clock size={12} /> {new Date(ev.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                                </div>
-                                                <button
-                                                    onClick={() => deleteCalendarEvent(ev.id).then(() => loadDayData())}
-                                                    style={{ background: "none", border: "none", color: "#ef4444", cursor: "pointer", fontSize: "10px", fontWeight: "900" }}
-                                                >
-                                                    Cancel
-                                                </button>
-                                            </div>
-                                            <div style={{ fontWeight: "800", color: "#1e293b", marginTop: "8px", fontSize: "14px" }}>{ev.title || "Consultation"}</div>
-                                            <div style={{ fontSize: "12px", color: "#64748b", marginTop: "2px" }}>{ev.metadata?.doctor_name || "Care Provider"}</div>
-                                        </div>
-                                    ))
-                                )}
-                            </div>
+                                    <div className={appt.agendaEventTitle}>{ev.title || "Consultation"}</div>
+                                    <div className={appt.agendaEventSub}>{ev.metadata?.doctor_name || "Care Provider"}</div>
+                                </div>
+                            ))}
                         </div>
 
-                        {/* Quick Tips or Insights */}
-                        <div style={{
-                            background: "linear-gradient(135deg, #1d4ed8 0%, #3b82f6 100%)",
-                            borderRadius: "32px", padding: "32px", color: "#fff",
-                            position: "relative", overflow: "hidden"
-                        }}>
-                            <div style={{ position: "relative", zIndex: 1 }}>
-                                <h3 style={{ fontSize: "16px", fontWeight: "900", margin: 0 }}>Efficiency Tip</h3>
-                                <p style={{ fontSize: "13px", opacity: 0.9, marginTop: "12px", lineHeight: "1.6", fontWeight: "500" }}>
-                                    Staff members with the "Remote Only" tag can be reassigned to the Virtual Care wing for improved patient throughput.
-                                </p>
-                            </div>
-                            <Video size={100} style={{ position: "absolute", right: "-20px", bottom: "-20px", opacity: 0.1 }} />
+                        <div className={appt.tipCard}>
+                            <h3 className={appt.tipTitle}>Efficiency Tip</h3>
+                            <p className={appt.tipText}>Staff members with the "Remote Only" tag can be reassigned to the Virtual Care wing for improved patient throughput.</p>
+                            <Video size={70} className={appt.tipIcon} />
                         </div>
                     </div>
                 </div>
-
-                <CalendarModal
-                    isOpen={isModalOpen}
-                    onClose={() => setIsModalOpen(false)}
-                    selectedDate={selectedDate}
-                    onSave={() => { setIsModalOpen(false); loadDayData(); loadMonthData(); loadInitialData(); }}
-                />
             </div>
+
+            <CalendarModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                selectedDate={selectedDate}
+                onSave={() => { setIsModalOpen(false); loadDayData(); loadMonthData(); loadInitialData(); }}
+            />
         </motion.div>
     );
 }

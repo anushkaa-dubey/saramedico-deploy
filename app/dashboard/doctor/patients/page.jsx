@@ -8,7 +8,7 @@ import PatientAIChat from "./components/PatientAIChat";
 import PatientVitals from "./components/PatientVitals";
 import styles from "./Patients.module.css";
 import { motion } from "framer-motion";
-import { Users, Calendar, ChevronRight, MoreVertical, Trash2 } from "lucide-react";
+import { Users, Calendar, ChevronRight, MoreVertical, Trash2, Search } from "lucide-react";
 import { fetchAppointments, fetchPatients, fetchDoctorProfile, fetchPatientProfile } from "@/services/doctor";
 import { checkPermissions, requestAccess, revokeDoctorAccess } from "@/services/permissions";
 import OnboardPatientModal from "./components/OnboardPatientModal";
@@ -24,10 +24,9 @@ function PatientsContent() {
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [doctorId, setDoctorId] = useState(null);
 
-    // Row-action dropdown state
     const [openMenuId, setOpenMenuId] = useState(null);
-    const [actionLoading, setActionLoading] = useState(null); // patientId of in-flight action
-    const [actionToast, setActionToast] = useState(null); // { msg, type }
+    const [actionLoading, setActionLoading] = useState(null);
+    const [actionToast, setActionToast] = useState(null);
     const [permissionDenied, setPermissionDenied] = useState(false);
     const menuRef = useRef(null);
 
@@ -42,7 +41,6 @@ function PatientsContent() {
         return age >= 0 ? age : null;
     };
 
-    // Close menu on outside click
     useEffect(() => {
         const handler = (e) => {
             if (menuRef.current && !menuRef.current.contains(e.target)) setOpenMenuId(null);
@@ -70,7 +68,6 @@ function PatientsContent() {
         }
     };
 
-    // Row-level permission actions
     const handleCheckPermission = async (patient) => {
         if (!doctorId) return;
         setActionLoading(patient.id);
@@ -97,12 +94,7 @@ function PatientsContent() {
         setActionLoading(patient.id);
         setOpenMenuId(null);
         try {
-            await requestAccess({
-                patient_id: patient.id,
-                doctor_id: doctorId,
-                access_level: "read_analyze",
-                ai_access_permission: true,
-            });
+            await requestAccess({ patient_id: patient.id, doctor_id: doctorId, access_level: "read_analyze", ai_access_permission: true });
             showToast(`📨 Access request sent to ${patient.name}.`, "success");
         } catch (err) {
             showToast(`Failed: ${err.message}`, "error");
@@ -128,9 +120,7 @@ function PatientsContent() {
     const loadPatients = async () => {
         setLoading(true);
         try {
-            // 1. Try dedicated patient directory endpoint first
             const patientsData = await fetchPatients();
-
             if (patientsData && patientsData.length > 0) {
                 const mappedPatients = patientsData.map(p => ({
                     id: p.id,
@@ -144,16 +134,14 @@ function PatientsContent() {
                     gender: p.gender || "N/A",
                     phone: p.phoneNumber || p.phone_number || p.phone || p.user?.phoneNumber || p.user?.phone || p.contact?.phone || "N/A",
                     email: p.email || p.email_address || p.user?.email || p.contact?.email || "N/A",
-                    avatar: p.avatar || p.profile_image || p.photo || null
+                    avatar: p.avatar || p.profile_image || p.photo || null,
                 }));
                 setPatientsList(mappedPatients);
                 if (mappedPatients.length > 0 && !selectedId) setSelectedId(mappedPatients[0].id);
             } else {
-                // 2. Fallback: derive from appointments
                 const appointments = await fetchAppointments();
                 const uniquePatients = [];
                 const patientIds = new Set();
-
                 appointments.forEach(apt => {
                     const pId = apt.patient_id || (apt.user && apt.user.id);
                     if (pId && !patientIds.has(pId)) {
@@ -169,7 +157,7 @@ function PatientsContent() {
                             age: apt.user?.age || "N/A",
                             gender: apt.user?.gender || "N/A",
                             phone: apt.user?.phone || apt.user?.phoneNumber || apt.patient?.phoneNumber || apt.patient?.phone || "N/A",
-                            email: apt.user?.email || apt.patient?.email || "N/A"
+                            email: apt.user?.email || apt.patient?.email || "N/A",
                         });
                     }
                 });
@@ -189,13 +177,11 @@ function PatientsContent() {
 
     const handleDeleteConsultation = async (visitId) => {
         if (!confirm("Are you sure you want to delete this consultation record? This cannot be undone.")) return;
-
         setDeletingVisitId(visitId);
         try {
             const { deleteConsultation } = await import("@/services/consultation");
             await deleteConsultation(visitId);
             showToast("Consultation record deleted successfully.", "success");
-            // refresh visits
             loadVisits(selectedId);
         } catch (err) {
             console.error(err);
@@ -205,7 +191,6 @@ function PatientsContent() {
         }
     };
 
-    // When patient selected, load their visits AND fetch full profile details
     useEffect(() => {
         if (selectedId) {
             loadVisits(selectedId);
@@ -240,7 +225,6 @@ function PatientsContent() {
 
     const selectedPatient = filteredPatients.find(p => p.id === selectedId) || filteredPatients[0];
 
-    // Merge list-level data with the full profile fetched separately
     const mergePatient = (p) => {
         if (!p) return null;
         const detail = (selectedPatientDetail && selectedPatientDetail.id === p.id) ? selectedPatientDetail : null;
@@ -248,16 +232,11 @@ function PatientsContent() {
         const computedAge = calcAge(dobRaw);
         return {
             ...p,
-            dob: dobRaw
-                ? new Date(dobRaw).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })
-                : "N/A",
+            dob: dobRaw ? new Date(dobRaw).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }) : "N/A",
             age: computedAge !== null ? computedAge : p.age,
             gender: detail?.gender || p.gender || "N/A",
-            phone: detail?.phoneNumber || detail?.phone_number || detail?.phone ||
-                detail?.user?.phoneNumber || detail?.user?.phone ||
-                detail?.contact?.phone || p.phone || "N/A",
-            email: detail?.email || detail?.email_address || detail?.user?.email ||
-                detail?.contact?.email || p.email || "N/A",
+            phone: detail?.phoneNumber || detail?.phone_number || detail?.phone || detail?.user?.phoneNumber || detail?.user?.phone || detail?.contact?.phone || p.phone || "N/A",
+            email: detail?.email || detail?.email_address || detail?.user?.email || detail?.contact?.email || p.email || "N/A",
             mrn: detail?.mrn || detail?.medical_record_number || p.mrn || "N/A",
             avatar: detail?.avatar || detail?.profile_image || p.avatar || null,
         };
@@ -267,18 +246,30 @@ function PatientsContent() {
 
     return (
         <>
+            {/* Topbar outside padded wrapper so it flush-aligns with sidebar — no grey gap */}
+            <div className="patients-topbar-wrap">
+                <Topbar />
+            </div>
+
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
-                style={{ padding: '0 24px 24px 24px' }}
+                style={{ padding: '24px' }}
             >
-                <Topbar />
-
+                {/* ── Page Header: title left, search + button right, all one line ── */}
                 <div className={styles.pageHeader}>
-                    <h2 className={styles.title}>Patient Directory</h2>
+                    <div className={styles.headerLeft}>
+                        <h1 className={styles.title}>Patient Directory</h1>
+                        <p className={styles.headerSubtitle}>Manage clinical records and patient access.</p>
+                    </div>
+
                     <div className={styles.headerControls}>
-                        <div className={styles.searchWrapper}>
+                        {/* Search with lucide icon */}
+                        {/* <div className={styles.searchWrapper}>
+                            <span className={styles.searchIcon}>
+                                <Search size={14} />
+                            </span>
                             <input
                                 type="text"
                                 placeholder="Search by name or MRN..."
@@ -286,11 +277,8 @@ function PatientsContent() {
                                 onChange={(e) => setSearchTerm(e.target.value)}
                                 className={styles.searchInput}
                             />
-                        </div>
-                        <button
-                            onClick={() => setIsModalOpen(true)}
-                            className={styles.onboardBtn}
-                        >
+                        </div> */}
+                        <button onClick={() => setIsModalOpen(true)} className={styles.onboardBtn}>
                             + Onboard Patient
                         </button>
                     </div>
@@ -306,10 +294,7 @@ function PatientsContent() {
                     isOpen={isEditModalOpen}
                     onClose={() => setIsEditModalOpen(false)}
                     patientId={selectedId}
-                    onSuccess={() => {
-                        loadPatients();
-                        if (selectedId) loadVisits(selectedId);
-                    }}
+                    onSuccess={() => { loadPatients(); if (selectedId) loadVisits(selectedId); }}
                 />
 
                 <div className={styles.contentRow}>
@@ -326,9 +311,9 @@ function PatientsContent() {
                         {loading ? (
                             <div style={{ padding: '20px', textAlign: 'center', color: '#64748b' }}>Loading patients...</div>
                         ) : filteredPatients.length === 0 ? (
-                            <div style={{ padding: '20px', textAlign: 'center', color: '#94a3b8' }}>
+                            <div style={{ padding: '32px', textAlign: 'center', color: '#94a3b8' }}>
                                 <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px', color: '#cbd5e1' }}>
-                                    <Users size={48} />
+                                    <Users size={40} />
                                 </div>
                                 <div style={{ fontWeight: 600, color: "#64748b" }}>No patients found</div>
                                 <div style={{ fontSize: "12px", marginTop: "4px" }}>Try adjusting your search or onboard a new patient.</div>
@@ -344,28 +329,21 @@ function PatientsContent() {
                                     >
                                         <div className={styles.nameGroup}>
                                             <span className={styles.pName}>{patient.name}</span>
-                                            <span className={`${styles.pStatus} ${styles[patient.statusClass]}`}>
-                                                {patient.status}
-                                            </span>
+                                            <span className={`${styles.pStatus} ${styles[patient.statusClass]}`}>{patient.status}</span>
                                         </div>
                                         <div className={styles.itemText}>
                                             {patient.dob}
-                                            {calcAge(patient.dob) !== null && <span style={{ opacity: 0.6, fontSize: "11px", marginLeft: "4px" }}>({calcAge(patient.dob)}y)</span>}
+                                            {calcAge(patient.dob) !== null && (
+                                                <span style={{ opacity: 0.6, fontSize: "11px", marginLeft: "4px" }}>({calcAge(patient.dob)}y)</span>
+                                            )}
                                         </div>
                                         <div className={styles.itemText}>{patient.mrn}</div>
                                         <div className={styles.itemText}>{patient.lastVisit}</div>
                                         <div className={styles.statusCol} style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                                            {/* Actions dropdown trigger */}
                                             <button
-                                                id={`patient-actions-${patient.id}`}
                                                 onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === patient.id ? null : patient.id); }}
                                                 disabled={actionLoading === patient.id}
-                                                style={{
-                                                    background: "none", border: "none", cursor: "pointer",
-                                                    color: "#94a3b8", padding: "2px", borderRadius: "4px",
-                                                    display: "flex", alignItems: "center",
-                                                    opacity: actionLoading === patient.id ? 0.5 : 1,
-                                                }}
+                                                style={{ background: "none", border: "none", cursor: "pointer", color: "#94a3b8", padding: "2px", borderRadius: "4px", display: "flex", alignItems: "center", opacity: actionLoading === patient.id ? 0.5 : 1 }}
                                                 title="Patient actions"
                                             >
                                                 {actionLoading === patient.id
@@ -373,33 +351,18 @@ function PatientsContent() {
                                                     : <MoreVertical size={14} />}
                                             </button>
 
-                                            {/* Dropdown */}
                                             {openMenuId === patient.id && (
-                                                <div style={{
-                                                    position: "absolute", right: "8px", top: "100%",
-                                                    zIndex: 500, background: "#fff",
-                                                    border: "1px solid #e2e8f0", borderRadius: "10px",
-                                                    boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
-                                                    minWidth: "180px", overflow: "hidden",
-                                                }} onClick={e => e.stopPropagation()}>
+                                                <div style={{ position: "absolute", right: "8px", top: "100%", zIndex: 500, background: "#fff", border: "1px solid #e2e8f0", borderRadius: "10px", boxShadow: "0 8px 24px rgba(0,0,0,0.12)", minWidth: "180px", overflow: "hidden" }}
+                                                    onClick={e => e.stopPropagation()}>
                                                     {[
                                                         { label: "📂 View Documents", action: () => { setSelectedId(patient.id); setActiveTab("documents"); setOpenMenuId(null); } },
                                                         { label: "📨 Request Access", action: () => handleRequestAccess(patient) },
                                                         { label: "🔍 Check Permission", action: () => handleCheckPermission(patient) },
                                                         { label: "🚫 Revoke Access", action: () => handleRevokeAccess(patient), danger: true },
                                                     ].map((item) => (
-                                                        <button key={item.label} onClick={item.action} style={{
-                                                            display: "block", width: "100%", textAlign: "left",
-                                                            padding: "10px 14px", background: "none", border: "none",
-                                                            fontSize: "13px", cursor: "pointer",
-                                                            color: item.danger ? "#ef4444" : "#1e293b",
-                                                            fontWeight: "500",
-                                                            borderBottom: "1px solid #f8fafc",
-                                                            transition: "background 0.1s",
-                                                        }}
+                                                        <button key={item.label} onClick={item.action} style={{ display: "block", width: "100%", textAlign: "left", padding: "10px 14px", background: "none", border: "none", fontSize: "13px", cursor: "pointer", color: item.danger ? "#ef4444" : "#1e293b", fontWeight: "500", borderBottom: "1px solid #f8fafc", transition: "background 0.1s" }}
                                                             onMouseEnter={e => e.currentTarget.style.background = item.danger ? "#fff5f5" : "#f8fafc"}
-                                                            onMouseLeave={e => e.currentTarget.style.background = "none"}
-                                                        >
+                                                            onMouseLeave={e => e.currentTarget.style.background = "none"}>
                                                             {item.label}
                                                         </button>
                                                     ))}
@@ -417,235 +380,138 @@ function PatientsContent() {
                     {/* Patient Details */}
                     {selectedPatient && enrichedSelectedPatient && (
                         <div className={styles.detailsPanel}>
-                            {/* Permission Denied Banner */}
                             {permissionDenied && (
-                                <div style={{
-                                    background: "#fef2f2", border: "1px solid #fecaca",
-                                    borderRadius: "10px", padding: "12px 16px",
-                                    marginBottom: "16px", display: "flex",
-                                    alignItems: "center", gap: "10px"
-                                }}>
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2">
-                                        <circle cx="12" cy="12" r="10" /><line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
-                                    </svg>
+                                <div style={{ background: "#fef2f2", border: "1px solid #fecaca", borderRadius: "10px", padding: "12px 16px", marginBottom: "4px", display: "flex", alignItems: "center", gap: "10px" }}>
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2"><circle cx="12" cy="12" r="10" /><line x1="4.93" y1="4.93" x2="19.07" y2="19.07" /></svg>
                                     <div>
                                         <div style={{ fontSize: "13px", fontWeight: "700", color: "#dc2626" }}>Access Restricted</div>
-                                        <div style={{ fontSize: "12px", color: "#91231c" }}>Access to this patient's records requires patient approval. Use the actions menu to request access.</div>
+                                        <div style={{ fontSize: "12px", color: "#91231c" }}>Access to this patient's records requires patient approval.</div>
                                     </div>
                                     <button onClick={() => setPermissionDenied(false)} style={{ marginLeft: "auto", background: "none", border: "none", cursor: "pointer", color: "#94a3b8" }}>✕</button>
                                 </div>
                             )}
+
                             <div className={styles.profileCard}>
-                                {/* Avatar — initials fallback since API has no image URL */}
-                                <div className={styles.avatarLarge} style={{
-                                    display: "flex", alignItems: "center", justifyContent: "center",
-                                    background: "linear-gradient(135deg, #359AFF, #9CCDFF)",
-                                    color: "#fff", fontSize: "22px", fontWeight: "700",
-                                    letterSpacing: "0.5px", userSelect: "none"
-                                }}>
+                                <div className={styles.avatarLarge} style={{ display: "flex", alignItems: "center", justifyContent: "center", background: "linear-gradient(135deg, #359AFF, #9CCDFF)", color: "#fff", fontSize: "20px", fontWeight: "700", userSelect: "none" }}>
                                     {selectedPatient.avatar
                                         ? <img src={selectedPatient.avatar} alt={selectedPatient.name} style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "50%" }} />
-                                        : (selectedPatient.name
-                                            ? selectedPatient.name.split(" ").map(w => w[0]).slice(0, 2).join("").toUpperCase()
-                                            : "?")
-                                    }
+                                        : (selectedPatient.name ? selectedPatient.name.split(" ").map(w => w[0]).slice(0, 2).join("").toUpperCase() : "?")}
                                 </div>
+
                                 <div className={styles.profileInfo}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                         <div className={styles.profileName}>{enrichedSelectedPatient.name}</div>
-                                        <button
-                                            onClick={() => setIsEditModalOpen(true)}
-                                            className={styles.editProfileBtn}
-                                        >
-                                            Edit Profile
-                                        </button>
+                                        <button onClick={() => setIsEditModalOpen(true)} className={styles.editProfileBtn}>Edit Profile</button>
                                     </div>
                                     <div className={styles.profileMeta}>
-                                        {enrichedSelectedPatient.age !== null && enrichedSelectedPatient.age !== "N/A"
-                                            ? `${enrichedSelectedPatient.age} yrs`
-                                            : ""}
-                                        {enrichedSelectedPatient.gender && enrichedSelectedPatient.gender !== "N/A"
-                                            ? ` · ${enrichedSelectedPatient.gender}`
-                                            : ""}
+                                        {enrichedSelectedPatient.age !== null && enrichedSelectedPatient.age !== "N/A" ? `${enrichedSelectedPatient.age} yrs` : ""}
+                                        {enrichedSelectedPatient.gender && enrichedSelectedPatient.gender !== "N/A" ? ` · ${enrichedSelectedPatient.gender}` : ""}
                                     </div>
 
                                     <div className={styles.statsRow}>
-                                        <div className={styles.statItem}>
-                                            <span className={styles.statLabel}>MRN</span>
-                                            <span className={styles.statValue}>{enrichedSelectedPatient.mrn}</span>
-                                        </div>
-                                        <div className={styles.statItem}>
-                                            <span className={styles.statLabel}>DOB</span>
-                                            <span className={styles.statValue}>{enrichedSelectedPatient.dob}</span>
-                                        </div>
-                                        <div className={styles.statItem}>
-                                            <span className={styles.statLabel}>PHONE</span>
-                                            <span className={styles.statValue}>{enrichedSelectedPatient.phone}</span>
-                                        </div>
-                                        <div className={styles.statItem}>
-                                            <span className={styles.statLabel}>EMAIL</span>
-                                            <span className={styles.statValue} style={{ wordBreak: "break-all", fontSize: "11px" }}>{enrichedSelectedPatient.email}</span>
-                                        </div>
+                                        {[
+                                            { label: "MRN", value: enrichedSelectedPatient.mrn },
+                                            { label: "DOB", value: enrichedSelectedPatient.dob },
+                                            { label: "PHONE", value: enrichedSelectedPatient.phone },
+                                            { label: "EMAIL", value: enrichedSelectedPatient.email },
+                                        ].map(s => (
+                                            <div key={s.label} className={styles.statItem}>
+                                                <span className={styles.statLabel}>{s.label}</span>
+                                                <span className={styles.statValue} style={{ fontSize: s.label === "EMAIL" ? "11px" : undefined, wordBreak: s.label === "EMAIL" ? "break-all" : undefined }}>{s.value}</span>
+                                            </div>
+                                        ))}
                                     </div>
 
                                     <div className={styles.tabs}>
-                                        <div
-                                            className={`${styles.tab} ${activeTab === 'visits' ? styles.active : ''}`}
-                                            onClick={() => setActiveTab('visits')}
-                                        >
-                                            Visits
-                                        </div>
-                                        <div
-                                            className={`${styles.tab} ${activeTab === 'documents' ? styles.active : ''}`}
-                                            onClick={() => setActiveTab('documents')}
-                                        >
-                                            Documents
-                                        </div>
-                                        <div
-                                            className={`${styles.tab} ${activeTab === 'ai-chat' ? styles.active : ''}`}
-                                            onClick={() => setActiveTab('ai-chat')}
-                                        >
-                                            AI Chat
-                                        </div>
-                                        <div
-                                            className={`${styles.tab} ${activeTab === 'vitals' ? styles.active : ''}`}
-                                            onClick={() => setActiveTab('vitals')}
-                                        >
-                                            Vitals
-                                        </div>
+                                        {['visits', 'documents', 'ai-chat', 'vitals'].map(tab => (
+                                            <div key={tab} className={`${styles.tab} ${activeTab === tab ? styles.active : ''}`} onClick={() => setActiveTab(tab)}>
+                                                {tab.charAt(0).toUpperCase() + tab.slice(1).replace('-', ' ')}
+                                            </div>
+                                        ))}
                                     </div>
                                 </div>
                             </div>
 
                             {/* Tab Content */}
                             <div className={styles.tabContent}>
-                                {activeTab === 'visits' ? (
+                                {activeTab === 'visits' && (
                                     <div>
                                         <div className={styles.sectionHeader}>
                                             <h3 className={styles.sectionTitle}>Recent Visits</h3>
                                         </div>
-
                                         <div className={styles.visitList}>
                                             {loadingVisits ? (
                                                 <div style={{ padding: '20px', textAlign: 'center', color: '#64748b' }}>Loading visits...</div>
                                             ) : visits.length === 0 ? (
-                                                <div style={{ padding: '20px', textAlign: 'center', color: '#94a3b8' }}>
-                                                    <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px', color: '#cbd5e1' }}>
-                                                        <Calendar size={48} />
-                                                    </div>
+                                                <div style={{ padding: '32px', textAlign: 'center', color: '#94a3b8' }}>
+                                                    <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '12px', color: '#cbd5e1' }}><Calendar size={40} /></div>
                                                     <div style={{ fontWeight: 600, color: "#64748b" }}>No visit records yet</div>
                                                     <div style={{ fontSize: "12px", marginTop: "4px" }}>Consultation records will appear here after sessions are completed.</div>
                                                 </div>
-                                            ) : (
-                                                visits.map((visit, idx) => (
-                                                    <div key={visit.id || idx} className={styles.visitCard}>
-                                                        <div className={styles.visitDateRow}>
-                                                            <span className={styles.visitDate}>{new Date(visit.scheduledAt || visit.date).toLocaleDateString()}</span>
-                                                            <span className={styles.visitArrow}><ChevronRight size={16} /></span>
-                                                        </div>
-                                                        <div style={{ display: 'flex', gap: '8px', marginBottom: '8px', flexWrap: 'wrap' }}>
-                                                            <span style={{
-                                                                padding: "4px 8px",
-                                                                borderRadius: "6px",
-                                                                fontSize: "10px",
-                                                                fontWeight: "700",
-                                                                textTransform: "uppercase",
-                                                                background: visit.status === "completed" ? "#f0fdf4" : "#f8fafc",
-                                                                color: visit.status === "completed" ? "#16a34a" : "#64748b",
-                                                                border: `1px solid ${visit.status === "completed" ? "#bbf7d0" : "#e2e8f0"}`
-                                                            }}>
-                                                                MEETING: {visit.status || "UNKNOWN"}
-                                                            </span>
-                                                            <span style={{
-                                                                padding: "4px 8px",
-                                                                borderRadius: "6px",
-                                                                fontSize: "10px",
-                                                                fontWeight: "700",
-                                                                textTransform: "uppercase",
-                                                                background: visit.aiStatus === "completed" ? "#f0fdf4" : visit.aiStatus === "processing" ? "#eff6ff" : visit.aiStatus === "failed" ? "#fef2f2" : "#f8fafc",
-                                                                color: visit.aiStatus === "completed" ? "#16a34a" : visit.aiStatus === "processing" ? "#2563eb" : visit.aiStatus === "failed" ? "#dc2626" : "#64748b",
-                                                                border: `1px solid ${visit.aiStatus === "completed" ? "#bbf7d0" : visit.aiStatus === "processing" ? "#bfdbfe" : visit.aiStatus === "failed" ? "#fecaca" : "#e2e8f0"}`
-                                                            }}>
-                                                                SOAP: {visit.aiStatus || "PENDING"}
-                                                            </span>
-                                                            {visit.visitState && visit.visitState !== "scheduled" && (
-                                                                <span className={styles.visitType}>{visit.visitState || visit.visit_state}</span>
-                                                            )}
-                                                        </div>
-                                                        <p className={styles.visitNotes}>
-                                                            {(typeof (visit.chiefComplaint || visit.chief_complaint || visit.summary || visit.reason) === 'object'
-                                                                ? ((visit.chiefComplaint || visit.chief_complaint || visit.summary || visit.reason)?.chief_complaint || JSON.stringify(visit.chiefComplaint || visit.chief_complaint || visit.summary || visit.reason))
-                                                                : (visit.chiefComplaint || visit.chief_complaint || visit.summary || visit.reason)) || "Patient encounter session recorded and processed."}
-                                                        </p>
-                                                        <div style={{ display: 'flex', gap: '12px', marginTop: '16px' }}>
-                                                            <Link href={`/dashboard/doctor/patients/soap?consultationId=${visit.id}`} style={{ textDecoration: 'none', flex: 1 }}>
-                                                                <button className={styles.soapBtn} style={{ width: '100%' }}>
-                                                                    View SOAP Note
-                                                                </button>
-                                                            </Link>
-                                                            <button
-                                                                onClick={() => handleDeleteConsultation(visit.id)}
-                                                                disabled={deletingVisitId === visit.id}
-                                                                style={{
-                                                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                                    width: '40px', borderRadius: '8px', cursor: deletingVisitId === visit.id ? 'not-allowed' : 'pointer',
-                                                                    background: '#fff', border: '1px solid #fee2e2', color: '#ef4444', opacity: deletingVisitId === visit.id ? 0.5 : 1, transition: 'all 0.2s',
-                                                                }}
-                                                                onMouseEnter={(e) => {
-                                                                    if (deletingVisitId !== visit.id) {
-                                                                        e.currentTarget.style.background = '#fef2f2';
-                                                                    }
-                                                                }}
-                                                                onMouseLeave={(e) => e.currentTarget.style.background = '#fff'}
-                                                                title="Delete Consultation"
-                                                            >
-                                                                {deletingVisitId === visit.id ? (
-                                                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ animation: "spin 0.8s linear infinite" }}><path d="M21 12a9 9 0 1 1-6.219-8.56" /></svg>
-                                                                ) : (
-                                                                    <Trash2 size={18} />
-                                                                )}
-                                                            </button>
-                                                        </div>
+                                            ) : visits.map((visit, idx) => (
+                                                <div key={visit.id || idx} className={styles.visitCard}>
+                                                    <div className={styles.visitDateRow}>
+                                                        <span className={styles.visitDate}>{new Date(visit.scheduledAt || visit.date).toLocaleDateString()}</span>
+                                                        <span className={styles.visitArrow}><ChevronRight size={16} /></span>
                                                     </div>
-                                                ))
-                                            )}
+                                                    <div style={{ display: 'flex', gap: '8px', marginBottom: '8px', flexWrap: 'wrap' }}>
+                                                        <span style={{ padding: "4px 8px", borderRadius: "6px", fontSize: "10px", fontWeight: "700", textTransform: "uppercase", background: visit.status === "completed" ? "#f0fdf4" : "#f8fafc", color: visit.status === "completed" ? "#16a34a" : "#64748b", border: `1px solid ${visit.status === "completed" ? "#bbf7d0" : "#e2e8f0"}` }}>
+                                                            MEETING: {visit.status || "UNKNOWN"}
+                                                        </span>
+                                                        <span style={{ padding: "4px 8px", borderRadius: "6px", fontSize: "10px", fontWeight: "700", textTransform: "uppercase", background: visit.aiStatus === "completed" ? "#f0fdf4" : visit.aiStatus === "processing" ? "#eff6ff" : visit.aiStatus === "failed" ? "#fef2f2" : "#f8fafc", color: visit.aiStatus === "completed" ? "#16a34a" : visit.aiStatus === "processing" ? "#2563eb" : visit.aiStatus === "failed" ? "#dc2626" : "#64748b", border: `1px solid ${visit.aiStatus === "completed" ? "#bbf7d0" : visit.aiStatus === "processing" ? "#bfdbfe" : visit.aiStatus === "failed" ? "#fecaca" : "#e2e8f0"}` }}>
+                                                            SOAP: {visit.aiStatus || "PENDING"}
+                                                        </span>
+                                                        {visit.visitState && visit.visitState !== "scheduled" && (
+                                                            <span className={styles.visitType}>{visit.visitState || visit.visit_state}</span>
+                                                        )}
+                                                    </div>
+                                                    <p className={styles.visitNotes}>
+                                                        {(typeof (visit.chiefComplaint || visit.chief_complaint || visit.summary || visit.reason) === 'object'
+                                                            ? ((visit.chiefComplaint || visit.chief_complaint || visit.summary || visit.reason)?.chief_complaint || JSON.stringify(visit.chiefComplaint || visit.chief_complaint || visit.summary || visit.reason))
+                                                            : (visit.chiefComplaint || visit.chief_complaint || visit.summary || visit.reason)) || "Patient encounter session recorded and processed."}
+                                                    </p>
+                                                    <div style={{ display: 'flex', gap: '12px', marginTop: '12px' }}>
+                                                        <Link href={`/dashboard/doctor/patients/soap?consultationId=${visit.id}`} style={{ textDecoration: 'none', flex: 1 }}>
+                                                            <button className={styles.soapBtn} style={{ width: '100%' }}>View SOAP Note</button>
+                                                        </Link>
+                                                        <button
+                                                            onClick={() => handleDeleteConsultation(visit.id)}
+                                                            disabled={deletingVisitId === visit.id}
+                                                            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '40px', borderRadius: '8px', cursor: deletingVisitId === visit.id ? 'not-allowed' : 'pointer', background: '#fff', border: '1px solid #fee2e2', color: '#ef4444', opacity: deletingVisitId === visit.id ? 0.5 : 1, transition: 'all 0.2s' }}
+                                                            onMouseEnter={e => { if (deletingVisitId !== visit.id) e.currentTarget.style.background = '#fef2f2'; }}
+                                                            onMouseLeave={e => e.currentTarget.style.background = '#fff'}
+                                                            title="Delete Consultation"
+                                                        >
+                                                            {deletingVisitId === visit.id
+                                                                ? <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ animation: "spin 0.8s linear infinite" }}><path d="M21 12a9 9 0 1 1-6.219-8.56" /></svg>
+                                                                : <Trash2 size={18} />}
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ))}
                                         </div>
                                     </div>
-                                ) : activeTab === 'documents' ? (
-                                    <DocumentsList patientId={selectedPatient.id} />
-                                ) : activeTab === 'ai-chat' && doctorId ? (
+                                )}
+                                {activeTab === 'documents' && <DocumentsList patientId={selectedPatient.id} />}
+                                {activeTab === 'ai-chat' && doctorId && (
                                     <div style={{ height: '600px' }}>
-                                        <PatientAIChat
-                                            patientId={selectedPatient.id}
-                                            chatType="doctor"
-                                            doctorId={doctorId}
-                                        />
+                                        <PatientAIChat patientId={selectedPatient.id} chatType="doctor" doctorId={doctorId} />
                                     </div>
-                                ) : activeTab === 'vitals' ? (
-                                    <PatientVitals patientId={selectedPatient.id} />
-                                ) : null}
+                                )}
+                                {activeTab === 'vitals' && <PatientVitals patientId={selectedPatient.id} />}
                             </div>
                         </div>
                     )}
                 </div>
             </motion.div>
 
-            {/* Action Toast */}
+            {/* Toast */}
             {actionToast && (
-                <div style={{
-                    position: "fixed", bottom: "24px", right: "24px", zIndex: 99999,
-                    background: actionToast.type === "error" ? "#fee2e2" : actionToast.type === "info" ? "#f0f9ff" : "#f0fdf4",
-                    color: actionToast.type === "error" ? "#dc2626" : actionToast.type === "info" ? "#0369a1" : "#16a34a",
-                    border: `1px solid ${actionToast.type === "error" ? "#fecaca" : actionToast.type === "info" ? "#bae6fd" : "#bbf7d0"}`,
-                    padding: "12px 18px", borderRadius: "12px",
-                    fontSize: "13px", fontWeight: "600",
-                    boxShadow: "0 4px 20px rgba(0,0,0,0.12)",
-                    maxWidth: "320px", animation: "slideInToast 0.3s ease",
-                }}>
+                <div style={{ position: "fixed", bottom: "24px", right: "24px", zIndex: 99999, background: actionToast.type === "error" ? "#fee2e2" : actionToast.type === "info" ? "#f0f9ff" : "#f0fdf4", color: actionToast.type === "error" ? "#dc2626" : actionToast.type === "info" ? "#0369a1" : "#16a34a", border: `1px solid ${actionToast.type === "error" ? "#fecaca" : actionToast.type === "info" ? "#bae6fd" : "#bbf7d0"}`, padding: "12px 18px", borderRadius: "12px", fontSize: "13px", fontWeight: "600", boxShadow: "0 4px 20px rgba(0,0,0,0.12)", maxWidth: "320px", animation: "slideInToast 0.3s ease" }}>
                     {actionToast.msg}
                 </div>
             )}
-            <style>{`@keyframes spin { to { transform: rotate(360deg); } } @keyframes slideInToast { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }`}</style>
+            <style>{`@keyframes spin { to { transform: rotate(360deg); } } @keyframes slideInToast { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } } .patients-topbar-wrap [class*="topbarSearchWrap"] { display: none !important; } ::-webkit-scrollbar { display: none; } * { scrollbar-width: none; }`}</style>
         </>
     );
 }

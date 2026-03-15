@@ -98,12 +98,10 @@ export default function HospitalDashboard() {
 
                 setDailyAgenda(Array.isArray(agendaData) ? agendaData.slice(0, 6) : []);
 
-                // Only show activity if there are real meaningful entries (not just audit logs)
                 const activity = dashboardOverview?.recentActivities || [];
                 if (Array.isArray(activity) && activity.length > 0) {
                     setRecentActivity(activity.slice(0, 5));
                 }
-                // Do NOT fall back to audit logs — they spam view_audit_logs entries
 
             } catch (err) {
                 console.error("Dashboard load error:", err);
@@ -118,11 +116,11 @@ export default function HospitalDashboard() {
     const greeting = hour < 12 ? "Good Morning" : hour < 17 ? "Good Afternoon" : "Good Evening";
 
     const statCards = [
-        { label: "DOCTORS", value: stats.doctors, icon: <Stethoscope size={20} />, color: "#6366f1", bg: "#eef2ff", href: "/dashboard/hospital/doctors" },
-        { label: "PATIENTS", value: stats.patients, icon: <Users size={20} />, color: "#10b981", bg: "#f0fdf4", href: "/dashboard/hospital/patients" },
-        { label: "STAFF MEMBERS", value: stats.staff, icon: <Building2 size={20} />, color: "#f59e0b", bg: "#fffbeb", href: "/dashboard/hospital/staff-management" },
-        { label: "APPOINTMENTS TODAY", value: stats.appointments, icon: <Calendar size={20} />, color: "#3b82f6", bg: "#eff6ff", href: "/dashboard/hospital/appointments" },
-        { label: "DEPARTMENTS", value: stats.departments, icon: <BarChart2 size={20} />, color: "#ec4899", bg: "#fdf2f8", href: "/dashboard/hospital/departments" },
+        { label: "DOCTORS", value: stats.doctors, icon: <Stethoscope size={18} />, color: "#6366f1", bg: "#eef2ff", href: "/dashboard/hospital/doctors" },
+        { label: "PATIENTS", value: stats.patients, icon: <Users size={18} />, color: "#10b981", bg: "#f0fdf4", href: "/dashboard/hospital/patients" },
+        { label: "STAFF MEMBERS", value: stats.staff, icon: <Building2 size={18} />, color: "#f59e0b", bg: "#fffbeb", href: "/dashboard/hospital/staff-management" },
+        { label: "APPOINTMENTS TODAY", value: stats.appointments, icon: <Calendar size={18} />, color: "#3b82f6", bg: "#eff6ff", href: "/dashboard/hospital/appointments" },
+        { label: "DEPARTMENTS", value: stats.departments, icon: <BarChart2 size={18} />, color: "#ec4899", bg: "#fdf2f8", href: "/dashboard/hospital/departments" },
     ];
 
     const quickActions = [
@@ -135,7 +133,8 @@ export default function HospitalDashboard() {
     if (loading) {
         return (
             <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-                <Topbar title="Clinical Dashboard" />
+                {/* ── FIX 1: No title prop → Topbar shows nothing on the left, removing the duplicate */}
+                <Topbar />
                 <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', background: '#F5F7FA' }}>
                     <div className={styles.spinner}></div>
                     <span style={{ marginLeft: '12px', fontWeight: 'bold', color: '#64748b' }}>Loading dashboard...</span>
@@ -151,35 +150,41 @@ export default function HospitalDashboard() {
             variants={containerVariants}
             style={{ display: "flex", flexDirection: "column", background: "transparent", padding: 0, minHeight: "100%" }}
         >
-            <Topbar title="Clinical Dashboard" />
+            <Topbar />
 
             <div className={styles.contentWrapper}>
-                {/* Header */}
-                <motion.div variants={cardVariants} style={{ marginBottom: "28px", display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: "8px" }}>
-                    <div>
-                        <h1 style={{ fontSize: isMobile ? "22px" : "28px", fontWeight: "900", color: "#0f172a", margin: 0, letterSpacing: "-0.02em" }}>
-                            Clinical Dashboard
-                        </h1>
-                        <p style={{ color: "#64748b", fontSize: "14px", margin: "4px 0 0 0", fontWeight: "500" }}>
-                            {greeting}{doctorProfile?.full_name ? `, ${doctorProfile.full_name}` : ""}. Your clinical queue is {stats.appointments > 0 ? `active with ${stats.appointments} events` : "clear"}.
-                        </p>
-                    </div>
+
+                {/* Page heading + greeting */}
+                <motion.div variants={cardVariants} style={{ marginBottom: "16px" }}>
+                    <h1 style={{ fontSize: "28px", fontWeight: "900", color: "#0f172a", margin: "0 0 4px 0", letterSpacing: "-0.02em" }}>
+                        Clinical Dashboard
+                    </h1>
+                    <p style={{ color: "#64748b", fontSize: "14px", margin: 0, fontWeight: "500" }}>
+                        {greeting}{doctorProfile?.full_name ? `, ${doctorProfile.full_name}` : ""}. Your clinical queue is {stats.appointments > 0 ? `active with ${stats.appointments} events` : "clear"}.
+                    </p>
                 </motion.div>
 
-                {/* Hero Stats */}
-                <motion.div variants={cardVariants} style={{ marginBottom: "24px" }}>
+                <motion.div variants={cardVariants} style={{ marginBottom: "16px" }}>
                     <div style={{
                         background: "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)",
-                        borderRadius: "20px",
-                        padding: isMobile ? "24px 20px" : "40px",
+                        borderRadius: "16px",
+                        padding: isMobile ? "20px" : "24px 32px",   // was 40px desktop
                         color: "white",
                         position: "relative",
                         overflow: "hidden",
-                        boxShadow: "0 20px 40px -12px rgba(37, 99, 235, 0.3)"
+                        boxShadow: "0 20px 40px -12px rgba(37, 99, 235, 0.3)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: "16px",
                     }}>
                         <div style={{ position: "relative", zIndex: 1 }}>
-                            <div style={{ fontSize: "13px", fontWeight: "800", opacity: 0.9, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "8px" }}>Appointments Today</div>
-                            <div style={{ fontSize: isMobile ? "40px" : "56px", fontWeight: "900", marginBottom: "20px", letterSpacing: "-0.04em" }}>{stats.appointments}</div>
+                            <div style={{ fontSize: "11px", fontWeight: "800", opacity: 0.85, letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: "4px" }}>
+                                Appointments Today
+                            </div>
+                            <div style={{ fontSize: isMobile ? "36px" : "44px", fontWeight: "900", marginBottom: "14px", letterSpacing: "-0.04em", lineHeight: 1 }}>
+                                {stats.appointments}
+                            </div>
                             <Link href="/dashboard/hospital/appointments" style={{
                                 display: "inline-flex",
                                 alignItems: "center",
@@ -189,32 +194,31 @@ export default function HospitalDashboard() {
                                 fontSize: "13px",
                                 fontWeight: "800",
                                 background: "rgba(255,255,255,0.15)",
-                                padding: "8px 16px",
+                                padding: "7px 14px",
                                 borderRadius: "10px",
                                 backdropFilter: "blur(10px)",
-                                transition: "all 0.2s"
+                                transition: "all 0.2s",
                             }}
                                 onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.25)"}
                                 onMouseLeave={e => e.currentTarget.style.background = "rgba(255,255,255,0.15)"}
                             >
-                                View Full Schedule <Calendar size={14} />
+                                View Full Schedule <Calendar size={13} />
                             </Link>
                         </div>
-                        <Calendar size={isMobile ? 70 : 110} style={{ position: "absolute", right: "24px", top: "50%", transform: "translateY(-50%) rotate(-15deg)", opacity: 0.1, zIndex: 0 }} />
+                        <Calendar
+                            size={isMobile ? 60 : 80}   // was 110 — too large, made card tall
+                            style={{ opacity: 0.12, flexShrink: 0, zIndex: 0 }}
+                        />
                     </div>
                 </motion.div>
 
-                {/* Stats Grid
-                    Desktop: 5 columns
-                    Mobile:  3 columns (row of 3, then row of 2 centered) via CSS grid auto-placement
-                */}
                 <motion.div
                     variants={cardVariants}
                     style={{
-                        marginBottom: "24px",
+                        marginBottom: "20px",
                         display: "grid",
                         gridTemplateColumns: isMobile ? "repeat(3, 1fr)" : "repeat(5, 1fr)",
-                        gap: isMobile ? "10px" : "16px",
+                        gap: isMobile ? "10px" : "12px",   // was 16px
                     }}
                 >
                     {statCards.map((s, idx) => (
@@ -223,27 +227,28 @@ export default function HospitalDashboard() {
                             href={s.href}
                             style={{
                                 textDecoration: "none",
-                                // On mobile: 4th and 5th cards share the middle column area — center the last row
                                 gridColumn: isMobile && idx === 3 ? "1 / 2" : isMobile && idx === 4 ? "2 / 3" : undefined,
                             }}
                         >
-                            <div style={{
-                                background: "#fff",
-                                padding: isMobile ? "14px 12px" : "20px",
-                                borderRadius: "14px",
-                                border: "1px solid #f1f5f9",
-                                cursor: "pointer",
-                                transition: "transform 0.15s, box-shadow 0.15s",
-                                height: "100%",
-                            }}
+                            <div
+                                style={{
+                                    background: "#fff",
+                                    padding: isMobile ? "12px 10px" : "16px",   // was 20px desktop
+                                    borderRadius: "12px",
+                                    border: "1px solid #f1f5f9",
+                                    cursor: "pointer",
+                                    transition: "transform 0.15s, box-shadow 0.15s",
+                                    height: "100%",
+                                }}
                                 onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 8px 24px rgba(0,0,0,0.08)"; }}
                                 onMouseLeave={e => { e.currentTarget.style.transform = "none"; e.currentTarget.style.boxShadow = "none"; }}
                             >
-                                <div style={{ width: "34px", height: "34px", borderRadius: "9px", background: s.bg, color: s.color, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "10px" }}>
+                                <div style={{ width: "32px", height: "32px", borderRadius: "8px", background: s.bg, color: s.color, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "8px" }}>
                                     {s.icon}
                                 </div>
                                 <div style={{ fontSize: "9px", fontWeight: "800", color: "#94a3b8", letterSpacing: "0.05em" }}>{s.label}</div>
-                                <div style={{ fontSize: isMobile ? "22px" : "30px", fontWeight: "800", color: "#1e293b", marginTop: "4px" }}>
+                                {/* was 30px desktop — now 24px, still readable, card stays compact */}
+                                <div style={{ fontSize: isMobile ? "20px" : "26px", fontWeight: "800", color: "#1e293b", marginTop: "2px" }}>
                                     {s.value}
                                 </div>
                             </div>
@@ -251,27 +256,26 @@ export default function HospitalDashboard() {
                     ))}
                 </motion.div>
 
-                {/* Two column layout — stacked on mobile */}
                 <div style={{
                     display: "grid",
-                    gridTemplateColumns: isMobile ? "1fr" : "1fr 320px",
-                    gap: "20px",
+                    gridTemplateColumns: isMobile ? "1fr" : "1fr 300px",   // was 320px
+                    gap: "16px",   // was 20px
                 }}>
                     {/* Recent Activity */}
                     <motion.div variants={cardVariants}>
-                        <div style={{ background: "#fff", borderRadius: "16px", border: "1px solid #f1f5f9", overflow: "hidden" }}>
-                            <div style={{ padding: "16px 20px", borderBottom: "1px solid #f8fafc" }}>
-                                <h2 style={{ fontSize: "15px", fontWeight: "800", color: "#1e293b", margin: 0 }}>Recent Activity</h2>
+                        <div style={{ background: "#fff", borderRadius: "14px", border: "1px solid #f1f5f9", overflow: "hidden" }}>
+                            <div style={{ padding: "14px 18px", borderBottom: "1px solid #f8fafc" }}>
+                                <h2 style={{ fontSize: "14px", fontWeight: "800", color: "#1e293b", margin: 0 }}>Recent Activity</h2>
                             </div>
                             {recentActivity.length === 0 ? (
-                                <div style={{ padding: "36px 20px", textAlign: "center", color: "#94a3b8", fontSize: "13px" }}>
+                                <div style={{ padding: "32px 20px", textAlign: "center", color: "#94a3b8", fontSize: "13px" }}>
                                     No recent activity to display.
                                 </div>
                             ) : recentActivity.map((item, i) => {
                                 const timeStr = item.timestamp ? new Date(item.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "Recent";
                                 return (
-                                    <div key={i} style={{ display: "flex", padding: "14px 20px", borderBottom: i < recentActivity.length - 1 ? "1px solid #f8fafc" : "none", alignItems: "center" }}>
-                                        <div style={{ width: "68px", flexShrink: 0 }}>
+                                    <div key={i} style={{ display: "flex", padding: "12px 18px", borderBottom: i < recentActivity.length - 1 ? "1px solid #f8fafc" : "none", alignItems: "center" }}>
+                                        <div style={{ width: "60px", flexShrink: 0 }}>
                                             <div style={{ fontSize: "12px", fontWeight: "700", color: "#1e293b" }}>{timeStr}</div>
                                         </div>
                                         <div style={{ flex: 1, paddingLeft: "12px", minWidth: 0 }}>
@@ -290,12 +294,12 @@ export default function HospitalDashboard() {
 
                     {/* Quick Actions */}
                     <motion.div variants={cardVariants}>
-                        <div style={{ background: "#fff", borderRadius: "16px", border: "1px solid #f1f5f9", padding: "16px 20px" }}>
-                            <h3 style={{ fontSize: "14px", fontWeight: "800", color: "#1e293b", marginBottom: "14px", marginTop: 0 }}>Quick Actions</h3>
+                        <div style={{ background: "#fff", borderRadius: "14px", border: "1px solid #f1f5f9", padding: "14px 18px" }}>
+                            <h3 style={{ fontSize: "14px", fontWeight: "800", color: "#1e293b", marginBottom: "12px", marginTop: 0 }}>Quick Actions</h3>
                             <div style={{
                                 display: "grid",
                                 gridTemplateColumns: "repeat(4, 1fr)",
-                                gap: "10px",
+                                gap: "8px",
                             }}>
                                 {quickActions.map((a) => (
                                     <Link key={a.label} href={a.href} style={{ textDecoration: "none" }}>
@@ -303,12 +307,12 @@ export default function HospitalDashboard() {
                                             display: "flex",
                                             flexDirection: "column",
                                             alignItems: "center",
-                                            padding: "12px 6px",
-                                            borderRadius: "12px",
+                                            padding: "10px 4px",
+                                            borderRadius: "10px",
                                             border: "1.5px solid #f1f5f9",
                                             cursor: "pointer",
                                             transition: "all 0.15s",
-                                            gap: "6px",
+                                            gap: "5px",
                                         }}
                                             onMouseEnter={e => { e.currentTarget.style.borderColor = a.color; e.currentTarget.style.background = a.bg; }}
                                             onMouseLeave={e => { e.currentTarget.style.borderColor = "#f1f5f9"; e.currentTarget.style.background = "transparent"; }}

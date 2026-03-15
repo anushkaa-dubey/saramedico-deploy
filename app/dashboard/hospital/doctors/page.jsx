@@ -3,6 +3,7 @@ import Topbar from "../components/Topbar";
 import styles from "../HospitalDashboard.module.css";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useEffect } from "react";
+import { Search } from "lucide-react";
 import { createHospitalDoctor, fetchHospitalDoctorStatus, updateHospitalDoctor } from "@/services/hospital";
 import { fetchOrganizationMembers } from "@/services/hospital";
 
@@ -127,8 +128,7 @@ function CreateDoctorModal({ onClose, onSuccess }) {
     );
 }
 
-
-// ── View/Edit Doctor Modal — ALL FIELDS PRE-FILLED (mirrors HospitalEditDoctorScreen) ───
+// ── View/Edit Doctor Modal ───────────────────────────────────────────────────
 function DoctorDetailModal({ doctor, onClose, onUpdate }) {
     const [form, setForm] = useState({
         name: doctor.full_name || doctor.name || "",
@@ -146,7 +146,6 @@ function DoctorDetailModal({ doctor, onClose, onUpdate }) {
         setSaving(true);
         setError("");
         try {
-            // Only send changed fields (mirrors mobile behavior)
             const original = {
                 name: doctor.full_name || doctor.name || "",
                 specialty: doctor.specialty || "",
@@ -185,7 +184,6 @@ function DoctorDetailModal({ doctor, onClose, onUpdate }) {
                     <button onClick={onClose} style={{ border: "none", background: "#f1f5f9", width: "36px", height: "36px", borderRadius: "10px", cursor: "pointer", fontSize: "18px", color: "#64748b" }}>×</button>
                 </div>
 
-                {/* Avatar + Name Card */}
                 <div style={{ display: "flex", alignItems: "center", gap: "14px", marginBottom: "24px", padding: "14px", background: "#f8fafc", borderRadius: "12px" }}>
                     <div style={{ width: "52px", height: "52px", borderRadius: "14px", background: "linear-gradient(135deg, #3b82f6, #6366f1)", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "800", fontSize: "18px", flexShrink: 0 }}>
                         {initials}
@@ -250,8 +248,6 @@ function DoctorDetailModal({ doctor, onClose, onUpdate }) {
     );
 }
 
-
-
 // ── Main Doctors Page ────────────────────────────────────────────────────────
 export default function DoctorsPage() {
     const [doctors, setDoctors] = useState([]);
@@ -262,40 +258,23 @@ export default function DoctorsPage() {
     const [selectedDoctor, setSelectedDoctor] = useState(null);
     const [toast, setToast] = useState("");
 
-    const showToast = (msg) => {
-        setToast(msg);
-        setTimeout(() => setToast(""), 3500);
-    };
+    const showToast = (msg) => { setToast(msg); setTimeout(() => setToast(""), 3500); };
 
     const load = async () => {
         setLoading(true);
         setError("");
-        console.log("Loading doctors directory...");
         try {
-            // Prefer status endpoint (gives active/inactive info), fallback to org members
-            const data = await fetchHospitalDoctorStatus().catch((err) => {
-                console.error("fetchHospitalDoctorStatus failed:", err);
-                return [];
-            });
-            console.log("Doctors fetched from status endpoint:", data?.length || 0);
-
+            const data = await fetchHospitalDoctorStatus().catch(() => []);
             if (data && data.length > 0) {
-                console.log("First doctor data sample:", data[0]);
                 setDoctors(data);
             } else {
-                console.log("Falling back to fetchOrganizationMembers...");
                 const members = await fetchOrganizationMembers();
-                console.log("Members fetched:", members?.length || 0);
-                if (members && members.length > 0) {
-                    console.log("First member data sample:", members[0]);
-                }
-                setDoctors(members.filter(m => m.role === "doctor" || m.specialty));
+                setDoctors((members || []).filter(m => m.role === "doctor" || m.specialty));
             }
         } catch (err) {
             console.error("Failed to load doctors:", err);
             setError("Could not load doctor directory — backend may be unavailable.");
         } finally {
-            console.log("Finished loading doctors.");
             setLoading(false);
         }
     };
@@ -324,35 +303,40 @@ export default function DoctorsPage() {
             animate={{ opacity: 1 }}
             style={{ display: "flex", flexDirection: "column", background: "transparent", padding: 0, minHeight: "100%" }}
         >
-            <Topbar title="Doctors Directory" />
+            <Topbar title="" />
 
             <div className={styles.contentWrapper}>
                 {/* Header */}
-                <div style={{ marginBottom: "24px" }}>
-                    <h1 style={{ fontSize: "24px", fontWeight: "800", color: "#0f172a", margin: 0 }}>Doctors Directory</h1>
-                    <p style={{ color: "#64748b", margin: "4px 0 0 0", fontSize: "14px" }}>
+                <div style={{ marginBottom: "20px" }}>
+                    <h1 style={{ fontSize: "28px", fontWeight: "900", color: "#0f172a", margin: "0 0 4px 0", letterSpacing: "-0.02em" }}>
+                        Doctors Directory
+                    </h1>
+                    <p style={{ color: "#64748b", margin: 0, fontSize: "14px", fontWeight: "500" }}>
                         Manage clinical staff and their department assignments.
                     </p>
                 </div>
 
-                {/* Filter/Action Row */}
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "28px", flexWrap: "wrap", gap: "16px" }}>
-                    <div style={{ display: "flex", gap: "12px", alignItems: "center", flex: 1 }}>
-                        <div style={{ position: "relative", flex: 1, maxWidth: "400px" }}>
-                            <span style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "#94a3b8" }}>🔍</span>
-                            <input
-                                type="text"
-                                placeholder="Search doctors by name, specialty or email..."
-                                value={search}
-                                onChange={e => setSearch(e.target.value)}
-                                style={{ ...inputStyle, paddingLeft: "36px", width: "100%" }}
-                            />
-                        </div>
+                {/* Search + Action Row */}
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px", flexWrap: "wrap", gap: "12px" }}>
+                    {/* Search input with lucide icon */}
+                    <div style={{ position: "relative", flex: 1, maxWidth: "400px", display: "flex", alignItems: "center" }}>
+                        <Search
+                            size={15}
+                            style={{
+                                position: "absolute", left: "12px",
+                                color: "#94a3b8", pointerEvents: "none",
+                                flexShrink: 0,
+                            }}
+                        />
+                        <input
+                            type="text"
+                            placeholder="Search by name, specialty or email..."
+                            value={search}
+                            onChange={e => setSearch(e.target.value)}
+                            style={{ ...inputStyle, paddingLeft: "36px" }}
+                        />
                     </div>
-                    <button
-                        className={styles.primaryBtn}
-                        onClick={() => setShowCreate(true)}
-                    >
+                    <button className={styles.primaryBtn} onClick={() => setShowCreate(true)}>
                         + Onboard Doctor
                     </button>
                 </div>
@@ -402,9 +386,11 @@ export default function DoctorsPage() {
                                 ) : filtered.map((doc, i) => {
                                     const initials = (doc.full_name || doc.name || "D").split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
                                     return (
-                                        <tr key={doc.id || i} style={{ borderBottom: "1px solid #f8fafc", transition: "background 0.1s" }}
+                                        <tr key={doc.id || i}
+                                            style={{ borderBottom: "1px solid #f8fafc", transition: "background 0.1s" }}
                                             onMouseEnter={e => e.currentTarget.style.background = "#fafbfc"}
-                                            onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                                            onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+                                        >
                                             <td style={{ padding: "16px" }}>
                                                 <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                                                     <div style={{ width: "36px", height: "36px", borderRadius: "10px", background: "linear-gradient(135deg, #3b82f620, #6366f130)", color: "#3b82f6", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "800", fontSize: "12px", flexShrink: 0 }}>
@@ -415,15 +401,9 @@ export default function DoctorsPage() {
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td style={{ padding: "16px", color: "#64748b", fontSize: "13px" }}>
-                                                {doc.specialty || doc.department || "General"}
-                                            </td>
-                                            <td style={{ padding: "16px", color: "#64748b", fontSize: "13px" }}>
-                                                {doc.email || "—"}
-                                            </td>
-                                            <td style={{ padding: "16px", color: "#64748b", fontSize: "12px" }}>
-                                                {doc.department_role || doc.role || "Clinician"}
-                                            </td>
+                                            <td style={{ padding: "16px", color: "#64748b", fontSize: "13px" }}>{doc.specialty || doc.department || "General"}</td>
+                                            <td style={{ padding: "16px", color: "#64748b", fontSize: "13px" }}>{doc.email || "—"}</td>
+                                            <td style={{ padding: "16px", color: "#64748b", fontSize: "12px" }}>{doc.department_role || doc.role || "Clinician"}</td>
                                             <td style={{ padding: "16px" }}>
                                                 <span style={{ ...getStatusStyle(doc.status || (doc.is_active ? "active" : "inactive")), padding: "4px 12px", borderRadius: "20px", fontSize: "11px", fontWeight: "700", whiteSpace: "nowrap" }}>
                                                     {doc.status || (doc.is_active ? "Active" : "Inactive")}
@@ -446,37 +426,26 @@ export default function DoctorsPage() {
                     </div>
                 </div>
 
-                {/* Footer note */}
                 <div style={{ marginTop: "16px", color: "#94a3b8", fontSize: "12px" }}>
                     Showing {filtered.length} of {doctors.length} doctors
                 </div>
             </div>
 
-            {/* Create Modal */}
             <AnimatePresence>
                 {showCreate && (
                     <CreateDoctorModal
                         onClose={() => setShowCreate(false)}
-                        onSuccess={() => {
-                            setShowCreate(false);
-                            showToast("Doctor account created successfully. Credentials sent to their email.");
-                            load();
-                        }}
+                        onSuccess={() => { setShowCreate(false); showToast("Doctor account created successfully."); load(); }}
                     />
                 )}
             </AnimatePresence>
 
-            {/* Detail/Edit Modal */}
             <AnimatePresence>
                 {selectedDoctor && (
                     <DoctorDetailModal
                         doctor={selectedDoctor}
                         onClose={() => setSelectedDoctor(null)}
-                        onUpdate={() => {
-                            setSelectedDoctor(null);
-                            showToast("Doctor profile updated successfully.");
-                            load();
-                        }}
+                        onUpdate={() => { setSelectedDoctor(null); showToast("Doctor profile updated successfully."); load(); }}
                     />
                 )}
             </AnimatePresence>

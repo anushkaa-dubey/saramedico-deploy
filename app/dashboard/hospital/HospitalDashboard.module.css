@@ -1799,31 +1799,25 @@
 
 /* =============================================
    RESPONSIVE HELPER CLASSES
-   No visual effect at desktop — used by media queries
-   to override inline styles on mobile
+  
    ============================================= */
 .dashboardHeaderRow {
-    /* responsive hook */
     display: flex;
 }
 
 .dashboardHeaderActions {
-    /* responsive hook */
     display: flex;
 }
 
 .statCardsGrid {
-    /* responsive hook */
     display: grid;
 }
 
 .sessionsSectionHeader {
-    /* responsive hook */
     display: flex;
 }
 
 .sessionsTabBar {
-    /* responsive hook */
     display: flex;
 }
 
@@ -1832,7 +1826,6 @@
 }
 
 .scheduleSectionHeader {
-    /* responsive hook */
     display: flex;
 }
 
@@ -1845,48 +1838,39 @@
 }
 
 .pageHeaderRow {
-    /* responsive hook */
     display: flex;
 }
 
 .pageHeaderActions {
-    /* responsive hook */
     display: flex;
 }
 
 .inlineGrid4 {
-    /* responsive hook */
     display: grid;
 }
 
 .inlineGrid3 {
-    /* responsive hook */
     display: grid;
 }
 
 .inlineGrid2 {
-    /* responsive hook */
     display: grid;
 }
 
 .inlineGridAuto {
-    /* responsive hook */
     display: grid;
 }
 
 .appointmentListItem {
-    /* responsive hook */
     display: flex;
 }
 
 .filterButtonRow {
-    /* responsive hook */
     display: flex;
 }
 
 /* =============================================
-   MOBILE RESPONSIVENESS — media queries only
-   No desktop styles are changed above this line
+   MOBILE RESPONSIVENESS e
    ============================================= */
 
 /* ---------- Tablet & small laptop (≤1024px) ---------- */
@@ -2033,59 +2017,49 @@
         display: none;
     }
 
-    /* Topbar tighter */
     .topbar {
         padding: 12px 16px 12px 64px;
     }
 
-    /* Dashboard grid single column */
     .dashboardGrid {
         grid-template-columns: 1fr !important;
         padding: 12px 0 !important;
         gap: 16px !important;
     }
 
-    /* Stat cards 2-col grid on medium mobile */
     .overviewSection {
         grid-template-columns: repeat(2, 1fr) !important;
         gap: 12px !important;
     }
 
-    /* Stat card compressor */
     .statCard {
         min-height: auto !important;
         padding: 14px !important;
     }
 
-    /* Calendar card full width */
     .calendarCard {
         max-width: 100% !important;
     }
 
-    /* Chart grid single col  */
     .chartGrid {
         grid-template-columns: 1fr !important;
         gap: 16px !important;
     }
 
-    /* Chart card */
     .chartCard {
         padding: 16px;
     }
 
-    /* Card title wrap */
     .cardTitle {
         flex-wrap: wrap;
         gap: 8px;
     }
 
-    /* Form card responsive */
     .formCard {
         padding: 20px;
         margin: 12px;
     }
 
-    /* Form group responsive */
     .formGroup select,
     .formGroup input,
     .formGroup textarea {
@@ -2195,23 +2169,19 @@
         justify-content: center;
     }
 
-    /* Content wrapper minimal padding */
     .contentWrapper {
         padding: 12px;
     }
 
-    /* Logo smaller on mobile */
     .logoRow img {
         width: 100px !important;
     }
 
-    /* Search bar even smaller */
     .search {
         max-width: 150px;
         font-size: 12px !important;
     }
 
-    /* Pie wrapper even smaller */
     .pieWrapper {
         width: 120px;
         height: 120px;
@@ -2320,11 +2290,10 @@
         margin-bottom: 20px !important;
     }
 
-    .overviewSection > div {
+    .overviewSection>div {
         padding: 16px !important;
     }
 
-    /* Filter tabs: scroll horizontally */
     .staffFilterTabs {
         display: flex;
         gap: 8px;
@@ -2333,20 +2302,17 @@
         -webkit-overflow-scrolling: touch;
     }
 
-    /* Table wrapper: horizontal scroll */
     .tableScrollWrapper {
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
         border-radius: 16px;
     }
 
-    /* Shrink table font on mobile */
     .activityTable {
         min-width: 540px;
         font-size: 12px !important;
     }
 
-    /* Hide secondary columns on small screens */
     .activityTable th:nth-child(3),
     .activityTable td:nth-child(3),
     .activityTable th:nth-child(4),
@@ -2354,13 +2320,11 @@
         display: none;
     }
 
-    /* Tighter row padding */
     .activityTable td,
     .activityTable th {
         padding: 10px 12px !important;
     }
 
-    /* Buttons: smaller on mobile */
     .outlineBtn,
     .primaryBtn {
         font-size: 12px !important;
@@ -2375,12 +2339,10 @@
 
 @media (max-width: 768px) {
 
-    /* Appointments inner padding */
     .contentWrapper {
         padding: 16px !important;
     }
 
-    /* Page header: stack title + view toggle */
     .apptPageHeader {
         flex-direction: column !important;
         align-items: flex-start !important;
@@ -2393,7 +2355,6 @@
         letter-spacing: -0.02em !important;
     }
 
-    /* View toggle pill: full width, stacked */
     .apptViewToggle {
         width: 100% !important;
         flex-direction: row !important;
@@ -2406,29 +2367,26 @@
         padding: 8px 12px !important;
     }
 
-    /* Stats grid: 2×2 on mobile */
     .apptStatsGrid {
         grid-template-columns: repeat(2, 1fr) !important;
         gap: 10px !important;
         margin-bottom: 20px !important;
     }
 
-    .apptStatsGrid > div {
+    .apptStatsGrid>div {
         padding: 16px !important;
         border-radius: 16px !important;
     }
 
-    .apptStatsGrid > div > div:last-child > div:last-child {
+    .apptStatsGrid>div>div:last-child>div:last-child {
         font-size: 22px !important;
     }
 
-    /* Main grid: single column (list on top, agenda below) */
     .apptMainGrid {
         grid-template-columns: 1fr !important;
         gap: 16px !important;
     }
 
-    /* Appointment list header: stack date + filters */
     .apptListHeader {
         flex-direction: column !important;
         align-items: flex-start !important;
@@ -2452,20 +2410,17 @@
         padding: 8px 10px !important;
     }
 
-    /* Appointment rows: switch from grid to flex stack */
     .apptRow {
         grid-template-columns: 1fr !important;
         gap: 6px !important;
         padding: 16px !important;
     }
 
-    /* Mini agenda card layout */
     .apptAgendaCard {
         border-radius: 20px !important;
         padding: 16px !important;
     }
 
-    /* Calendar grid: reduce cell height */
     .apptCalCell {
         min-height: 64px !important;
         padding: 8px !important;
@@ -2475,7 +2430,6 @@
 
 @media (max-width: 480px) {
 
-    /* Stack stat tiles single column on very small screens */
     .apptStatsGrid {
         grid-template-columns: 1fr 1fr !important;
     }
@@ -2484,13 +2438,11 @@
         grid-template-columns: 1fr 1fr !important;
     }
 
-    /* Narrower content padding */
     .contentWrapper {
         padding: 12px !important;
     }
 
-    /* Shrink headings further */
     .apptPageHeader h1 {
         font-size: 18px !important;
     }
-}
+}

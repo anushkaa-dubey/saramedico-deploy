@@ -1,0 +1,1015 @@
+/* ═══════════════════════════════════════════════════
+   Appointments.module.css
+   Mobile-first, responsive appointments page styles
+═══════════════════════════════════════════════════ */
+
+/* ── Page wrapper ── */
+.page {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background: #f8fafc;
+}
+
+.content {
+    padding: 20px 24px 40px;
+    max-width: 1400px;
+    margin: 0 auto;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* ── Page heading ── */
+.heading {
+    margin: 0 0 4px 0;
+    font-size: 28px;
+    font-weight: 900;
+    color: #0f172a;
+    letter-spacing: -0.02em;
+}
+
+.subheading {
+    margin: 0 0 20px 0;
+    font-size: 14px;
+    color: #64748b;
+    font-weight: 500;
+    line-height: 1.5;
+}
+
+/* ── View toggle bar ── */
+.viewToggleBar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.viewToggle {
+    display: flex;
+    background: #f1f5f9;
+    padding: 4px;
+    border-radius: 12px;
+    gap: 4px;
+}
+
+.viewBtn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 10px;
+    border: none;
+    background: transparent;
+    color: #64748b;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.viewBtnActive {
+    background: #fff;
+    color: #1e293b;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+/* ── Stat cards grid ── */
+.statsGrid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.statCard {
+    background: #fff;
+    padding: 16px;
+    border-radius: 12px;
+    border: 1px solid #f1f5f9;
+}
+
+.statIcon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 10px;
+    flex-shrink: 0;
+}
+
+.statLabel {
+    font-size: 9px;
+    font-weight: 800;
+    color: #94a3b8;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.statValue {
+    font-size: 26px;
+    font-weight: 800;
+    color: #1e293b;
+    margin-top: 2px;
+    line-height: 1;
+}
+
+/* ── Main two-col grid ── */
+.mainGrid {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 16px;
+    align-items: start;
+}
+
+/* ── Left panel (list / calendar) ── */
+.leftPanel {
+    background: #fff;
+    border-radius: 14px;
+    border: 1px solid #f1f5f9;
+    overflow: hidden;
+    min-width: 0;
+}
+
+/* ── List view filters bar ── */
+.listFiltersBar {
+    padding: 16px 20px;
+    border-bottom: 1px solid #f8fafc;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.listDateTitle {
+    font-size: 15px;
+    font-weight: 800;
+    color: #1e293b;
+    margin: 0;
+}
+
+.listFilters {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.filterSelect {
+    padding: 8px 12px;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    background: #f8fafc;
+    font-size: 13px;
+    font-weight: 600;
+    color: #475569;
+    font-family: inherit;
+    cursor: pointer;
+}
+
+/* ── List empty / loading states ── */
+.listEmpty {
+    padding: 60px 40px;
+    text-align: center;
+}
+
+.listEmptyTitle {
+    font-size: 15px;
+    font-weight: 800;
+    color: #1e293b;
+    margin: 12px 0 6px;
+}
+
+.listEmptyText {
+    color: #94a3b8;
+    font-size: 13px;
+    margin: 0;
+}
+
+.loadingWrap {
+    padding: 60px;
+    text-align: center;
+}
+
+.loadingText {
+    margin-top: 12px;
+    color: #94a3b8;
+    font-weight: 600;
+    font-size: 13px;
+}
+
+/* ── Appointment row ── */
+.apptRow {
+    padding: 14px 20px;
+    border-bottom: 1px solid #f8fafc;
+    display: grid;
+    grid-template-columns: 72px 1fr 1fr 150px 40px;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.15s;
+    cursor: default;
+}
+
+.apptRow:last-child {
+    border-bottom: none;
+}
+
+.apptRow:hover {
+    background: #fafafa;
+}
+
+.apptTime {
+    font-size: 14px;
+    font-weight: 800;
+    color: #0f172a;
+}
+
+.apptPersonCell {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
+
+.apptAvatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.apptPersonMeta {
+    min-width: 0;
+}
+
+.apptPersonRole {
+    font-size: 10px;
+    font-weight: 800;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.apptPersonName {
+    font-weight: 700;
+    color: #1e293b;
+    font-size: 13px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.apptTypeBadge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 10px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.apptMenuBtn {
+    background: none;
+    border: none;
+    color: #cbd5e1;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Mobile appointment card (shown instead of row on mobile) */
+.apptCard {
+    display: none;
+}
+
+/* ── Calendar view toolbar ── */
+.calToolbar {
+    padding: 16px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    border-bottom: 1px solid #f8fafc;
+}
+
+.calNavGroup {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.calNavLabel {
+    font-size: 15px;
+    font-weight: 800;
+    color: #1e293b;
+    min-width: 180px;
+}
+
+.calNavBtn {
+    padding: 7px;
+    border-radius: 9px;
+    border: 1px solid #e2e8f0;
+    background: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s;
+}
+
+.calNavBtn:hover {
+    background: #f8fafc;
+}
+
+.calTodayBtn {
+    padding: 7px 12px;
+    border-radius: 9px;
+    border: 1px solid #e2e8f0;
+    background: white;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 700;
+    color: #475569;
+    font-family: inherit;
+    transition: background 0.15s;
+}
+
+.calTodayBtn:hover {
+    background: #f8fafc;
+}
+
+.calModeToggle {
+    display: flex;
+    background: #f1f5f9;
+    padding: 3px;
+    border-radius: 10px;
+    gap: 2px;
+}
+
+.calModeBtn {
+    padding: 7px 14px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    color: #64748b;
+    font-weight: 700;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: inherit;
+}
+
+.calModeBtnActive {
+    background: #fff;
+    color: #3b82f6;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+/* ── Month grid ── */
+.calBody {
+    padding: 16px;
+}
+
+.monthGrid {
+    border: 1px solid #f1f5f9;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.monthDayLabels {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    background: #f8fafc;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.monthDayLabel {
+    padding: 10px 4px;
+    text-align: center;
+    font-size: 10px;
+    font-weight: 800;
+    color: #94a3b8;
+    letter-spacing: 0.08em;
+}
+
+.monthCells {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    background: #f1f5f9;
+    gap: 1px;
+}
+
+.monthCell {
+    background: #fff;
+    min-height: 80px;
+    padding: 8px;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.monthCell:hover {
+    background: #f8fafc;
+}
+
+.monthCellSelected {
+    background: #eff6ff !important;
+}
+
+.monthCellOther {
+    background: #fbfcfd;
+    cursor: default;
+}
+
+.monthCellOther:hover {
+    background: #fbfcfd;
+}
+
+.monthDateNum {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 800;
+    color: #1e293b;
+}
+
+.monthDateNumToday {
+    background: #3b82f6;
+    color: #fff;
+}
+
+.monthDateNumSelected {
+    color: #3b82f6;
+}
+
+.monthDateNumOther {
+    color: #cbd5e1;
+}
+
+.monthDot {
+    height: 4px;
+    border-radius: 2px;
+    margin-top: 4px;
+}
+
+/* ── Week grid ── */
+.weekGrid {
+    border: 1px solid #f1f5f9;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.weekHeader {
+    display: grid;
+    grid-template-columns: 48px repeat(7, 1fr);
+    background: #f8fafc;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.weekHeaderCell {
+    padding: 10px 4px;
+    text-align: center;
+    cursor: pointer;
+}
+
+.weekHeaderDay {
+    font-size: 10px;
+    font-weight: 700;
+    color: #94a3b8;
+}
+
+.weekHeaderDate {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    margin: 4px auto 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 800;
+}
+
+.weekBody {
+    max-height: 440px;
+    overflow-y: auto;
+}
+
+.weekRow {
+    display: grid;
+    grid-template-columns: 48px repeat(7, 1fr);
+    border-bottom: 1px solid #f8fafc;
+    min-height: 48px;
+}
+
+.weekTimeLabel {
+    padding: 4px 8px;
+    font-size: 10px;
+    font-weight: 700;
+    color: #94a3b8;
+    padding-top: 6px;
+}
+
+.weekCell {
+    border-left: 1px solid #f8fafc;
+    padding: 3px;
+}
+
+.weekApptChip {
+    background: #eff6ff;
+    border-left: 3px solid #3b82f6;
+    border-radius: 4px;
+    padding: 3px 6px;
+    font-size: 10px;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 2px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+/* ── Day grid ── */
+.dayGrid {
+    border: 1px solid #f1f5f9;
+    border-radius: 12px;
+    overflow: hidden;
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.dayRow {
+    display: grid;
+    grid-template-columns: 56px 1fr;
+    border-bottom: 1px solid #f8fafc;
+    min-height: 52px;
+}
+
+.dayTimeLabel {
+    padding: 8px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #94a3b8;
+    padding-top: 10px;
+}
+
+.dayRowCurrent {
+    background: #fffbeb;
+}
+
+.dayRowCurrent .dayTimeLabel {
+    color: #f59e0b;
+}
+
+.dayCell {
+    padding: 6px 8px;
+    border-left: 1px solid #f1f5f9;
+}
+
+.dayChip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-radius: 6px;
+    padding: 6px 10px;
+    margin-bottom: 4px;
+}
+
+.dayChipAppt {
+    background: #eff6ff;
+    border-left: 3px solid #3b82f6;
+}
+
+.dayChipEvent {
+    background: #f0fdf4;
+    border-left: 3px solid #10b981;
+}
+
+.dayChipName {
+    font-size: 12px;
+    font-weight: 800;
+    color: #1e293b;
+}
+
+.dayChipSub {
+    font-size: 10px;
+    color: #64748b;
+    font-weight: 600;
+}
+
+/* ── Right sidebar ── */
+.rightSidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.agendaCard {
+    background: #fff;
+    border-radius: 14px;
+    padding: 16px 18px;
+    border: 1px solid #f1f5f9;
+}
+
+.agendaHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+}
+
+.agendaTitle {
+    font-size: 14px;
+    font-weight: 800;
+    color: #1e293b;
+    margin: 0;
+}
+
+.agendaAddBtn {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    background: #1e293b;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border: none;
+    flex-shrink: 0;
+}
+
+.agendaEmpty {
+    padding: 24px 16px;
+    text-align: center;
+    background: #f8fafc;
+    border-radius: 10px;
+    border: 2px dashed #e2e8f0;
+    color: #94a3b8;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.agendaEvent {
+    padding: 12px;
+    background: #f8fafc;
+    border-radius: 10px;
+    border-left: 3px solid #3b82f6;
+    margin-bottom: 8px;
+}
+
+.agendaEventHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.agendaEventTime {
+    font-size: 11px;
+    font-weight: 800;
+    color: #3b82f6;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.agendaCancelBtn {
+    background: none;
+    border: none;
+    color: #ef4444;
+    cursor: pointer;
+    font-size: 10px;
+    font-weight: 800;
+    font-family: inherit;
+}
+
+.agendaEventTitle {
+    font-weight: 700;
+    color: #1e293b;
+    margin-top: 6px;
+    font-size: 13px;
+}
+
+.agendaEventSub {
+    font-size: 11px;
+    color: #64748b;
+    margin-top: 1px;
+}
+
+.tipCard {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    border-radius: 14px;
+    padding: 18px;
+    color: #fff;
+    position: relative;
+    overflow: hidden;
+}
+
+.tipTitle {
+    font-size: 13px;
+    font-weight: 800;
+    margin: 0 0 8px 0;
+}
+
+.tipText {
+    font-size: 12px;
+    opacity: 0.85;
+    margin: 0;
+    line-height: 1.6;
+    font-weight: 500;
+}
+
+.tipIcon {
+    position: absolute;
+    right: -12px;
+    bottom: -12px;
+    opacity: 0.1;
+}
+
+/* ════════════════════════════════════════
+   TABLET  ≤ 1024px
+════════════════════════════════════════ */
+@media (max-width: 1024px) {
+    .mainGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .rightSidebar {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+    }
+
+    .statsGrid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .apptRow {
+        grid-template-columns: 64px 1fr 1fr 130px 36px;
+    }
+
+    .calNavLabel {
+        min-width: 140px;
+        font-size: 14px;
+    }
+}
+
+/* ════════════════════════════════════════
+   MOBILE  ≤ 768px
+════════════════════════════════════════ */
+@media (max-width: 768px) {
+    .content {
+        padding: 16px 16px 32px;
+    }
+
+    .heading {
+        font-size: 22px;
+    }
+
+    .subheading {
+        font-size: 13px;
+        margin-bottom: 16px;
+    }
+
+    /* View toggle: full width */
+    .viewToggleBar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .viewToggle {
+        width: 100%;
+        justify-content: stretch;
+    }
+
+    .viewBtn {
+        flex: 1;
+        justify-content: center;
+        font-size: 12px;
+        padding: 8px 10px;
+    }
+
+    /* Stats: 2×2 */
+    .statsGrid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        margin-bottom: 16px;
+    }
+
+    .statCard {
+        padding: 14px 12px;
+    }
+
+    .statValue {
+        font-size: 22px;
+    }
+
+    /* Main grid: single column, sidebar below */
+    .mainGrid {
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+
+    /* Sidebar stacks vertically again */
+    .rightSidebar {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    /* ── LIST VIEW: hide table, show cards ── */
+    .listFiltersBar {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 14px 16px;
+        gap: 10px;
+    }
+
+    .listFilters {
+        width: 100%;
+    }
+
+    .filterSelect {
+        flex: 1;
+        font-size: 12px;
+        padding: 8px 10px;
+    }
+
+    /* Hide table rows on mobile */
+    .apptRow {
+        display: none;
+    }
+
+    /* Show card layout on mobile */
+    .apptCard {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 14px 16px;
+        border-bottom: 1px solid #f8fafc;
+    }
+
+    .apptCard:last-child {
+        border-bottom: none;
+    }
+
+    .apptCardTop {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .apptCardTime {
+        font-size: 13px;
+        font-weight: 800;
+        color: #0f172a;
+    }
+
+    .apptCardBody {
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+    }
+
+    .apptCardInfo {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .apptCardName {
+        font-size: 14px;
+        font-weight: 700;
+        color: #1e293b;
+    }
+
+    .apptCardDoctor {
+        font-size: 12px;
+        color: #64748b;
+        margin-top: 2px;
+    }
+
+    /* ── CALENDAR: collapse complex views ── */
+    .calToolbar {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 14px 16px;
+        gap: 10px;
+    }
+
+    .calNavLabel {
+        min-width: 0;
+        font-size: 14px;
+    }
+
+    .calModeToggle {
+        width: 100%;
+    }
+
+    .calModeBtn {
+        flex: 1;
+        text-align: center;
+        padding: 7px 8px;
+        font-size: 12px;
+    }
+
+    .calBody {
+        padding: 12px;
+    }
+
+    .monthCell {
+        min-height: 52px;
+        padding: 6px 4px;
+    }
+
+    .monthDateNum {
+        width: 20px;
+        height: 20px;
+        font-size: 11px;
+    }
+
+    /* Week view: scrollable on mobile */
+    .weekBody {
+        max-height: 320px;
+    }
+
+    .weekHeaderCell {
+        padding: 6px 2px;
+    }
+
+    .weekHeaderDate {
+        width: 22px;
+        height: 22px;
+        font-size: 11px;
+    }
+
+    /* Day view */
+    .dayGrid {
+        max-height: 380px;
+    }
+
+    /* Agenda card */
+    .agendaCard {
+        padding: 14px 16px;
+    }
+
+    .tipCard {
+        padding: 16px;
+    }
+}
+
+/* ════════════════════════════════════════
+   SMALL PHONE  ≤ 480px
+════════════════════════════════════════ */
+@media (max-width: 480px) {
+    .content {
+        padding: 12px 12px 28px;
+    }
+
+    .statsGrid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+
+    .statCard {
+        padding: 12px 10px;
+    }
+
+    .statIcon {
+        width: 28px;
+        height: 28px;
+    }
+
+    .statValue {
+        font-size: 20px;
+    }
+
+    .statLabel {
+        font-size: 8px;
+    }
+
+    .heading {
+        font-size: 20px;
+    }
+
+    /* Month grid cells even smaller */
+    .monthCell {
+        min-height: 40px;
+        padding: 4px 2px;
+    }
+}
