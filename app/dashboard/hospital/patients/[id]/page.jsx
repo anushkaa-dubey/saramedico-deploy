@@ -27,14 +27,8 @@ import {
     ExternalLink
 } from "lucide-react";
 
-// --- URL Rewrite Helper (Common for Local Development) ---
-const REWRITE_URL = (url) => {
-    if (!url) return url;
-    // Redirect internal minio/s3 requests to our exposed port 9010
-    return url
-        .replace("http://minio:9000", "http://localhost:9010")
-        .replace("http://localhost:9000", "http://localhost:9010");
-};
+// --- URL Rewrite Helper (No longer needed, but kept for signature compatibility if used elsewhere) ---
+const REWRITE_URL = (url) => url;
 
 // ── Theme Mapping ──────────────────────────────────────────────────────────
 const METRIC_CONFIG = {

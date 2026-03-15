@@ -1,17 +1,6 @@
 import { API_BASE_URL, getAuthHeaders, handleResponse } from "./apiConfig";
 
-const REWRITE_URL = (url) => {
-    if (!url) return url;
-    const BACKEND_HOST = process.env.NEXT_PUBLIC_API_URL
-        ? new URL(process.env.NEXT_PUBLIC_API_URL).hostname
-        : 'localhost';
-    if (url.includes('minio:9000') || url.includes(':9000')) {
-        return url
-            .replace(/^https?:\/\/minio:9000\//, `http://${BACKEND_HOST}:9010/`)
-            .replace(/^https?:\/\/[^/]+:9000\//, `http://${BACKEND_HOST}:9010/`);
-    }
-    return url;
-};
+const REWRITE_URL = (url) => url;
 
 /**
  * Fetch doctor's tasks
@@ -254,20 +243,10 @@ export const fetchPatientDocuments = async (patientId) => {
     });
     const data = await handleResponse(response);
 
-    // Fix backend internal minio/docker URLs (minio:9000 or host:9000)
-    // Rewrite to public AWS IP:9000 so browsers can access them directly.
-    const BACKEND_HOST = process.env.NEXT_PUBLIC_API_URL
-        ? new URL(process.env.NEXT_PUBLIC_API_URL).hostname
-        : 'localhost';
     if (Array.isArray(data)) {
         return data.map(doc => {
             const url = doc.presigned_url || doc.url || doc.download_url;
-            if (url && (url.includes('minio:9000') || url.includes(':9000'))) {
-                // Rewrite docker-internal hostname to localhost
-                doc.presigned_url = url
-                    .replace(/^https?:\/\/minio:9000\//, `http://${BACKEND_HOST}:9010/`)
-                    .replace(/^https?:\/\/[^/]+:9000\//, `http://${BACKEND_HOST}:9010/`);
-            }
+            doc.presigned_url = url;
             return doc;
         });
     }
@@ -300,16 +279,9 @@ export const fetchDocumentDetails = async (documentId) => {
     });
     const doc = await handleResponse(response);
 
-    // Fix docker-internal minio URLs → public AWS IP:9000
-    const BACKEND_HOST = process.env.NEXT_PUBLIC_API_URL
-        ? new URL(process.env.NEXT_PUBLIC_API_URL).hostname
-        : 'localhost';
+    // The backend now provides the correct public URL directly
     const url = doc.downloadUrl || doc.download_url || doc.presigned_url || doc.url;
-    if (url && (url.includes('minio:9000') || url.includes(':9000'))) {
-        doc.downloadUrl = url
-            .replace(/^https?:\/\/minio:9000\//, `http://${BACKEND_HOST}:9000/`)
-            .replace(/^https?:\/\/[^/]+:9000\//, `http://${BACKEND_HOST}:9000/`);
-    }
+    doc.downloadUrl = url;
     return doc;
 };
 
@@ -572,21 +544,10 @@ export const uploadPatientDocument = async (patientId, file, metadata) => {
             const { uploadUrl, documentId } = await initResponse.json();
             existingDocumentId = documentId;
 
-            // Fix docker-internal minio hostname → public AWS IP
-            let publicUploadUrl = uploadUrl;
-            if (uploadUrl && uploadUrl.includes("minio:")) {
-                publicUploadUrl = uploadUrl.replace("http://minio:", `http://${BACKEND_HOST}:`);
-            }
+            // The backend now returns the correct public uploadUrl based on MINIO_EXTERNAL_ENDPOINT
+            const publicUploadUrl = uploadUrl;
 
-            // MinIO port 9000/9010 is sometimes blocked on corporate networks — fall through to direct tunnel upload
-            const isMinioPortBlocked = publicUploadUrl && (
-                publicUploadUrl.includes(":9000/") || publicUploadUrl.includes(":9000?") ||
-                publicUploadUrl.includes(":9010/") || publicUploadUrl.includes(":9010?")
-            );
-            if (isMinioPortBlocked) {
-                console.warn("MinIO storage port is not reachable — skipping presigned URL, using direct tunnel upload.");
-                throw new Error("MinIO port blocked");
-            }
+            // Optional: You could add a check if the URL is reachable, but generally we trust the backend config
 
             // Step 2: Upload file directly to S3/MinIO
             const uploadResponse = await fetch(publicUploadUrl, {
