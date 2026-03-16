@@ -11,6 +11,13 @@ export default function VisitHistory() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [selectedVisitId, setSelectedVisitId] = useState(null);
+    const [now, setNow] = useState(Date.now());
+
+    // Tick for countdowns
+    useEffect(() => {
+        const interval = setInterval(() => setNow(Date.now()), 1000);
+        return () => clearInterval(interval);
+    }, []);
 
     useEffect(() => {
         loadVisits();
@@ -94,24 +101,53 @@ export default function VisitHistory() {
                                         {c.diagnosis || "General Consultation"}
                                     </td>
                                     <td>
-                                        {c.status === 'completed' && (
-                                            <button
-                                                onClick={() => setSelectedVisitId(c.id)}
-                                                style={{
-                                                    background: "none", border: "none",
-                                                    color: "#2563eb", fontWeight: "600",
-                                                    fontSize: "13px", cursor: "pointer",
-                                                    padding: 0, display: "flex",
-                                                    alignItems: "center", gap: "4px",
-                                                    whiteSpace: "nowrap",
-                                                    transition: "color 0.2s",
-                                                }}
-                                                onMouseEnter={e => e.currentTarget.style.color = "#1d4ed8"}
-                                                onMouseLeave={e => e.currentTarget.style.color = "#2563eb"}
-                                            >
-                                                View Summary →
-                                            </button>
-                                        )}
+                                        {(() => {
+                                            const completedAt = c.completionTime || c.completion_time;
+                                            const isCompleted = c.status === "completed";
+                                            const cooldownMs = 5 * 60 * 1000;
+                                            let countdownText = null;
+                                            let isDisabled = false;
+
+                                            if (isCompleted && completedAt) {
+                                                const diff = (new Date(completedAt).getTime() + cooldownMs) - now;
+                                                if (diff > 0) {
+                                                    const m = Math.floor(diff / 60000);
+                                                    const s = Math.floor((diff % 60000) / 1000);
+                                                    countdownText = `${m}m ${s}s`;
+                                                    isDisabled = true;
+                                                }
+                                            }
+
+                                            if (!isCompleted) return null;
+
+                                            return (
+                                                <button
+                                                    onClick={() => !isDisabled && setSelectedVisitId(c.id)}
+                                                    disabled={isDisabled}
+                                                    style={{
+                                                        background: "none", border: "none",
+                                                        color: isDisabled ? "#94a3b8" : "#2563eb",
+                                                        fontWeight: "600",
+                                                        fontSize: "13px", cursor: isDisabled ? "not-allowed" : "pointer",
+                                                        padding: 0, display: "flex",
+                                                        alignItems: "center", gap: "4px",
+                                                        whiteSpace: "nowrap",
+                                                        transition: "color 0.2s",
+                                                    }}
+                                                    onMouseEnter={e => { if (!isDisabled) e.currentTarget.style.color = "#1d4ed8"; }}
+                                                    onMouseLeave={e => { if (!isDisabled) e.currentTarget.style.color = "#2563eb"; }}
+                                                >
+                                                    {isDisabled ? (
+                                                        <span style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ animation: "spin 2s linear infinite" }}><path d="M21 12a9 9 0 1 1-6.219-8.56" /></svg>
+                                                            Preparing Summary... {countdownText}
+                                                        </span>
+                                                    ) : (
+                                                        "View Summary →"
+                                                    )}
+                                                </button>
+                                            );
+                                        })()}
                                     </td>
                                 </tr>
                             ))}

@@ -122,3 +122,41 @@ export const generateDemoSoap = async (consultationId, scenario = null) => {
     });
     return handleResponse(response);
 };
+
+/**
+ * Check if the Google Drive transcript is available for this consultation.
+ * Returns { status: 'available' | 'processing' | 'not_found', message, ... }
+ */
+export const fetchTranscriptStatus = async (consultationId) => {
+    const response = await fetch(`${API_BASE_URL}/consultations/${consultationId}/transcript-status`, {
+        headers: getAuthHeaders(),
+    });
+    return handleResponse(response);
+};
+
+/**
+ * Explicitly trigger SOAP note generation after transcript is confirmed available.
+ * POST /api/v1/consultations/{id}/generate-soap
+ */
+export const triggerSoapGeneration = async (consultationId) => {
+    const response = await fetch(`${API_BASE_URL}/consultations/${consultationId}/generate-soap`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+    });
+    return handleResponse(response);
+};
+
+/**
+ * Update (patch) the SOAP note fields for a consultation.
+ * Accepts any of: { subjective, objective, assessment, plan, patient_summary }
+ * PATCH /api/v1/consultations/{id}/soap-note
+ * Returns: { message, consultation_id, ai_status, soap_note }
+ */
+export const patchSoapNote = async (consultationId, soapFields) => {
+    const response = await fetch(`${API_BASE_URL}/consultations/${consultationId}/soap-note`, {
+        method: "PATCH",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(soapFields),
+    });
+    return handleResponse(response);
+};

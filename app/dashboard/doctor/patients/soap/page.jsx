@@ -2,10 +2,12 @@
 import { Suspense } from "react";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
-import { fetchConsultationById, markConsultationComplete, fetchSoapNote, generateDemoSoap } from "@/services/consultation";
+import { fetchConsultationById, markConsultationComplete, fetchSoapNote, fetchTranscriptStatus, triggerSoapGeneration, updateConsultation } from "@/services/consultation";
 import Topbar from "../../components/Topbar";
 import styles from "./SoapNotes.module.css";
 import { motion } from "framer-motion";
+import jsPDF from "jspdf";
+import VisitSummary from "@/app/dashboard/patient/records/components/VisitSummary";
 
 const POLL_INTERVAL_MS = 10000; // 10 seconds per handbook spec
 const MAX_POLL_ATTEMPTS = 40;   // ~4 minutes max
@@ -17,16 +19,134 @@ function SoapNotesPage() {
     const [consultation, setConsultation] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [now, setNow] = useState(Date.now());
 
     // SOAP state
     const [soap, setSoap] = useState(null);
     const [soapStatus, setSoapStatus] = useState("idle"); // idle | processing | completed | timeout | error | no_transcript
     const [marking, setMarking] = useState(false);
-    const [generatingDemo, setGeneratingDemo] = useState(false); // Demo SOAP generation
-    const [displayAttempt, setDisplayAttempt] = useState(0); // Separate state for UI re-render on each poll
+    const [displayAttempt, setDisplayAttempt] = useState(0);
+
+    // Transcript status state
+    const [transcriptStatus, setTranscriptStatus] = useState(null); // null | 'processing' | 'available' | 'not_found'
+    const [transcriptMsg, setTranscriptMsg] = useState("");
+    const [checkingTranscript, setCheckingTranscript] = useState(false);
+    const [generatingSoap, setGeneratingSoap] = useState(false);
+    const [showPatientPreview, setShowPatientPreview] = useState(false);
+
+    const [isEditingSummary, setIsEditingSummary] = useState(false);
+    const [editedPatientSummary, setEditedPatientSummary] = useState("");
 
     const pollTimerRef = useRef(null);
     const pollAttemptsRef = useRef(0);
+
+    // ── PDF Export Function ────────────────────────────────────────────────
+    const handleDownloadPDF = () => {
+        if (!soap || !consultation) return;
+
+        const doc = new jsPDF();
+        
+        // Add Header
+        doc.setFontSize(22);
+        doc.setTextColor(30, 64, 175); // #1e40af
+        doc.text("SaraMedico SOAP Note", 14, 22);
+        
+        doc.setFontSize(10);
+        doc.setTextColor(100, 116, 139); // #64748b
+        const date = new Date().toLocaleDateString();
+        doc.text(`Generated on: ${date}`, 14, 30);
+        
+        doc.setLineWidth(0.5);
+        doc.setDrawColor(226, 232, 240); // #e2e8f0
+        doc.line(14, 35, 196, 35);
+
+        // Patient & Provider Info
+        doc.setFontSize(12);
+        doc.setTextColor(15, 23, 42); // #0f172a
+        doc.setFont("helvetica", "bold");
+        doc.text("Patient Information", 14, 45);
+        doc.setFont("helvetica", "normal");
+        doc.text(`Name: ${consultation.patient_name || consultation.patientName || "N/A"}`, 14, 52);
+        doc.text(`MRN: ${consultation.mrn || "N/A"}`, 14, 58);
+        
+        doc.setFont("helvetica", "bold");
+        doc.text("Provider Information", 110, 45);
+        doc.setFont("helvetica", "normal");
+        const drName = consultation.doctorName || consultation.doctor_name || "N/A";
+        doc.text(`Physician: ${drName.startsWith("Dr.") ? drName : "Dr. " + drName}`, 110, 52);
+        doc.text(`Specialty: ${consultation.doctorSpecialty || "General Practitioner"}`, 110, 58);
+
+        doc.line(14, 65, 196, 65);
+
+        // SOAP Sections
+        const sections = [
+            { label: "SUBJECTIVE", content: soap.subjective },
+            { label: "OBJECTIVE", content: soap.objective },
+            { label: "ASSESSMENT", content: soap.assessment },
+            { label: "PLAN", content: soap.plan }
+        ];
+
+        let cursorY = 75;
+
+        sections.forEach(section => {
+            if (section.content) {
+                // Check for new page before starting section head
+                if (cursorY > 260) {
+                    doc.addPage();
+                    cursorY = 20;
+                }
+
+                doc.setFontSize(11);
+                doc.setFont("helvetica", "bold");
+                doc.setTextColor(59, 130, 246); // #3b82f6
+                doc.text(section.label, 14, cursorY);
+                cursorY += 7;
+
+                doc.setFontSize(10);
+                doc.setFont("helvetica", "normal");
+                doc.setTextColor(51, 65, 85); // #334155
+                
+                // Helper to format text/objects safely with recursion
+                const formatData = (data, depth = 0) => {
+                    if (!data) return "";
+                    if (typeof data === "string") return data;
+                    if (Array.isArray(data)) return data.map(item => `- ${formatData(item)}`).join("\n");
+                    if (typeof data === "object") {
+                        const indent = "  ".repeat(depth);
+                        return Object.entries(data).map(([k, v]) => {
+                            const formattedKey = k.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase());
+                            return typeof v === "object" ? `${indent}${formattedKey}:\n${formatData(v, depth + 1)}` : `${indent}${formattedKey}: ${v}`;
+                        }).join("\n");
+                    }
+                    return String(data);
+                };
+
+                const textContent = formatData(section.content);
+                const splitText = doc.splitTextToSize(textContent, 175);
+                
+                // If the block is too long for current page, move to next
+                if (cursorY + (splitText.length * 5) > 280) {
+                    doc.addPage();
+                    cursorY = 20;
+                    // Redraw label on new page if header was moved
+                    doc.setFontSize(11);
+                    doc.setFont("helvetica", "bold");
+                    doc.setTextColor(59, 130, 246);
+                    doc.text(`${section.label} (cont.)`, 14, cursorY);
+                    cursorY += 7;
+                    doc.setFontSize(10);
+                    doc.setFont("helvetica", "normal");
+                    doc.setTextColor(51, 65, 85);
+                }
+
+                doc.text(splitText, 14, cursorY);
+                cursorY += (splitText.length * 5) + 12;
+            }
+        });
+
+        const fileName = `SOAP_Note_${consultation.patient_name || "Record"}_${new Date().toISOString().split('T')[0]}.pdf`;
+        doc.save(fileName);
+    };
 
     // ── Polling function ────────────────────────────────────────────────────
     const startPolling = useCallback((consultationId) => {
@@ -51,6 +171,7 @@ function SoapNotesPage() {
                 if (result.httpStatus === 200 && result.soap_note) {
                     clearInterval(pollTimerRef.current);
                     setSoap(result.soap_note);
+                    setEditedPatientSummary(result.soap_note.patient_summary || "");
                     setSoapStatus("completed");
                 } else if (
                     result.ai_status === "no_transcript" ||
@@ -81,26 +202,17 @@ function SoapNotesPage() {
                 setConsultation(data);
 
                 const aiStatus = data?.aiStatus || data?.ai_status;
-                const isAiDone = aiStatus === "completed";
-                const hasSoap = data?.hasSoapNote || !!data?.soap_note;
-                const hasNoTranscript = aiStatus === "no_transcript";
-                const isAwaitingTranscript = aiStatus === "awaiting_transcript" || aiStatus === "processing";
-
-                if (hasNoTranscript) {
-                    // The meeting had no real speech — show no_transcript state
-                    setSoapStatus("no_transcript");
-                } else if (isAiDone || hasSoap) {
+                const isAwaitingTranscript = data?.ai_status === "awaiting_transcript" || data?.ai_status === "pending";
+                
+                if (data?.soap_note) {
+                    setSoap(data.soap_note);
+                    setEditedPatientSummary(data.soap_note.patient_summary || "");
                     setSoapStatus("completed");
-                    if (data?.soap_note) {
-                        setSoap(data.soap_note);
-                    } else {
-                        fetchSoapNote(consultationId).then(res => {
-                            if (res.soap_note) setSoap(res.soap_note);
-                        });
+                } else if (data?.status === "completed") {
+                    // Consultation is complete — if AI status is already processing, start polling
+                    if (data?.ai_status === "processing") {
+                        startPolling(consultationId);
                     }
-                } else if (isAwaitingTranscript || data?.status === "completed") {
-                    // Consultation is complete — AI is checking for transcript
-                    startPolling(consultationId);
                 }
             })
             .catch((err) => {
@@ -108,7 +220,14 @@ function SoapNotesPage() {
                 setError("Could not load consultation. " + (err.message || ""));
             })
             .finally(() => setLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [consultationId, startPolling]);
+
+     // ── Countdown Timer Tick ───────────────────────────────────────────────
+    useEffect(() => {
+        const interval = setInterval(() => setNow(Date.now()), 1000);
+        return () => clearInterval(interval);
+    }, []);
 
     // ── Cleanup polling on unmount ──────────────────────────────────────────
     useEffect(() => () => { if (pollTimerRef.current) clearInterval(pollTimerRef.current); }, []);
@@ -133,27 +252,43 @@ function SoapNotesPage() {
         if (consultationId) startPolling(consultationId);
     };
 
-    // ── Generate Demo SOAP Note (using mock transcript) ─────────────────────
-    const handleGenerateDemo = async (scenario = null) => {
-        if (!consultationId || generatingDemo) return;
-        setGeneratingDemo(true);
-        setSoapStatus("processing");
+    // ── Check Google Drive for transcript ──────────────────────────────────
+    const handleCheckTranscript = async () => {
+        if (!consultationId || checkingTranscript) return;
+        setCheckingTranscript(true);
         try {
-            const result = await generateDemoSoap(consultationId, scenario);
-            if (result?.soap_note) {
-                setSoap(result.soap_note);
-                setSoapStatus("completed");
-            } else {
-                // Fallback: poll for it
+            const result = await fetchTranscriptStatus(consultationId);
+            setTranscriptStatus(result.status);
+            setTranscriptMsg(result.message || "");
+            // If the transcript is already in DB, we can start polling right away
+            if (result.status === "available" && result.transcript_in_db) {
                 startPolling(consultationId);
             }
         } catch (err) {
-            console.error("Demo SOAP generation failed:", err);
-            setSoapStatus("error");
+            console.error("Transcript status check failed:", err);
+            setTranscriptStatus("not_found");
+            setTranscriptMsg("Could not check transcript status.");
         } finally {
-            setGeneratingDemo(false);
+            setCheckingTranscript(false);
         }
     };
+
+    // ── Trigger SOAP generation from available transcript ──────────────────
+    const handleGenerateSoap = async () => {
+        if (!consultationId || generatingSoap) return;
+        setGeneratingSoap(true);
+        setSoapStatus("processing");
+        try {
+            await triggerSoapGeneration(consultationId);
+            startPolling(consultationId);
+        } catch (err) {
+            console.error("SOAP generation trigger failed:", err);
+            setSoapStatus("error");
+        } finally {
+            setGeneratingSoap(false);
+        }
+    };
+
 
     // ── Render states ───────────────────────────────────────────────────────
     if (loading) return (
@@ -193,8 +328,8 @@ function SoapNotesPage() {
 
     const patient = consultation.patient || {};
     const patientName = consultation.patientName || consultation.patient_name || patient.full_name || "Patient Record";
-    const visitDate = consultation.scheduled_at
-        ? new Date(consultation.scheduled_at).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
+    const visitDate = (consultation.scheduled_at || consultation.scheduledAt)
+        ? new Date(consultation.scheduled_at || consultation.scheduledAt).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
         : "Today";
 
     return (
@@ -268,18 +403,21 @@ function SoapNotesPage() {
                                 background:
                                     soapStatus === "completed" ? "#f0fdf4" :
                                     soapStatus === "no_transcript" ? "#fefce8" :
-                                    (soapStatus === "processing" || (consultation?.status === "completed" && soapStatus === "idle")) ? "#eff6ff" : "#f8fafc",
+                                    soapStatus === "processing" ? "#eff6ff" : 
+                                    (consultation?.status === "completed" && soapStatus === "idle") ? "#fef9c3" : "#f8fafc",
                                 color:
                                     soapStatus === "completed" ? "#16a34a" :
                                     soapStatus === "no_transcript" ? "#a16207" :
-                                    (soapStatus === "processing" || (consultation?.status === "completed" && soapStatus === "idle")) ? "#2563eb" : "#64748b",
+                                    soapStatus === "processing" ? "#2563eb" : 
+                                    (consultation?.status === "completed" && soapStatus === "idle") ? "#854d0e" : "#64748b",
                             }}>
                                 {soapStatus === "completed" && "✓ Note Ready"}
                                 {soapStatus === "no_transcript" && "⚠ No Transcript"}
-                                {(soapStatus === "processing" || (consultation?.status === "completed" && soapStatus === "idle")) && "⟳ Checking Transcript..."}
+                                {soapStatus === "processing" && "⟳ AI Generating Note..."}
+                                {(consultation?.status === "completed" && soapStatus === "idle") && "⏳ Awaiting Verification"}
                                 {soapStatus === "timeout" && "⚠ Timed Out"}
                                 {soapStatus === "error" && "✗ Error"}
-                                {soapStatus === "idle" && "Not Started"}
+                                {soapStatus === "idle" && consultation?.status !== "completed" && "Not Started"}
                             </span>
                         </div>
 
@@ -355,10 +493,42 @@ function SoapNotesPage() {
                                     <span className={styles.sectionLabel}>PLAN</span>
                                     <div className={styles.textBlock}>{renderSoapContent(soap.plan, "No plan recorded.")}</div>
                                 </div>
+                                 <div className={styles.soapSection}>
+                                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                                         <span className={styles.sectionLabel} style={{ color: "#0891b2", margin: 0 }}>PATIENT SUMMARY (SIMPLIFIED)</span>
+                                         <button 
+                                            onClick={() => setIsEditingSummary(!isEditingSummary)}
+                                            style={{ 
+                                                background: "none", border: "none", color: "#0891b2", 
+                                                fontSize: "11px", fontWeight: "700", cursor: "pointer",
+                                                textDecoration: "underline"
+                                            }}
+                                         >
+                                             {isEditingSummary ? "CANCEL EDIT" : "EDIT SUMMARY"}
+                                         </button>
+                                     </div>
+                                     <div className={styles.textBlock} style={{ background: "#f0f9ff", borderLeft: "3px solid #0ea5e9", position: "relative" }}>
+                                         {isEditingSummary ? (
+                                             <textarea 
+                                                value={editedPatientSummary}
+                                                onChange={(e) => setEditedPatientSummary(e.target.value)}
+                                                style={{
+                                                    width: "100%", minHeight: "120px", background: "white",
+                                                    border: "1px solid #bae6fd", borderRadius: "8px",
+                                                    padding: "12px", fontSize: "14px", color: "#334155",
+                                                    fontFamily: "inherit", lineHeight: "1.6", outline: "none"
+                                                }}
+                                                placeholder="Modify the summary for the patient..."
+                                             />
+                                         ) : (
+                                             renderSoapContent(soap.patient_summary || "No patient summary available.")
+                                         )}
+                                     </div>
+                                 </div>
                                     </>
                                 );
                             })()
-                        ) : (soapStatus === "processing" || (consultation?.status === "completed" && soapStatus === "idle")) ? (
+                         ) : soapStatus === "processing" ? (
                             /* ── Processing / Polling state ── */
                             <div style={{ padding: "40px", textAlign: "center" }}>
                                 <div style={{ display: "flex", justifyContent: "center", marginBottom: "16px" }}>
@@ -405,33 +575,6 @@ function SoapNotesPage() {
                                         <li>Mark the consultation complete only after the meeting ends</li>
                                     </ul>
                                 </div>
-                                {/* Demo SOAP generation button */}
-                                <div style={{ borderTop: "1px solid #fde047", paddingTop: "16px", maxWidth: "400px", margin: "0 auto" }}>
-                                    <p style={{ fontSize: "11px", color: "#92400e", marginBottom: "10px", fontWeight: "600" }}>
-                                        🧪 FOR DEMO / TESTING
-                                    </p>
-                                    <button
-                                        onClick={() => handleGenerateDemo("chest_pain")}
-                                        disabled={generatingDemo}
-                                        style={{
-                                            padding: "10px 24px",
-                                            background: generatingDemo ? "#94a3b8" : "linear-gradient(135deg, #6366f1, #8b5cf6)",
-                                            color: "white",
-                                            border: "none",
-                                            borderRadius: "10px",
-                                            fontSize: "13px",
-                                            fontWeight: "700",
-                                            cursor: generatingDemo ? "not-allowed" : "pointer",
-                                            transition: "all 0.2s",
-                                            width: "100%"
-                                        }}
-                                    >
-                                        {generatingDemo ? "⟳ Generating AI SOAP Note..." : "✨ Generate Demo SOAP Note"}
-                                    </button>
-                                    <p style={{ fontSize: "10px", color: "#a16207", marginTop: "6px" }}>
-                                        Uses a realistic clinical case transcript with AWS Bedrock AI
-                                    </p>
-                                </div>
                             </div>
                         ) : soapStatus === "timeout" ? (
                             <div style={{ padding: "40px", textAlign: "center" }}>
@@ -456,60 +599,35 @@ function SoapNotesPage() {
                                 </button>
                             </div>
                         ) : (
-                            /* ── Idle: Show "Mark Complete" if not already completed ── */
-                            <div style={{ padding: "40px", textAlign: "center" }}>
-                                <div style={{ fontSize: "48px", marginBottom: "16px" }}>🩺</div>
-                                <p style={{ color: "#475569", fontSize: "14px", fontWeight: "500", marginBottom: "8px" }}>
-                                    Once the Google Meet consultation ends, click below to trigger AI note generation.
-                                </p>
-                                <p style={{ color: "#94a3b8", fontSize: "12px", marginBottom: "24px" }}>
-                                    The backend will fetch the transcript and generate a structured SOAP note using AWS Bedrock AI.
-                                </p>
-                                <button
-                                    onClick={handleMarkComplete}
-                                    disabled={marking}
-                                    style={{
-                                        padding: "12px 28px",
-                                        background: marking ? "#94a3b8" : "#3b82f6",
-                                        color: "white",
-                                        border: "none",
-                                        borderRadius: "10px",
-                                        fontSize: "15px",
-                                        fontWeight: "700",
-                                        cursor: marking ? "not-allowed" : "pointer",
-                                        transition: "background 0.2s",
-                                        width: "100%",
-                                        marginBottom: "12px"
-                                    }}
-                                >
-                                    {marking ? "Processing..." : "✓ Mark Consultation as Complete"}
-                                </button>
-                                <div style={{ borderTop: "1px solid #e2e8f0", paddingTop: "16px" }}>
-                                    <p style={{ fontSize: "11px", color: "#94a3b8", marginBottom: "10px", fontWeight: "600" }}>
-                                        🧪 FOR DEMO / TESTING (no Google Meet transcript needed)
-                                    </p>
-                                    <button
-                                        onClick={() => handleGenerateDemo("chest_pain")}
-                                        disabled={generatingDemo || marking}
-                                        style={{
-                                            padding: "10px 24px",
-                                            background: (generatingDemo || marking) ? "#94a3b8" : "linear-gradient(135deg, #6366f1, #8b5cf6)",
-                                            color: "white",
-                                            border: "none",
-                                            borderRadius: "10px",
-                                            fontSize: "13px",
-                                            fontWeight: "700",
-                                            cursor: (generatingDemo || marking) ? "not-allowed" : "pointer",
-                                            transition: "all 0.2s",
-                                            width: "100%"
-                                        }}
-                                    >
-                                        {generatingDemo ? "⟳ Generating AI SOAP Note..." : "✨ Generate Demo SOAP Note"}
-                                    </button>
-                                    <p style={{ fontSize: "10px", color: "#94a3b8", marginTop: "6px" }}>
-                                        Uses a realistic clinical case transcript with AWS Bedrock AI
-                                    </p>
+                            /* ── Idle: Consultation not yet generating SOAP ── */
+                            <div style={{ padding: "60px 40px", textAlign: "center" }}>
+                                <div style={{ 
+                                    width: "80px", height: "80px", borderRadius: "50%", background: "#eff6ff",
+                                    display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 24px"
+                                }}>
+                                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                                        <polyline points="14 2 14 8 20 8" />
+                                    </svg>
                                 </div>
+                                <h3 style={{ fontSize: "20px", fontWeight: "800", color: "#0f172a", marginBottom: "12px" }}>
+                                    Ready for SOAP Generation
+                                </h3>
+                                <p style={{ color: "#64748b", fontSize: "15px", lineHeight: "1.6", maxWidth: "360px", margin: "0 auto 24px" }}>
+                                    The consultation is complete. Once the Google Meet transcript is confirmed as available, you can generate the AI SOAP note.
+                                </p>
+                                
+                                {transcriptStatus !== "available" && (
+                                    <div style={{
+                                        background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "12px",
+                                        padding: "16px", marginBottom: "24px", textAlign: "left"
+                                    }}>
+                                        <div style={{ display: "flex", alignItems: "center", gap: "10px", color: "#64748b", fontSize: "13px" }}>
+                                            <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: "#cbd5e1" }} />
+                                            <span>Waiting for Google Drive transcript sync...</span>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         )}
                     </div>
@@ -517,11 +635,45 @@ function SoapNotesPage() {
 
                 {/* RIGHT: Session Info Sidebar */}
                 <div className={styles.rightCol}>
-                    <div className={styles.summaryHeader}>
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2">
-                            <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
-                        </svg>
-                        <span>Session Details</span>
+                    <div className={styles.summaryHeader} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%", paddingRight: "4px" }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth="2">
+                                <circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
+                            </svg>
+                            <span>Session Details</span>
+                        </div>
+                        {soapStatus === "completed" && (
+                            <motion.button 
+                                initial={{ opacity: 0, scale: 0.8 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                whileHover={{ scale: 1.05, boxShadow: "0 6px 15px rgba(59, 130, 246, 0.4)" }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={handleDownloadPDF}
+                                style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "6px",
+                                    background: "linear-gradient(135deg, #3b82f6, #2563eb)",
+                                    color: "white",
+                                    border: "none",
+                                    borderRadius: "8px",
+                                    padding: "6px 12px",
+                                    fontSize: "11px",
+                                    fontWeight: "700",
+                                    cursor: "pointer",
+                                    boxShadow: "0 4px 10px rgba(59, 130, 246, 0.25)",
+                                    whiteSpace: "nowrap",
+                                    transition: "box-shadow 0.2s"
+                                }}
+                            >
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                                    <polyline points="7 10 12 15 17 10" />
+                                    <line x1="12" y1="15" x2="12" y2="3" />
+                                </svg>
+                                EXPORT PDF
+                            </motion.button>
+                        )}
                     </div>
 
                     <div className={styles.subHeader}>STATUS</div>
@@ -534,7 +686,149 @@ function SoapNotesPage() {
                         )}
                     </div>
 
+                    {/* Quick Access Actions */}
+                    <div style={{ marginTop: "20px", display: "flex", flexDirection: "column", gap: "10px" }}>
+                        <motion.button
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => setShowPatientPreview(true)}
+                            disabled={soapStatus !== "completed"}
+                            style={{
+                                width: "100%", padding: "12px", borderRadius: "10px",
+                                background: soapStatus === "completed" ? "#ffffff" : "#f1f5f9",
+                                border: "1px solid #e2e8f0", color: "#1e293b",
+                                fontSize: "13px", fontWeight: "700", cursor: soapStatus === "completed" ? "pointer" : "not-allowed",
+                                display: "flex", alignItems: "center", justifyContent: "center", gap: "10px",
+                                boxShadow: "0 2px 4px rgba(0,0,0,0.02)",
+                                transition: "all 0.2s"
+                            }}
+                        >
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                                <circle cx="12" cy="12" r="3" />
+                            </svg>
+                            VIEW PATIENT SUMMARY
+                        </motion.button>
+
+
+                    </div>
+
                     <hr style={{ border: "none", borderTop: "1px solid #e2e8f0", margin: "20px 0" }} />
+
+                     <div className={styles.subHeader}>GOOGLE DRIVE TRANSCRIPT STATUS</div>
+                    <div style={{
+                        background: transcriptStatus === "available" ? "#f0fdf4" : (transcriptStatus === "not_found" ? "#fff1f2" : "#f8fafc"),
+                        border: "1px solid " + (transcriptStatus === "available" ? "#bcf0da" : (transcriptStatus === "not_found" ? "#fecaca" : "#e2e8f0")),
+                        borderRadius: "12px", padding: "16px", marginBottom: "20px"
+                    }}>
+                        {(() => {
+                            const completedAt = consultation?.completionTime || consultation?.completion_time;
+                            const COOLDOWN_MS = 4 * 60 * 1000;
+                            const diffMs = completedAt ? (new Date(completedAt).getTime() + COOLDOWN_MS) - now : 0;
+                            const isInCooldown = diffMs > 0;
+                            const minsLeft = Math.floor(Math.max(0, diffMs) / 60000);
+                            const secsLeft = Math.floor((Math.max(0, diffMs) % 60000) / 1000);
+
+                            if (isInCooldown) {
+                                return (
+                                    <div style={{ textAlign: "center", padding: "10px 0" }}>
+                                        <div style={{ fontSize: "24px", fontWeight: "800", color: "#3b82f6", marginBottom: "4px" }}>
+                                            {minsLeft}:{secsLeft.toString().padStart(2, '0')}
+                                        </div>
+                                        <p style={{ fontSize: "12px", color: "#64748b", margin: 0 }}>
+                                            Awaiting Google Meet processing...
+                                        </p>
+                                        <p style={{ fontSize: "11px", color: "#94a3b8", marginTop: "8px" }}>
+                                            The Verify button will appear when time expires.
+                                        </p>
+                                    </div>
+                                );
+                            }
+
+                            return (
+                                <>
+                                    <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
+                                        <motion.div 
+                                            animate={checkingTranscript ? { scale: [1, 1.15, 1], opacity: [0.8, 1, 0.8] } : {}}
+                                            transition={{ duration: 1.5, repeat: checkingTranscript ? Infinity : 0, ease: "easeInOut" }}
+                                            style={{
+                                                width: "28px", height: "28px", borderRadius: "50%",
+                                                background: transcriptStatus === "available" ? "#16a34a" : (transcriptStatus === "not_found" ? "#ef4444" : "#3b82f6"),
+                                                display: "flex", alignItems: "center", justifyContent: "center",
+                                                boxShadow: checkingTranscript ? "0 0 10px rgba(59,130,246,0.5)" : "none"
+                                            }}
+                                        >
+                                            {transcriptStatus === "available" ? (
+                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3"><polyline points="20 6 9 17 4 12" /></svg>
+                                            ) : checkingTranscript ? (
+                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" style={{ animation: "spin 1.5s linear infinite" }}><path d="M21 12a9 9 0 1 1-6.219-8.56" /></svg>
+                                            ) : (
+                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2"><circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" /></svg>
+                                            )}
+                                        </motion.div>
+                                        <div style={{ display: "flex", flexDirection: "column" }}>
+                                            <span style={{ 
+                                                fontWeight: "700", fontSize: "14px", 
+                                                color: transcriptStatus === "available" ? "#16a34a" : (transcriptStatus === "not_found" ? "#dc2626" : "#2563eb")
+                                            }}>
+                                                {transcriptStatus === "available" ? "Found & Available" : (transcriptStatus === "not_found" ? "Not Found / Unavailable" : checkingTranscript ? "Scanning Google Drive..." : "Pending Verification")}
+                                            </span>
+                                            {checkingTranscript && (
+                                                <span style={{ fontSize: "11px", color: "#64748b" }}>Looking for Google Meet recording...</span>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <p style={{ fontSize: "13px", color: (transcriptStatus === "not_found" ? "#ef4444" : "#475569"), lineHeight: "1.5", margin: 0, marginTop: "8px" }}>
+                                        {transcriptMsg || "Click the button below to check Google Drive."}
+                                    </p>
+                                    
+                                    {transcriptStatus !== "available" && (
+                                        <motion.button 
+                                            onClick={handleCheckTranscript}
+                                            disabled={checkingTranscript}
+                                            whileHover={!checkingTranscript ? { scale: 1.01, backgroundColor: "#2563eb" } : {}}
+                                            whileTap={!checkingTranscript ? { scale: 0.98 } : {}}
+                                            animate={checkingTranscript ? {
+                                                boxShadow: ["0px 0px 0px rgba(59,130,246,0)", "0px 0px 14px rgba(59,130,246,0.6)", "0px 0px 0px rgba(59,130,246,0)"],
+                                                backgroundColor: ["#3b82f6", "#60a5fa", "#3b82f6"]
+                                            } : {
+                                                backgroundColor: "#3b82f6"
+                                            }}
+                                            transition={{ duration: 1.8, repeat: checkingTranscript ? Infinity : 0, ease: "easeInOut" }}
+                                            style={{ 
+                                                marginTop: "16px", width: "100%", padding: "12px", 
+                                                color: "white", border: "none", 
+                                                borderRadius: "8px", fontWeight: "600", fontSize: "14px", 
+                                                cursor: checkingTranscript ? "not-allowed" : "pointer"
+                                            }}
+                                        >
+                                            {checkingTranscript ? (
+                                                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}>
+                                                    <span>Searching...</span>
+                                                </div>
+                                            ) : "Verify Transcript in Drive"}
+                                        </motion.button>
+                                    )}
+                                </>
+                            );
+                        })()}
+                    </div>
+
+                    {soapStatus !== "completed" && (
+                        <button
+                            onClick={handleGenerateSoap}
+                            disabled={transcriptStatus !== "available" || generatingSoap || soapStatus === "processing"}
+                            style={{
+                                width: "100%", padding: "14px", borderRadius: "12px", border: "none",
+                                background: (transcriptStatus !== "available" || generatingSoap || soapStatus === "processing") ? "#cbd5e1" : "linear-gradient(135deg, #3b82f6, #1d4ed8)",
+                                color: "white", fontWeight: "700", fontSize: "14px", cursor: (transcriptStatus !== "available" || generatingSoap || soapStatus === "processing") ? "not-allowed" : "pointer",
+                                boxShadow: (transcriptStatus !== "available" || generatingSoap || soapStatus === "processing") ? "none" : "0 4px 12px rgba(59,130,246,0.3)",
+                                transition: "all 0.2s", marginBottom: "24px"
+                            }}
+                        >
+                            {generatingSoap || soapStatus === "processing" ? "⟳ Generating SOAP..." : "✨ Generate SOAP"}
+                        </button>
+                    )}
 
                     <div className={styles.subHeader}>CONSULTATION DETAILS</div>
                     <div className={styles.infoCard}>
@@ -558,15 +852,24 @@ function SoapNotesPage() {
                     <div className={styles.subHeader} style={{ marginTop: "16px" }}>HOW IT WORKS</div>
                     <div className={styles.infoCard}>
                         <p className={styles.infoText}>
-                            1. Doctor completes the Google Meet consultation.<br />
-                            2. Click <strong>"Mark Complete"</strong> — backend starts AI processing.<br />
-                            3. Google processes the audio transcript (2–4 min).<br />
-                            4. AWS Bedrock AI generates the SOAP note.<br />
-                            5. Note appears automatically when ready.
+                            1. Consultation ends via Google Meet.<br />
+                            2. Google processes and uploads the transcript (2–4 min).<br />
+                            3. System verifies transcript availability in Drive.<br />
+                            4. Click <strong>"Generate SOAP"</strong> to initiate AI analysis.<br />
+                            5. Structured Note appears on the left when ready.
                         </p>
                     </div>
                 </div>
             </div>
+
+            {/* Patient View Preview Modal */}
+            {showPatientPreview && (
+                <VisitSummary 
+                    consultationId={consultationId} 
+                    onClose={() => setShowPatientPreview(false)}
+                    isDoctor={true}
+                />
+            )}
         </motion.div>
     );
 }

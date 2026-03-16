@@ -395,12 +395,12 @@ export default function Home() {
               exit={{ opacity: 0, height: 0 }}
               className={styles.mobileMenu}
             >
-              <Link href="#features" className={styles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>Features</Link>
-              <Link href="#use-cases" className={styles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>Use Cases</Link>
-              <Link href="#pricing" className={styles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>Pricing</Link>
-              <Link href="#security" className={styles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>Security</Link>
-              <Link href="#faq" className={styles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>FAQ</Link>
-              <Link href="#contact" className={styles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>Contact</Link>
+              <a href="#features" className={styles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>Features</a>
+              <a href="#use-cases" className={styles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>Use Cases</a>
+              <a href="#pricing" className={styles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>Pricing</a>
+              <a href="#security" className={styles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>Security</a>
+              <a href="#faq" className={styles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>FAQ</a>
+              <a href="#contact" className={styles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>Contact</a>
               <Link href="/roles" className={styles.mobileGetStartedBtn} onClick={() => setIsMobileMenuOpen(false)}>
                 Get Saramedico
               </Link>
@@ -459,9 +459,9 @@ export default function Home() {
             <Link href="/roles" className={styles.primaryBtn}>
               Start Free 14-Day Trial
             </Link>
-            <Link href="#pricing" className={styles.secondaryBtn}>
+            <a href="#pricing" className={styles.secondaryBtn}>
               View Pricing
-            </Link>
+            </a>
           </motion.div>
 
           <motion.p
@@ -1127,9 +1127,9 @@ export default function Home() {
             >
               <h5>Product</h5>
               <ul className={styles.footerLinks}>
-                <li><Link href="#features">Features</Link></li>
-                <li><Link href="#pricing">Pricing</Link></li>
-                <li><Link href="#security">Security</Link></li>
+                <li><a href="#features">Features</a></li>
+                <li><a href="#pricing">Pricing</a></li>
+                <li><a href="#security">Security</a></li>
               </ul>
             </motion.div>
             <motion.div
@@ -1141,7 +1141,7 @@ export default function Home() {
             >
               <h5>Company</h5>
               <ul className={styles.footerLinks}>
-                <li><Link href="#contact">Contact</Link></li>
+                <li><a href="#contact">Contact</a></li>
               </ul>
             </motion.div>
             <motion.div
@@ -1153,8 +1153,8 @@ export default function Home() {
             >
               <h5>Resources</h5>
               <ul className={styles.footerLinks}>
-                <li><Link href="#faq">FAQ</Link></li>
-                <li><Link href="#use-cases">Use Cases</Link></li>
+                <li><a href="#faq">FAQ</a></li>
+                <li><a href="#use-cases">Use Cases</a></li>
               </ul>
             </motion.div>
             <motion.div
@@ -1168,7 +1168,7 @@ export default function Home() {
               <ul className={styles.footerLinks}>
                 <li><Link href="/privacy">Privacy Policy</Link></li>
                 <li><Link href="/terms">Terms of Service</Link></li>
-                <li><Link href="#security">BAA Request</Link></li>
+                <li><Link href="/baa">BAA Request</Link></li>
                 {/* <li><Link href="/accessibility">Accessibility</Link></li> */}
                 <li><Link href="/retention">Data Retention</Link></li>
               </ul>

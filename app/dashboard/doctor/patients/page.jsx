@@ -198,6 +198,13 @@ function PatientsContent() {
     const [visits, setVisits] = useState([]);
     const [loadingVisits, setLoadingVisits] = useState(false);
     const [deletingVisitId, setDeletingVisitId] = useState(null);
+    const [now, setNow] = useState(Date.now());
+
+    // Tick for countdowns
+    useEffect(() => {
+        const interval = setInterval(() => setNow(Date.now()), 1000);
+        return () => clearInterval(interval);
+    }, []);
 
     const handleDeleteConsultation = async (visitId) => {
         if (!confirm("Are you sure you want to delete this consultation record? This cannot be undone.")) return;
@@ -513,9 +520,53 @@ function PatientsContent() {
                                                             : (visit.chiefComplaint || visit.chief_complaint || visit.summary || visit.reason)) || "Patient encounter session recorded and processed."}
                                                     </p>
                                                     <div style={{ display: 'flex', gap: '12px', marginTop: '12px' }}>
-                                                        <Link href={`/dashboard/doctor/patients/soap?consultationId=${visit.id}`} style={{ textDecoration: 'none', flex: 1 }}>
-                                                            <button className={styles.soapBtn} style={{ width: '100%' }}>View SOAP Note</button>
-                                                        </Link>
+                                                        {(() => {
+                                                            const completedAt = visit.completionTime || visit.completion_time;
+                                                            const isCompleted = visit.status === "completed";
+                                                            const cooldownMs = 5 * 60 * 1000;
+                                                            let countdownText = null;
+                                                            let isDisabled = false;
+
+                                                            if (isCompleted && completedAt) {
+                                                                const diff = (new Date(completedAt).getTime() + cooldownMs) - now;
+                                                                if (diff > 0) {
+                                                                    const m = Math.floor(diff / 60000);
+                                                                    const s = Math.floor((diff % 60000) / 1000);
+                                                                    countdownText = `${m}m ${s}s`;
+                                                                    isDisabled = true;
+                                                                }
+                                                            }
+
+                                                            return (
+                                                                <Link
+                                                                    href={isDisabled ? "#" : `/dashboard/doctor/patients/soap?consultationId=${visit.id}`}
+                                                                    style={{ textDecoration: 'none', flex: 1, pointerEvents: isDisabled ? 'none' : 'auto' }}
+                                                                >
+                                                                    <button
+                                                                        className={styles.soapBtn}
+                                                                        disabled={isDisabled}
+                                                                        style={{
+                                                                            width: '100%',
+                                                                            background: isDisabled ? "#f1f5f9" : undefined,
+                                                                            color: isDisabled ? "#94a3b8" : undefined,
+                                                                            borderColor: isDisabled ? "#e2e8f0" : undefined,
+                                                                            cursor: isDisabled ? "not-allowed" : "pointer",
+                                                                            display: "flex",
+                                                                            alignItems: "center",
+                                                                            justifyContent: "center",
+                                                                            gap: "8px"
+                                                                        }}
+                                                                    >
+                                                                        {isDisabled ? (
+                                                                            <>
+                                                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ animation: "spin 2s linear infinite" }}><path d="M21 12a9 9 0 1 1-6.219-8.56" /></svg>
+                                                                                Syncing Transcript... {countdownText}
+                                                                            </>
+                                                                        ) : "View SOAP Note"}
+                                                                    </button>
+                                                                </Link>
+                                                            );
+                                                        })()}
                                                         <button
                                                             onClick={() => handleDeleteConsultation(visit.id)}
                                                             disabled={deletingVisitId === visit.id}
