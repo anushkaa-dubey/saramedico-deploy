@@ -6,10 +6,25 @@ import { X } from "lucide-react";
 // TODO: Uncomment when connecting backend
 import { fetchTasks as fetchTasksAPI, addTask as addTaskAPI, updateTask as updateTaskAPI, deleteTask as deleteTaskAPI } from "@/services/doctor";
 
+// Helper function to convert local date to ISO date string in the correct timezone
+const getLocalDateISOString = (date) => {
+  if (!date) return new Date().toISOString();
+  
+  // Create a date string in YYYY-MM-DD format from the local date
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  
+  // Return ISO string for the start of that day in local timezone
+  // by creating a new date at midnight of the local timezone
+  return new Date(year, date.getMonth(), date.getDate()).toISOString();
+};
+
 export default function TasksSection(props) {
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [selectedDate, setSelectedDate] = useState(props.selectedDate || new Date());
 
   // Load tasks on component mount
   useEffect(() => {
@@ -41,7 +56,7 @@ export default function TasksSection(props) {
       const newTask = await addTaskAPI({
         title: taskData.label,
         priority: taskData.urgent ? "urgent" : "normal",
-        due_date: new Date().toISOString()
+        due_date: getLocalDateISOString(props.selectedDate)
       });
       setTasks(prev => [...prev, newTask]);
       if (typeof props.onRefresh === 'function') props.onRefresh();
@@ -181,6 +196,9 @@ export default function TasksSection(props) {
           zIndex: 10
         }}>
           <h4 style={{ margin: 0, color: "#1e293b" }}>New Task</h4>
+          <p style={{ margin: "0 0 8px 0", fontSize: "12px", color: "#64748b" }}>
+            {props.selectedDate ? `Assigned to: ${props.selectedDate.toDateString()}` : "Assigned to today"}
+          </p>
           <input
             type="text"
             placeholder="What needs to be done?"

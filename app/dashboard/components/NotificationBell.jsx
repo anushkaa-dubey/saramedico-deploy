@@ -152,7 +152,7 @@ export default function NotificationBell() {
         }
     };
 
-    const markAsRead = async (id, action_url, type, title = "") => {
+    const markAsRead = async (id, action_url, type, title = "", action_metadata = null) => {
         try {
             await fetch(`${API_BASE_URL}/notifications/${id}/read`, {
                 method: "PATCH",
@@ -182,6 +182,13 @@ export default function NotificationBell() {
                         targetUrl = `/dashboard/${role}/video-call?appointmentId=${appointmentId}`;
                     } else {
                         targetUrl = `/dashboard/${role}/appointments`;
+                    }
+                }
+                // Handle consultation_started notification - preserve the consultationId and add meet_link from action_metadata
+                else if (targetUrl.includes("/video-call") && targetUrl.includes("consultationId")) {
+                    // URL already has consultationId, add meet_link if available from action_metadata
+                    if (action_metadata?.meet_link) {
+                        targetUrl += `&meetLink=${encodeURIComponent(action_metadata.meet_link)}`;
                     }
                 }
                 else if (targetUrl.includes("/tasks/") || targetUrl.startsWith("/doctor/tasks")) {
@@ -309,7 +316,7 @@ export default function NotificationBell() {
                     background: notif.is_read ? "#fff" : "#f8fafc",
                     cursor: isAccessRequest ? "default" : "pointer",
                 }}
-                onClick={isAccessRequest ? undefined : () => markAsRead(notif.id, notif.action_url, notif.type, notif.title)}
+                onClick={isAccessRequest ? undefined : () => markAsRead(notif.id, notif.action_url, notif.type, notif.title, notif.action_metadata)}
             >
                 {/* Notification icon + title row */}
                 <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>

@@ -11,11 +11,19 @@
  */
 
 const getApiBaseUrl = () => {
-    // During local development in the browser, always use the relative path 
-    // to go through the Next.js reverse proxy (configured in next.config.ts).
-    // This avoids CORS issues and ensures the browser talks to the same origin.
+    // For browser environments, try to use the full backend URL from env var first
+    // This ensures POST requests with large payloads work correctly
     if (typeof window !== "undefined") {
-        return "/api/v1";
+        // If NEXT_PUBLIC_API_URL is set (e.g., in production), use it directly
+        if (process.env.NEXT_PUBLIC_API_URL) {
+            const url = process.env.NEXT_PUBLIC_API_URL.trim();
+            // Remove trailing /api/v1 if present to avoid duplication
+            return url.endsWith('/api/v1') ? url : url + '/api/v1';
+        }
+        
+        // For local development, connect directly to localhost:8000
+        // This avoids proxy issues with large POST payloads
+        return "http://localhost:8000/api/v1";
     }
 
     // For server-side or non-browser environments, use the environment variable

@@ -14,6 +14,7 @@ function VideoCallContent() {
     const searchParams = useSearchParams();
     const consultationId = searchParams.get("consultationId");
     const appointmentId = searchParams.get("appointmentId");
+    const meetLinkFromNotif = searchParams.get("meetLink"); // Get meet_link from notification
 
     useEffect(() => {
         loadSession();
@@ -31,7 +32,7 @@ function VideoCallContent() {
         return {
             ...data,
             doctor_name: data.doctorName || data.doctor_name || "Doctor",
-            meet_link: data.meetLink || data.meet_link || data.google_meet_link || data.hangout_link || data.join_url || data.start_url || data.url
+            meet_link: data.meetLink || data.meet_link || data.google_meet_link || data.hangout_link || data.join_url || data.start_url || data.url || meetLinkFromNotif
         };
     };
 
@@ -40,7 +41,13 @@ function VideoCallContent() {
             if (consultationId) {
                 const detail = await fetchConsultationDetails(consultationId);
                 if (detail) {
-                    setAppointment(normalizeAppointment(detail));
+                    const normalized = normalizeAppointment(detail);
+                    setAppointment(normalized);
+                    return;
+                }
+                // If consultation fetch fails but we have meetLink from notification, use it
+                if (meetLinkFromNotif) {
+                    setAppointment(normalizeAppointment({ id: consultationId, meet_link: meetLinkFromNotif }));
                     return;
                 }
             }

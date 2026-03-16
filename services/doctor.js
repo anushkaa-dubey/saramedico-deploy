@@ -83,7 +83,7 @@ export const searchDoctorDirectory = async (params = {}) => {
 };
 
 /**
- * Add a new task
+ * Add a new `task`
  * Endpoint: POST /api/v1/doctor/tasks
  */
 export const addTask = async (task) => {

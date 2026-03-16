@@ -367,7 +367,7 @@ export default function Home() {
             <a href="#security" className={styles.navLink}>Security</a>
             <a href="#security" className={styles.navLink}>Compliance / BAA</a>
             <a href="#faq" className={styles.navLink}>FAQ</a>
-            <a href="#contact" className={styles.navLink}>Contact</a>
+            <Link href="/contact" className={styles.navLink}>Contact</Link>
           </div>
 
           <div className={styles.navActions}>
@@ -400,7 +400,7 @@ export default function Home() {
               <a href="#pricing" className={styles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>Pricing</a>
               <a href="#security" className={styles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>Security</a>
               <a href="#faq" className={styles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>FAQ</a>
-              <a href="#contact" className={styles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>Contact</a>
+              <Link href="/contact" className={styles.mobileNavLink} onClick={() => setIsMobileMenuOpen(false)}>Contact</Link>
               <Link href="/roles" className={styles.mobileGetStartedBtn} onClick={() => setIsMobileMenuOpen(false)}>
                 Get Saramedico
               </Link>
@@ -1096,7 +1096,7 @@ export default function Home() {
                 </ul>
               </div>
             </div>
-            <Link href="/auth/signup" className={styles.ctaBtn}>Contact Sales Team</Link>
+            <Link href="/contact" className={styles.ctaBtn}>Contact Sales Team</Link>
           </motion.div>
 
           <div className={styles.footerContainer}>
@@ -1141,7 +1141,7 @@ export default function Home() {
             >
               <h5>Company</h5>
               <ul className={styles.footerLinks}>
-                <li><a href="#contact">Contact</a></li>
+                <li><Link href="/contact">Contact Us</Link></li>
               </ul>
             </motion.div>
             <motion.div

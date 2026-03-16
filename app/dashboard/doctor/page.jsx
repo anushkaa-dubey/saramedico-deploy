@@ -3,6 +3,14 @@ import Topbar from "./components/Topbar";
 import TasksSection from "./components/TasksSection";
 import styles from "./DoctorDashboard.module.css";
 import personIcon from "@/public/icons/person.svg";
+
+// Helper function to convert local date to YYYY-MM-DD without timezone issues
+const getLocalDateString = (date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
 import scheduleIcon from "@/public/icons/schedule.svg";
 import micWhiteIcon from "@/public/icons/mic_white.svg";
 import { useRouter } from "next/navigation";
@@ -45,6 +53,7 @@ export default function DoctorDashboard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentDate, setCurrentDate] = useState(null);
   const [appointments, setAppointments] = useState([]);
+  const [tasks, setTasks] = useState([]);
   const [monthData, setMonthData] = useState({});
   const [selectedDayEvents, setSelectedDayEvents] = useState(null);
   const [patientsMap, setPatientsMap] = useState({});
@@ -115,9 +124,19 @@ export default function DoctorDashboard() {
         return d === today;
       });
 
+      // Count today's meetings from consultations
+      const todayMeetings = (consultations || []).filter(c => {
+        const consultationDate = new Date(c.scheduledAt).toISOString().split('T')[0];
+        return consultationDate === today;
+      }).length;
+
       const urgentTasks = (tasks || []).filter(t => t.status !== "completed" && (t.priority === "high" || t.priority === "urgent")).length;
 
+      // Count completed consultations (meetings)
+      const completedMeetings = (consultations || []).filter(c => c.status === "completed").length;
+
       setAppointments(appts || []);
+      setTasks(tasks || []);
       setDoctorProfile(profile);
 
       const pendingRequests = (appts || []).filter(a => a.status === 'pending').length;
@@ -126,8 +145,8 @@ export default function DoctorDashboard() {
       setMetrics({
         pending_review: pendingRequests, // Total appointment requests pending from patients
         high_urgency: urgentTasks,
-        cleared_today: completedVisits, // Total successfully completed appointments
-        today_meetings: todayAppts.length,
+        cleared_today: completedMeetings, // Total successfully completed consultations/meetings
+        today_meetings: todayMeetings, // Total meetings scheduled for today from consultations
         total_patients: patients.length,
         total_records: consultations.length
       });
@@ -206,7 +225,7 @@ export default function DoctorDashboard() {
     const newSelected = new Date(currentYear, currentDate.getMonth(), day);
     setSelectedDate(newSelected);
     try {
-      const dateStr = newSelected.toISOString().split('T')[0];
+      const dateStr = getLocalDateString(newSelected);
       const events = await fetchCalendarDay(dateStr);
       setSelectedDayEvents(events?.events || []);
     } catch (err) {
@@ -217,12 +236,16 @@ export default function DoctorDashboard() {
   const handleCreateEvent = async () => {
     if (!newEvent.title.trim()) return;
     try {
-      const dateStr = selectedDate.toISOString().split('T')[0];
+      const dateStr = getLocalDateString(selectedDate);
+      // Use event time if provided, otherwise use default times (9 AM to 10 AM)
+      const startTime = newEvent.time || "09:00";
+      const endTime = `${parseInt(startTime.split(':')[0]) + 1}:${startTime.split(':')[1]}:00Z`;
+      
       await createCalendarEvent({
         title: newEvent.title,
         event_type: newEvent.type,
-        start_time: `${dateStr}T${newEvent.time}:00Z`,
-        end_time: `${dateStr}T${parseInt(newEvent.time.split(':')[0]) + 1}:00:00Z`
+        start_time: `${dateStr}T${startTime}:00Z`,
+        end_time: `${dateStr}T${endTime}`
       });
       setIsEventModalOpen(false);
       setNewEvent({ title: "", type: "event", time: "10:00" });
@@ -444,10 +467,13 @@ export default function DoctorDashboard() {
               </motion.div>
 
               <motion.div variants={itemVariants} style={{ width: '100%' }}>
-                <TasksSection onRefresh={() => {
-                  refreshMonthData();
-                  loadDashboardData();
-                }} />
+                <TasksSection 
+                  onRefresh={() => {
+                    refreshMonthData();
+                    loadDashboardData();
+                  }}
+                  selectedDate={selectedDate}
+                />
               </motion.div>
             </div>
 
@@ -474,9 +500,17 @@ export default function DoctorDashboard() {
                     const isSelected = selectedDate && selectedDate.getDate() === day && selectedDate.getMonth() === currentDate.getMonth();
                     const dayInfo = monthData?.days?.find(d => d.day === day);
                     const eventCount = dayInfo?.event_count || 0;
+                    
+                    // Count tasks for this day from the tasks state
+                    const taskCount = (tasks || []).filter(task => {
+                      if (!task.due_date) return false;
+                      const taskDate = new Date(task.due_date);
+                      return taskDate.getDate() === day && taskDate.getMonth() === currentDate.getMonth() && taskDate.getFullYear() === currentYear;
+                    }).length;
 
-                    const isBusy = eventCount > 0;
-                    const isVeryBusy = eventCount >= 3;
+                    const totalCount = eventCount + taskCount;
+                    const isBusy = totalCount > 0;
+                    const isVeryBusy = totalCount >= 3;
                     return (
                       <div
                         key={day}
@@ -570,28 +604,17 @@ export default function DoctorDashboard() {
                       style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0' }}
                     />
                   </div>
-                  <div style={{ display: 'flex', gap: '10px' }}>
-                    <div style={{ flex: 1 }}>
-                      <label style={{ fontSize: '13px', color: '#64748b', display: 'block', marginBottom: '5px' }}>Type</label>
-                      <select
-                        value={newEvent.type}
-                        onChange={(e) => setNewEvent({ ...newEvent, type: e.target.value })}
-                        style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0' }}
-                      >
-                        <option value="event">Event</option>
-                        <option value="task">Task</option>
-                        <option value="reminder">Reminder</option>
-                      </select>
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <label style={{ fontSize: '13px', color: '#64748b', display: 'block', marginBottom: '5px' }}>Time</label>
-                      <input
-                        type="time"
-                        value={newEvent.time}
-                        onChange={(e) => setNewEvent({ ...newEvent, time: e.target.value })}
-                        style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0' }}
-                      />
-                    </div>
+                  <div>
+                    <label style={{ fontSize: '13px', color: '#64748b', display: 'block', marginBottom: '5px' }}>Type</label>
+                    <select
+                      value={newEvent.type}
+                      onChange={(e) => setNewEvent({ ...newEvent, type: e.target.value })}
+                      style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0' }}
+                    >
+                      <option value="event">Event</option>
+                      <option value="task">Task</option>
+                      <option value="reminder">Reminder</option>
+                    </select>
                   </div>
                 </div>
                 <div className={styles.modalActions} style={{ padding: '20px', borderTop: '1px solid #e2e8f0' }}>

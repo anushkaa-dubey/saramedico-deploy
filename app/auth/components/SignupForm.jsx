@@ -4,7 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
-import { registerUser, registerHospital, loginUser } from "@/services/auth";
+import { registerUser, registerHospital, loginUser, googleLogin } from "@/services/auth";
 import { Eye, EyeOff } from "lucide-react";
 import styles from "./SignupForm.module.css";
 
@@ -116,7 +116,6 @@ export default function SignupForm() {
     return Object.keys(newErrors).length === 0;
   };
 
-  // ── Submit ───────────────────────────────────────────────────────────────
   const handleSignup = async (e) => {
     e.preventDefault();
     setApiError("");
@@ -177,6 +176,15 @@ export default function SignupForm() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleGoogleSignup = () => {
+    // Save the current role to sessionStorage so the callback can use it
+    if (role) {
+      sessionStorage.setItem("signupRole", role);
+    }
+    // Initiate Google OAuth flow
+    googleLogin(role);
   };
 
   if (!isClient) return null;
@@ -311,6 +319,13 @@ export default function SignupForm() {
             <span className={styles.hipaaIcon}>🛡️</span>
             HIPAA Compliant &amp; Secure Data Processing
           </p>
+
+          <div className="divider">OR</div>
+
+          <button type="button" className="social-btn" onClick={handleGoogleSignup}>
+            <img src="/icons/google.svg" alt="Google" />
+            Continue with Google
+          </button>
 
           <div className="bottom-text">
             Already have an account? <Link href="/auth/login?role=hospital">Login</Link>
@@ -485,12 +500,7 @@ export default function SignupForm() {
 
         <div className="divider">OR</div>
 
-        <button type="button" className="social-btn">
-          <img src="/icons/apple.svg" alt="Apple" />
-          Continue with Apple ID
-        </button>
-
-        <button type="button" className="social-btn">
+        <button type="button" className="social-btn" onClick={handleGoogleSignup}>
           <img src="/icons/google.svg" alt="Google" />
           Continue with Google
         </button>
