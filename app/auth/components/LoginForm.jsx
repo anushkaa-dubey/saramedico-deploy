@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 // import { loginUser, getCurrentUser } from "@/services/auth";
-import { loginUser, googleLogin } from "@/services/auth";
+import { loginUser, googleLogin, appleLogin } from "@/services/auth";
 import { Eye, EyeOff } from "lucide-react";
 
 export default function LoginForm() {
@@ -16,6 +16,7 @@ export default function LoginForm() {
 
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [appleLoading, setAppleLoading] = useState(false);
   const [computedRole, setComputedRole] = useState("doctor");
   const [isClient, setIsClient] = useState(false);
 
@@ -117,6 +118,15 @@ export default function LoginForm() {
     googleLogin(computedRole);
     // Note: setGoogleLoading(false) is not called because the page
     // will navigate away to Google's login screen.
+  };
+
+  const handleAppleLogin = () => {
+    setAppleLoading(true);
+    // Redirect to the backend Apple OAuth endpoint.
+    // The backend handles the full OAuth dance and returns tokens.
+    appleLogin(computedRole);
+    // Note: setAppleLoading(false) is not called because the page
+    // will navigate away to Apple's login screen.
   };
 
   if (!isClient) return null;
@@ -232,9 +242,15 @@ export default function LoginForm() {
 
         <div className="divider">OR</div>
 
-        <button type="button" className="social-btn">
+        <button
+          type="button"
+          className="social-btn"
+          onClick={handleAppleLogin}
+          disabled={appleLoading || loading}
+          style={appleLoading ? { opacity: 0.7, cursor: "not-allowed" } : {}}
+        >
           <img src="/icons/apple.svg" alt="Apple" />
-          Continue with Apple ID
+          {appleLoading ? "Redirecting to Apple..." : "Continue with Apple ID"}
         </button>
 
         <button

@@ -188,6 +188,33 @@ export const handleGoogleCallback = (data) => {
 };
 
 /**
+ * Initiate Apple OAuth login
+ * Redirects the browser to the backend Apple SSO login endpoint.
+ * The backend handles the full OAuth flow and the callback.
+ *
+ * @param {string} [role] - Optional role hint to pass as state (e.g. "doctor", "patient")
+ */
+export const appleLogin = (role) => {
+    // Determine the backend base URL (direct backend URL for OAuth redirect flow)
+    // We bypass the Next.js proxy here because the OAuth redirect chain must
+    // go through the backend's own origin so Apple's redirect_uri matches.
+    const backendOrigin =
+        process.env.NEXT_PUBLIC_API_URL
+            ? new URL(process.env.NEXT_PUBLIC_API_URL).origin
+            : "http://localhost:8000";
+
+    const appleLoginUrl = `${backendOrigin}/api/v1/auth/apple/login`;
+
+    // Store the role hint so the callback page can use it for routing hints
+    if (role && typeof window !== "undefined") {
+        sessionStorage.setItem("appleAuthRole", role);
+    }
+
+    // Full page redirect — required for the OAuth flow
+    window.location.href = appleLoginUrl;
+};
+
+/**
  * Upload profile avatar
  * POST /api/v1/users/me/avatar
  */
