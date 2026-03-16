@@ -279,6 +279,35 @@ export default function VisitSummary({ consultationId, onClose }) {
                                         </div>
                                     )}
 
+                                    {/* Patient Summary (Simple Language) */}
+                                    {soapData.soap_note.patient_summary && (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            style={{
+                                                background: "linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)",
+                                                border: "1px solid #bbf7d0",
+                                                borderRadius: "14px",
+                                                padding: "20px",
+                                                marginBottom: "20px",
+                                                boxShadow: "0 4px 12px rgba(22, 163, 74, 0.08)",
+                                            }}
+                                        >
+                                            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "10px" }}>
+                                                <span style={{ fontSize: "24px" }}>✨</span>
+                                                <h4 style={{ margin: 0, fontSize: "16px", fontWeight: 700, color: "#166534" }}>
+                                                    Quick Summary
+                                                </h4>
+                                            </div>
+                                            <p style={{
+                                                margin: 0, fontSize: "15px", color: "#14532d",
+                                                lineHeight: 1.6, fontWeight: 500,
+                                            }}>
+                                                {soapData.soap_note.patient_summary}
+                                            </p>
+                                        </motion.div>
+                                    )}
+
                                     {/* SOAP Sections */}
                                     {hasSoap && (
                                         <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
