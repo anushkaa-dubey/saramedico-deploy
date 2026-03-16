@@ -65,6 +65,7 @@ export default function VisitHistory() {
                                 <th>DOCTOR</th>
                                 <th>STATUS</th>
                                 <th>DIAGNOSIS</th>
+                                <th>ACTION</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -91,6 +92,26 @@ export default function VisitHistory() {
                                     </td>
                                     <td style={{ maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                         {c.diagnosis || "General Consultation"}
+                                    </td>
+                                    <td>
+                                        {c.status === 'completed' && (
+                                            <button
+                                                onClick={() => setSelectedVisitId(c.id)}
+                                                style={{
+                                                    background: "none", border: "none",
+                                                    color: "#2563eb", fontWeight: "600",
+                                                    fontSize: "13px", cursor: "pointer",
+                                                    padding: 0, display: "flex",
+                                                    alignItems: "center", gap: "4px",
+                                                    whiteSpace: "nowrap",
+                                                    transition: "color 0.2s",
+                                                }}
+                                                onMouseEnter={e => e.currentTarget.style.color = "#1d4ed8"}
+                                                onMouseLeave={e => e.currentTarget.style.color = "#2563eb"}
+                                            >
+                                                View Summary →
+                                            </button>
+                                        )}
                                     </td>
                                 </tr>
                             ))}
