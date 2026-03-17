@@ -2,7 +2,7 @@
 import { Suspense } from "react";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
-import { fetchConsultationById, markConsultationComplete, fetchSoapNote, fetchTranscriptStatus, triggerSoapGeneration, updateConsultation } from "@/services/consultation";
+import { fetchConsultationById, markConsultationComplete, fetchSoapNote, fetchTranscriptStatus, triggerSoapGeneration, updateConsultation, patchSoapNote } from "@/services/consultation";
 import Topbar from "../../components/Topbar";
 import styles from "./SoapNotes.module.css";
 import { motion } from "framer-motion";
@@ -39,6 +39,23 @@ function SoapNotesPage() {
 
     const pollTimerRef = useRef(null);
     const pollAttemptsRef = useRef(0);
+    const [isSavingSummary, setIsSavingSummary] = useState(false);
+
+    // ── Save Summary Function ──────────────────────────────────────────────
+    const handleSaveSummary = async () => {
+        if (!soap || !consultationId) return;
+        setIsSavingSummary(true);
+        try {
+            await patchSoapNote(consultationId, { patient_summary: editedPatientSummary });
+            setSoap((prev) => ({ ...prev, patient_summary: editedPatientSummary }));
+            setIsEditingSummary(false);
+        } catch (err) {
+            console.error("Failed to save summary:", err);
+            alert("Failed to save summary.");
+        } finally {
+            setIsSavingSummary(false);
+        }
+    };
 
     // ── PDF Export Function ────────────────────────────────────────────────
     const handleDownloadPDF = () => {
@@ -528,16 +545,46 @@ function SoapNotesPage() {
                                  <div className={styles.soapSection}>
                                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
                                          <span className={styles.sectionLabel} style={{ color: "#0891b2", margin: 0 }}>PATIENT SUMMARY (SIMPLIFIED)</span>
-                                         <button 
-                                            onClick={() => setIsEditingSummary(!isEditingSummary)}
-                                            style={{ 
-                                                background: "none", border: "none", color: "#0891b2", 
-                                                fontSize: "11px", fontWeight: "700", cursor: "pointer",
-                                                textDecoration: "underline"
-                                            }}
-                                         >
-                                             {isEditingSummary ? "CANCEL EDIT" : "EDIT SUMMARY"}
-                                         </button>
+                                         {isEditingSummary ? (
+                                             <div style={{ display: "flex", gap: "8px" }}>
+                                                 <button
+                                                    onClick={handleSaveSummary}
+                                                    disabled={isSavingSummary}
+                                                    style={{
+                                                        background: "#0891b2", border: "none", color: "white",
+                                                        fontSize: "10px", fontWeight: "700", cursor: "pointer",
+                                                        padding: "4px 10px", borderRadius: "4px",
+                                                        opacity: isSavingSummary ? 0.7 : 1
+                                                    }}
+                                                 >
+                                                     {isSavingSummary ? "SAVING..." : "SAVE"}
+                                                 </button>
+                                                 <button 
+                                                    onClick={() => {
+                                                        setIsEditingSummary(false);
+                                                        setEditedPatientSummary(soap.patient_summary || "");
+                                                    }}
+                                                    style={{ 
+                                                        background: "none", border: "1px solid #cbd5e1", color: "#64748b", 
+                                                        fontSize: "10px", fontWeight: "700", cursor: "pointer",
+                                                        padding: "3px 9px", borderRadius: "4px"
+                                                    }}
+                                                 >
+                                                     CANCEL
+                                                 </button>
+                                             </div>
+                                         ) : (
+                                            <button 
+                                                onClick={() => setIsEditingSummary(true)}
+                                                style={{ 
+                                                    background: "none", border: "none", color: "#0891b2", 
+                                                    fontSize: "11px", fontWeight: "700", cursor: "pointer",
+                                                    textDecoration: "underline"
+                                                }}
+                                            >
+                                                EDIT SUMMARY
+                                            </button>
+                                         )}
                                      </div>
                                      <div className={styles.textBlock} style={{ background: "#f0f9ff", borderLeft: "3px solid #0ea5e9", position: "relative" }}>
                                          {isEditingSummary ? (
