@@ -85,7 +85,8 @@ export default function HospitalDashboard() {
                 const members = Array.isArray(membersData) ? membersData : [];
                 const uniqueDepts = [...new Set([...docs, ...members].map(d => d.department || d.specialty).filter(Boolean))];
 
-                const staffCount = members.filter(m => m.role !== 'patient').length;
+                const excludedRoles = ["patient", "admin", "hospital"];
+                const staffCount = members.filter(m => !excludedRoles.includes(m.system_role || m.role)).length;
                 const appsToday = dashboardOverview?.metrics?.todayAppointments || agendaData.filter(e => e.event_type === 'appointment').length;
 
                 setStats({
