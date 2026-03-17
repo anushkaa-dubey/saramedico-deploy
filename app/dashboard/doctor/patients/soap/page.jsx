@@ -197,29 +197,61 @@ function SoapNotesPage() {
             setError("No consultation selected. Please open the SOAP note from a valid appointment.");
             return;
         }
-        fetchConsultationById(consultationId)
-            .then((data) => {
+
+        const loadData = async () => {
+            try {
+                // 1. Fetch consultation details
+                const data = await fetchConsultationById(consultationId);
                 setConsultation(data);
 
-                const aiStatus = data?.aiStatus || data?.ai_status;
-                const isAwaitingTranscript = data?.ai_status === "awaiting_transcript" || data?.ai_status === "pending";
-                
+                // 2. Fetch SOAP Note explicitly
+                try {
+                    const soapResult = await fetchSoapNote(consultationId);
+                    
+                    if (soapResult.httpStatus === 200 && soapResult.soap_note) {
+                        setSoap(soapResult.soap_note);
+                        setEditedPatientSummary(soapResult.soap_note.patient_summary || "");
+                        setSoapStatus("completed");
+                        setLoading(false);
+                        return;
+                    } 
+                    
+                    if (soapResult.ai_status === "no_transcript" || soapResult.status === "no_transcript") {
+                        setSoapStatus("no_transcript");
+                        setLoading(false);
+                        return;
+                    }
+                    
+                    if (soapResult.httpStatus === 202) {
+                        setSoapStatus("processing");
+                        startPolling(consultationId);
+                        setLoading(false);
+                        return;
+                    }
+                } catch (soapErr) {
+                    console.error("Silent ignore: explicit SOAP fetch failed", soapErr);
+                }
+
+                // 3. Fallback to existing setup (fields from the consultation model)
                 if (data?.soap_note) {
                     setSoap(data.soap_note);
                     setEditedPatientSummary(data.soap_note.patient_summary || "");
                     setSoapStatus("completed");
                 } else if (data?.status === "completed") {
-                    // Consultation is complete — if AI status is already processing, start polling
                     if (data?.ai_status === "processing") {
                         startPolling(consultationId);
                     }
                 }
-            })
-            .catch((err) => {
+
+                setLoading(false);
+            } catch (err) {
                 console.error("Failed to fetch consultation:", err);
                 setError("Could not load consultation. " + (err.message || ""));
-            })
-            .finally(() => setLoading(false));
+                setLoading(false);
+            }
+        };
+
+        loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [consultationId, startPolling]);
 
