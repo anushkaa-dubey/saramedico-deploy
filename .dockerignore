@@ -46,9 +46,7 @@ user_login_check*.js
 # Env files (injected via docker-compose / build args)
 .env*
 
-# Documentation
+# Documentation (keep Legal/*.md — needed at build time by Next.js pages)
 *.md
 !README.md
-
-# Legal
-Legal/
+!Legal/*.md
