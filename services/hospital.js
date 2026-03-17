@@ -204,7 +204,22 @@ export const fetchAuditLogs = async () => {
  * 12. Fetch Organization Overview (Redirected)
  */
 export const fetchHospitalStats = async () => {
-    return fetchHospitalDashboardOverview();
+    try {
+        const overviewData = await fetchAppointmentsOverview();
+        const metrics = overviewData?.metrics || {};
+        return {
+            totalToday: metrics.acceptedAppointments || 0,
+            transcriptionQueueStatus: metrics.transcriptionsInQueue || 0,
+            notesPendingSignature: metrics.pendingNotes || 0,
+        };
+    } catch (err) {
+        console.error("fetchHospitalStats error:", err);
+        return {
+            totalToday: 0,
+            transcriptionQueueStatus: 0,
+            notesPendingSignature: 0,
+        };
+    }
 };
 
 
@@ -525,3 +540,26 @@ export async function fetchDocumentUrl(documentId, disposition = "inline") {
     if (!res.ok) throw new Error("Failed to fetch document URL");
     return res.json();
 }
+
+/**
+ * Fetch Appointments Overview / Metrics
+ * Endpoint: GET /api/v1/hospital/appointments/overview
+ */
+export const fetchAppointmentsOverview = async () => {
+    try {
+        const response = await fetch(`${API_BASE_URL}/hospital/appointments/overview`, {
+            headers: getAuthHeaders(),
+        });
+        return await handleResponse(response);
+    } catch (err) {
+        console.error("fetchAppointmentsOverview error:", err);
+        return {
+            metrics: {
+                scheduledAppointments: 0,
+                acceptedAppointments: 0,
+                transcriptionsInQueue: 0,
+                pendingNotes: 0,
+            }
+        };
+    }
+};

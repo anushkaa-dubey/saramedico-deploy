@@ -84,10 +84,7 @@ export default function AppointmentsPage() {
                 fetchOrganizationMembers(),
             ]);
 
-            const today = new Date().toDateString();
-            const todayAppts = (apptData || []).filter(a => new Date(a.scheduled_at).toDateString() === today);
-
-            setStats({ ...statData, totalToday: todayAppts.length });
+            setStats(statData || { totalToday: 0, transcriptionQueueStatus: 0, notesPendingSignature: 0 });
             setAppointments(apptData || []);
             setDoctors(teamData || []);
             await Promise.all([loadMonthData(), loadDayData()]);
