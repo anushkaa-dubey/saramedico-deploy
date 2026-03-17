@@ -8,6 +8,17 @@ import { getAuthHeaders, API_BASE_URL } from "@/services/apiConfig";
 import { checkAIPermission, grantAIAccess } from "@/services/doctor";
 
 /**
+ * Strip the [FORMATTING INSTRUCTION: ...] prefix that gets prepended to user
+ * messages before they are sent to the API.  The backend stores the full string
+ * so we need to clean it when displaying.
+ */
+const stripFormattingInstruction = (text) => {
+    if (!text) return text;
+    // Remove everything from the start up to and including the closing "]\n\n"
+    return text.replace(/^\s*\[FORMATTING INSTRUCTION:[^\]]*\]\s*/s, "").trim();
+};
+
+/**
  * AI Chat Component for Doctor-Patient Context
  * @param {string} patientId - Required patient ID
  * @param {string} documentId - Optional document ID for context
@@ -64,7 +75,7 @@ export default function PatientAIChat({ patientId, documentId = null, doctorId =
                     const formattedMessages = history.messages.map((msg, idx) => ({
                         id: msg.id || idx,
                         role: msg.role === "doctor" ? "user" : (msg.role === "user" ? "user" : "assistant"),
-                        text: msg.content,
+                        text: (msg.role === "doctor" || msg.role === "user") ? stripFormattingInstruction(msg.content) : msg.content,
                         timestamp: msg.created_at,
                         isError: false
                     }));
@@ -476,7 +487,7 @@ Use bullet points for findings and markdown for structure. Do not include this i
                                     </ReactMarkdown>
                                 </div>
                             ) : (
-                                <p>{message.text}</p>
+                                <p>{stripFormattingInstruction(message.text)}</p>
                             )}
                             {message.timestamp && (
                                 <div className={styles.timestamp}>

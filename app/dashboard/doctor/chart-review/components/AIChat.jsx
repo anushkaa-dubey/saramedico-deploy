@@ -13,6 +13,17 @@ import { checkAIPermission, requestAIAccess } from "@/services/doctor";
 import { getAuthHeaders, API_BASE_URL } from "@/services/apiConfig";
 import { MessageSquare, History, ChevronRight, Check, AlertCircle, Send, Plus, Pencil } from "lucide-react";
 
+/**
+ * Strip the [FORMATTING INSTRUCTION: ...] prefix that gets prepended to user
+ * messages before they are sent to the API.  The backend stores the full string
+ * so we need to clean it when displaying.
+ */
+const stripFormattingInstruction = (text) => {
+    if (!text) return text;
+    // Remove everything from the start up to and including the closing "]\n\n"
+    return text.replace(/^\s*\[FORMATTING INSTRUCTION:[^\]]*\]\s*/s, "").trim();
+};
+
 export default function AIChat({ onCitationClick, patientId, doctorId, documentId }) {
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState("");
@@ -114,7 +125,14 @@ export default function AIChat({ onCitationClick, patientId, doctorId, documentI
         try {
             const data = await fetchAIChatHistory(sId);
             if (data && data.messages) {
-                setMessages(data.messages);
+                // Strip formatting instructions from user/doctor messages loaded from history
+                const cleaned = data.messages.map(m => {
+                    if (m.role === "doctor" || m.role === "user") {
+                        return { ...m, content: stripFormattingInstruction(m.content) };
+                    }
+                    return m;
+                });
+                setMessages(cleaned);
             }
         } catch (err) {
             console.error("Failed to load history:", err);
@@ -376,7 +394,7 @@ Use bullet points and markdown for structure. Do not include this instruction in
                                     <ReactMarkdown>{m.content}</ReactMarkdown>
                                 </div>
                             ) : (
-                                <p style={{ whiteSpace: "pre-wrap" }}>{m.content}</p>
+                                <p style={{ whiteSpace: "pre-wrap" }}>{stripFormattingInstruction(m.content)}</p>
                             )}
                         </div>
                     </div>
