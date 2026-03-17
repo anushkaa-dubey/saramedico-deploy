@@ -13,15 +13,25 @@ export default function CalendarModal({ isOpen, onClose, selectedDate, onSave })
         e.preventDefault();
         setLoading(true);
         try {
-            const startTime = new Date(selectedDate);
+            // Extract YYYY-MM-DD cleanly using local getters to safely bypass browser timezone wrapping
+            const year = selectedDate.getFullYear();
+            const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+            const day = String(selectedDate.getDate()).padStart(2, '0');
+            const dateStr = `${year}-${month}-${day}`;
+
             const [hours, mins] = time.split(':');
-            startTime.setHours(parseInt(hours), parseInt(mins));
-            const endTime = new Date(startTime.getTime() + 60 * 60 * 1000); // 1 hour later
+            
+            // Format explicitly as UTC to ensure the exact selected date and time map into the database without local offsets pushing it over boundary lines
+            const formattedStartTime = `${dateStr}T${hours}:${mins}:00.000Z`;
+            
+            const startHourInt = parseInt(hours, 10);
+            const endHourStr = String(startHourInt + 1).padStart(2, '0');
+            const formattedEndTime = `${dateStr}T${endHourStr}:${mins}:00.000Z`;
 
             await createCalendarEvent({
                 title,
-                start_time: startTime.toISOString(),
-                end_time: endTime.toISOString()
+                start_time: formattedStartTime,
+                end_time: formattedEndTime
             });
             onSave();
             setTitle("");
