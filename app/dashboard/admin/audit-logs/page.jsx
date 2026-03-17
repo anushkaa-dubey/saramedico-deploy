@@ -5,7 +5,8 @@ import { fetchAdminAuditLogs } from "@/services/admin";
 import { motion } from "framer-motion";
 
 export default function AuditLogsPage() {
-    const [logs, setLogs] = useState([]);
+    const [allLogs, setAllLogs] = useState([]);
+    const [filteredLogs, setFilteredLogs] = useState([]);
     const [insights, setInsights] = useState({
         total_events_24h: 0,
         new_users_24h: 0,
@@ -22,23 +23,49 @@ export default function AuditLogsPage() {
 
     useEffect(() => {
         loadLogs();
-    }, [filter]);
+    }, []);
+
+    useEffect(() => {
+        applyFilters();
+    }, [filter, allLogs]);
 
     const loadLogs = async () => {
         setLoading(true);
         try {
-            const data = await fetchAdminAuditLogs(filter);
+            const data = await fetchAdminAuditLogs();
             if (data && data.logs) {
-                setLogs(data.logs);
+                setAllLogs(data.logs);
                 setInsights(data.insights || insights);
             } else if (Array.isArray(data)) {
-                setLogs(data);
+                setAllLogs(data);
             }
         } catch (err) {
             console.error("Audit logs failed:", err);
+            setAllLogs([]);
         } finally {
             setLoading(false);
         }
+    };
+
+    const applyFilters = () => {
+        let filtered = allLogs;
+
+        if (filter.action) {
+            filtered = filtered.filter(log => log.action === filter.action);
+        }
+
+        if (filter.resource_type) {
+            filtered = filtered.filter(log => log.resource_type === filter.resource_type);
+        }
+
+        if (filter.date) {
+            filtered = filtered.filter(log => {
+                const logDate = new Date(log.timestamp).toISOString().split('T')[0];
+                return logDate === filter.date;
+            });
+        }
+
+        setFilteredLogs(filtered);
     };
 
     const getSeverityColor = (severity) => {
@@ -149,14 +176,14 @@ export default function AuditLogsPage() {
                                         <div className={styles.loadingSpinner}>Analyzing Audit Trail...</div>
                                     </td>
                                 </tr>
-                            ) : logs.length === 0 ? (
+                            ) : filteredLogs.length === 0 ? (
                                 <tr>
                                     <td colSpan="5" style={{ textAlign: "center", padding: "40px" }}>
                                         No audit entries discovered for the selected criteria.
                                     </td>
                                 </tr>
                             ) : (
-                                logs.map((log) => (
+                                filteredLogs.map((log) => (
                                     <tr key={log.id} style={{ borderLeft: `3px solid ${getSeverityColor(log.severity)}` }}>
                                         <td style={{ fontSize: "12px", color: "#64748b" }}>
                                             {new Date(log.timestamp).toLocaleString(undefined, {
