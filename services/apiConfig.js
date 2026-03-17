@@ -1,38 +1,35 @@
 /**
  * API Configuration
  *
- * IMPORTANT: The frontend ALWAYS uses a relative path (/api/v1) so that all
- * requests are routed through Next.js's built-in reverse proxy (next.config.ts).
- * This avoids CORS errors entirely — the browser only ever talks to localhost:3000,
- * and Next.js proxies the request to the real backend on the server side.
+ * DEPLOYMENT STRATEGY:
+ * ─────────────────────
+ * In production (EC2), Nginx sits in front of both the frontend and backend.
+ * All traffic arrives on port 80:
+ *   /api/*   →  proxied to FastAPI backend (:8000)
+ *   /*       →  proxied to Next.js frontend (:3000)
  *
- * The NEXT_PUBLIC_API_URL env var is read by next.config.ts (server-side) to
- * know where to forward the proxied requests. It is NOT used here.
+ * Because the browser only ever talks to the SAME origin (port 80),
+ * we use a RELATIVE URL ("/api/v1") for all API calls — this completely
+ * eliminates CORS issues.
+ *
+ * For local development without Nginx you can set
+ *   NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
+ * in your .env to hit the backend directly.
  */
 
 const getApiBaseUrl = () => {
-    // For browser environments, try to use the full backend URL from env var first
-    // This ensures POST requests with large payloads work correctly
-    if (typeof window !== "undefined") {
-        // If NEXT_PUBLIC_API_URL is set (e.g., in production), use it directly
-        if (process.env.NEXT_PUBLIC_API_URL) {
-            const url = process.env.NEXT_PUBLIC_API_URL.trim();
-            // Remove trailing /api/v1 if present to avoid duplication
-            return url.endsWith('/api/v1') ? url : url + '/api/v1';
-        }
-        
-        // For local development, connect directly to localhost:8000
-        // This avoids proxy issues with large POST payloads
-        return "http://localhost:8000/api/v1";
+    // NEXT_PUBLIC_API_URL is set at build time and available in both
+    // server and browser environments.
+    const envUrl = process.env.NEXT_PUBLIC_API_URL;
+
+    if (envUrl) {
+        const url = envUrl.trim();
+        // Ensure it ends with /api/v1
+        return url.endsWith('/api/v1') ? url : url + '/api/v1';
     }
 
-    // For server-side or non-browser environments, use the environment variable
-    // or fallback to localhost.
-    if (process.env.NEXT_PUBLIC_API_URL) {
-        return process.env.NEXT_PUBLIC_API_URL.trim();
-    }
-
-    return "http://localhost:8000/api/v1";
+    // Fallback — relative URL works when Nginx is in front
+    return "/api/v1";
 };
 
 export const API_BASE_URL = getApiBaseUrl();
