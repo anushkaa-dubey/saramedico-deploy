@@ -6,7 +6,7 @@ import { X } from "lucide-react";
 // TODO: Uncomment when connecting backend
 import { fetchTasks as fetchTasksAPI, addTask as addTaskAPI, updateTask as updateTaskAPI, deleteTask as deleteTaskAPI } from "@/services/doctor";
 
-// Helper function to convert local date to ISO date string in the correct timezone
+// Helper function to convert local date to ISO date string that safely maps to the same UTC day
 const getLocalDateISOString = (date) => {
   if (!date) return new Date().toISOString();
   
@@ -15,9 +15,10 @@ const getLocalDateISOString = (date) => {
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
   
-  // Return ISO string for the start of that day in local timezone
-  // by creating a new date at midnight of the local timezone
-  return new Date(year, date.getMonth(), date.getDate()).toISOString();
+  // Return ISO string for midday UTC. This safely avoids timezone boundary
+  // issues (-12 to +12 offsets) so the backend's explicit UTC day checking 
+  // will correctly map the task to the selected day.
+  return `${year}-${month}-${day}T12:00:00.000Z`;
 };
 
 export default function TasksSection(props) {
