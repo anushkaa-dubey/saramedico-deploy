@@ -997,11 +997,14 @@ export default function Home() {
               viewport={{ once: true }}
               transition={{ delay: (i % 4) * 0.1 }}
               className={styles.faqItem}
+              onClick={() => setOpenDropdown(openDropdown === `faq-${i}` ? null : `faq-${i}`)}
+              style={{ cursor: 'pointer' }}
+
             >
               <div
                 className={styles.faqQuestion}
-                onClick={() => setOpenDropdown(openDropdown === `faq-${i}` ? null : `faq-${i}`)}
-                style={{ cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                // onClick={() => setOpenDropdown(openDropdown === `faq-${i}` ? null : `faq-${i}`)}
+                style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
               >
                 <span>{faq.question}</span>
                 <motion.svg
