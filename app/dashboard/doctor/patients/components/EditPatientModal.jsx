@@ -61,8 +61,8 @@ export default function EditPatientModal({ isOpen, onClose, patientId, onSuccess
                     relationship: data.emergency_contact?.relationship || data.emergencyContact?.relationship || "",
                     phoneNumber: data.emergency_contact?.phone_number || data.emergencyContact?.phoneNumber || ""
                 },
-                medicalHistory: typeof (data.medical_history || data.medicalHistory) === 'object' 
-                    ? JSON.stringify(data.medical_history || data.medicalHistory, null, 2) 
+                medicalHistory: typeof (data.medical_history || data.medicalHistory) === 'object'
+                    ? JSON.stringify(data.medical_history || data.medicalHistory, null, 2)
                     : (data.medical_history || data.medicalHistory || ""),
                 allergies: data.allergies || [],
                 medications: data.medications || []
@@ -100,15 +100,47 @@ export default function EditPatientModal({ isOpen, onClose, patientId, onSuccess
     };
 
     return (
-        <div className={styles.overlay}>
-            <div className={styles.modal} style={{ maxWidth: '650px' }}>
-                <div className={styles.header}>
+        // ── Overlay: fixed, full-viewport, flex-centered ──
+        <div
+            style={{
+                position: "fixed",
+                inset: 0,
+                background: "rgba(15, 23, 42, 0.45)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                zIndex: 9999,
+                padding: "16px",
+            }}
+            onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+        >
+            {/* ── Modal box: capped height, scrolls internally ── */}
+            <div
+                style={{
+                    background: "#ffffff",
+                    borderRadius: "16px",
+                    width: "100%",
+                    maxWidth: "650px",
+                    maxHeight: "90vh",
+                    display: "flex",
+                    flexDirection: "column",
+                    boxShadow: "0 20px 60px rgba(0, 0, 0, 0.18)",
+                    overflow: "hidden",
+                }}
+            >
+                {/* ── Sticky header ── */}
+                <div className={styles.header} style={{ flexShrink: 0 }}>
                     <h3>Edit Patient Profile</h3>
                     <button onClick={onClose} className={styles.closeBtn}>&times;</button>
                 </div>
-                <div className={styles.scrollContent}>
+
+                {/* ── Scrollable body ── */}
+                <div
+                    className={styles.scrollContent}
+                    style={{ overflowY: "auto", flex: 1, padding: "24px" }}
+                >
                     {fetching ? (
-                        <div style={{ padding: '40px', textAlign: 'center' }}>Loading patient details...</div>
+                        <div style={{ padding: "40px", textAlign: "center" }}>Loading patient details...</div>
                     ) : (
                         <form onSubmit={handleSubmit} className={styles.form}>
                             <div className={styles.field}>

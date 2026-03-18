@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import styles from "./OnboardPatientModal.module.css";
 import { onboardPatient, fetchDoctorProfile } from "@/services/doctor";
 import { requestAccess } from "@/services/permissions";
@@ -104,7 +105,6 @@ export default function OnboardPatientModal({ isOpen, onClose, onSuccess }) {
                 ));
 
             if (isConflict) {
-                // Extract patient_id from the conflict response if backend provides it
                 const existingPatientId = err?.patient_id || err?.data?.patient_id || null;
                 setConflictPatient({ patient_id: existingPatientId, email: formData.email });
                 setError("");
@@ -121,7 +121,6 @@ export default function OnboardPatientModal({ isOpen, onClose, onSuccess }) {
 
     const handleRequestAccess = async () => {
         if (!conflictPatient?.patient_id) {
-            // If we don't have a patient_id, show a message — doctor must find patient in directory
             setAccessRequested(true);
             return;
         }
@@ -143,7 +142,7 @@ export default function OnboardPatientModal({ isOpen, onClose, onSuccess }) {
         }
     };
 
-    return (
+    return createPortal(
         <div className={styles.overlay}>
             <div className={styles.modal}>
                 <div className={styles.header}>
@@ -152,7 +151,6 @@ export default function OnboardPatientModal({ isOpen, onClose, onSuccess }) {
                 </div>
                 <div className={styles.scrollContent}>
                     {conflictPatient && !onboardedData ? (
-                        /* ── Conflict: patient already exists ── */
                         <div className={styles.successView}>
                             <div style={{
                                 width: "56px", height: "56px", borderRadius: "50%",
@@ -368,7 +366,6 @@ export default function OnboardPatientModal({ isOpen, onClose, onSuccess }) {
                                         {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                                     </button>
                                 </div>
-
                             </div>
 
                             <hr style={{ margin: "20px 0", border: "0", borderTop: "1px solid #e2e8f0" }} />
@@ -495,6 +492,7 @@ export default function OnboardPatientModal({ isOpen, onClose, onSuccess }) {
                     )}
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }
