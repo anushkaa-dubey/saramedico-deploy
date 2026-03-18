@@ -1,5 +1,4 @@
 Terms of Service
-Effective Date: [Insert Effective Date]	Last Updated: [Insert Last Updated Date]
 1. Acceptance of Terms
 These Terms of Service (the "Terms") govern access to and use of the SaraMedico website, platform, applications, APIs, and related services. By accessing or using the Services, the customer, user, or organization accepting these Terms agrees to be bound by them. If the individual accepting these Terms is doing so on behalf of an organization, that individual represents that they have authority to bind the organization.
 2. Eligibility and Authorized Use

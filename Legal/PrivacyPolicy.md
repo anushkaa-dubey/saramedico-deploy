@@ -1,4 +1,3 @@
-Effective Date: [Insert Effective Date]	Last Updated: [Insert Last Updated Date]
 1. Overview
 SaraMedico, Inc. ("SaraMedico," "we," "our," or "us") provides software tools that support modern medical practice, including AI-assisted documentation, OCR-based medical record intake, visit transcription, reporting, workflow administration, and related support services (collectively, the "Services"). This Privacy Policy explains how SaraMedico collects, uses, discloses, stores, and protects personal information when individuals visit our website, create an account, use the Services, request a demo, contact us, or otherwise interact with us.
 2. Scope
