@@ -3,16 +3,21 @@ import path from 'path';
 import Link from 'next/link';
 import ReactMarkdown from 'react-markdown';
 
-export default function PrivacyPage() {
+export default async function PrivacyPage(props: any) {
   const filePath = path.join(process.cwd(), 'Legal', 'PrivacyPolicy.md');
   const content = fs.readFileSync(filePath, 'utf8');
+
+  const searchParams = await props.searchParams;
+  const isFromAuth = searchParams?.from === 'auth';
+  const backHref = isFromAuth ? '/auth/login' : '/';
+  const backText = isFromAuth ? '\u2190 Back to Login/Signup Page' : '\u2190 Back to Home';
 
   return (
     <div style={{ minHeight: '100vh', background: 'linear-gradient(180deg, #F8FAFC 0%, #FFFFFF 100%)', padding: '80px 24px', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
       <div style={{ maxWidth: '800px', margin: '0 auto', backgroundColor: '#ffffff', padding: '48px', borderRadius: '16px', boxShadow: '0 10px 40px -10px rgba(0,0,0,0.08)', border: '1px solid rgba(0, 129, 254, 0.1)' }}>
         <div style={{ marginBottom: '40px' }}>
-          <Link href="/" style={{ color: '#0081FE', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '8px', fontWeight: 600, fontSize: '15px' }}>
-             &larr; Back to Home
+          <Link href={backHref} style={{ color: '#0081FE', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '8px', fontWeight: 600, fontSize: '15px' }}>
+            {backText}
           </Link>
         </div>
         <div className="markdown-content">

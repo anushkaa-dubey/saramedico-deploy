@@ -314,7 +314,7 @@ export default function SignupForm() {
               className={styles.termsCheckbox}
             />
             <label htmlFor="h_terms" className={styles.termsLabel}>
-              I agree to the <a href="#" className={styles.termsLink}>Privacy Policy</a> and <a href="#" className={styles.termsLink}>Terms of Service</a>.
+              I agree to the <Link href="/privacy?from=auth" className={styles.termsLink}>Privacy Policy</Link> and <Link href="/terms?from=auth" className={styles.termsLink}>Terms of Service</Link>.
             </label>
           </div>
           {errors.terms && <p className={styles.fieldErrorTerms}>{errors.terms}</p>}
@@ -497,7 +497,7 @@ export default function SignupForm() {
             className={styles.termsCheckbox}
           />
           <label htmlFor="terms" className={styles.termsLabel}>
-            I agree to the <a href="#" className={styles.termsLink}>Privacy Policy</a> and <a href="#" className={styles.termsLink}>Terms of Service</a>.
+            I agree to the <Link href="/privacy?from=auth" className={styles.termsLink}>Privacy Policy</Link> and <Link href="/terms?from=auth" className={styles.termsLink}>Terms of Service</Link>.
           </label>
         </div>
         {errors.terms && <p className={styles.fieldErrorTerms}>{errors.terms}</p>}

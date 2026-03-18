@@ -240,6 +240,12 @@ export default function LoginForm() {
           <span style={{ fontSize: "14px" }}>🛡️</span> HIPAA Compliant &amp; Secure Data Processing
         </p>
 
+        <div style={{ textAlign: "center", marginTop: "12px", fontSize: "12px", color: "#6b7280" }}>
+          <Link href="/privacy?from=auth" style={{ color: '#4361ee', textDecoration: 'none', fontWeight: 500 }}>Privacy Policy</Link>
+          <span style={{ margin: "0 8px" }}>|</span>
+          <Link href="/terms?from=auth" style={{ color: '#4361ee', textDecoration: 'none', fontWeight: 500 }}>Terms of Service</Link>
+        </div>
+
         <div className="divider">OR</div>
 
         <button
