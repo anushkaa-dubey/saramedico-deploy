@@ -10,7 +10,6 @@ export default function AdminLayout({ children }) {
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        // Check auth synchronously from localStorage — no network call
         const token = localStorage.getItem("authToken");
         if (!token) {
             router.replace("/auth/login");
@@ -27,18 +26,13 @@ export default function AdminLayout({ children }) {
             }
         } catch (_) { }
 
-        if (!role) {
-            // No cached user — just let them in if token exists
-            setIsLoading(false);
-            return;
-        }
+        if (!role) { setIsLoading(false); return; }
 
         if (role === "admin" || role === "administrator") {
             setIsLoading(false);
             return;
         }
 
-        // Wrong role — redirect to correct dashboard
         if (role === "doctor") router.replace("/dashboard/doctor");
         else if (role === "patient") router.replace("/dashboard/patient");
         else if (role === "hospital") router.replace("/dashboard/hospital");
@@ -47,7 +41,11 @@ export default function AdminLayout({ children }) {
 
     if (isLoading) {
         return (
-            <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh", background: "#f8fafc", color: "#64748b", fontWeight: "bold" }}>
+            <div style={{
+                display: "flex", justifyContent: "center", alignItems: "center",
+                height: "100vh", background: "#f8fafc",
+                color: "#64748b", fontWeight: "bold"
+            }}>
                 Loading Dashboard...
             </div>
         );
@@ -56,9 +54,10 @@ export default function AdminLayout({ children }) {
     return (
         <div className={styles.container}>
             <AdminSidebar />
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: "100vh" }}>
+
+            <div className={styles.contentWrapper}>
                 <AdminTopbar />
-                <main className={styles.main} style={{ flex: 1, overflowY: "auto" }}>
+                <main className={styles.main}>
                     {children}
                 </main>
             </div>

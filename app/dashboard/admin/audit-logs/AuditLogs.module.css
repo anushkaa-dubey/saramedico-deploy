@@ -1,0 +1,317 @@
+.pageWrapper {
+    padding: 24px;
+}
+
+/* ── Page Header ── */
+.pageHeader {
+    margin-bottom: 20px;
+}
+
+.heading {
+    font-size: 22px;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0;
+}
+
+.subtext {
+    font-size: 13px;
+    color: #94a3b8;
+    margin: 4px 0 0;
+}
+
+/* ── Stats Grid ── */
+.statsGrid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.statCard {
+    background: #ffffff;
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px solid #eef2f7;
+    transition: box-shadow 0.2s;
+}
+
+.statCard:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.statLabel {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #94a3b8;
+    margin: 0 0 8px;
+}
+
+.statValue {
+    font-size: 28px;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0;
+    line-height: 1;
+}
+
+/* ── Main Card ── */
+.card {
+    background: #ffffff;
+    border: 1px solid #eef2f7;
+    border-radius: 14px;
+    padding: 20px;
+    overflow: hidden;
+}
+
+/* ── Filters Row ── */
+.filtersRow {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.filtersTitle {
+    font-size: 14px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+    flex: 1;
+    min-width: 120px;
+}
+
+.filterSelect,
+.filterDate {
+    height: 38px;
+    padding: 0 12px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    background: #fff;
+    font-size: 13px;
+    color: #334155;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.filterSelect:focus,
+.filterDate:focus {
+    border-color: #359aff;
+    box-shadow: 0 0 0 3px rgba(53, 154, 255, 0.1);
+}
+
+/* ── Table ── */
+.tableWrapper {
+    overflow-x: auto;
+    width: 100%;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    min-width: 600px;
+}
+
+.table th {
+    text-align: left;
+    color: #94a3b8;
+    font-weight: 600;
+    padding: 10px 14px;
+    border-bottom: 1px solid #eef2f7;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+}
+
+.table td {
+    padding: 14px;
+    border-bottom: 1px solid #f8fafc;
+    vertical-align: middle;
+}
+
+.table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.table tbody tr:hover {
+    background: #fafbfc;
+}
+
+
+.timestamp {
+    font-size: 12px;
+    color: #64748b;
+    white-space: nowrap;
+}
+
+.identity {
+    font-weight: 600;
+    color: #0f172a;
+    font-size: 13px;
+}
+
+.actionBadge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+}
+
+.resourceType {
+    color: #475569;
+    font-weight: 600;
+    font-size: 13px;
+}
+
+.ipAddress {
+    font-family: "Courier New", monospace;
+    color: #94a3b8;
+    font-size: 12px;
+}
+
+.stateMsg {
+    padding: 48px;
+    text-align: center;
+    color: #94a3b8;
+    font-size: 14px;
+}
+
+/* ── Mobile cards (hidden on desktop) ── */
+.mobileList {
+    display: none;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.logCard {
+    background: #f8fafc;
+    border: 1px solid #eef2f7;
+    border-radius: 12px;
+    padding: 14px 16px;
+    border-left-width: 4px;
+    border-left-style: solid;
+}
+
+.logCardTop {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+}
+
+.logCardBottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+/* ═══════════════════════════
+   TABLET
+═══════════════════════════ */
+@media (max-width: 1024px) and (min-width: 769px) {
+    .statsGrid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .pageWrapper {
+        padding: 20px;
+    }
+
+    .card {
+        padding: 16px;
+    }
+}
+
+/* ═══════════════════════════
+   MOBILE  ≤ 768px
+═══════════════════════════ */
+@media (max-width: 768px) {
+    .pageWrapper {
+        padding: 16px;
+    }
+
+    .heading {
+        font-size: 18px;
+    }
+
+    .subtext {
+        font-size: 12px;
+    }
+
+    /* Stats: 2-col on mobile */
+    .statsGrid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        margin-bottom: 16px;
+    }
+
+    .statCard {
+        padding: 14px;
+    }
+
+    .statValue {
+        font-size: 22px;
+    }
+
+    .statLabel {
+        font-size: 10px;
+    }
+
+    /* Filters: stack */
+    .filtersRow {
+        gap: 8px;
+    }
+
+    .filtersTitle {
+        width: 100%;
+        flex: unset;
+    }
+
+    .filterSelect,
+    .filterDate {
+        flex: 1;
+        min-width: 0;
+        width: 100%;
+        font-size: 12px;
+    }
+
+    /* Hide desktop table, show mobile cards */
+    .tableWrapper {
+        display: none;
+    }
+
+    .mobileList {
+        display: flex;
+    }
+
+    .card {
+        padding: 14px;
+    }
+}
+
+@media (max-width: 480px) {
+    .statsGrid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+
+    .statValue {
+        font-size: 20px;
+    }
+
+    .pageWrapper {
+        padding: 12px;
+    }
+}

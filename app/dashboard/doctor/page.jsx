@@ -494,6 +494,9 @@ export default function DoctorDashboard() {
                 </div>
 
                 <div className={styles.calendarGrid}>
+                  {Array.from({ length: (new Date(currentYear, currentDate.getMonth(), 1).getDay() + 6) % 7 }).map((_, i) => (
+                    <div key={`empty-${i}`} className={styles.calendarCell} style={{ visibility: 'hidden' }}></div>
+                  ))}
                   {daysInMonth.map(day => {
                     const dayDate = new Date(currentYear, currentDate.getMonth(), day);
                     const isToday = isTodayMonth && day === todayDate;

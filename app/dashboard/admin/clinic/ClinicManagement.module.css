@@ -1,0 +1,258 @@
+.pageWrapper {
+    padding: 24px;
+}
+
+.pageHeader {
+    margin-bottom: 20px;
+}
+
+.heading {
+    font-size: 22px;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 0;
+}
+
+.subtext {
+    font-size: 13px;
+    color: #94a3b8;
+    margin: 4px 0 0;
+}
+
+/* ── CARD ── */
+.card {
+    background: #fff;
+    border: 1px solid #eef2f7;
+    border-radius: 14px;
+    padding: 20px;
+    overflow: hidden;
+}
+
+.cardHeader {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.cardHeader h3 {
+    font-size: 15px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+}
+
+/* ── TABLE ── */
+.tableWrapper {
+    overflow-x: auto;
+    width: 100%;
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    min-width: 420px;
+}
+
+.table th {
+    text-align: left;
+    color: #94a3b8;
+    font-weight: 600;
+    padding: 10px 14px;
+    border-bottom: 1px solid #eef2f7;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+}
+
+.centerCol {
+    text-align: center !important;
+}
+
+.table td {
+    padding: 14px;
+    border-bottom: 1px solid #f8fafc;
+    vertical-align: middle;
+}
+
+.table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.table tbody tr:hover {
+    background: #fafbfc;
+}
+
+.stateMsg {
+    padding: 32px;
+    text-align: center;
+    color: #94a3b8;
+    font-size: 14px;
+}
+
+/* ── ORG CELL ── */
+.orgCell {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.orgIcon {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    background: #eff6ff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.orgName {
+    font-weight: 600;
+    color: #0f172a;
+    font-size: 13px;
+}
+
+/* ── BADGES ── */
+.badgeBlue {
+    display: inline-block;
+    background: #eff6ff;
+    color: #2563eb;
+    padding: 4px 14px;
+    border-radius: 99px;
+    font-size: 13px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.badgeGreen {
+    display: inline-block;
+    background: #f0fdf4;
+    color: #16a34a;
+    padding: 4px 14px;
+    border-radius: 99px;
+    font-size: 13px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+/* ── MOBILE CARDS (hidden on desktop) ── */
+.mobileList {
+    display: none;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.statCard {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #f8fafc;
+    border: 1px solid #eef2f7;
+    border-radius: 12px;
+    padding: 14px 16px;
+    gap: 12px;
+}
+
+.statCardLeft {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    min-width: 0;
+}
+
+.statCardLeft .orgName {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.statCardRight {
+    display: flex;
+    gap: 12px;
+    flex-shrink: 0;
+    align-items: center;
+}
+
+.statItem {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.statLabel {
+    font-size: 10px;
+    font-weight: 700;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+/* ═══════════════════════
+   TABLET
+═══════════════════════ */
+@media (max-width: 1024px) and (min-width: 769px) {
+    .pageWrapper {
+        padding: 20px;
+    }
+
+    .card {
+        padding: 16px;
+    }
+
+    .table th,
+    .table td {
+        padding: 12px 10px;
+        font-size: 12px;
+    }
+}
+
+/* ═══════════════════════
+   MOBILE  ≤ 768px
+═══════════════════════ */
+@media (max-width: 768px) {
+    .pageWrapper {
+        padding: 16px;
+    }
+
+    .heading {
+        font-size: 18px;
+    }
+
+    /* hide desktop table, show mobile cards */
+    .tableWrapper {
+        display: none;
+    }
+
+    .mobileList {
+        display: flex;
+    }
+}
+
+@media (max-width: 480px) {
+    .pageWrapper {
+        padding: 12px;
+    }
+
+    .heading {
+        font-size: 16px;
+    }
+
+    .statCard {
+        padding: 12px;
+    }
+
+    .orgIcon {
+        width: 30px;
+        height: 30px;
+    }
+
+    .statCardRight {
+        gap: 8px;
+    }
+}

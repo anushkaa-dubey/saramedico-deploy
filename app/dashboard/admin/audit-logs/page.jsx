@@ -1,39 +1,39 @@
 "use client";
+
 import { useState, useEffect } from "react";
-import styles from "../AdminDashboard.module.css";
+import styles from "./AuditLogs.module.css";
 import { fetchAdminAuditLogs } from "@/services/admin";
 import { motion } from "framer-motion";
+
+const SEVERITY_COLORS = {
+    critical: "#ef4444",
+    warning: "#f59e0b",
+    info: "#3b82f6",
+    default: "#64748b",
+};
+
+function severityColor(s) {
+    return SEVERITY_COLORS[(s || "").toLowerCase()] || SEVERITY_COLORS.default;
+}
 
 export default function AuditLogsPage() {
     const [allLogs, setAllLogs] = useState([]);
     const [filteredLogs, setFilteredLogs] = useState([]);
     const [insights, setInsights] = useState({
-        total_events_24h: 0,
-        new_users_24h: 0,
-        new_doctors_24h: 0,
-        new_hospitals_24h: 0
+        total_events_24h: 0, new_users_24h: 0,
+        new_doctors_24h: 0, new_hospitals_24h: 0,
     });
     const [loading, setLoading] = useState(true);
+    const [filter, setFilter] = useState({ action: "", resource_type: "", date: "" });
 
-    const [filter, setFilter] = useState({
-        action: "",
-        resource_type: "",
-        date: ""
-    });
-
-    useEffect(() => {
-        loadLogs();
-    }, []);
-
-    useEffect(() => {
-        applyFilters();
-    }, [filter, allLogs]);
+    useEffect(() => { loadLogs(); }, []);
+    useEffect(() => { applyFilters(); }, [filter, allLogs]);
 
     const loadLogs = async () => {
         setLoading(true);
         try {
             const data = await fetchAdminAuditLogs();
-            if (data && data.logs) {
+            if (data?.logs) {
                 setAllLogs(data.logs);
                 setInsights(data.insights || insights);
             } else if (Array.isArray(data)) {
@@ -48,85 +48,60 @@ export default function AuditLogsPage() {
     };
 
     const applyFilters = () => {
-        let filtered = allLogs;
-
-        if (filter.action) {
-            filtered = filtered.filter(log => log.action === filter.action);
-        }
-
-        if (filter.resource_type) {
-            filtered = filtered.filter(log => log.resource_type === filter.resource_type);
-        }
-
-        if (filter.date) {
-            filtered = filtered.filter(log => {
-                const logDate = new Date(log.timestamp).toISOString().split('T')[0];
-                return logDate === filter.date;
-            });
-        }
-
-        setFilteredLogs(filtered);
+        let f = allLogs;
+        if (filter.action) f = f.filter(l => l.action === filter.action);
+        if (filter.resource_type) f = f.filter(l => l.resource_type === filter.resource_type);
+        if (filter.date) f = f.filter(l =>
+            new Date(l.timestamp).toISOString().split("T")[0] === filter.date
+        );
+        setFilteredLogs(f);
     };
 
-    const getSeverityColor = (severity) => {
-        switch (severity?.toLowerCase()) {
-            case "critical": return "#ef4444";
-            case "warning": return "#f59e0b";
-            case "info": return "#3b82f6";
-            default: return "#64748b";
-        }
-    };
+    const fmtTime = (ts) => new Date(ts).toLocaleString(undefined, {
+        month: "short", day: "numeric", hour: "2-digit", minute: "2-digit"
+    });
+
+    const statItems = [
+        { label: "Events (24h)", value: insights.total_events_24h, color: "#0f172a" },
+        { label: "Users Onboarding", value: insights.new_users_24h, color: "#3b82f6" },
+        { label: "Doctors Today", value: insights.new_doctors_24h, color: "#10b981" },
+        { label: "New Hospitals", value: insights.new_hospitals_24h, color: "#8b5cf6" },
+    ];
 
     return (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-            {/* Page Header */}
-            <div className={styles.titleRow}>
-                <div>
-                    <h2 className={styles.heading}>Security Audit Center</h2>
-                    <p className={styles.subtext}>
-                        Global monitoring of application activity and PHI access logs
-                    </p>
-                </div>
+        <motion.div
+            className={styles.pageWrapper}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+        >
+            {/* Header */}
+            <div className={styles.pageHeader}>
+                <h2 className={styles.heading}>Security Audit Center</h2>
+                <p className={styles.subtext}>
+                    Global monitoring of application activity and PHI access logs
+                </p>
             </div>
 
-            {/* Insight Stats */}
-            <div className={styles.statsGrid} style={{ 
-                display: "grid", 
-                gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", 
-                gap: "16px",
-                marginTop: "24px"
-            }}>
-                <div className={styles.statCard} style={{ background: "#ffffff", padding: "20px", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
-                    <p style={{ color: "#64748b", fontSize: "12px", fontWeight: "600", textTransform: "uppercase" }}>Events (24h)</p>
-                    <h3 style={{ fontSize: "24px", margin: "8px 0 0" }}>{insights.total_events_24h}</h3>
-                </div>
-                <div className={styles.statCard} style={{ background: "#ffffff", padding: "20px", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
-                    <p style={{ color: "#3b82f6", fontSize: "12px", fontWeight: "600", textTransform: "uppercase" }}>Users Onboarding</p>
-                    <h3 style={{ fontSize: "24px", margin: "8px 0 0", color: "#3b82f6" }}>{insights.new_users_24h}</h3>
-                </div>
-                <div className={styles.statCard} style={{ background: "#ffffff", padding: "20px", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
-                    <p style={{ color: "#10b981", fontSize: "12px", fontWeight: "600", textTransform: "uppercase" }}>Doctors Today</p>
-                    <h3 style={{ fontSize: "24px", margin: "8px 0 0", color: "#10b981" }}>{insights.new_doctors_24h}</h3>
-                </div>
-                <div className={styles.statCard} style={{ background: "#ffffff", padding: "20px", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
-                    <p style={{ color: "#8b5cf6", fontSize: "12px", fontWeight: "600", textTransform: "uppercase" }}>New Hospitals</p>
-                    <h3 style={{ fontSize: "24px", margin: "8px 0 0", color: "#8b5cf6" }}>{insights.new_hospitals_24h}</h3>
-                </div>
-            </div>
-
-            {/* Main Log Card */}
-            <div className={styles.card} style={{ marginTop: "24px" }}>
-                {/* Filters */}
-                <div style={{ display: "flex", gap: "16px", marginBottom: "20px", flexWrap: "wrap", alignItems: "center" }}>
-                    <div style={{ flex: 1 }}>
-                        <h4 style={{ margin: 0, fontSize: "14px" }}>System-Wide Audit Trail</h4>
+            {/* Stats */}
+            <div className={styles.statsGrid}>
+                {statItems.map(s => (
+                    <div key={s.label} className={styles.statCard}>
+                        <p className={styles.statLabel}>{s.label}</p>
+                        <h3 className={styles.statValue} style={{ color: s.color }}>{s.value}</h3>
                     </div>
-                    <select
-                        className={styles.input}
+                ))}
+            </div>
+
+            {/* Main Card */}
+            <div className={styles.card}>
+
+                {/* Filters */}
+                <div className={styles.filtersRow}>
+                    <h4 className={styles.filtersTitle}>System-Wide Audit Trail</h4>
+
+                    <select className={styles.filterSelect}
                         value={filter.action}
-                        onChange={(e) => setFilter({ ...filter, action: e.target.value })}
-                        style={{ width: "auto" }}
-                    >
+                        onChange={e => setFilter({ ...filter, action: e.target.value })}>
                         <option value="">All Actions</option>
                         <option value="create">Create</option>
                         <option value="update">Update</option>
@@ -135,12 +110,9 @@ export default function AuditLogsPage() {
                         <option value="export">Export</option>
                     </select>
 
-                    <select
-                        className={styles.input}
+                    <select className={styles.filterSelect}
                         value={filter.resource_type}
-                        onChange={(e) => setFilter({ ...filter, resource_type: e.target.value })}
-                        style={{ width: "auto" }}
-                    >
+                        onChange={e => setFilter({ ...filter, resource_type: e.target.value })}>
                         <option value="">All Resources</option>
                         <option value="user">User</option>
                         <option value="appointment">Appointment</option>
@@ -148,17 +120,13 @@ export default function AuditLogsPage() {
                         <option value="medical_record">Medical Records</option>
                     </select>
 
-                    <input
-                        type="date"
-                        className={styles.input}
+                    <input type="date" className={styles.filterDate}
                         value={filter.date}
-                        onChange={(e) => setFilter({ ...filter, date: e.target.value })}
-                        style={{ width: "auto" }}
-                    />
+                        onChange={e => setFilter({ ...filter, date: e.target.value })} />
                 </div>
 
-                {/* Table */}
-                <div style={{ overflowX: "auto" }}>
+                {/* ── Desktop Table ── */}
+                <div className={styles.tableWrapper}>
                     <table className={styles.table}>
                         <thead>
                             <tr>
@@ -171,52 +139,56 @@ export default function AuditLogsPage() {
                         </thead>
                         <tbody>
                             {loading ? (
-                                <tr>
-                                    <td colSpan="5" style={{ textAlign: "center", padding: "60px" }}>
-                                        <div className={styles.loadingSpinner}>Analyzing Audit Trail...</div>
-                                    </td>
-                                </tr>
+                                <tr><td colSpan="5" className={styles.stateMsg}>Analyzing Audit Trail…</td></tr>
                             ) : filteredLogs.length === 0 ? (
-                                <tr>
-                                    <td colSpan="5" style={{ textAlign: "center", padding: "40px" }}>
-                                        No audit entries discovered for the selected criteria.
+                                <tr><td colSpan="5" className={styles.stateMsg}>No audit entries found for the selected criteria.</td></tr>
+                            ) : filteredLogs.map(log => (
+                                <tr key={log.id} style={{ borderLeft: `3px solid ${severityColor(log.severity)}` }}>
+                                    <td className={styles.timestamp}>{fmtTime(log.timestamp)}</td>
+                                    <td className={styles.identity}>{log.user_name}</td>
+                                    <td>
+                                        <span className={styles.actionBadge} style={{
+                                            background: `${severityColor(log.severity)}18`,
+                                            color: severityColor(log.severity),
+                                        }}>
+                                            {(log.action || "").replace("_", " ")}
+                                        </span>
                                     </td>
+                                    <td className={styles.resourceType}>{log.resource_type}</td>
+                                    <td className={styles.ipAddress}>{log.ip_address || "Internal"}</td>
                                 </tr>
-                            ) : (
-                                filteredLogs.map((log) => (
-                                    <tr key={log.id} style={{ borderLeft: `3px solid ${getSeverityColor(log.severity)}` }}>
-                                        <td style={{ fontSize: "12px", color: "#64748b" }}>
-                                            {new Date(log.timestamp).toLocaleString(undefined, {
-                                                month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
-                                            })}
-                                        </td>
-                                        <td style={{ fontWeight: "500" }}>{log.user_name}</td>
-                                        <td>
-                                            <span style={{
-                                                padding: "4px 8px",
-                                                borderRadius: "6px",
-                                                fontSize: "11px",
-                                                fontWeight: "700",
-                                                textTransform: "uppercase",
-                                                letterSpacing: "0.5px",
-                                                background: `${getSeverityColor(log.severity)}15`,
-                                                color: getSeverityColor(log.severity)
-                                            }}>
-                                                {log.action.replace("_", " ")}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <span style={{ color: "#475569", fontWeight: "600" }}>{log.resource_type}</span>
-                                        </td>
-                                        <td style={{ fontFamily: "monospace", color: "#94a3b8", fontSize: "13px" }}>
-                                            {log.ip_address || "Internal"}
-                                        </td>
-                                    </tr>
-                                ))
-                            )}
+                            ))}
                         </tbody>
                     </table>
                 </div>
+
+                {/* ── Mobile Cards ── */}
+                <div className={styles.mobileList}>
+                    {loading ? (
+                        <div className={styles.stateMsg}>Analyzing Audit Trail…</div>
+                    ) : filteredLogs.length === 0 ? (
+                        <div className={styles.stateMsg}>No entries found.</div>
+                    ) : filteredLogs.map(log => (
+                        <div key={log.id} className={styles.logCard}
+                            style={{ borderLeftColor: severityColor(log.severity) }}>
+                            <div className={styles.logCardTop}>
+                                <span className={styles.identity}>{log.user_name}</span>
+                                <span className={styles.timestamp}>{fmtTime(log.timestamp)}</span>
+                            </div>
+                            <div className={styles.logCardBottom}>
+                                <span className={styles.actionBadge} style={{
+                                    background: `${severityColor(log.severity)}18`,
+                                    color: severityColor(log.severity),
+                                }}>
+                                    {(log.action || "").replace("_", " ")}
+                                </span>
+                                <span className={styles.resourceType}>{log.resource_type}</span>
+                                <span className={styles.ipAddress}>{log.ip_address || "Internal"}</span>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
             </div>
         </motion.div>
     );

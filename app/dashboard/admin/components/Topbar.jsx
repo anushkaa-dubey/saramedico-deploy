@@ -1,14 +1,12 @@
 "use client";
+
 import { useState, useEffect } from "react";
-import { User } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import styles from "./Topbar.module.css";
 import { fetchAdminSettings } from "@/services/admin";
 import NotificationBell from "@/app/dashboard/components/NotificationBell";
 
 export default function AdminTopbar() {
-    const router = useRouter();
     const [adminUser, setAdminUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
@@ -32,46 +30,29 @@ export default function AdminTopbar() {
         };
 
         loadProfile();
-
-        // Listen for profile updates from Settings page
         window.addEventListener("profile-updated", loadProfile);
         return () => window.removeEventListener("profile-updated", loadProfile);
     }, []);
 
-    const adminInitial = adminUser?.full_name ? adminUser.full_name.charAt(0).toUpperCase() : "A";
+    const adminInitial = adminUser?.full_name
+        ? adminUser.full_name.charAt(0).toUpperCase()
+        : "A";
 
     return (
         <header className={styles.topbar}>
-            <div className={styles.topActions} style={{ display: "flex", alignItems: "center", gap: "16px", marginLeft: "auto" }}>
+            <div className={styles.topActions}>
                 <NotificationBell />
-
-                <Link
-                    href="/dashboard/admin/settings"
-                    className={styles.profile}
-                    style={{ textDecoration: "none" }}
-                >
+                <Link href="/dashboard/admin/settings" className={styles.profile}>
                     <div className={styles.profileInfo}>
                         <span className={styles.adminName}>
                             {loading ? "..." : (adminUser?.full_name || "Admin")}
                         </span>
                         <small className={styles.role}>Administrator</small>
                     </div>
-
                     <div className={styles.avatar}>
-                        {adminUser?.photo_url ? (
-                            <img
-                                src={adminUser.photo_url}
-                                alt="Profile"
-                                style={{
-                                    width: "100%",
-                                    height: "100%",
-                                    borderRadius: "50%",
-                                    objectFit: "cover"
-                                }}
-                            />
-                        ) : (
-                            adminInitial
-                        )}
+                        {adminUser?.photo_url
+                            ? <img src={adminUser.photo_url} alt="Profile" />
+                            : adminInitial}
                     </div>
                 </Link>
             </div>

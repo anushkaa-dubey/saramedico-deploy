@@ -71,8 +71,11 @@ export default function CalendarView({ appointments = [] }) {
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '4px', textAlign: 'center' }}>
-                {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(d => (
-                    <span key={d} style={{ fontSize: '11px', fontWeight: '800', color: '#94a3b8', padding: '8px 0' }}>{d}</span>
+                {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, index) => (
+                    <span key={`header-${index}`} style={{ fontSize: '11px', fontWeight: '800', color: '#94a3b8', padding: '8px 0' }}>{d}</span>
+                ))}
+                {Array.from({ length: new Date(currentYear, currentDate.getMonth(), 1).getDay() }).map((_, i) => (
+                    <div key={`empty-${i}`} style={{ visibility: 'hidden' }}></div>
                 ))}
                 {daysInMonth.map((day) => {
                     const hasEvent = getDayAvailability(day) !== 'none';
