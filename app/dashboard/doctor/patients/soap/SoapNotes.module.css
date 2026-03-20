@@ -16,6 +16,12 @@
     }
 }
 
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
 .main {
     flex: 1;
     padding: 24px;
@@ -25,7 +31,7 @@
     animation: fadeIn 0.4s ease-out;
 }
 
-/* Patient Header Card */
+/* ── Patient Header Card ── */
 .patientHeader {
     background: #ffffff;
     border-radius: 12px;
@@ -34,8 +40,9 @@
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 32px;
+    gap: 24px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+    margin: 16px 16px 0;
 }
 
 .pName {
@@ -45,7 +52,7 @@
 }
 
 .pMeta {
-    font-size: 14px;
+    font-size: 13px;
     color: #94a3b8;
     font-weight: 500;
 }
@@ -54,43 +61,48 @@
     display: flex;
     flex-direction: column;
     border-left: 1px solid #eef2f7;
-    padding-left: 24px;
+    padding-left: 20px;
 }
 
 .pLabel {
-    font-size: 11px;
+    font-size: 10px;
     color: #94a3b8;
     text-transform: uppercase;
     font-weight: 600;
-    margin-bottom: 4px;
+    margin-bottom: 3px;
+    letter-spacing: 0.5px;
 }
 
 .pValue {
-    font-size: 14px;
+    font-size: 13px;
     color: #0f172a;
     font-weight: 600;
 }
 
-/* Grid Layout */
+/* ── Grid Layout ── */
 .contentGrid {
     display: grid;
     grid-template-columns: 2fr 1fr;
-    gap: 24px;
+    gap: 20px;
+    padding: 16px;
 }
 
 .leftCol {
     display: flex;
     flex-direction: column;
     gap: 20px;
+    min-width: 0;
+    /* prevent grid blowout */
 }
 
 .rightCol {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 16px;
+    min-width: 0;
 }
 
-/* SOAP Section */
+/* ── SOAP Card ── */
 .card {
     background: #ffffff;
     border-radius: 12px;
@@ -103,10 +115,12 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 10px;
 }
 
 .headerTitle {
-    font-size: 16px;
+    font-size: 15px;
     font-weight: 700;
     color: #0f172a;
     display: flex;
@@ -132,50 +146,46 @@
     color: #0f172a;
 }
 
+/* ── SOAP Sections ── */
 .soapSection {
-    margin-bottom: 24px;
+    margin-bottom: 20px;
 }
 
 .sectionLabel {
-    font-size: 12px;
-    font-weight: 600;
-    color: #94a3b8;
-    /* or nice blue like the image usually implies headings */
-    color: #6366f1;
-    /* Using a subtle purple-blue from image hint, or stick to slate */
+    font-size: 11px;
+    font-weight: 700;
     color: #94a3b8;
     text-transform: uppercase;
+    letter-spacing: 0.6px;
     margin-bottom: 8px;
     display: block;
 }
 
-/* The text blocks in the image have a light gray background */
 .textBlock {
     background: #f1f5f9;
     border-radius: 10px;
-    padding: 16px;
-    font-size: 14px;
+    padding: 14px 16px;
+    font-size: 13px;
     color: #334155;
-    line-height: 1.6;
+    line-height: 1.65;
 }
 
 .listBlock {
     background: #f1f5f9;
     border-radius: 10px;
-    padding: 16px 16px 16px 32px;
-    /* Extra left padding for bullets */
-    font-size: 14px;
+    padding: 14px 16px 14px 32px;
+    font-size: 13px;
     color: #334155;
-    line-height: 1.6;
+    line-height: 1.65;
 }
 
 .listBlock li {
     margin-bottom: 4px;
 }
 
-/* Sidebar Sections */
+/* ── Sidebar ── */
 .summaryHeader {
-    font-size: 16px;
+    font-size: 15px;
     font-weight: 700;
     color: #0f172a;
     display: flex;
@@ -185,25 +195,26 @@
 }
 
 .subHeader {
-    font-size: 11px;
-    font-weight: 600;
+    font-size: 10px;
+    font-weight: 700;
     color: #94a3b8;
     text-transform: uppercase;
-    margin-bottom: 12px;
+    letter-spacing: 0.6px;
+    margin-bottom: 10px;
 }
 
 .tagsRow {
     display: flex;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 8px;
     margin-bottom: 12px;
 }
 
 .tag {
-    padding: 6px 12px;
+    padding: 5px 12px;
     border-radius: 6px;
-    font-size: 12px;
-    font-weight: 600;
+    font-size: 11px;
+    font-weight: 700;
 }
 
 .tagRed {
@@ -216,7 +227,6 @@
     color: #d97706;
 }
 
-/* Search */
 .searchBox {
     width: 100%;
     height: 40px;
@@ -228,23 +238,23 @@
     margin-bottom: 20px;
 }
 
-/* Info Cards */
+/* ── Info Cards ── */
 .infoCard {
     border: 1px solid #e2e8f0;
     border-radius: 10px;
-    padding: 16px;
-    margin-bottom: 16px;
+    padding: 14px 16px;
+    margin-bottom: 12px;
     background: #ffffff;
 }
 
 .infoCardHeader {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
 }
 
 .infoTitle {
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 700;
     color: #0f172a;
 }
@@ -255,9 +265,9 @@
 }
 
 .infoText {
-    font-size: 13px;
+    font-size: 12px;
     color: #64748b;
-    line-height: 1.5;
+    line-height: 1.6;
 }
 
 .addIcon {
@@ -266,9 +276,564 @@
     cursor: pointer;
 }
 
-/* Responsive */
+/* ═══════════════════════════════════
+   TABLET  ( ≤ 1024px )
+═══════════════════════════════════ */
 @media (max-width: 1024px) {
     .contentGrid {
         grid-template-columns: 1fr;
+    }
+
+    /* Move sidebar above SOAP on tablet so the actions are easy to reach */
+    .rightCol {
+        order: -1;
+    }
+
+    .patientHeader {
+        gap: 16px;
+    }
+
+    .pDetailGroup {
+        border-left: none;
+        padding-left: 0;
+        border-top: 1px solid #eef2f7;
+        padding-top: 10px;
+    }
+}
+
+/* ═══════════════════════════════════
+   MOBILE  ( ≤ 640px )
+═══════════════════════════════════ */
+@media (max-width: 640px) {
+
+    /* ── Page wrapper ── */
+    .contentGrid {
+        grid-template-columns: 1fr;
+        padding: 12px;
+        gap: 12px;
+    }
+
+    .rightCol {
+        order: -1;
+        /* Session details first */
+    }
+
+    /* ── Patient header — stack vertically ── */
+    .patientHeader {
+        margin: 12px 12px 0;
+        padding: 16px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+        border-radius: 10px;
+    }
+
+    /* Avatar + name row stays horizontal */
+    .patientHeader>div:first-child {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        width: 100%;
+    }
+
+    .pName {
+        font-size: 16px;
+    }
+
+    /* Detail groups: horizontal scroll row on mobile */
+    .pDetailGroup {
+        border-left: none;
+        padding-left: 0;
+        border-top: none;
+        padding-top: 0;
+        flex-direction: row;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .pDetailGroup .pLabel::after {
+        content: ":";
+    }
+
+    .pLabel {
+        font-size: 10px;
+        margin-bottom: 0;
+    }
+
+    .pValue {
+        font-size: 12px;
+    }
+
+    /* ── SOAP card ── */
+    .card {
+        padding: 16px;
+        border-radius: 10px;
+    }
+
+    .cardHeader {
+        margin-bottom: 16px;
+    }
+
+    .headerTitle {
+        font-size: 14px;
+    }
+
+    .textBlock {
+        padding: 12px;
+        font-size: 13px;
+    }
+
+    .soapSection {
+        margin-bottom: 16px;
+    }
+
+    /* ── Sidebar card ── */
+    .summaryHeader {
+        font-size: 14px;
+        margin-bottom: 12px;
+    }
+
+    /* Summary header row — stack PDF button below title on very small screens */
+    .summaryHeader {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .infoCard {
+        padding: 12px 14px;
+    }
+
+    .infoText {
+        font-size: 12px;
+    }
+
+    /* ── Tags ── */
+    .tagsRow {
+        gap: 6px;
+    }
+
+    .tag {
+        font-size: 10px;
+        padding: 4px 10px;
+    }
+}
+
+.container {
+    display: flex;
+    min-height: 100vh;
+    background: #f8fafc;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.main {
+    flex: 1;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    animation: fadeIn 0.4s ease-out;
+}
+
+/* ── Patient Header Card ── */
+.patientHeader {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 20px 24px;
+    border: 1px solid #eef2f7;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 24px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+    margin: 16px 16px 0;
+}
+
+.pName {
+    font-size: 18px;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.pMeta {
+    font-size: 13px;
+    color: #94a3b8;
+    font-weight: 500;
+}
+
+.pDetailGroup {
+    display: flex;
+    flex-direction: column;
+    border-left: 1px solid #eef2f7;
+    padding-left: 20px;
+}
+
+.pLabel {
+    font-size: 10px;
+    color: #94a3b8;
+    text-transform: uppercase;
+    font-weight: 600;
+    margin-bottom: 3px;
+    letter-spacing: 0.5px;
+}
+
+.pValue {
+    font-size: 13px;
+    color: #0f172a;
+    font-weight: 600;
+}
+
+/* ── Grid Layout ── */
+.contentGrid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 20px;
+    padding: 16px;
+}
+
+.leftCol {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    min-width: 0;
+    /* prevent grid blowout */
+}
+
+.rightCol {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 0;
+}
+
+/* ── SOAP Card ── */
+.card {
+    background: #ffffff;
+    border-radius: 12px;
+    border: 1px solid #eef2f7;
+    padding: 24px;
+}
+
+.cardHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.headerTitle {
+    font-size: 15px;
+    font-weight: 700;
+    color: #0f172a;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.editBtn {
+    height: 32px;
+    padding: 0 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #ffffff;
+    color: #64748b;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.editBtn:hover {
+    border-color: #cbd5e1;
+    color: #0f172a;
+}
+
+/* ── SOAP Sections ── */
+.soapSection {
+    margin-bottom: 20px;
+}
+
+.sectionLabel {
+    font-size: 11px;
+    font-weight: 700;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin-bottom: 8px;
+    display: block;
+}
+
+.textBlock {
+    background: #f1f5f9;
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 13px;
+    color: #334155;
+    line-height: 1.65;
+}
+
+.listBlock {
+    background: #f1f5f9;
+    border-radius: 10px;
+    padding: 14px 16px 14px 32px;
+    font-size: 13px;
+    color: #334155;
+    line-height: 1.65;
+}
+
+.listBlock li {
+    margin-bottom: 4px;
+}
+
+/* ── Sidebar ── */
+.summaryHeader {
+    font-size: 15px;
+    font-weight: 700;
+    color: #0f172a;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.subHeader {
+    font-size: 10px;
+    font-weight: 700;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin-bottom: 10px;
+}
+
+.tagsRow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.tag {
+    padding: 5px 12px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.tagRed {
+    background: #fee2e2;
+    color: #ef4444;
+}
+
+.tagYellow {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.searchBox {
+    width: 100%;
+    height: 40px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 0 12px;
+    font-size: 13px;
+    background: #ffffff;
+    margin-bottom: 20px;
+}
+
+/* ── Info Cards ── */
+.infoCard {
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+    background: #ffffff;
+}
+
+.infoCardHeader {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 6px;
+}
+
+.infoTitle {
+    font-size: 13px;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.infoIcon {
+    color: #94a3b8;
+    font-size: 14px;
+}
+
+.infoText {
+    font-size: 12px;
+    color: #64748b;
+    line-height: 1.6;
+}
+
+.addIcon {
+    color: #cbd5e1;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+/* ═══════════════════════════════════
+   TABLET  ( ≤ 1024px )
+═══════════════════════════════════ */
+@media (max-width: 1024px) {
+    .contentGrid {
+        grid-template-columns: 1fr;
+    }
+
+    /* Move sidebar above SOAP on tablet so the actions are easy to reach */
+    .rightCol {
+        order: -1;
+    }
+
+    .patientHeader {
+        gap: 16px;
+    }
+
+    .pDetailGroup {
+        border-left: none;
+        padding-left: 0;
+        border-top: 1px solid #eef2f7;
+        padding-top: 10px;
+    }
+}
+
+/* ═══════════════════════════════════
+   MOBILE  ( ≤ 640px )
+═══════════════════════════════════ */
+@media (max-width: 640px) {
+
+    /* ── Page wrapper ── */
+    .contentGrid {
+        grid-template-columns: 1fr;
+        padding: 12px;
+        gap: 12px;
+    }
+
+    .rightCol {
+        order: -1;
+        /* Session details first */
+    }
+
+    /* ── Patient header — stack vertically ── */
+    .patientHeader {
+        margin: 12px 12px 0;
+        padding: 16px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+        border-radius: 10px;
+    }
+
+    /* Avatar + name row stays horizontal */
+    .patientHeader>div:first-child {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        width: 100%;
+    }
+
+    .pName {
+        font-size: 16px;
+    }
+
+    /* Detail groups: horizontal scroll row on mobile */
+    .pDetailGroup {
+        border-left: none;
+        padding-left: 0;
+        border-top: none;
+        padding-top: 0;
+        flex-direction: row;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .pDetailGroup .pLabel::after {
+        content: ":";
+    }
+
+    .pLabel {
+        font-size: 10px;
+        margin-bottom: 0;
+    }
+
+    .pValue {
+        font-size: 12px;
+    }
+
+    /* ── SOAP card ── */
+    .card {
+        padding: 16px;
+        border-radius: 10px;
+    }
+
+    .cardHeader {
+        margin-bottom: 16px;
+    }
+
+    .headerTitle {
+        font-size: 14px;
+    }
+
+    .textBlock {
+        padding: 12px;
+        font-size: 13px;
+    }
+
+    .soapSection {
+        margin-bottom: 16px;
+    }
+
+    /* ── Sidebar card ── */
+    .summaryHeader {
+        font-size: 14px;
+        margin-bottom: 12px;
+    }
+
+    /* Summary header row — stack PDF button below title on very small screens */
+    .summaryHeader {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .infoCard {
+        padding: 12px 14px;
+    }
+
+    .infoText {
+        font-size: 12px;
+    }
+
+    /* ── Tags ── */
+    .tagsRow {
+        gap: 6px;
+    }
+
+    .tag {
+        font-size: 10px;
+        padding: 4px 10px;
     }
 }
