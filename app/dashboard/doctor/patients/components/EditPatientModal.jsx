@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import styles from "./OnboardPatientModal.module.css"; // Reuse the same styles
+import styles from "./OnboardPatientModal.module.css";
 import { fetchPatientForDoctor, updatePatientForDoctor } from "@/services/doctor";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
@@ -31,6 +31,20 @@ export default function EditPatientModal({ isOpen, onClose, patientId, onSuccess
     const [loading, setLoading] = useState(false);
     const [fetching, setFetching] = useState(false);
     const [error, setError] = useState("");
+
+    useEffect(() => {
+        if (isOpen) {
+            document.body.style.overflow = "hidden";
+            document.documentElement.style.overflow = "hidden";
+        } else {
+            document.body.style.overflow = "";
+            document.documentElement.style.overflow = "";
+        }
+        return () => {
+            document.body.style.overflow = "";
+            document.documentElement.style.overflow = "";
+        };
+    }, [isOpen]);
 
     useEffect(() => {
         if (isOpen && patientId) {
@@ -81,7 +95,6 @@ export default function EditPatientModal({ isOpen, onClose, patientId, onSuccess
         e.preventDefault();
         setLoading(true);
         setError("");
-
         try {
             const payload = {
                 ...formData,
@@ -100,32 +113,38 @@ export default function EditPatientModal({ isOpen, onClose, patientId, onSuccess
     };
 
     return (
-        // ── Overlay: fixed, full-viewport, flex-centered ──
         <div
             style={{
                 position: "fixed",
-                inset: 0,
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
                 background: "rgba(15, 23, 42, 0.45)",
                 display: "flex",
                 alignItems: "flex-start",
                 justifyContent: "center",
                 zIndex: 9999,
-                padding: "40px 16px 24px",
+                padding: "40px 24px 24px",
+                overflowY: "auto",
+                // Force new stacking context so it escapes parent overflow
+                WebkitTransform: "translateZ(0)",
+                transform: "translateZ(0)",
             }}
             onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
         >
-            {/* ── Modal box: capped height, scrolls internally ── */}
             <div
                 style={{
                     background: "#ffffff",
                     borderRadius: "16px",
                     width: "100%",
                     maxWidth: "650px",
-                    maxHeight: "calc(100vh-80px)",
+                    maxHeight: "calc(100vh - 80px)",
                     display: "flex",
                     flexDirection: "column",
                     boxShadow: "0 20px 60px rgba(0, 0, 0, 0.18)",
                     overflow: "hidden",
+                    flexShrink: 0,
                 }}
             >
                 {/* ── Sticky header ── */}
@@ -140,7 +159,9 @@ export default function EditPatientModal({ isOpen, onClose, patientId, onSuccess
                     style={{ overflowY: "auto", flex: 1, padding: "24px" }}
                 >
                     {fetching ? (
-                        <div style={{ padding: "40px", textAlign: "center" }}>Loading patient details...</div>
+                        <div style={{ padding: "40px", textAlign: "center", color: "#64748b" }}>
+                            Loading patient details...
+                        </div>
                     ) : (
                         <form onSubmit={handleSubmit} className={styles.form}>
                             <div className={styles.field}>
@@ -250,7 +271,7 @@ export default function EditPatientModal({ isOpen, onClose, patientId, onSuccess
                             <div className={styles.field}>
                                 <label>Medical History</label>
                                 <textarea
-                                    style={{ width: "100%", padding: "12px", border: "1px solid #e2e8f0", borderRadius: "8px", minHeight: "80px" }}
+                                    style={{ width: "100%", padding: "12px", border: "1px solid #e2e8f0", borderRadius: "8px", minHeight: "80px", fontFamily: "inherit", fontSize: "14px", resize: "vertical", outline: "none", boxSizing: "border-box" }}
                                     value={formData.medicalHistory}
                                     onChange={(e) => setFormData({ ...formData, medicalHistory: e.target.value })}
                                 />
@@ -278,11 +299,7 @@ export default function EditPatientModal({ isOpen, onClose, patientId, onSuccess
 
                             <div className={styles.actions}>
                                 <button type="button" onClick={onClose} className={styles.cancelBtn}>Cancel</button>
-                                <button
-                                    type="submit"
-                                    className={styles.submitBtn}
-                                    disabled={loading}
-                                >
+                                <button type="submit" className={styles.submitBtn} disabled={loading}>
                                     {loading ? "Updating..." : "Save Changes"}
                                 </button>
                             </div>
