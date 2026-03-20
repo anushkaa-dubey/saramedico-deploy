@@ -107,10 +107,10 @@ export default function EditPatientModal({ isOpen, onClose, patientId, onSuccess
                 inset: 0,
                 background: "rgba(15, 23, 42, 0.45)",
                 display: "flex",
-                alignItems: "center",
+                alignItems: "flex-start",
                 justifyContent: "center",
                 zIndex: 9999,
-                padding: "16px",
+                padding: "40px 16px 24px",
             }}
             onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
         >
@@ -121,7 +121,7 @@ export default function EditPatientModal({ isOpen, onClose, patientId, onSuccess
                     borderRadius: "16px",
                     width: "100%",
                     maxWidth: "650px",
-                    maxHeight: "90vh",
+                    maxHeight: "calc(100vh-80px)",
                     display: "flex",
                     flexDirection: "column",
                     boxShadow: "0 20px 60px rgba(0, 0, 0, 0.18)",
