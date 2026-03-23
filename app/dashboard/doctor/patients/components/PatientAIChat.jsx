@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import styles from "./AIChat.module.css";
-import { createAIChatSession, fetchAIChatSessions, fetchAIChatHistory, renameAIChatSession } from "@/services/ai";
+import { createAIChatSession, fetchAIChatSessions, fetchAIChatHistory, renameAIChatSession, deleteAIChatSession } from "@/services/ai";
 import { getAuthHeaders, API_BASE_URL } from "@/services/apiConfig";
 import { checkAIPermission, grantAIAccess } from "@/services/doctor";
 
@@ -65,6 +65,36 @@ export default function PatientAIChat({ patientId, documentId = null, doctorId =
         try {
             const fetchedSessions = await fetchAIChatSessions(patientId);
             setSessions(fetchedSessions || []);
+
+            // If we have a documentId, try to find a session that matches the document
+            if (documentId) {
+                const docSession = fetchedSessions?.find(s => s.title?.includes("Analysis:") && s.title?.includes(documentId.substring(0,8)));
+                if (docSession) {
+                    const sId = targetSessionId || docSession.session_id;
+                    setConversationId(sId);
+                    const history = await fetchAIChatHistory(sId);
+                    if (history && history.messages) {
+                        const formattedMessages = history.messages.map((msg, idx) => ({
+                            id: msg.id || idx,
+                            role: msg.role === "doctor" ? "user" : (msg.role === "user" ? "user" : "assistant"),
+                            text: (msg.role === "doctor" || msg.role === "user") ? stripFormattingInstruction(msg.content) : msg.content,
+                            timestamp: msg.created_at,
+                            isError: false
+                        }));
+                        setMessages(formattedMessages);
+                    }
+                    setIsLoading(false);
+                    return;
+                } else {
+                    const newSession = await createAIChatSession(patientId, `Analysis: ${documentId.substring(0,8)}`);
+                    setConversationId(newSession.session_id);
+                    setMessages([]);
+                    const updatedSessions = await fetchAIChatSessions(patientId);
+                    setSessions(updatedSessions || []);
+                    setIsLoading(false);
+                    return;
+                }
+            }
 
             if (fetchedSessions && fetchedSessions.length > 0) {
                 const sId = targetSessionId || fetchedSessions[0].session_id;
@@ -133,6 +163,24 @@ export default function PatientAIChat({ patientId, documentId = null, doctorId =
             setError("Failed to rename session");
         } finally {
             setEditingSessionId(null);
+        }
+    };
+
+    const handleDeleteSession = async (sId, e) => {
+        e.stopPropagation();
+        if (!confirm("Are you sure you want to delete this chat session?")) return;
+
+        try {
+            await deleteAIChatSession(sId);
+            const updatedSessions = await fetchAIChatSessions(patientId);
+            setSessions(updatedSessions || []);
+            if (conversationId === sId) {
+                setConversationId(null);
+                setMessages([]);
+            }
+        } catch (err) {
+            console.error("Failed to delete session:", err);
+            setError("Failed to delete session");
         }
     };
 
@@ -440,6 +488,29 @@ Use bullet points for findings and markdown for structure. Do not include this i
                                                                 Rename
                                                             </button>
                                                         )}
+                                                        <button
+                                                            className={styles.deleteBtn}
+                                                            title="Delete Session"
+                                                            onClick={(e) => handleDeleteSession(s.session_id, e)}
+                                                            style={{ 
+                                                                color: "#ef4444", 
+                                                                display: "flex", 
+                                                                alignItems: "center", 
+                                                                gap: "4px",
+                                                                fontSize: "11px",
+                                                                fontWeight: "600",
+                                                                padding: "4px 8px",
+                                                                borderRadius: "6px",
+                                                                background: "rgba(239, 68, 68, 0.08)",
+                                                                border: "1px solid rgba(239, 68, 68, 0.1)",
+                                                                cursor: "pointer"
+                                                            }}
+                                                        >
+                                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                                                <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6" />
+                                                            </svg>
+                                                            Delete
+                                                        </button>
                                                         {editingSessionId !== s.session_id && (
                                                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: "#cbd5e0" }}>
                                                                 <path d="M9 18l6-6-6-6" />

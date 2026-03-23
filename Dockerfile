@@ -11,7 +11,10 @@ WORKDIR /app
 COPY package.json package-lock.json* ./
 
 # Install dependencies (clean install for reproducibility)
-RUN npm ci
+RUN npm config set fetch-retries 5 && \
+    npm config set fetch-retry-mintimeout 20000 && \
+    npm config set fetch-retry-maxtimeout 120000 && \
+    npm ci --network-timeout=1000000
 
 # ============= Stage 2: Builder =============
 FROM node:20-alpine AS builder

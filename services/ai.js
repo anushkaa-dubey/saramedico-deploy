@@ -54,6 +54,19 @@ export const renameAIChatSession = async (sessionId, newTitle) => {
 };
 
 /**
+ * Delete an AI Chat Session
+ * DELETE /api/v1/doctor/ai/chat/session/{session_id}
+ */
+export const deleteAIChatSession = async (sessionId) => {
+    const response = await fetch(`${API_BASE_URL}/doctor/ai/chat/session/${sessionId}`, {
+        method: "DELETE",
+        headers: getAuthHeaders(),
+    });
+    if (response.status === 204) return true;
+    return handleResponse(response);
+};
+
+/**
  * Send a message to the AI Chat (Streaming/SSE)
  * POST /api/v1/doctor/ai/chat/message
  * Note: This returns a raw response for the consumer to handle SSE stream.

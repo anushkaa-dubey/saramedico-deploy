@@ -107,18 +107,55 @@ function SoapNotesPage() {
     // ── Polling ───────────────────────────────────────────────────────────
     const startPolling = useCallback((id) => {
         if (pollTimerRef.current) clearInterval(pollTimerRef.current);
-        pollAttemptsRef.current = 0;
-        setDisplayAttempt(0);
+        let startTimestamp = localStorage.getItem(`soap_poll_start_${id}`);
+        if (!startTimestamp) {
+            startTimestamp = Date.now().toString();
+            localStorage.setItem(`soap_poll_start_${id}`, startTimestamp);
+        }
+        
+        const elapsedS = (Date.now() - parseInt(startTimestamp)) / 1000;
+        pollAttemptsRef.current = Math.max(0, Math.floor(elapsedS / (POLL_INTERVAL_MS / 1000)));
+        setDisplayAttempt(pollAttemptsRef.current);
+        
         setSoapStatus("processing");
         pollTimerRef.current = setInterval(async () => {
             pollAttemptsRef.current += 1;
             setDisplayAttempt(pollAttemptsRef.current);
-            if (pollAttemptsRef.current >= MAX_POLL_ATTEMPTS) { clearInterval(pollTimerRef.current); setSoapStatus("timeout"); return; }
+            if (pollAttemptsRef.current >= MAX_POLL_ATTEMPTS) { 
+                clearInterval(pollTimerRef.current); 
+                localStorage.removeItem(`soap_poll_start_${id}`);
+                setSoapStatus("timeout"); 
+                return; 
+            }
             try {
                 const result = await fetchSoapNote(id);
-                if (result.httpStatus === 200 && result.soap_note) { clearInterval(pollTimerRef.current); setSoap(result.soap_note); setEditedPatientSummary(result.soap_note.patient_summary || ""); setSoapStatus("completed"); }
-                else if (result.ai_status === "no_transcript" || result.status === "no_transcript") { clearInterval(pollTimerRef.current); setSoapStatus("no_transcript"); }
-            } catch (err) { clearInterval(pollTimerRef.current); setSoapStatus("error"); }
+                if (result.httpStatus === 200 && result.soap_note) { 
+                    clearInterval(pollTimerRef.current); 
+                    localStorage.removeItem(`soap_poll_start_${id}`);
+                    setSoap(result.soap_note); 
+                    setEditedPatientSummary(result.soap_note.patient_summary || ""); 
+                    setSoapStatus("completed"); 
+                }
+                else if (result.ai_status === "no_transcript" || result.status === "no_transcript") { 
+                    clearInterval(pollTimerRef.current); 
+                    localStorage.removeItem(`soap_poll_start_${id}`);
+                    setSoapStatus("no_transcript"); 
+                }
+                // If it's awaiting_transcript but we are polling, it might need an auto-trigger
+                else if (result.ai_status === "awaiting_transcript") {
+                    // Check if we already found the transcript, if so, trigger it
+                    try {
+                        const tsStatus = await fetchTranscriptStatus(id);
+                        if (tsStatus.status === "available") {
+                            await triggerSoapGeneration(id);
+                        }
+                    } catch (e) { /* silent check */ }
+                }
+            } catch (err) { 
+                clearInterval(pollTimerRef.current); 
+                localStorage.removeItem(`soap_poll_start_${id}`);
+                setSoapStatus("error"); 
+            }
         }, POLL_INTERVAL_MS);
     }, []);
 
@@ -131,11 +168,28 @@ function SoapNotesPage() {
                 setConsultation(data);
                 try {
                     const soapResult = await fetchSoapNote(consultationId);
-                    if (soapResult.httpStatus === 200 && soapResult.soap_note) { setSoap(soapResult.soap_note); setEditedPatientSummary(soapResult.soap_note.patient_summary || ""); setSoapStatus("completed"); setLoading(false); return; }
-                    if (soapResult.ai_status === "no_transcript" || soapResult.status === "no_transcript") { setSoapStatus("no_transcript"); setLoading(false); return; }
+                    if (soapResult.httpStatus === 200 && soapResult.soap_note) { 
+                        localStorage.removeItem(`soap_poll_start_${consultationId}`);
+                        setSoap(soapResult.soap_note); 
+                        setEditedPatientSummary(soapResult.soap_note.patient_summary || ""); 
+                        setSoapStatus("completed"); 
+                        setLoading(false); 
+                        return; 
+                    }
+                    if (soapResult.ai_status === "no_transcript" || soapResult.status === "no_transcript") { 
+                        localStorage.removeItem(`soap_poll_start_${consultationId}`);
+                        setSoapStatus("no_transcript"); 
+                        setLoading(false); 
+                        return; 
+                    }
                     if (soapResult.httpStatus === 202) { setSoapStatus("processing"); startPolling(consultationId); setLoading(false); return; }
                 } catch (soapErr) { /* silent */ }
-                if (data?.soap_note) { setSoap(data.soap_note); setEditedPatientSummary(data.soap_note.patient_summary || ""); setSoapStatus("completed"); }
+                if (data?.soap_note) { 
+                    localStorage.removeItem(`soap_poll_start_${consultationId}`);
+                    setSoap(data.soap_note); 
+                    setEditedPatientSummary(data.soap_note.patient_summary || ""); 
+                    setSoapStatus("completed"); 
+                }
                 else if (data?.status === "completed" && data?.ai_status === "processing") { startPolling(consultationId); }
                 setLoading(false);
             } catch (err) { setError("Could not load consultation. " + (err.message || "")); setLoading(false); }

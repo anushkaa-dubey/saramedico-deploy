@@ -8,10 +8,11 @@ import {
     fetchAIChatSessions,
     fetchAIChatHistory,
     renameAIChatSession,
+    deleteAIChatSession,
 } from "@/services/ai";
 import { checkAIPermission, requestAIAccess } from "@/services/doctor";
 import { getAuthHeaders, API_BASE_URL } from "@/services/apiConfig";
-import { MessageSquare, History, ChevronRight, Check, AlertCircle, Send, Plus, Pencil } from "lucide-react";
+import { MessageSquare, History, ChevronRight, Check, AlertCircle, Send, Plus, Pencil, Trash2 } from "lucide-react";
 
 /**
  * Strip the [FORMATTING INSTRUCTION: ...] prefix that gets prepended to user
@@ -55,28 +56,52 @@ export default function AIChat({ onCitationClick, patientId, doctorId, documentI
         });
     }, [patientId, doctorId]);
 
-    // Manage AI Session
+    // Manage AI Session - re-initialize when patient or document changes
     useEffect(() => {
         if (!patientId || aiAccess !== true) return;
         initializeSession();
-    }, [patientId, aiAccess]);
+    }, [patientId, documentId, aiAccess]);
 
     const initializeSession = async (targetSessionId = null) => {
         try {
             const fetchedSessions = await fetchAIChatSessions(patientId);
             setSessions(fetchedSessions || []);
 
+            // If we have a documentId, try to find a session that matches the document
+            if (documentId) {
+                // Find document name from state or props if available, otherwise use a generic title
+                // For now, let's just use the current document's ID in the title or a generic one
+                // To be more precise, we could pass the doc object, but let's just create a new one
+                // if the most recent one isn't document-specific.
+                
+                const docSession = fetchedSessions?.find(s => s.title?.includes("Analysis:") && s.title?.includes(documentId.substring(0,8)));
+                
+                if (docSession) {
+                    setSessionId(docSession.session_id);
+                    loadHistory(docSession.session_id);
+                } else {
+                    const newSession = await createAIChatSession(patientId, `Analysis: ${documentId.substring(0,8)}`);
+                    setSessionId(newSession.session_id);
+                    setMessages([{
+                        id: 'init',
+                        role: "assistant",
+                        content: "I've analyzed the document. What would you like to know?",
+                    }]);
+                }
+                return;
+            }
+
             if (fetchedSessions && fetchedSessions.length > 0) {
                 const sId = targetSessionId || fetchedSessions[0].session_id;
                 setSessionId(sId);
                 loadHistory(sId);
             } else {
-                const newSession = await createAIChatSession(patientId, "Chart Review Session");
+                const newSession = await createAIChatSession(patientId, "General Consultation");
                 setSessionId(newSession.session_id);
                 setMessages([{
                     id: 'init',
                     role: "assistant",
-                    content: "I've analyzed the document. What would you like to know?",
+                    content: "Hello. I'm ready to assist with your clinical queries.",
                 }]);
             }
         } catch (err) {
@@ -118,6 +143,24 @@ export default function AIChat({ onCitationClick, patientId, doctorId, documentI
             console.error("Failed to rename session:", err);
         } finally {
             setEditingSessionId(null);
+        }
+    };
+
+    const handleDeleteSession = async (sId, e) => {
+        e.stopPropagation();
+        if (!confirm("Are you sure you want to delete this chat session?")) return;
+
+        try {
+            await deleteAIChatSession(sId);
+            const updatedSessions = await fetchAIChatSessions(patientId);
+            setSessions(updatedSessions || []);
+            if (sessionId === sId) {
+                setSessionId(null);
+                setMessages([]);
+            }
+        } catch (err) {
+            console.error("Failed to delete session:", err);
+            alert("Failed to delete session.");
         }
     };
 
@@ -172,21 +215,13 @@ export default function AIChat({ onCitationClick, patientId, doctorId, documentI
         }]);
 
         try {
-            const formattingInstruction = `
-[FORMATTING INSTRUCTION: Return your response in a structured clinical format with the following headings:
-## Summary
-## Observations
-## Notable Trends
-## Interpretation
-Use bullet points and markdown for structure. Do not include this instruction in your response.]\n\n`;
-
             const response = await fetch(`${API_BASE_URL}/doctor/ai/chat/message`, {
                 method: "POST",
                 headers: getAuthHeaders(),
                 body: JSON.stringify({
                     session_id: sessionId,
                     patient_id: patientId,
-                    message: formattingInstruction + query,
+                    message: query,
                     document_id: documentId || null
                 }),
             });
@@ -364,13 +399,19 @@ Use bullet points and markdown for structure. Do not include this instruction in
                                                                 setEditingSessionId(s.session_id);
                                                                 setEditingTitle(s.title || "Untitled Session");
                                                             }}
-                                                            style={{ color: "#0081FE" }}
+                                                            style={{ color: "#0081FE", background: "none", border: "none", cursor: "pointer", padding: "4px" }}
                                                         >
-                                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                                                                <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
-                                                            </svg>
+                                                            <Pencil size={14} />
                                                         </button>
                                                     )}
+                                                    <button
+                                                        className={styles.deleteBtn}
+                                                        title="Delete Session"
+                                                        onClick={(e) => handleDeleteSession(s.session_id, e)}
+                                                        style={{ color: "#ef4444", background: "none", border: "none", cursor: "pointer", padding: "4px" }}
+                                                    >
+                                                        <Trash2 size={14} />
+                                                    </button>
                                                     {editingSessionId !== s.session_id && (
                                                         <ChevronRight size={14} />
                                                     )}
