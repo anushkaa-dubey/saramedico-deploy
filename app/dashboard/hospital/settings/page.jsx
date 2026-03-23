@@ -9,8 +9,9 @@ import {
   updateHospitalAdminProfile,
   uploadHospitalAvatar
 } from "@/services/hospital";
-import { fetchProfile } from "@/services/doctor"; // Use as fallback for admin name/email
+import { fetchProfile } from "@/services/doctor";
 import { logoutUser } from "@/services/auth";
+import { deleteMyAccount } from "@/services/auth";
 import { useRouter } from "next/navigation";
 import {
   Building2,
@@ -20,7 +21,8 @@ import {
   LogOut,
   CheckCircle,
   AlertTriangle,
-  Camera
+  Camera,
+  Trash2
 } from "lucide-react";
 // ── Component ──────────────────────────────────────────────────────────────
 export default function SettingsPage() {
@@ -31,6 +33,11 @@ export default function SettingsPage() {
   const [message, setMessage] = useState({ type: "", text: "" });
   const [activeTab, setActiveTab] = useState("profile");
   const [userRole, setUserRole] = useState(null);
+  // Delete state
+  const [showDeleteZone, setShowDeleteZone] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState("");
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
 
   const [hospitalInfo, setHospitalInfo] = useState({
     name: "",
@@ -161,6 +168,22 @@ export default function SettingsPage() {
     if (!window.confirm("Are you sure you want to sign out?")) return;
     await logoutUser();
     router.push("/auth/login");
+  };
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmText !== "DELETE") {
+      setDeleteError("Please type DELETE exactly to confirm.");
+      return;
+    }
+    setDeleting(true);
+    setDeleteError("");
+    try {
+      await deleteMyAccount();
+      router.push("/auth/login");
+    } catch (err) {
+      setDeleteError(err.message || "Failed to delete account. Please try again.");
+      setDeleting(false);
+    }
   };
 
   const tabs = [
@@ -508,6 +531,92 @@ export default function SettingsPage() {
             )}
           </div>
         </div>
+      </div>
+
+      {/* Danger Zone */}
+      <div className={styles.contentWrapper} style={{ paddingTop: 0 }}>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          style={{
+            border: "1.5px solid #fee2e2",
+            borderRadius: "20px",
+            background: "#fff",
+            overflow: "hidden",
+            marginBottom: "32px"
+          }}
+        >
+          <div style={{
+            padding: "20px 24px", background: "#fef2f2",
+            borderBottom: "1px solid #fee2e2",
+            display: "flex", alignItems: "center", gap: "10px"
+          }}>
+            <AlertTriangle size={18} color="#dc2626" />
+            <span style={{ fontWeight: "800", color: "#dc2626", fontSize: "15px" }}>Danger Zone</span>
+          </div>
+          <div style={{ padding: "20px 24px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px" }}>
+              <div>
+                <div style={{ fontWeight: "700", color: "#1e293b", fontSize: "15px", marginBottom: "4px" }}>Delete Hospital Account</div>
+                <div style={{ color: "#64748b", fontSize: "13px" }}>
+                  Permanently removes this hospital account and all its organization data. This action cannot be undone.
+                </div>
+              </div>
+              <button
+                onClick={() => { setShowDeleteZone(!showDeleteZone); setDeleteConfirmText(""); setDeleteError(""); }}
+                style={{
+                  padding: "10px 20px", borderRadius: "10px",
+                  border: "1.5px solid #dc2626", background: "transparent",
+                  color: "#dc2626", fontWeight: "700", fontSize: "14px",
+                  cursor: "pointer", display: "flex", alignItems: "center",
+                  gap: "8px"
+                }}
+              >
+                <Trash2 size={15} /> Delete Account
+              </button>
+            </div>
+            {showDeleteZone && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                style={{ marginTop: "20px", paddingTop: "20px", borderTop: "1px dashed #fca5a5" }}
+              >
+                <p style={{ color: "#7f1d1d", fontSize: "13px", fontWeight: "600", marginBottom: "12px" }}>
+                  ⚠️ This will permanently delete the hospital account and all organization data. Type <strong>DELETE</strong> to confirm.
+                </p>
+                <div style={{ display: "flex", gap: "12px", alignItems: "center", flexWrap: "wrap" }}>
+                  <input
+                    value={deleteConfirmText}
+                    onChange={e => { setDeleteConfirmText(e.target.value); setDeleteError(""); }}
+                    placeholder="Type DELETE here"
+                    style={{
+                      flex: 1, minWidth: "200px", padding: "10px 14px",
+                      borderRadius: "8px", border: "1.5px solid #fca5a5",
+                      fontSize: "14px", fontWeight: "600",
+                      background: "#fff7f7", color: "#7f1d1d", outline: "none"
+                    }}
+                  />
+                  <button
+                    onClick={handleDeleteAccount}
+                    disabled={deleting || deleteConfirmText !== "DELETE"}
+                    style={{
+                      padding: "10px 20px", borderRadius: "8px", border: "none",
+                      background: deleteConfirmText === "DELETE" ? "#dc2626" : "#fca5a5",
+                      color: "white", fontWeight: "700", fontSize: "14px",
+                      cursor: deleteConfirmText === "DELETE" ? "pointer" : "not-allowed"
+                    }}
+                  >
+                    {deleting ? "Deleting..." : "Confirm Delete"}
+                  </button>
+                </div>
+                {deleteError && (
+                  <p style={{ color: "#dc2626", fontSize: "13px", fontWeight: "600", marginTop: "10px" }}>{deleteError}</p>
+                )}
+              </motion.div>
+            )}
+          </div>
+        </motion.div>
       </div>
 
       {/* Mobile spacing */}

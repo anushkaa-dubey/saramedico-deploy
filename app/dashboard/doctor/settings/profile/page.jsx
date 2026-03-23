@@ -1,16 +1,16 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import Image from "next/image";
 import styles from "../Settings.module.css";
-import lock from "@/public/icons/lock.svg";
-import notification from "@/public/icons/notification.svg";
-import mfa from "@/public/icons/MFA.svg";
 import { motion } from "framer-motion";
 import { fetchDoctorProfile, updateDoctorProfile } from "@/services/doctor";
 import { API_BASE_URL, getAuthHeaders, handleResponse } from "@/services/apiConfig";
+import { deleteMyAccount } from "@/services/auth";
+import { useRouter } from "next/navigation";
+import { AlertTriangle, Trash2 } from "lucide-react";
 
 export default function ProfileSettings() {
+    const router = useRouter();
     const [profile, setProfile] = useState({
         full_name: "",
         email: "",
@@ -26,6 +26,12 @@ export default function ProfileSettings() {
     const [avatarPreview, setAvatarPreview] = useState(null);
     const [avatarError, setAvatarError] = useState("");
     const [avatarSuccess, setAvatarSuccess] = useState("");
+
+    // Delete account state
+    const [showDeleteZone, setShowDeleteZone] = useState(false);
+    const [deleteConfirmText, setDeleteConfirmText] = useState("");
+    const [deleting, setDeleting] = useState(false);
+    const [deleteError, setDeleteError] = useState("");
 
     useEffect(() => {
         const getProfile = async () => {
@@ -60,38 +66,28 @@ export default function ProfileSettings() {
         setAvatarSuccess("");
         try {
             let avatarUpdated = false;
-            // Avatar upload
             if (avatarFile) {
                 const formData = new FormData();
                 formData.append("file", avatarFile);
-
                 const headers = getAuthHeaders();
                 delete headers["Content-Type"];
-
                 const avatarRes = await fetch(`${API_BASE_URL}/users/me/avatar`, {
                     method: 'POST',
                     headers: headers,
                     body: formData
                 });
-
-                if (!avatarRes.ok) {
-                    throw new Error("Avatar upload failed");
-                }
-
+                if (!avatarRes.ok) throw new Error("Avatar upload failed");
                 const avatarData = await handleResponse(avatarRes);
                 setProfile(prev => ({ ...prev, avatar_url: avatarData?.avatar_url || avatarData?.url || prev.avatar_url }));
                 setAvatarFile(null);
                 avatarUpdated = true;
             }
-
-            // Profile fields upload
             await updateDoctorProfile({
                 full_name: profile.full_name,
                 specialty: profile.specialty,
                 credentials: profile.credentials,
                 license_number: profile.license_number
             });
-
             if (avatarUpdated) {
                 setAvatarSuccess("Avatar uploaded and profile updated successfully.");
                 window.dispatchEvent(new Event('avatarUpdated'));
@@ -107,6 +103,22 @@ export default function ProfileSettings() {
         }
     };
 
+    const handleDeleteAccount = async () => {
+        if (deleteConfirmText !== "DELETE") {
+            setDeleteError("Please type DELETE exactly to confirm.");
+            return;
+        }
+        setDeleting(true);
+        setDeleteError("");
+        try {
+            await deleteMyAccount();
+            router.push("/auth/login");
+        } catch (err) {
+            setDeleteError(err.message || "Failed to delete account. Please try again.");
+            setDeleting(false);
+        }
+    };
+
     if (loading) return <div style={{ padding: "40px", textAlign: "center" }}>Loading profile...</div>;
 
     return (
@@ -116,15 +128,8 @@ export default function ProfileSettings() {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
         >
-            {/* Topbar */}
-            <div className={styles.topbar}>
-                {/* <input
-                    className={styles.search}
-                    placeholder="Search settings, reports, notes..."
-                /> */}
-            </div>
+            <div className={styles.topbar}></div>
 
-            {/* Header */}
             <div className={styles.header}>
                 <h1 className={styles.title}>My Profile</h1>
                 <p className={styles.description}>
@@ -132,11 +137,8 @@ export default function ProfileSettings() {
                 </p>
             </div>
 
-            {/* Content */}
             <div className={styles.content}>
-                {/* Profile Card */}
                 <div className={styles.profileCard}>
-                    {/* <h2 className={styles.profileCardTitle}>My Profile</h2> */}
                     <div className={styles.profileCardContent} style={{ display: 'flex', alignItems: 'center', marginBottom: '24px' }}>
                         <div
                             style={{
@@ -206,32 +208,95 @@ export default function ProfileSettings() {
                     {avatarSuccess && <div style={{ color: '#22c55e', fontSize: '14px', textAlign: 'right', marginTop: '12px', fontWeight: '500' }}>{avatarSuccess}</div>}
                 </div>
 
-                {/* Bottom Cards commented out as requested */}
-                {/* 
-                <div className={styles.cardsGrid}>
-                    <div className={styles.card}>
-                        <div className={styles.cardTitleRow}>
-                            <span className={styles.cardIcon}><Image src={lock.src} alt="Lock" width={18} height={18} /></span>
-                            <h3>Password</h3>
-                        </div>
-                        <p>Last changed 3 months ago. We recommend changing every 90 days.</p>
-                        <button className={styles.cardButton}>Change Password</button>
+                {/* ─── Danger Zone ─────────────────────────────────────────────── */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                    style={{
+                        marginTop: "24px",
+                        border: "1.5px solid #fee2e2",
+                        borderRadius: "16px",
+                        background: "#fff",
+                        overflow: "hidden"
+                    }}
+                >
+                    <div style={{
+                        padding: "20px 24px",
+                        background: "#fef2f2",
+                        borderBottom: "1px solid #fee2e2",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "10px"
+                    }}>
+                        <AlertTriangle size={18} color="#dc2626" />
+                        <span style={{ fontWeight: "800", color: "#dc2626", fontSize: "15px" }}>Danger Zone</span>
                     </div>
 
-                    <div className={styles.card}>
-                        <div className={styles.cardTitleRow}>
-                            <span className={styles.cardIcon}><Image src={mfa.src} alt="MFA" width={18} height={18} /></span>
-                            <h3>MFA Setup</h3>
-                            <span className={styles.badge}>Enabled</span>
+                    <div style={{ padding: "20px 24px" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px" }}>
+                            <div>
+                                <div style={{ fontWeight: "700", color: "#1e293b", fontSize: "15px", marginBottom: "4px" }}>Delete My Account</div>
+                                <div style={{ color: "#64748b", fontSize: "13px" }}>
+                                    Permanently removes your doctor profile, all consultations, SOAP notes, and documents. Cannot be undone.
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => { setShowDeleteZone(!showDeleteZone); setDeleteConfirmText(""); setDeleteError(""); }}
+                                style={{
+                                    padding: "10px 20px", borderRadius: "10px",
+                                    border: "1.5px solid #dc2626", background: "transparent",
+                                    color: "#dc2626", fontWeight: "700", fontSize: "14px",
+                                    cursor: "pointer", display: "flex", alignItems: "center",
+                                    gap: "8px", transition: "all 0.15s"
+                                }}
+                            >
+                                <Trash2 size={15} /> Delete Account
+                            </button>
                         </div>
-                        <p>
-                            Multi-factor authentication is currently active via authenticator
-                            App.
-                        </p>
-                        <button className={styles.cardButton}>Manage</button>
+
+                        {showDeleteZone && (
+                            <motion.div
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: "auto" }}
+                                style={{ marginTop: "20px", paddingTop: "20px", borderTop: "1px dashed #fca5a5" }}
+                            >
+                                <p style={{ color: "#7f1d1d", fontSize: "13px", fontWeight: "600", marginBottom: "12px" }}>
+                                    ⚠️ This will permanently delete your account and all data. Type <strong>DELETE</strong> to confirm.
+                                </p>
+                                <div style={{ display: "flex", gap: "12px", alignItems: "center", flexWrap: "wrap" }}>
+                                    <input
+                                        value={deleteConfirmText}
+                                        onChange={e => { setDeleteConfirmText(e.target.value); setDeleteError(""); }}
+                                        placeholder="Type DELETE here"
+                                        style={{
+                                            flex: 1, minWidth: "200px", padding: "10px 14px",
+                                            borderRadius: "8px", border: "1.5px solid #fca5a5",
+                                            fontSize: "14px", fontWeight: "600", outline: "none",
+                                            background: "#fff7f7", color: "#7f1d1d"
+                                        }}
+                                    />
+                                    <button
+                                        onClick={handleDeleteAccount}
+                                        disabled={deleting || deleteConfirmText !== "DELETE"}
+                                        style={{
+                                            padding: "10px 20px", borderRadius: "8px", border: "none",
+                                            background: deleteConfirmText === "DELETE" ? "#dc2626" : "#fca5a5",
+                                            color: "white", fontWeight: "700", fontSize: "14px",
+                                            cursor: deleteConfirmText === "DELETE" ? "pointer" : "not-allowed",
+                                            transition: "all 0.15s"
+                                        }}
+                                    >
+                                        {deleting ? "Deleting..." : "Confirm Delete"}
+                                    </button>
+                                </div>
+                                {deleteError && (
+                                    <p style={{ color: "#dc2626", fontSize: "13px", fontWeight: "600", marginTop: "10px" }}>{deleteError}</p>
+                                )}
+                            </motion.div>
+                        )}
                     </div>
-                </div> 
-                */}
+                </motion.div>
             </div>
         </motion.div>
     );

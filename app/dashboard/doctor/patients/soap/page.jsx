@@ -336,11 +336,47 @@ function SoapNotesPage() {
                                 </div>
                             </>
                         ) : soapStatus === "processing" ? (
-                            <div style={{ padding: "48px 24px", textAlign: "center" }}>
-                                <div style={{ width: "40px", height: "40px", border: "3px solid #DFF2FF", borderTop: "3px solid #359AFF", borderRadius: "50%", animation: "spin 1s linear infinite", margin: "0 auto 16px" }} />
-                                <p style={{ color: "#475569", fontSize: "14px", fontWeight: "600", marginBottom: "6px" }}>AI is generating the SOAP note</p>
-                                <p style={{ color: "#94a3b8", fontSize: "12px", marginBottom: "4px" }}>Google Meet takes 2–4 minutes to process audio. Checking every 10s...</p>
-                                <p style={{ color: "#cbd5e1", fontSize: "11px", fontWeight: "700" }}>Attempt {displayAttempt} / {MAX_POLL_ATTEMPTS}</p>
+                            <div style={{ padding: "60px 24px", textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center" }}>
+                                <div style={{ position: "relative", width: "80px", height: "80px", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "24px" }}>
+                                    <motion.div
+                                        animate={{ scale: [1, 1.5, 2], opacity: [0.8, 0.3, 0] }}
+                                        transition={{ duration: 2, repeat: Infinity, ease: "easeOut" }}
+                                        style={{ position: "absolute", width: "100%", height: "100%", borderRadius: "50%", background: "#359AFF", opacity: 0.2 }}
+                                    />
+                                    <motion.div
+                                        animate={{ scale: [1, 1.2, 1.5], opacity: [0.8, 0.5, 0] }}
+                                        transition={{ duration: 2, repeat: Infinity, ease: "easeOut", delay: 0.6 }}
+                                        style={{ position: "absolute", width: "100%", height: "100%", borderRadius: "50%", background: "#359AFF", opacity: 0.2 }}
+                                    />
+                                    <div style={{ position: "relative", zIndex: 2, width: "48px", height: "48px", borderRadius: "50%", background: "linear-gradient(135deg, #359AFF, #0284c7)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 4px 12px rgba(53, 154, 255, 0.3)" }}>
+                                        <FileText size={24} color="white" />
+                                    </div>
+                                </div>
+                                <h3 style={{ color: "#0f172a", fontSize: "18px", fontWeight: "700", marginBottom: "8px" }}>Generating SOAP Note...</h3>
+                                <p style={{ color: "#64748b", fontSize: "14px", marginBottom: "24px", maxWidth: "320px", lineHeight: "1.5" }}>
+                                    AI is analyzing the conversation transcript to extract clinical findings.
+                                </p>
+                                
+                                <div style={{ width: "100%", maxWidth: "320px", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "12px", padding: "16px" }}>
+                                    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "8px", fontSize: "12px", fontWeight: "600", color: "#475569" }}>
+                                        <span>Analysis Progress</span>
+                                        <span style={{ color: "#359AFF" }}>{Math.min(99, Math.max(5, Math.round((displayAttempt / MAX_POLL_ATTEMPTS) * 100)))}%</span>
+                                    </div>
+                                    <div style={{ height: "6px", background: "#e2e8f0", borderRadius: "3px", overflow: "hidden", marginBottom: "12px" }}>
+                                        <motion.div 
+                                            initial={{ width: "5%" }}
+                                            animate={{ width: `${Math.min(99, Math.max(5, (displayAttempt / MAX_POLL_ATTEMPTS) * 100))}%` }}
+                                            transition={{ duration: 0.5 }}
+                                            style={{ height: "100%", background: "linear-gradient(90deg, #359AFF, #9CCDFF)", borderRadius: "3px" }}
+                                        />
+                                    </div>
+                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "11px", color: "#94a3b8" }}>
+                                        <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                                            <RefreshCw size={10} style={{ animation: "spin 2s linear infinite" }} /> Polling Check
+                                        </span>
+                                        <span>Attempt {displayAttempt} / {MAX_POLL_ATTEMPTS}</span>
+                                    </div>
+                                </div>
                             </div>
                         ) : soapStatus === "no_transcript" ? (
                             <div style={{ padding: "40px 24px", textAlign: "center" }}>

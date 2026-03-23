@@ -8,6 +8,8 @@ import { fetchProfile } from "@/services/patient";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 import { API_BASE_URL, getAuthHeaders, handleResponse } from "@/services/apiConfig";
+import { deleteMyAccount } from "@/services/auth";
+import { useRouter } from "next/navigation";
 import {
     User,
     Phone,
@@ -17,6 +19,8 @@ import {
     Camera,
     BadgeCheck,
     Home,
+    AlertTriangle,
+    Trash2,
 } from "lucide-react";
 
 const containerVariants = {
@@ -33,6 +37,7 @@ const itemVariants = {
 };
 
 export default function ProfilePage() {
+    const router = useRouter();
     const [loading, setLoading] = useState(false);
     const fileInputRef = useRef(null);
     const [avatarFile, setAvatarFile] = useState(null);
@@ -40,6 +45,11 @@ export default function ProfilePage() {
     const [uploadingAvatar, setUploadingAvatar] = useState(false);
     const [avatarError, setAvatarError] = useState("");
     const [avatarSuccess, setAvatarSuccess] = useState("");
+    // Delete account state
+    const [showDeleteZone, setShowDeleteZone] = useState(false);
+    const [deleteConfirmText, setDeleteConfirmText] = useState("");
+    const [deleting, setDeleting] = useState(false);
+    const [deleteError, setDeleteError] = useState("");
 
     const [profileData, setProfileData] = useState({
         firstName: "",
@@ -146,6 +156,22 @@ export default function ProfilePage() {
 
     const initials =
         `${profileData.firstName?.[0] || ""}${profileData.lastName?.[0] || ""}`.toUpperCase() || "P";
+
+    const handleDeleteAccount = async () => {
+        if (deleteConfirmText !== "DELETE") {
+            setDeleteError("Please type DELETE exactly to confirm.");
+            return;
+        }
+        setDeleting(true);
+        setDeleteError("");
+        try {
+            await deleteMyAccount();
+            router.push("/auth/login");
+        } catch (err) {
+            setDeleteError(err.message || "Failed to delete account.");
+            setDeleting(false);
+        }
+    };
 
     return (
         <motion.div initial="hidden" animate="visible" variants={containerVariants}>
@@ -313,6 +339,90 @@ export default function ProfilePage() {
                             </div>
                         </div>
 
+                    </div>
+                </motion.div>
+
+                {/* ─── Danger Zone ─────────────────────────────────────────────── */}
+                <motion.div
+                    variants={itemVariants}
+                    style={{
+                        marginTop: "24px",
+                        border: "1.5px solid #fee2e2",
+                        borderRadius: "16px",
+                        background: "#fff",
+                        overflow: "hidden"
+                    }}
+                >
+                    <div style={{
+                        padding: "18px 24px",
+                        background: "#fef2f2",
+                        borderBottom: "1px solid #fee2e2",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "10px"
+                    }}>
+                        <AlertTriangle size={16} color="#dc2626" />
+                        <span style={{ fontWeight: "800", color: "#dc2626", fontSize: "14px" }}>Danger Zone</span>
+                    </div>
+                    <div style={{ padding: "20px 24px" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "16px" }}>
+                            <div>
+                                <div style={{ fontWeight: "700", color: "#1e293b", fontSize: "15px", marginBottom: "4px" }}>Delete My Account</div>
+                                <div style={{ color: "#64748b", fontSize: "13px" }}>
+                                    Permanently removes your patient profile, medical records, consultations, and all associated data.
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => { setShowDeleteZone(!showDeleteZone); setDeleteConfirmText(""); setDeleteError(""); }}
+                                style={{
+                                    padding: "10px 20px", borderRadius: "10px",
+                                    border: "1.5px solid #dc2626", background: "transparent",
+                                    color: "#dc2626", fontWeight: "700", fontSize: "14px",
+                                    cursor: "pointer", display: "flex", alignItems: "center", gap: "8px"
+                                }}
+                            >
+                                <Trash2 size={15} /> Delete Account
+                            </button>
+                        </div>
+                        {showDeleteZone && (
+                            <motion.div
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: "auto" }}
+                                style={{ marginTop: "20px", paddingTop: "20px", borderTop: "1px dashed #fca5a5" }}
+                            >
+                                <p style={{ color: "#7f1d1d", fontSize: "13px", fontWeight: "600", marginBottom: "12px" }}>
+                                    This will permanently delete your account and all medical data. Type <strong>DELETE</strong> to confirm.
+                                </p>
+                                <div style={{ display: "flex", gap: "12px", alignItems: "center", flexWrap: "wrap" }}>
+                                    <input
+                                        value={deleteConfirmText}
+                                        onChange={e => { setDeleteConfirmText(e.target.value); setDeleteError(""); }}
+                                        placeholder="Type DELETE here"
+                                        style={{
+                                            flex: 1, minWidth: "200px", padding: "10px 14px",
+                                            borderRadius: "8px", border: "1.5px solid #fca5a5",
+                                            fontSize: "14px", fontWeight: "600", outline: "none",
+                                            background: "#fff7f7", color: "#7f1d1d"
+                                        }}
+                                    />
+                                    <button
+                                        onClick={handleDeleteAccount}
+                                        disabled={deleting || deleteConfirmText !== "DELETE"}
+                                        style={{
+                                            padding: "10px 20px", borderRadius: "8px", border: "none",
+                                            background: deleteConfirmText === "DELETE" ? "#dc2626" : "#fca5a5",
+                                            color: "white", fontWeight: "700", fontSize: "14px",
+                                            cursor: deleteConfirmText === "DELETE" ? "pointer" : "not-allowed"
+                                        }}
+                                    >
+                                        {deleting ? "Deleting..." : "Confirm Delete"}
+                                    </button>
+                                </div>
+                                {deleteError && (
+                                    <p style={{ color: "#dc2626", fontSize: "13px", fontWeight: "600", marginTop: "10px" }}>{deleteError}</p>
+                                )}
+                            </motion.div>
+                        )}
                     </div>
                 </motion.div>
             </motion.section>

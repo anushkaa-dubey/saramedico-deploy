@@ -240,3 +240,24 @@ export const uploadAvatar = async (file) => {
 
     return handleResponse(response);
 };
+
+/**
+ * Permanently delete the current user's account and all associated data.
+ * Clears local storage after the API responds successfully.
+ */
+export const deleteMyAccount = async () => {
+    const token = localStorage.getItem("authToken");
+    const response = await fetch(`${API_BASE_URL}/auth/me`, {
+        method: "DELETE",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+        },
+    });
+    const data = await handleResponse(response);
+    // Clear all local session data regardless of backend response
+    localStorage.removeItem("authToken");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("user");
+    return data;
+};
