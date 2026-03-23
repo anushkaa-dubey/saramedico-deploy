@@ -1,13 +1,50 @@
 import { API_BASE_URL, handleResponse } from "./apiConfig";
 
 /**
- * Register a new user
+ * unified Signup for Doctor / Hospital
+ * POST /api/v1/auth/signup
  */
-export const registerUser = async (payload) => {
-    const response = await fetch(`${API_BASE_URL}/auth/register`, {
+export const signupUser = async (payload) => {
+    const response = await fetch(`${API_BASE_URL}/auth/signup`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+    });
+    return handleResponse(response);
+};
+
+/**
+ * Onboard Doctor
+ * POST /api/v1/auth/onboarding/doctor
+ */
+export const onboardDoctor = async (payload) => {
+    // Need to get the onboarding token from localStorage
+    const token = localStorage.getItem("authToken");
+    const response = await fetch(`${API_BASE_URL}/auth/onboarding/doctor`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify(payload),
+    });
+    return handleResponse(response);
+};
+
+/**
+ * Onboard Hospital
+ * POST /api/v1/auth/onboarding/hospital
+ */
+export const onboardHospital = async (payload) => {
+    // Need to get the onboarding token from localStorage
+    const token = localStorage.getItem("authToken");
+    const response = await fetch(`${API_BASE_URL}/auth/onboarding/hospital`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
         },
         body: JSON.stringify(payload),
     });
@@ -132,30 +169,15 @@ export const forgotPassword = async (payload) => {
 
     return handleResponse(response);
 };
-/**
- * Initiate Google OAuth login
- * Redirects the browser to the backend Google SSO login endpoint.
- * The backend handles the full OAuth flow and the callback.
- *
- * @param {string} [role] - Optional role hint to pass as state (e.g. "doctor", "patient")
- */
 export const googleLogin = (role) => {
-    // Determine the backend base URL (direct backend URL for OAuth redirect flow)
-    // We bypass the Next.js proxy here because the OAuth redirect chain must
-    // go through the backend's own origin so Google's redirect_uri matches.
     const backendOrigin =
         process.env.NEXT_PUBLIC_API_URL
             ? new URL(process.env.NEXT_PUBLIC_API_URL).origin
             : "http://localhost:8000";
 
-    const googleLoginUrl = `${backendOrigin}/api/v1/auth/google/login`;
+    let googleLoginUrl = `${backendOrigin}/api/v1/auth/google/login`;
+    if (role) googleLoginUrl += `?role=${role}`;
 
-    // Store the role hint so the callback page can use it for routing hints
-    if (role && typeof window !== "undefined") {
-        sessionStorage.setItem("googleAuthRole", role);
-    }
-
-    // Full page redirect — required for the OAuth flow
     window.location.href = googleLoginUrl;
 };
 
@@ -187,30 +209,15 @@ export const handleGoogleCallback = (data) => {
     return { userRole, user };
 };
 
-/**
- * Initiate Apple OAuth login
- * Redirects the browser to the backend Apple SSO login endpoint.
- * The backend handles the full OAuth flow and the callback.
- *
- * @param {string} [role] - Optional role hint to pass as state (e.g. "doctor", "patient")
- */
 export const appleLogin = (role) => {
-    // Determine the backend base URL (direct backend URL for OAuth redirect flow)
-    // We bypass the Next.js proxy here because the OAuth redirect chain must
-    // go through the backend's own origin so Apple's redirect_uri matches.
     const backendOrigin =
         process.env.NEXT_PUBLIC_API_URL
             ? new URL(process.env.NEXT_PUBLIC_API_URL).origin
             : "http://localhost:8000";
 
-    const appleLoginUrl = `${backendOrigin}/api/v1/auth/apple/login`;
+    let appleLoginUrl = `${backendOrigin}/api/v1/auth/apple/login`;
+    if (role) appleLoginUrl += `?role=${role}`;
 
-    // Store the role hint so the callback page can use it for routing hints
-    if (role && typeof window !== "undefined") {
-        sessionStorage.setItem("appleAuthRole", role);
-    }
-
-    // Full page redirect — required for the OAuth flow
     window.location.href = appleLoginUrl;
 };
 

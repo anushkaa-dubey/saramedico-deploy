@@ -17,19 +17,11 @@ export default function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [appleLoading, setAppleLoading] = useState(false);
-  const [computedRole, setComputedRole] = useState("doctor");
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
   }, []);
-
-  // Get role from URL or sessionStorage safely (used only for UI hints, not routing)
-  useEffect(() => {
-    const urlRole = searchParams.get("role");
-    const sessionRole = typeof window !== "undefined" ? sessionStorage.getItem("selectedRole") : null;
-    setComputedRole(urlRole || sessionRole || "doctor");
-  }, [searchParams]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -113,27 +105,18 @@ export default function LoginForm() {
 
   const handleGoogleLogin = () => {
     setGoogleLoading(true);
-    // Redirect to the backend Google OAuth endpoint.
-    // The backend handles the full OAuth dance and returns tokens.
-    googleLogin(computedRole);
-    // Note: setGoogleLoading(false) is not called because the page
-    // will navigate away to Google's login screen.
+    googleLogin();
   };
 
   const handleAppleLogin = () => {
     setAppleLoading(true);
-    // Redirect to the backend Apple OAuth endpoint.
-    // The backend handles the full OAuth dance and returns tokens.
-    appleLogin(computedRole);
-    // Note: setAppleLoading(false) is not called because the page
-    // will navigate away to Apple's login screen.
+    appleLogin();
   };
 
   if (!isClient) return null;
 
   return (
     <>
-      {(computedRole !== "patient" && computedRole !== "admin" && computedRole !== "administrator") && (
         <div style={{ display: "flex", borderBottom: "1px solid #eee", marginBottom: "24px" }}>
           <div style={{
             flex: 1,
@@ -147,7 +130,7 @@ export default function LoginForm() {
             Login
           </div>
           <Link
-            href={`/auth/signup?role=${computedRole}`}
+            href={`/auth/signup`}
             style={{
               flex: 1,
               padding: "14px",
@@ -161,9 +144,6 @@ export default function LoginForm() {
             Sign Up
           </Link>
         </div>
-      )}
-
-
       <h2>Welcome Back</h2>
       <p className="subtext">Access your workspace.</p>
 
@@ -271,12 +251,9 @@ export default function LoginForm() {
           {googleLoading ? "Redirecting to Google..." : "Continue with Google"}
         </button>
 
-        {(computedRole !== "patient" && computedRole !== "admin" && computedRole !== "administrator") && (
           <div className="bottom-text">
-            Don&apos;t have an account? <Link href={`/auth/signup?role=${computedRole}`}>Sign Up</Link>
+            Don&apos;t have an account? <Link href="/auth/signup">Sign Up</Link>
           </div>
-        )}
-
       </form>
     </>
   );

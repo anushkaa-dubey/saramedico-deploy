@@ -115,17 +115,17 @@ export default function DoctorOnboardingStep1() {
           {/* Top Bar */}
           <div className={styles.topBar}>
             <div className={styles.stepInfo}>
-              <span className={styles.stepTitle}>STEP 1 OF 2</span>
+              <span className={styles.stepTitle}>STEP 1 OF 3</span>
               <h2 className={styles.mainTitle}>Select Specialty</h2>
             </div>
             <div className={styles.progressSection}>
               <span className={styles.progressText}>
-                {selectedSpecialty ? "50% Completed" : "25% Completed"}
+                {selectedSpecialty ? "33% Completed" : "15% Completed"}
               </span>
               <div className={styles.progressBarBg}>
                 <div
                   className={styles.progressBarFill}
-                  style={{ width: selectedSpecialty ? "50%" : "25%" }}
+                  style={{ width: selectedSpecialty ? "33%" : "15%" }}
                 />
               </div>
             </div>

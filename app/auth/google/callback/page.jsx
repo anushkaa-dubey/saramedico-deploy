@@ -94,6 +94,10 @@ function GoogleCallbackContent() {
             }
 
             if (userRole === "hospital") {
+                if (user?.onboarding_complete === false) {
+                    window.location.href = "/auth/signup/onboarding/hospital";
+                    return;
+                }
                 window.location.href = "/dashboard/hospital";
                 return;
             }

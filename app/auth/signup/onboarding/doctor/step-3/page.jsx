@@ -4,25 +4,25 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import styles from "./Step3.module.css";
 import logo from "@/public/logo2.svg";
-import mic from "@/public/icons/mic.svg";
-import { updateDoctorProfile } from "@/services/doctor";
+import { extractDoctorCredentials } from "@/services/doctor";
 
 export default function DoctorOnboardingStep3() {
   const router = useRouter();
-  const [isRecording, setIsRecording] = useState(false);
+  const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [extracted, setExtracted] = useState(null);
 
-  const handleStartRecording = () => {
-    setIsRecording(true);
-
-    setTimeout(() => {
-      setIsRecording(false);
-    }, 5000);
+  const handleFileChange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      setFile(e.target.files[0]);
+      setExtracted(null);
+    }
   };
 
-  const handleStopRecording = () => {
-    setIsRecording(false);
+  const handleRemoveFile = () => {
+    setFile(null);
+    setExtracted(null);
   };
 
   const handleSubmit = async (e) => {
@@ -30,19 +30,28 @@ export default function DoctorOnboardingStep3() {
     setLoading(true);
     setError("");
     try {
-      const updatedUser = await updateDoctorProfile({ onboarding_complete: true });
+      if (file) {
+        // Try to extract credentials from the uploaded document
+        try {
+          const credentials = await extractDoctorCredentials(file);
+          setExtracted(credentials);
+        } catch (extractErr) {
+          console.warn("Credential extraction failed, continuing:", extractErr);
+        }
+      }
 
-      // Update local storage
-      const user = JSON.parse(localStorage.getItem("user") || "{}");
-      localStorage.setItem("user", JSON.stringify({ ...user, ...updatedUser }));
-
+      // Navigate to dashboard — onboarding was completed in step 2
       router.push("/dashboard/doctor");
     } catch (err) {
-      console.error("Failed to complete onboarding:", err);
-      setError(err.message || "Failed to finalize onboarding. Please try again.");
+      console.error("Failed to process document:", err);
+      setError(err.message || "Failed to process document. Please try again.");
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSkip = () => {
+    router.push("/dashboard/doctor");
   };
 
   return (
@@ -56,7 +65,7 @@ export default function DoctorOnboardingStep3() {
           <div className={styles.topBar}>
             <div className={styles.stepInfo}>
               <span className={styles.stepTitle}>STEP 3 OF 3</span>
-              <h2 className={styles.mainTitle}>Audio Check</h2>
+              <h2 className={styles.mainTitle}>Document Upload (Optional)</h2>
             </div>
             <div className={styles.progressSection}>
               <span className={styles.progressText}>100% Completed</span>
@@ -69,62 +78,114 @@ export default function DoctorOnboardingStep3() {
 
           <div className={styles.mainContent}>
             <div className={styles.headerBlock}>
-              <h1 className={styles.heading}>Check your Audio</h1>
+              <h1 className={styles.heading}>Upload your Medical Certificate</h1>
               <p className={styles.subheading}>
-                {/* To ensure accurate speech recognition, please provide a short, de-identified audio recording for calibration. */}
-                <span style={{ color: '#ef4444', fontWeight: 'bold' }}>Voice features are currently disabled.</span> Please continue to complete your profile.
+                Upload your medical certificate or license document for verification. 
+                This step is <strong>optional</strong> — you can skip it and upload later from your profile settings.
               </p>
             </div>
 
             <form onSubmit={handleSubmit} className={styles.formLayout}>
               <div className={styles.cardGrid}>
-                {/* Left Card: Audio Config */}
+                {/* Left Card: Upload Area */}
                 <div className={styles.innerCard}>
                   <div className={styles.cardHeader}>
-                    <h3 className={styles.cardTitle}><img src={mic.src} alt="Mic" className={styles.micIcon} /> Audio Configuration</h3>
+                    <h3 className={styles.cardTitle}>📄 Medical Certificate</h3>
                   </div>
 
                   <div className={styles.cardBody}>
-                    <label className={styles.label}>INPUT SOURCE</label>
-                    <div className={styles.inputWrapper}>
-                      <div className={styles.micIconPlaceholder}></div>
-                      <select className={styles.selectInput} defaultValue="default">
-                        {/* <option value="default">Macbook Pro Microphone</option> */}
-                        {/* <option value="other">Other Microphone</option> */}
-                      </select>
-                    </div>
-
-                    <div className={styles.waveBox}>
-                      {isRecording ? (
-                        <div className={styles.waveActive}>
-                          <div className={styles.bar}></div>
-                          <div className={styles.bar}></div>
-                          <div className={styles.bar}></div>
-                          <div className={styles.bar}></div>
-                          <div className={styles.bar}></div>
+                    <div style={{
+                      border: "2px dashed #cbd5e1",
+                      borderRadius: "12px",
+                      padding: "40px 24px",
+                      textAlign: "center",
+                      background: file ? "#f0fdf4" : "#f8fafc",
+                      transition: "all 0.3s ease",
+                      cursor: "pointer",
+                      minHeight: "200px",
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      justifyContent: "center"
+                    }}>
+                      {file ? (
+                        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "12px" }}>
+                          <div style={{ fontSize: "48px" }}>✅</div>
+                          <div>
+                            <p style={{ fontSize: "15px", fontWeight: "600", color: "#1e293b", marginBottom: "4px" }}>{file.name}</p>
+                            <p style={{ fontSize: "13px", color: "#64748b" }}>{(file.size / 1024).toFixed(2)} KB</p>
+                          </div>
+                          <button 
+                            type="button" 
+                            onClick={handleRemoveFile}
+                            style={{
+                              background: "#fee2e2",
+                              border: "none",
+                              color: "#dc2626",
+                              padding: "6px 16px",
+                              borderRadius: "6px",
+                              fontSize: "13px",
+                              fontWeight: "600",
+                              cursor: "pointer"
+                            }}
+                          >
+                            Remove File
+                          </button>
                         </div>
                       ) : (
-                        <div className={styles.wavePlaceholder}>
-                          {/* Static placeholder wave */}
-                          <div className={`${styles.bar} ${styles.static}`}></div>
-                          <div className={`${styles.bar} ${styles.static}`}></div>
-                          <div className={`${styles.bar} ${styles.static}`}></div>
-                          <div className={`${styles.bar} ${styles.static}`}></div>
-                          <div className={`${styles.bar} ${styles.static}`}></div>
-                        </div>
+                        <>
+                          <div style={{ fontSize: "48px", marginBottom: "12px" }}>📁</div>
+                          <h3 style={{ fontSize: "16px", fontWeight: "700", color: "#1e293b", marginBottom: "8px" }}>Drag and drop your document</h3>
+                          <p style={{ fontSize: "13px", color: "#64748b", marginBottom: "16px" }}>or click to browse your local files</p>
+                          <label style={{
+                            display: "inline-block",
+                            padding: "10px 24px",
+                            background: "#3b82f6",
+                            color: "white",
+                            borderRadius: "8px",
+                            fontSize: "14px",
+                            fontWeight: "600",
+                            cursor: "pointer",
+                            transition: "background 0.2s"
+                          }}>
+                            Select Files
+                            <input
+                              type="file"
+                              style={{ display: "none" }}
+                              accept=".jpg,.jpeg,.png,.webp,.pdf"
+                              onChange={handleFileChange}
+                            />
+                          </label>
+                        </>
                       )}
                     </div>
                   </div>
                 </div>
 
-                {/* Right Card: Sample Text */}
+                {/* Right Card: Tips */}
                 <div className={`${styles.innerCard} ${styles.textCard}`}>
                   <div className={styles.cardHeader}>
+                    <h3 className={styles.cardTitle}>💡 Best Practices</h3>
                   </div>
                   <div className={styles.cardBody}>
-                    <div className={styles.sampleText}>
-                      I have been experiencing slight chest discomfort after climbing stairs, which goes away after resting. It usually lasts a few minutes and does not happen when I am sitting or lying down. I have not noticed any shortness of breath, dizziness, or sweating along with it.
-                    </div>
+                    <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+                      <li style={{ fontSize: "14px", color: "#475569", marginBottom: "14px", display: "flex", alignItems: "flex-start", gap: "10px", lineHeight: "1.5" }}>
+                        <span style={{ color: "#16a34a", fontWeight: "bold", flexShrink: 0 }}>✓</span>
+                        Clear text scans and high-resolution images work best.
+                      </li>
+                      <li style={{ fontSize: "14px", color: "#475569", marginBottom: "14px", display: "flex", alignItems: "flex-start", gap: "10px", lineHeight: "1.5" }}>
+                        <span style={{ color: "#16a34a", fontWeight: "bold", flexShrink: 0 }}>✓</span>
+                        Accepted formats: JPG, PNG, WebP, PDF
+                      </li>
+                      <li style={{ fontSize: "14px", color: "#475569", marginBottom: "14px", display: "flex", alignItems: "flex-start", gap: "10px", lineHeight: "1.5" }}>
+                        <span style={{ color: "#ef4444", fontWeight: "bold", flexShrink: 0 }}>✗</span>
+                        Do not upload password-protected files.
+                      </li>
+                      <li style={{ fontSize: "14px", color: "#475569", display: "flex", alignItems: "flex-start", gap: "10px", lineHeight: "1.5" }}>
+                        <span style={{ color: "#3b82f6", fontWeight: "bold", flexShrink: 0 }}>ℹ</span>
+                        You can always upload or update your documents later from your profile settings.
+                      </li>
+                    </ul>
                   </div>
                 </div>
               </div>
@@ -142,16 +203,16 @@ export default function DoctorOnboardingStep3() {
                   <button
                     type="button"
                     className={styles.skipBtn}
-                    onClick={() => router.push("/dashboard/doctor")}
+                    onClick={handleSkip}
                   >
-                    Skip this step
+                    Skip for now
                   </button>
                   <button
                     type="submit"
                     className={styles.continueBtn}
                     disabled={loading}
                   >
-                    {loading ? "Finalizing..." : "Continue →"}
+                    {loading ? "Processing..." : "Finish →"}
                   </button>
                 </div>
               </div>

@@ -1,73 +1,36 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
-import PhoneInput from "react-phone-input-2";
-import "react-phone-input-2/lib/style.css";
-import { registerUser, registerHospital, loginUser, googleLogin, appleLogin } from "@/services/auth";
+import { signupUser, googleLogin, appleLogin } from "@/services/auth";
 import { Eye, EyeOff } from "lucide-react";
 import styles from "./SignupForm.module.css";
 
 export default function SignupForm() {
   const router = useRouter();
-  const searchParams = useSearchParams();
 
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState("");
-  const [termsAccepted, setTermsAccepted] = useState(false);
   const [isClient, setIsClient] = useState(false);
+  
+  // Unified simple state
   const [role, setRole] = useState("doctor");
-
-  // ── Doctor / default fields ──────────────────────────────────────────────
   const [formData, setFormData] = useState({
+    name: "",
     email: "",
     password: "",
-    confirm_password: "",
-    first_name: "",
-    last_name: "",
-    phone: "",
-    date_of_birth: "",
-    gender: "",
-    organization_name: ""
-  });
-
-  // ── Hospital-only fields ─────────────────────────────────────────────────
-  const [hospitalForm, setHospitalForm] = useState({
-    organization_name: "",
-    admin_name: "",
-    email: "",
-    phone_number: "",
-    password: "",
-    confirm_password: ""
   });
 
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   useEffect(() => { setIsClient(true); }, []);
 
-  useEffect(() => {
-    const urlRole = searchParams.get("role");
-    const sessionRole = typeof window !== "undefined" ? sessionStorage.getItem("selectedRole") : null;
-    const resolvedRole = urlRole || sessionRole || "doctor";
-
-    if (resolvedRole === "patient" || resolvedRole === "admin" || resolvedRole === "administrator") {
-      router.push(`/auth/login?role=${resolvedRole === "patient" ? "patient" : "admin"}`);
-      return;
-    }
-
-    setRole(resolvedRole);
-    setFormData(prev => ({ ...prev, role: resolvedRole }));
-  }, [searchParams, router]);
-
-  const activePassword = role === "hospital" ? hospitalForm.password : formData.password;
+  const activePassword = formData.password;
   const hasMinLength = activePassword.length >= 8;
   const hasUppercase = /[A-Z]/.test(activePassword);
   const hasNumber = /[0-9]/.test(activePassword);
   const hasSpecial = /[^A-Za-z0-9]/.test(activePassword);
-  const activeConfirm = role === "hospital" ? hospitalForm.confirm_password : formData.confirm_password;
-  const passwordsMatch = activePassword && activeConfirm && activePassword === activeConfirm;
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -75,43 +38,19 @@ export default function SignupForm() {
     if (apiError) setApiError("");
   };
 
-  const handleHospitalChange = (field, value) => {
-    setHospitalForm(prev => ({ ...prev, [field]: value }));
-    if (errors[field]) setErrors(prev => ({ ...prev, [field]: "" }));
-    if (apiError) setApiError("");
-  };
-
-  const validateHospital = () => {
+  const validate = () => {
     const newErrors = {};
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!hospitalForm.organization_name.trim()) newErrors.organization_name = "Organization name is required";
-    if (!hospitalForm.admin_name.trim()) newErrors.admin_name = "Admin name is required";
-    if (!hospitalForm.email) newErrors.email = "Email is required";
-    else if (!emailRegex.test(hospitalForm.email)) newErrors.email = "Invalid email format";
-    if (!hospitalForm.phone_number || hospitalForm.phone_number.length < 8) newErrors.phone_number = "Valid phone number is required";
-    if (!hospitalForm.password) newErrors.password = "Password is required";
-    else if (!hasMinLength || !hasUppercase || !hasNumber || !hasSpecial) newErrors.password = "Password does not meet all requirements";
-    if (hospitalForm.password !== hospitalForm.confirm_password) newErrors.confirm_password = "Passwords do not match";
-    if (!termsAccepted) newErrors.terms = "You must accept the Privacy Policy and Terms.";
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const validateDoctor = () => {
-    const newErrors = {};
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    
+    if (!formData.name.trim()) newErrors.name = "Full name is required";
     if (!formData.email) newErrors.email = "Email is required";
     else if (!emailRegex.test(formData.email)) newErrors.email = "Invalid email format";
-    if (!formData.first_name.trim()) newErrors.first_name = "First name is required";
-    if (!formData.last_name.trim()) newErrors.last_name = "Last name is required";
-    if (!formData.phone || formData.phone.length < 8) newErrors.phone = "Valid phone number is required";
-    if (!formData.date_of_birth) newErrors.date_of_birth = "Date of Birth is required";
-    if (!formData.gender) newErrors.gender = "Gender is required";
+    
     if (!formData.password) newErrors.password = "Password is required";
-    else if (!hasMinLength || !hasUppercase || !hasNumber || !hasSpecial) newErrors.password = "Password does not meet all requirements";
-    if (formData.password !== formData.confirm_password) newErrors.confirm_password = "Passwords do not match";
-    if (formData.role !== "patient" && !formData.organization_name.trim()) newErrors.organization_name = "Organization name is required";
-    if (!termsAccepted) newErrors.terms = "You must accept the Privacy Policy and Terms.";
+    else if (!hasMinLength || !hasUppercase || !hasNumber || !hasSpecial) {
+      newErrors.password = "Password does not meet all requirements";
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -119,57 +58,36 @@ export default function SignupForm() {
   const handleSignup = async (e) => {
     e.preventDefault();
     setApiError("");
-    const isValid = role === "hospital" ? validateHospital() : validateDoctor();
-    if (!isValid) return;
+    
+    if (!validate()) return;
+    
     setLoading(true);
     try {
-      if (role === "hospital") {
-        const cleanPhone = `+${hospitalForm.phone_number.replace(/\D/g, "")}`;
-        await registerHospital({
-          organization_name: hospitalForm.organization_name,
-          admin_name: hospitalForm.admin_name,
-          email: hospitalForm.email,
-          phone_number: cleanPhone,
-          password: hospitalForm.password
-        });
-        await loginUser({ email: hospitalForm.email, password: hospitalForm.password });
-        window.location.href = "/dashboard/hospital";
+      const payload = {
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        role: role
+      };
 
-      } else if (role === "doctor") {
-        const cleanPhone = `+${formData.phone.replace(/\D/g, "")}`;
-        const payload = {
-          email: formData.email,
-          password: formData.password,
-          confirm_password: formData.confirm_password,
-          first_name: formData.first_name,
-          last_name: formData.last_name,
-          phone: cleanPhone,
-          date_of_birth: formData.date_of_birth,
-          gender: formData.gender,
-          role: formData.role,
-          organization_name: formData.organization_name
-        };
-        sessionStorage.setItem("signup_data", JSON.stringify(payload));
-        window.location.href = "/auth/signup/onboarding/doctor/step-1";
-
-      } else {
-        const cleanPhone = `+${formData.phone.replace(/\D/g, "")}`;
-        const payload = {
-          email: formData.email,
-          password: formData.password,
-          confirm_password: formData.confirm_password,
-          first_name: formData.first_name,
-          last_name: formData.last_name,
-          phone: cleanPhone,
-          date_of_birth: formData.date_of_birth,
-          gender: formData.gender,
-          role: formData.role,
-          organization_name: formData.organization_name
-        };
-        await registerUser(payload);
-        await loginUser({ email: formData.email, password: formData.password });
-        window.location.href = `/dashboard/${role}`;
+      // 1. Initial backend account creation logic returning Onboarding token
+      const data = await signupUser(payload);
+      
+      const token = data.access_token || data.token;
+      if (token) {
+        localStorage.setItem("authToken", token); // AuthToken captures Onboarding Scope token safely
       }
+
+      // 2. Safely capture the password dynamically into SessionStorage so they don't have to rewrite it for Onboarding Endpoints!
+      sessionStorage.setItem("signup_data", JSON.stringify(payload));
+      
+      // 3. Organically transition to Onboarding
+      if (role === "doctor") {
+        router.push("/auth/signup/onboarding/doctor/step-1");
+      } else if (role === "hospital") {
+        router.push("/auth/signup/onboarding/hospital");
+      }
+      
     } catch (err) {
       console.error("Signup failed:", err);
       setApiError(err.message || "Failed to create account. Please try again.");
@@ -179,270 +97,102 @@ export default function SignupForm() {
   };
 
   const handleGoogleSignup = () => {
-    // Save the current role to sessionStorage so the callback can use it
-    if (role) {
-      sessionStorage.setItem("signupRole", role);
-    }
-    // Initiate Google OAuth flow
     googleLogin(role);
   };
 
   const handleAppleSignup = () => {
-    // Save the current role to sessionStorage so the callback can use it
-    if (role) {
-      sessionStorage.setItem("signupRole", role);
-    }
-    // Initiate Apple OAuth flow
     appleLogin(role);
   };
 
   if (!isClient) return null;
 
-  // ═════════════════════════════════════════════════════════════════════════
-  // HOSPITAL SIGNUP FORM
-  // ═════════════════════════════════════════════════════════════════════════
-  if (role === "hospital") {
-    return (
-      <>
-        <div className={styles.tabs}>
-          <Link href="/auth/login?role=hospital" className={styles.tabInactive}>Login</Link>
-          <div className={styles.tabActive}>Sign Up</div>
-        </div>
-
-        <h2>Register Hospital</h2>
-        <p className="subtext">Set up your hospital organization and admin account.</p>
-
-        <div className={styles.roleBadge}>
-          <p className={styles.roleBadgeTitle}>Role: Hospital</p>
-          <p className={styles.roleBadgeSub}>Role defines access to clinical features.</p>
-          <p className={styles.roleBadgeNote}>* Role selection is immutable after signup.</p>
-        </div>
-
-        <form onSubmit={handleSignup}>
-          <label htmlFor="organization_name" className={styles.label}>Organization Name</label>
-          <input
-            id="organization_name" type="text" placeholder="General Hospital"
-            value={hospitalForm.organization_name}
-            onChange={e => handleHospitalChange("organization_name", e.target.value)}
-            style={{ borderColor: errors.organization_name ? "#ef4444" : "#ddd" }} required
-          />
-          {errors.organization_name && <p className={styles.fieldError}>{errors.organization_name}</p>}
-
-          <label htmlFor="admin_name" className={styles.label}>Admin Full Name</label>
-          <input
-            id="admin_name" type="text" placeholder="Dr. Sarah Smith"
-            value={hospitalForm.admin_name}
-            onChange={e => handleHospitalChange("admin_name", e.target.value)}
-            style={{ borderColor: errors.admin_name ? "#ef4444" : "#ddd" }} required
-          />
-          {errors.admin_name && <p className={styles.fieldError}>{errors.admin_name}</p>}
-
-          <label htmlFor="h_email" className={styles.label}>Email Address</label>
-          <input
-            id="h_email" type="email" placeholder="admin@hospital.com"
-            value={hospitalForm.email}
-            onChange={e => handleHospitalChange("email", e.target.value)}
-            style={{ borderColor: errors.email ? "#ef4444" : "#ddd" }} required
-          />
-          {errors.email && <p className={styles.fieldError}>{errors.email}</p>}
-
-          <label htmlFor="phone_number" className={styles.label}>Phone Number</label>
-          <div style={{ marginBottom: "4px" }}>
-            <PhoneInput
-              country={"us"} value={hospitalForm.phone_number}
-              onChange={(phone) => handleHospitalChange("phone_number", phone)}
-              inputProps={{ id: "phone_number", name: "phone_number", required: true, autoComplete: "tel" }}
-              inputStyle={{ width: "100%", height: "42px", fontSize: "15px", borderRadius: "6px", border: errors.phone_number ? "1px solid #ef4444" : "1px solid #ddd" }}
-              buttonStyle={{ border: errors.phone_number ? "1px solid #ef4444" : "1px solid #ddd", borderRight: "none", borderRadius: "6px 0 0 6px", backgroundColor: "#f9fafb" }}
-              enableSearch={true}
-            />
-          </div>
-          <p className={styles.phoneHint}>Used only for verification and security.</p>
-          {errors.phone_number && <p className={styles.fieldErrorTop}>{errors.phone_number}</p>}
-
-          <div className={styles.passwordReqs}>
-            <p className={styles.passwordReqsTitle}>Password Requirements:</p>
-            <ul className={styles.passwordReqsList}>
-              <li className={hasMinLength ? styles.reqMet : styles.reqUnmet}>At least 8 characters</li>
-              <li className={hasUppercase ? styles.reqMet : styles.reqUnmet}>One uppercase letter (A-Z)</li>
-              <li className={hasNumber ? styles.reqMet : styles.reqUnmet}>One number (0-9)</li>
-              <li className={hasSpecial ? styles.reqMet : styles.reqUnmet}>One special character (!@#)</li>
-            </ul>
-          </div>
-
-          <label htmlFor="h_password" className={styles.label}>Password</label>
-          <div className={styles.passwordWrapper}>
-            <input
-              id="h_password" type={showPassword ? "text" : "password"}
-              autoComplete="new-password" placeholder="Create a strong password"
-              value={hospitalForm.password}
-              onChange={e => handleHospitalChange("password", e.target.value)}
-              style={{ borderColor: errors.password ? "#ef4444" : "#ddd" }} required
-            />
-            <button type="button" className={styles.passwordToggleBtn} onClick={() => setShowPassword(!showPassword)}>
-              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-            </button>
-          </div>
-          {errors.password && <p className={styles.fieldError}>{errors.password}</p>}
-
-          <div className={styles.passwordWrapper}>
-            <input
-              id="h_confirm" type={showConfirmPassword ? "text" : "password"}
-              autoComplete="new-password" placeholder="Confirm your password"
-              value={hospitalForm.confirm_password}
-              onChange={e => handleHospitalChange("confirm_password", e.target.value)}
-              style={{ borderColor: hospitalForm.confirm_password && !passwordsMatch ? "#ef4444" : passwordsMatch ? "#16a34a" : "#ddd", paddingRight: "56px" }}
-              required
-            />
-            <div className={styles.passwordConfirmActions}>
-              <button type="button" className={styles.passwordToggleBtn} onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
-                {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-              </button>
-              {hospitalForm.confirm_password && (
-                <span className={passwordsMatch ? styles.matchIndicator : styles.noMatchIndicator}>
-                  {passwordsMatch ? "✓" : "✗"}
-                </span>
-              )}
-            </div>
-          </div>
-          {errors.confirm_password && <p className={styles.fieldError}>{errors.confirm_password}</p>}
-
-          <div className={styles.termsRow}>
-            <input
-              type="checkbox" id="h_terms" checked={termsAccepted}
-              onChange={e => { setTermsAccepted(e.target.checked); if (e.target.checked && errors.terms) setErrors(prev => ({ ...prev, terms: "" })); }}
-              className={styles.termsCheckbox}
-            />
-            <label htmlFor="h_terms" className={styles.termsLabel}>
-              I agree to the <Link href="/privacy?from=auth" className={styles.termsLink}>Privacy Policy</Link> and <Link href="/terms?from=auth" className={styles.termsLink}>Terms of Service</Link>.
-            </label>
-          </div>
-          {errors.terms && <p className={styles.fieldErrorTerms}>{errors.terms}</p>}
-          {apiError && <p className={styles.apiError}>{apiError}</p>}
-
-          <button className={`primary-btn ${styles.submitBtn}`} disabled={loading}>
-            {loading ? "Registering Hospital..." : "Register Hospital"}
-          </button>
-
-          <p className={styles.hipaaNote}>
-            <span className={styles.hipaaIcon}>🛡️</span>
-            HIPAA Compliant &amp; Secure Data Processing
-          </p>
-
-          <div className="divider">OR</div>
-
-          <button type="button" className="social-btn" onClick={handleAppleSignup}>
-            <img src="/icons/apple.svg" alt="Apple" />
-            Continue with Apple ID
-          </button>
-
-          <button type="button" className="social-btn" onClick={handleGoogleSignup}>
-            <img src="/icons/google.svg" alt="Google" />
-            Continue with Google
-          </button>
-
-          <div className="bottom-text">
-            Already have an account? <Link href="/auth/login?role=hospital">Login</Link>
-          </div>
-        </form>
-      </>
-    );
-  }
-
-  // ═════════════════════════════════════════════════════════════════════════
-  // DOCTOR / DEFAULT SIGNUP FORM
-  // ═════════════════════════════════════════════════════════════════════════
   return (
     <>
-      <div className={styles.tabs}>
-        <Link href={`/auth/login?role=${role}`} className={styles.tabInactive}>Login</Link>
-        <div className={styles.tabActive}>Sign Up</div>
+      <div style={{ display: "flex", borderBottom: "1px solid #eee", marginBottom: "24px" }}>
+        <Link
+          href="/auth/login"
+          style={{
+            flex: 1,
+            padding: "14px",
+            textAlign: "center",
+            textDecoration: "none",
+            color: "#6b7280",
+            fontWeight: "500",
+            borderBottom: "2px solid transparent"
+          }}
+        >
+          Login
+        </Link>
+        <div style={{
+          flex: 1,
+          padding: "14px",
+          textAlign: "center",
+          fontWeight: "600",
+          color: "#4361ee",
+          borderBottom: "2px solid #4361ee",
+          cursor: "default"
+        }}>
+          Sign Up
+        </div>
       </div>
 
       <h2>Create Account</h2>
-      <p className="subtext">Create your {role === "doctor" ? "clinician" : "account"} profile.</p>
-
-      {role && (
-        <div className={styles.roleBadge}>
-          <p className={styles.roleBadgeTitle}>Role: {role.charAt(0).toUpperCase() + role.slice(1)}</p>
-          <p className={styles.roleBadgeSub}>Role defines access to clinical features.</p>
-          <p className={styles.roleBadgeNote}>* Role selection is immutable after signup.</p>
-        </div>
-      )}
+      <p className="subtext">Set up your profile credentials.</p>
 
       <form onSubmit={handleSignup}>
-        <label htmlFor="first_name" className={styles.label}>First Name</label>
-        <input
-          id="first_name" type="text" name="given-name" autoComplete="given-name" placeholder="John"
-          value={formData.first_name} onChange={e => handleInputChange("first_name", e.target.value)}
-          style={{ borderColor: errors.first_name ? "#ef4444" : "#ddd" }} required
-        />
-        {errors.first_name && <p className={styles.fieldError}>{errors.first_name}</p>}
-
-        <label htmlFor="last_name" className={styles.label}>Last Name</label>
-        <input
-          id="last_name" type="text" name="family-name" autoComplete="family-name" placeholder="Doe"
-          value={formData.last_name} onChange={e => handleInputChange("last_name", e.target.value)}
-          style={{ borderColor: errors.last_name ? "#ef4444" : "#ddd" }} required
-        />
-        {errors.last_name && <p className={styles.fieldError}>{errors.last_name}</p>}
-
-        <label htmlFor="email" className={styles.label}>Email Address</label>
-        <input
-          id="email" type="email" name="email" autoComplete="email" placeholder="dr.hops@gmail.org"
-          value={formData.email} onChange={e => handleInputChange("email", e.target.value)}
-          style={{ borderColor: errors.email ? "#ef4444" : "#ddd" }} required
-        />
-        {errors.email && <p className={styles.fieldError}>{errors.email}</p>}
-
-        <label htmlFor="phone" className={styles.label}>Phone</label>
-        <div style={{ marginBottom: "4px" }}>
-          <PhoneInput
-            country={"us"} value={formData.phone}
-            onChange={(phone) => handleInputChange("phone", phone)}
-            inputProps={{ id: "phone", name: "phone", required: true, autoFocus: false, autoComplete: "tel" }}
-            inputStyle={{ width: "100%", height: "42px", fontSize: "15px", borderRadius: "6px", border: errors.phone ? "1px solid #ef4444" : "1px solid #ddd" }}
-            buttonStyle={{ border: errors.phone ? "1px solid #ef4444" : "1px solid #ddd", borderRight: "none", borderRadius: "6px 0 0 6px", backgroundColor: "#f9fafb" }}
-            enableSearch={true}
-          />
+      
+        <div style={{display: 'flex', gap: '15px', marginBottom: '20px', marginTop: '10px'}}>
+            <button 
+                type="button" 
+                onClick={() => setRole("doctor")}
+                style={{
+                    flex: 1,
+                    padding: '12px',
+                    borderRadius: '8px',
+                    border: role === "doctor" ? '2px solid #4361ee' : '1px solid #e5e7eb',
+                    backgroundColor: role === "doctor" ? '#eff6ff' : '#fff',
+                    color: role === "doctor" ? '#1e40af' : '#4b5563',
+                    fontWeight: role === "doctor" ? '600' : '500',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                }}
+            >
+                ⚕️ Doctor
+            </button>
+            <button 
+                type="button" 
+                onClick={() => setRole("hospital")}
+                style={{
+                    flex: 1,
+                    padding: '12px',
+                    borderRadius: '8px',
+                    border: role === "hospital" ? '2px solid #4361ee' : '1px solid #e5e7eb',
+                    backgroundColor: role === "hospital" ? '#eff6ff' : '#fff',
+                    color: role === "hospital" ? '#1e40af' : '#4b5563',
+                    fontWeight: role === "hospital" ? '600' : '500',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                }}
+            >
+                🏥 Hospital
+            </button>
         </div>
-        <p className={styles.phoneHint}>Used only for verification and security.</p>
-        {errors.phone && <p className={styles.fieldErrorTop}>{errors.phone}</p>}
 
-        <label htmlFor="dob" className={styles.label}>Date of Birth</label>
+        <label htmlFor="name" style={{ fontSize: "16px", fontWeight: "600", color: "#374151" }}>Full Name</label>
         <input
-          id="dob" type="date" name="bday" autoComplete="bday"
-          value={formData.date_of_birth} onChange={e => handleInputChange("date_of_birth", e.target.value)}
-          style={{ borderColor: errors.date_of_birth ? "#ef4444" : "#ddd" }} required
+          id="name" type="text" name="name" autoComplete="name" placeholder="Dr. Sarah / General Hospital Admin"
+          value={formData.name} onChange={e => handleInputChange("name", e.target.value)}
+          style={{ borderColor: errors.name ? "#ef4444" : "#ddd", width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #ddd", marginBottom: "12px", marginTop: "4px" }} required
         />
-        {errors.date_of_birth && <p className={styles.fieldError}>{errors.date_of_birth}</p>}
+        {errors.name && <p style={{ color: "#ef4444", fontSize: "13px", fontWeight: "600", marginTop: "-8px", marginBottom: "12px" }}>{errors.name}</p>}
 
-        <label htmlFor="gender" className={styles.label}>Gender</label>
-        <select
-          id="gender" name="sex" autoComplete="sex"
-          value={formData.gender} onChange={e => handleInputChange("gender", e.target.value)}
-          className={styles.genderSelect}
-          style={{ borderColor: errors.gender ? "#ef4444" : "#ddd" }} required
-        >
-          <option value="">Select Gender</option>
-          <option value="Male">Male</option>
-          <option value="Female">Female</option>
-          <option value="Other">Other</option>
-        </select>
-        {errors.gender && <p className={styles.fieldErrorTerms}>{errors.gender}</p>}
-
-        {role !== "patient" && (
-          <>
-            <label htmlFor="organization" className={styles.label}>Organization Name</label>
-            <input
-              id="organization" type="text" name="organization" autoComplete="organization"
-              placeholder="Saramedico Clinic"
-              value={formData.organization_name} onChange={e => handleInputChange("organization_name", e.target.value)}
-              style={{ borderColor: errors.organization_name ? "#ef4444" : "#ddd" }} required
-            />
-            {errors.organization_name && <p className={styles.fieldError}>{errors.organization_name}</p>}
-          </>
-        )}
+        <label htmlFor="email" style={{ fontSize: "16px", fontWeight: "600", color: "#374151" }}>Email Address</label>
+        <input
+          id="email" type="email" name="email" autoComplete="email" placeholder="example@gmail.com"
+          value={formData.email} onChange={e => handleInputChange("email", e.target.value)}
+          style={{ borderColor: errors.email ? "#ef4444" : "#ddd", width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #ddd", marginBottom: "12px", marginTop: "4px" }} required
+        />
+        {errors.email && <p style={{ color: "#ef4444", fontSize: "13px", fontWeight: "600", marginTop: "-8px", marginBottom: "12px" }}>{errors.email}</p>}
 
         <div className={styles.passwordReqs}>
           <p className={styles.passwordReqsTitle}>Password Requirements:</p>
@@ -454,61 +204,43 @@ export default function SignupForm() {
           </ul>
         </div>
 
-        <label htmlFor="password" className={styles.label}>Password</label>
-        <div className={styles.passwordWrapper}>
+        <label htmlFor="password" style={{ fontSize: "16px", fontWeight: "600", color: "#374151" }}>Password</label>
+        <div style={{ position: "relative", marginBottom: "12px", marginTop: "4px" }}>
           <input
             id="password" type={showPassword ? "text" : "password"}
             name="new-password" autoComplete="new-password" placeholder="Create a strong password"
             value={formData.password} onChange={e => handleInputChange("password", e.target.value)}
-            style={{ borderColor: errors.password ? "#ef4444" : "#ddd" }} required
+            style={{ width: "100%", padding: "10px", borderRadius: "8px", border: errors.password ? "1px solid #ef4444" : "1px solid #ddd" }} required
           />
-          <button type="button" className={styles.passwordToggleBtn} onClick={() => setShowPassword(!showPassword)}>
+          <button type="button" onClick={() => setShowPassword(!showPassword)}
+            style={{
+              position: "absolute",
+              right: "10px",
+              top: "50%",
+              transform: "translateY(-50%)",
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              color: "#9ca3af",
+              padding: "4px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              height: "100%"
+            }}>
             {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
           </button>
         </div>
-        {errors.password && <p className={styles.fieldError}>{errors.password}</p>}
+        {errors.password && <p style={{ color: "#ef4444", fontSize: "13px", fontWeight: "600", marginTop: "-8px", marginBottom: "12px" }}>{errors.password}</p>}
 
-        <label htmlFor="confirm_password" className={styles.label}>Confirm Password</label>
-        <div className={styles.passwordWrapper}>
-          <input
-            id="confirm_password" type={showConfirmPassword ? "text" : "password"}
-            name="new-password-confirm" placeholder="Confirm your password"
-            value={formData.confirm_password} onChange={e => handleInputChange("confirm_password", e.target.value)}
-            style={{ borderColor: formData.confirm_password && !passwordsMatch ? "#ef4444" : passwordsMatch ? "#16a34a" : "#ddd", paddingRight: "56px" }}
-            required
-          />
-          <div className={styles.passwordConfirmActions}>
-            <button type="button" className={styles.passwordToggleBtn} onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
-              {showConfirmPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-            </button>
-            {formData.confirm_password && (
-              <span className={passwordsMatch ? styles.matchIndicator : styles.noMatchIndicator}>
-                {passwordsMatch ? "✓" : "✗"}
-              </span>
-            )}
-          </div>
-        </div>
-        {errors.confirm_password && <p className={styles.fieldError}>{errors.confirm_password}</p>}
+        {apiError && <p style={{ color: "#ef4444", fontSize: "14px", fontWeight: "600", marginTop: "12px" }}>{apiError}</p>}
 
-        <div className={styles.termsRow}>
-          <input
-            type="checkbox" id="terms" checked={termsAccepted}
-            onChange={e => { setTermsAccepted(e.target.checked); if (e.target.checked && errors.terms) setErrors(prev => ({ ...prev, terms: "" })); }}
-            className={styles.termsCheckbox}
-          />
-          <label htmlFor="terms" className={styles.termsLabel}>
-            I agree to the <Link href="/privacy?from=auth" className={styles.termsLink}>Privacy Policy</Link> and <Link href="/terms?from=auth" className={styles.termsLink}>Terms of Service</Link>.
-          </label>
-        </div>
-        {errors.terms && <p className={styles.fieldErrorTerms}>{errors.terms}</p>}
-        {apiError && <p className={styles.apiError}>{apiError}</p>}
-
-        <button className={`primary-btn ${styles.submitBtn}`} disabled={loading}>
-          {loading ? "Creating Account..." : "Sign Up"}
+        <button className="primary-btn" disabled={loading} style={{marginTop: "20px"}}>
+          {loading ? "Creating Account..." : "Confirm Credentials"}
         </button>
 
-        <p className={styles.hipaaNote}>
-          <span className={styles.hipaaIcon}>🛡️</span>
+        <p style={{ fontSize: "12px", color: "#6b7280", textAlign: "center", marginTop: "24px", display: "flex", alignItems: "center", justifyContent: "center", gap: "6px" }}>
+          <span style={{ fontSize: "14px" }}>🛡️</span>
           HIPAA Compliant &amp; Secure Data Processing
         </p>
 
@@ -523,10 +255,11 @@ export default function SignupForm() {
           <img src="/icons/google.svg" alt="Google" />
           Continue with Google
         </button>
-
+        
         <div className="bottom-text">
-          Already have an account? <Link href={`/auth/login?role=${role}`}>Login</Link>
+            Already have an account? <Link href="/auth/login">Login</Link>
         </div>
+
       </form>
     </>
   );

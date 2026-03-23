@@ -1,83 +1,103 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import styles from "./Step2.module.css";
 import logo from "@/public/logo2.svg";
-import { extractDoctorCredentials, updateDoctorProfile } from "@/services/doctor";
-import { registerUser, loginUser } from "@/services/auth";
-
+import { onboardDoctor } from "@/services/auth";
 
 export default function DoctorOnboardingStep2() {
   const router = useRouter();
-  const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [isGoogleAuth, setIsGoogleAuth] = useState(false);
+  
+  // Additional required fields for backend
+  const [profileData, setProfileData] = useState({
+    phone: "",
+    date_of_birth: "",
+    gender: "",
+    license_number: ""
+  });
 
-  const handleFileChange = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0]);
+  useEffect(() => {
+    // Detect if user signed up via Google (no signup_data in session)
+    const signupData = JSON.parse(sessionStorage.getItem("signup_data") || "{}");
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    if (!signupData.password && user) {
+      setIsGoogleAuth(true);
     }
+  }, []);
+
+  const handleInputChange = (field, value) => {
+    setProfileData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleRemoveFile = () => {
-    setFile(null);
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!file) {
-      setError("Please upload your medical certificate");
-      return;
-    }
-
+  const finishOnboarding = async () => {
     setLoading(true);
     setError("");
     try {
       const signupData = JSON.parse(sessionStorage.getItem("signup_data") || "{}");
-      if (!signupData.email) throw new Error("Signup data missing. Please restart registration.");
 
-      signupData.specialty = signupData.specialty || "";
-
-      await registerUser(signupData);
-
-      await loginUser({
-        email: signupData.email,
-        password: signupData.password
-      });
-
-      let credentials = null;
-      if (file) {
-        credentials = await extractDoctorCredentials(file);
+      // For Google auth users, password is not required
+      const hasPassword = signupData.password;
+      
+      if (!isGoogleAuth && (!signupData.email || !signupData.password)) {
+        throw new Error("Signup credentials missing. Please restart registration.");
       }
 
-      // Build the profile update payload from extracted credentials and signup data.
-      // The backend PATCH /doctor/profile (DoctorProfileUpdate) accepts:
-      //   full_name, specialty, license_number, department, department_role
-      const profileUpdate = {
-        specialty: signupData.specialty || undefined,
+      // Backend expects: password, confirm_password, specialty, phone_number, gender, date_of_birth, license_number
+      const cleanPhone = profileData.phone ? `+${profileData.phone.replace(/\D/g, "")}` : "";
+      
+      const onboardingPayload = {
+        specialty: signupData.specialty || "general_medicine",
+        phone_number: cleanPhone || "+10000000000", // Fallback if skipped
+        gender: profileData.gender || "Other",
+        date_of_birth: profileData.date_of_birth || "1990-01-01",
+        license_number: profileData.license_number || "PENDING"
       };
-      if (credentials) {
-        if (credentials.licenseNumber) {
-          profileUpdate.license_number = credentials.licenseNumber;
-        }
-        if (credentials.doctorName) {
-          profileUpdate.full_name = credentials.doctorName;
-        }
+
+      // Only include password for email-based signups
+      if (hasPassword) {
+        onboardingPayload.password = signupData.password;
+        onboardingPayload.confirm_password = signupData.password;
       }
 
-      const updatedUser = await updateDoctorProfile(profileUpdate);
+      // Calls the onboardDoctor endpoint which consumes the onboarding token and returns the final access token
+      const data = await onboardDoctor(onboardingPayload);
+      
+      const token = data.access_token || data.token;
+      if (token) localStorage.setItem("authToken", token);
+      if (data.refresh_token) localStorage.setItem("refreshToken", data.refresh_token);
 
-      const user = JSON.parse(localStorage.getItem("user") || "{}");
-      localStorage.setItem("user", JSON.stringify({ ...user, ...updatedUser }));
+      const user = data?.user || data;
+      // Mark onboarding as complete in local user object
+      user.onboarding_complete = true;
+      localStorage.setItem("user", JSON.stringify(user));
 
-      router.push("/dashboard/doctor");
+      // Clean up session data
+      sessionStorage.removeItem("signup_data");
+
+      router.push("/auth/signup/onboarding/doctor/step-3");
     } catch (err) {
       console.error("Failed to complete onboarding:", err);
       setError(err.message || "Failed to finalize registration. Please try again.");
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!profileData.phone || !profileData.date_of_birth || !profileData.gender) {
+      setError("Please fill in all personal details to activate your account.");
+      return;
+    }
+    await finishOnboarding();
+  };
+
+  const handleSkip = async () => {
+    await finishOnboarding();
   };
 
   return (
@@ -90,13 +110,13 @@ export default function DoctorOnboardingStep2() {
         <div className={styles.card}>
           <div className={styles.topBar}>
             <div className={styles.stepInfo}>
-              <span className={styles.stepTitle}>STEP 2 OF 2</span>
-              <h2 className={styles.mainTitle}>Medical Certificate</h2>
+              <span className={styles.stepTitle}>STEP 2 OF 3</span>
+              <h2 className={styles.mainTitle}>Profile Details</h2>
             </div>
             <div className={styles.progressSection}>
-              <span className={styles.progressText}>{file ? "100% Completed" : "50% Completed"}</span>
+              <span className={styles.progressText}>66% Completed</span>
               <div className={styles.progressBarBg}>
-                <div className={styles.progressBarFill} style={{ width: file ? "100%" : "50%" }}></div>
+                <div className={styles.progressBarFill} style={{ width: "66%" }}></div>
               </div>
             </div>
           </div>
@@ -105,111 +125,97 @@ export default function DoctorOnboardingStep2() {
             <div className={styles.headerBlock}>
               <h1 className={styles.heading}>Finalize your Clinician Profile</h1>
               <p className={styles.subheading}>
-                Provide your medical specialty and upload your certificate to complete registration.
+                Provide your personal details to complete your profile setup.
               </p>
             </div>
 
             <div className={styles.cardContent}>
               <form onSubmit={handleSubmit} className={styles.formLayout}>
-                {/* Left Side: Upload Area */}
-                <div className={styles.uploadSection}>
-                  <div className={styles.dropZone}>
-                    {file ? (
-                      <div className={styles.filePreview}>
-                        <div className={styles.fileIcon}></div>
-                        <div className={styles.fileDetails}>
-                          <p className={styles.fileName}>{file.name}</p>
-                          <p className={styles.fileSize}>{(file.size / 1024).toFixed(2)} KB</p>
-                        </div>
-                        <button type="button" onClick={handleRemoveFile} className={styles.removeBtn}>×</button>
-                      </div>
-                    ) : (
-                      <>
-                        <div className={styles.uploadIcon}></div>
-                        <h3 className={styles.dropTitle}>Drag and drop your document</h3>
-                        <p className={styles.dropSubtitle}>or click to browse your local files</p>
-                        <label className={styles.browseButton}>
-                          Select Files
-                          <input
-                            type="file"
-                            className={styles.hiddenInput}
-                            // accept=".pdf,.docx,.txt,.dicom"
-                            accept=".jpg,.jpeg,.png,.webp"
-                            onChange={handleFileChange}
-                          />
-                        </label>
-                      </>
-                    )}
-                  </div>
-                </div>
-                {/* right side */}
-                <div className={styles.infoSide}>
-                  <div className={styles.infoBlock}>
-                    <h4 className={styles.infoTitle}>FILE REQUIREMENTS</h4>
-                    <div className={styles.reqRow}>
-                      <span>Max Size</span>
-                      <span>50 MB</span>
-                    </div>
-                    <div className={styles.reqRow}>
-                      <span>Supported Formats</span>
-                    </div>
-                    <div className={styles.formats}>
-                      {/* <span>PDF</span>
-                      <span>DOCX</span>
-                      <span>TXT</span>
-                      <span>DICOM</span> */}
-                      <span>JPG</span>
-                      <span>JPEG</span>
-                      <span>PNG</span>
-                      <span>WEBP</span>
-
-                    </div>
+                {/* Personal Details Input */}
+                <div style={{ maxWidth: "560px", margin: "0 auto" }}>
+                  <h4 style={{ fontSize: "14px", fontWeight: "700", color: "#64748b", marginBottom: "16px", letterSpacing: "0.05em" }}>PERSONAL DETAILS</h4>
+                  
+                  <div style={{ marginBottom: "16px" }}>
+                    <label style={{ display: "block", fontSize: "14px", fontWeight: "600", marginBottom: "8px", color: "#374151" }}>Phone Number</label>
+                    <input 
+                      type="tel" 
+                      placeholder="e.g. 1234567890"
+                      value={profileData.phone}
+                      onChange={e => handleInputChange("phone", e.target.value)}
+                      style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #ddd" }}
+                      required
+                    />
                   </div>
 
-                  <div className={styles.divider}></div>
-
-                  <div className={styles.infoBlock}>
-                    <h4 className={styles.infoTitle}>BEST PRACTICES</h4>
-                    <ul className={styles.bestPracticesList}>
-                      <li>
-                        <div className={styles.checkIcon}></div>
-                        Ensure the sample includes standard headers (HPI, Assessment, Plan).
-                      </li>
-                      <li>
-                        <div className={styles.checkIcon}></div>
-                        Clear text scans work best. Handwritten notes are currently in beta.
-                      </li>
-                      <li>
-                        <div className={styles.errorIcon}></div>
-                        Do not upload password-protected files.
-                      </li>
-                    </ul>
+                  <div style={{ marginBottom: "16px" }}>
+                    <label style={{ display: "block", fontSize: "14px", fontWeight: "600", marginBottom: "8px", color: "#374151" }}>Date of Birth</label>
+                    <input 
+                      type="date" 
+                      value={profileData.date_of_birth}
+                      onChange={e => handleInputChange("date_of_birth", e.target.value)}
+                      style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #ddd" }}
+                      required
+                    />
                   </div>
 
-                  <div className={styles.divider}></div>
+                  <div style={{ marginBottom: "16px" }}>
+                    <label style={{ display: "block", fontSize: "14px", fontWeight: "600", marginBottom: "8px", color: "#374151" }}>Gender</label>
+                    <select 
+                      value={profileData.gender}
+                      onChange={e => handleInputChange("gender", e.target.value)}
+                      style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #ddd", backgroundColor: "white" }}
+                      required
+                    >
+                      <option value="">Select Gender</option>
+                      <option value="Male">Male</option>
+                      <option value="Female">Female</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                  
+                  <div style={{ marginBottom: "16px" }}>
+                    <label style={{ display: "block", fontSize: "14px", fontWeight: "600", marginBottom: "8px", color: "#374151" }}>License Number (Optional)</label>
+                    <input 
+                      type="text" 
+                      placeholder="e.g. MED12345"
+                      value={profileData.license_number}
+                      onChange={e => handleInputChange("license_number", e.target.value)}
+                      style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "1px solid #ddd" }}
+                    />
+                  </div>
 
-                  {error && <div style={{ color: "#ef4444", fontSize: "12px", marginTop: "12px", fontWeight: "600" }}>{error}</div>}
+                  {error && <div style={{ color: "#ef4444", fontSize: "13px", marginTop: "16px", fontWeight: "600" }}>{error}</div>}
                 </div>
               </form>
             </div>
 
-            <div className={styles.footerActions}>
+            <div className={styles.footerActions} style={{display: 'flex', justifyContent: 'space-between', marginTop: '40px', paddingTop: '24px', borderTop: '1px solid #e2e8f0'}}>
               <button
                 type="button"
-                className={styles.backBtn}
+                style={{ background: "transparent", border: "none", color: "#64748b", fontWeight: "600", cursor: "pointer", padding: "10px" }}
                 onClick={() => router.back()}
               >
                 Back
               </button>
 
-              <button
-                type="button"
-                className={styles.continueBtn}
-                onClick={handleSubmit}
-                disabled={loading}
-              >
-                {loading ? "Processing..." : "Finish →"}
-              </button>
+              <div style={{ display: 'flex', gap: '16px' }}>
+                <button
+                  type="button"
+                  style={{ background: "#f1f5f9", border: "none", color: "#475569", fontWeight: "600", padding: "12px 24px", borderRadius: "8px", cursor: "pointer" }}
+                  onClick={handleSkip}
+                  disabled={loading}
+                >
+                  Skip for now
+                </button>
+                <button
+                  type="button"
+                  style={{ background: "#3b82f6", border: "none", color: "white", fontWeight: "600", padding: "12px 24px", borderRadius: "8px", cursor: "pointer" }}
+                  onClick={handleSubmit}
+                  disabled={loading}
+                >
+                  {loading ? "Processing..." : "Continue →"}
+                </button>
+              </div>
             </div>
           </div>
         </div>
