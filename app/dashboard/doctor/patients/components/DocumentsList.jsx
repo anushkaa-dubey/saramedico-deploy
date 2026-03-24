@@ -1,18 +1,20 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import { createPortal } from "react-dom";
 import styles from "./DocumentsList.module.css";
 import { fetchPatientDocuments, uploadPatientDocument, fetchDocumentDetails, deletePatientDocument } from "@/services/doctor";
+import { FileText, FileImage, File, FileCode, Trash2, AlertCircle, Clock, CheckCircle2, XCircle, Timer, RefreshCw } from "lucide-react";
 
 const FILE_ICONS = {
-    pdf: { color: "#ef4444", bg: "#fef2f2", icon: "📄" },
-    doc: { color: "#2563eb", bg: "#eff6ff", icon: "📝" },
-    docx: { color: "#2563eb", bg: "#eff6ff", icon: "📝" },
-    dicom: { color: "#7c3aed", bg: "#f5f3ff", icon: "🩻" },
-    png: { color: "#16a34a", bg: "#f0fdf4", icon: "🖼️" },
-    jpg: { color: "#16a34a", bg: "#f0fdf4", icon: "🖼️" },
-    jpeg: { color: "#16a34a", bg: "#f0fdf4", icon: "🖼️" },
-    webp: { color: "#16a34a", bg: "#f0fdf4", icon: "🖼️" },
+    pdf: { color: "#ef4444", bg: "#fef2f2", LucideIcon: FileText },
+    doc: { color: "#2563eb", bg: "#eff6ff", LucideIcon: FileText },
+    docx: { color: "#2563eb", bg: "#eff6ff", LucideIcon: FileText },
+    dicom: { color: "#7c3aed", bg: "#f5f3ff", LucideIcon: FileCode },
+    png: { color: "#16a34a", bg: "#f0fdf4", LucideIcon: FileImage },
+    jpg: { color: "#16a34a", bg: "#f0fdf4", LucideIcon: FileImage },
+    jpeg: { color: "#16a34a", bg: "#f0fdf4", LucideIcon: FileImage },
+    webp: { color: "#16a34a", bg: "#f0fdf4", LucideIcon: FileImage },
 };
 
 function getExt(doc) {
@@ -27,16 +29,16 @@ export default function DocumentsList({ patientId }) {
     const [uploading, setUploading] = useState(false);
     const [error, setError] = useState("");
     const [processingDoc, setProcessingDoc] = useState(null);
-    const [processResults, setProcessResults] = useState({}); // per-doc status
-    const [fileInputKey, setFileInputKey] = useState(0); // force re-mount to prevent duplicate events
+    const [processResults, setProcessResults] = useState({});
+    const [fileInputKey, setFileInputKey] = useState(0);
     const [deletingId, setDeletingId] = useState(null);
     const pollingRefs = useRef({});
-    const uploadingRef = useRef(false); // Guard against double-fire
+    const uploadingRef = useRef(false);
+    const [deleteDocModal, setDeleteDocModal] = useState({ open: false, doc: null });
 
     useEffect(() => {
         if (patientId) loadDocuments();
         return () => {
-            // Cleanup all polling intervals on unmount
             Object.values(pollingRefs.current).forEach(id => clearInterval(id));
         };
     }, [patientId]);
@@ -48,15 +50,11 @@ export default function DocumentsList({ patientId }) {
         try {
             const data = await fetchPatientDocuments(patientId);
             const list = Array.isArray(data) ? data : (data?.documents || data?.records || []);
-
-            // Intelligently deduplicate: if we have multiple records for the same file name, 
-            // and one has a valid downloadUrl/presigned_url but the other doesn't, keep only the valid one.
             const uniqueFiles = new Map();
             list.forEach(doc => {
                 const existing = uniqueFiles.get(doc.file_name);
                 const hasUrl = doc.downloadUrl || doc.presigned_url;
                 const existingHasUrl = existing ? (existing.downloadUrl || existing.presigned_url) : false;
-                
                 if (!existing) {
                     doc.allIds = [doc.id];
                     uniqueFiles.set(doc.file_name, doc);
@@ -68,8 +66,7 @@ export default function DocumentsList({ patientId }) {
                     }
                 }
             });
-            
-            setDocuments(Array.from(uniqueFiles.values()).sort((a,b) => 
+            setDocuments(Array.from(uniqueFiles.values()).sort((a, b) =>
                 new Date(b.uploaded_at || b.created_at) - new Date(a.uploaded_at || a.created_at)
             ));
         } catch (err) {
@@ -87,11 +84,8 @@ export default function DocumentsList({ patientId }) {
     const handleFileUpload = async (e) => {
         const file = e.target.files?.[0];
         if (!file) return;
-
-        // Prevent double-invoke (React StrictMode or label+input double-fire)
         if (uploadingRef.current) return;
         uploadingRef.current = true;
-
         setUploading(true);
         setError("");
         try {
@@ -103,7 +97,6 @@ export default function DocumentsList({ patientId }) {
         } finally {
             setUploading(false);
             uploadingRef.current = false;
-            // Reset by changing key — forces the input to remount and clears selection
             setFileInputKey(prev => prev + 1);
         }
     };
@@ -113,8 +106,6 @@ export default function DocumentsList({ patientId }) {
         setProcessingDoc(documentId);
         setProcessResults(prev => ({ ...prev, [documentId]: { status: "processing" } }));
         setError("");
-
-        // Mock AI indexing as the new RAG system handles this automatically
         setTimeout(() => {
             setProcessResults(prev => ({
                 ...prev,
@@ -127,8 +118,13 @@ export default function DocumentsList({ patientId }) {
 
     const handleDeleteDocument = async (doc, e) => {
         e.stopPropagation();
-        if (!window.confirm("Are you sure you want to delete this document? This cannot be undone.")) return;
-        
+        setDeleteDocModal({ open: true, doc });
+    };
+
+    const confirmDeleteDocument = async () => {
+        const doc = deleteDocModal.doc;
+        if (!doc) return;
+        setDeleteDocModal({ open: false, doc: null });
         setDeletingId(doc.id);
         setError("");
         try {
@@ -146,7 +142,6 @@ export default function DocumentsList({ patientId }) {
     };
 
     const handleOpenDocument = async (doc) => {
-        // Try presigned_url, then downloadUrl, then fetch document details
         let url = doc.presigned_url || doc.downloadUrl || doc.download_url || doc.url || doc.file_url;
         if (!url && doc.id) {
             try {
@@ -165,44 +160,43 @@ export default function DocumentsList({ patientId }) {
 
     const getStatusBadge = (doc) => {
         const r = processResults[doc.id];
-        // The API might use downloadUrl or presigned_url depending on the endpoint (documents vs doctor_records)
         const hasUrl = doc.downloadUrl || doc.presigned_url;
-        
         if (!r && !hasUrl && !loading) {
             return (
                 <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                     <span style={{
                         padding: "3px 8px", borderRadius: "6px", fontSize: "11px",
                         fontWeight: 600, background: "#fff7ed", color: "#c2410c",
-                        display: "inline-block", marginTop: "4px"
+                        display: "flex", alignItems: "center", gap: "4px", marginTop: "4px"
                     }}>
-                        ⏳ Waiting for upload...
+                        <Clock size={10} /> Waiting for upload...
                     </span>
-                    <button 
+                    <button
                         onClick={(e) => { e.stopPropagation(); loadDocuments(); }}
-                        style={{ background: "none", border: "none", color: "#359AFF", fontSize: "11px", cursor: "pointer", marginTop: "4px", padding: 0 }}
+                        style={{ background: "none", border: "none", color: "#359AFF", fontSize: "11px", cursor: "pointer", marginTop: "4px", padding: 0, display: "flex", alignItems: "center", gap: "2px" }}
                     >
-                        ↻ Refresh
+                        <RefreshCw size={10} /> Refresh
                     </button>
                 </div>
             );
         }
         if (!r) return null;
         const statusMap = {
-            processing: { bg: "#fef9c3", color: "#854d0e", label: "⏳ Processing..." },
-            completed: { bg: "#dcfce7", color: "#166534", label: "✓ Complete" },
-            indexed: { bg: "#dcfce7", color: "#166534", label: "✓ Indexed" },
-            processed: { bg: "#dcfce7", color: "#166534", label: "✓ Processed" },
-            failed: { bg: "#fee2e2", color: "#991b1b", label: "✗ Failed" },
-            timeout: { bg: "#fef3c7", color: "#92400e", label: "⌛ Timed Out" },
+            processing: { bg: "#fef9c3", color: "#854d0e", label: "Processing...", Icon: Clock },
+            completed: { bg: "#dcfce7", color: "#166534", label: "Complete", Icon: CheckCircle2 },
+            indexed: { bg: "#dcfce7", color: "#166534", label: "Indexed", Icon: CheckCircle2 },
+            processed: { bg: "#dcfce7", color: "#166534", label: "Processed", Icon: CheckCircle2 },
+            failed: { bg: "#fee2e2", color: "#991b1b", label: "Failed", Icon: XCircle },
+            timeout: { bg: "#fef3c7", color: "#92400e", label: "Timed Out", Icon: Timer },
         };
-        const s = statusMap[r.status] || { bg: "#f1f5f9", color: "#64748b", label: r.status };
+        const s = statusMap[r.status] || { bg: "#f1f5f9", color: "#64748b", label: r.status, Icon: AlertCircle };
         return (
             <span style={{
                 padding: "3px 8px", borderRadius: "6px", fontSize: "11px",
                 fontWeight: 600, background: s.bg, color: s.color,
-                display: "inline-block", marginTop: "4px"
+                display: "flex", alignItems: "center", gap: "4px", marginTop: "4px", width: "fit-content"
             }}>
+                {s.Icon && <s.Icon size={10} />}
                 {s.label}
                 {r.details && <span style={{ marginLeft: "4px", opacity: 0.7 }}>{r.details}</span>}
             </span>
@@ -273,9 +267,10 @@ export default function DocumentsList({ patientId }) {
 
                         return (
                             <div key={doc.id} className={styles.card}>
-                                {/* File type icon */}
                                 <div className={styles.iconWrapper} style={{ background: iconCfg.bg, color: iconCfg.color }}>
-                                    <span style={{ fontSize: "18px" }}>{iconCfg.icon}</span>
+                                    {iconCfg.LucideIcon
+                                        ? <iconCfg.LucideIcon size={22} strokeWidth={1.8} />
+                                        : <File size={22} strokeWidth={1.8} />}
                                     <span style={{ fontSize: "10px", fontWeight: 700, letterSpacing: "0.5px", marginTop: "2px" }}>
                                         {ext.toUpperCase()}
                                     </span>
@@ -295,65 +290,70 @@ export default function DocumentsList({ patientId }) {
                                     {getStatusBadge(doc)}
                                 </div>
 
-                                <div className={styles.actions}>
+                                <div className={styles.actions} style={{
+                                    display: "grid",
+                                    gridTemplateColumns: "1fr 1fr",
+                                    gridTemplateRows: "auto auto",
+                                    gap: "6px",
+                                    alignItems: "center",
+                                    minWidth: "140px"
+                                }}>
                                     {isProcessing && (
-                                        <span style={{ fontSize: "12px", color: "#64748b" }}>Processing...</span>
+                                        <span style={{ fontSize: "12px", color: "#64748b", gridColumn: "1 / -1" }}>Processing...</span>
                                     )}
-                                    
                                     {!isCompleted && !isProcessing && (
-                                         <button 
+                                        <button
                                             className={styles.aiProcessBtn}
                                             onClick={() => handleProcessWithAI(doc.id)}
                                             style={{
-                                                padding: "6px 10px", background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                                                color: "#fff", border: "none", borderRadius: "6px", fontSize: "12px", fontWeight: "600",
-                                                cursor: "pointer", transition: "all 0.2s ease", whiteSpace: "nowrap"
+                                                gridColumn: "1 / -1",
+                                                padding: "7px 10px", background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                                                color: "#fff", border: "none", borderRadius: "8px", fontSize: "12px", fontWeight: "600",
+                                                cursor: "pointer", transition: "all 0.2s ease", whiteSpace: "nowrap", textAlign: "center"
                                             }}
-                                         >
-                                            Process with AI
-                                         </button>
+                                        >
+                                            ✦ Process with AI
+                                        </button>
                                     )}
-
                                     {isCompleted && (
-                                        <span style={{ fontSize: "12px", color: "#16a34a", fontWeight: 600 }}>✓ AI Processed</span>
+                                        <span style={{ fontSize: "12px", color: "#16a34a", fontWeight: 600, gridColumn: "1 / -1" }}>✓ AI Processed</span>
                                     )}
-
                                     <button
                                         onClick={() => handleOpenDocument(doc)}
                                         className={styles.viewBtn}
                                         disabled={!hasUrl}
                                         title={!hasUrl ? "File is not yet available for viewing" : "View Document"}
                                         style={{
-                                            padding: "6px 10px", background: "#f1f5f9", color: "#2563eb",
-                                            border: "1px solid #e2e8f0", borderRadius: "6px",
+                                            padding: "7px 10px", background: "#eff6ff", color: "#2563eb",
+                                            border: "1px solid #bfdbfe", borderRadius: "8px",
                                             fontSize: "12px", fontWeight: "600",
                                             transition: "all 0.2s ease", whiteSpace: "nowrap",
                                             opacity: hasUrl ? 1 : 0.5,
-                                            cursor: hasUrl ? "pointer" : "not-allowed"
+                                            cursor: hasUrl ? "pointer" : "not-allowed",
+                                            display: "flex", alignItems: "center", justifyContent: "center", gap: "4px"
                                         }}
                                     >
-                                        View →
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" /><circle cx="12" cy="12" r="3" /></svg>
+                                        View
                                     </button>
-
                                     <button
                                         onClick={(e) => handleDeleteDocument(doc, e)}
                                         disabled={deletingId === doc.id}
                                         title="Delete document"
                                         style={{
-                                            padding: "6px", background: deletingId === doc.id ? "#ccc" : "#fee2e2", color: "#dc2626",
-                                            border: "1px solid #fca5a5", borderRadius: "6px",
-                                            fontSize: "12px", fontWeight: "600", display: "flex", alignItems: "center", justifyContent: "center",
+                                            padding: "7px 10px", background: deletingId === doc.id ? "#f1f5f9" : "#fef2f2", color: "#dc2626",
+                                            border: "1px solid #fca5a5", borderRadius: "8px",
+                                            fontSize: "12px", fontWeight: "600", display: "flex", alignItems: "center", justifyContent: "center", gap: "4px",
                                             cursor: deletingId === doc.id ? "not-allowed" : "pointer",
                                             opacity: deletingId === doc.id ? 0.5 : 1, transition: "all 0.2s ease",
                                         }}
                                     >
-                                        {deletingId === doc.id ? "..." : (
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                                                <polyline points="3 6 5 6 21 6" />
-                                                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-                                                <path d="M10 11v6M14 11v6" />
-                                            </svg>
+                                        {deletingId === doc.id ? (
+                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ animation: "spin 0.8s linear infinite" }}><path d="M21 12a9 9 0 1 1-6.219-8.56" /></svg>
+                                        ) : (
+                                            <Trash2 size={13} strokeWidth={2.5} />
                                         )}
+                                        Delete
                                     </button>
                                 </div>
                             </div>
@@ -362,9 +362,147 @@ export default function DocumentsList({ patientId }) {
                 )}
             </div>
 
+            {/* ── DELETE CONFIRMATION MODAL ── */}
+            {deleteDocModal.open && typeof document !== "undefined" && createPortal(
+                <div style={{
+                    position: "fixed",
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    zIndex: 999999,
+                    background: "rgba(15, 23, 42, 0.4)",
+                    backdropFilter: "blur(6px)",
+                    WebkitBackdropFilter: "blur(6px)",
+                    display: "flex",
+                    alignItems: "flex-start",
+                    justifyContent: "center",
+                    padding: "6% 16px",
+                    animation: "fadeInOverlay 0.2s ease"
+                }}
+                    onClick={() => setDeleteDocModal({ open: false, doc: null })}
+                >
+                    <div style={{
+                        background: "#ffffff",
+                        borderRadius: "16px",
+                        width: "100%",
+                        maxWidth: "400px",
+                        boxShadow: "0 20px 40px rgba(0,0,0,0.1)",
+                        animation: "slideUpModal 0.25s cubic-bezier(0, 0.5, 0.5, 1)",
+                        overflow: "hidden",
+                        border: "1px solid #eef2f7"
+                    }}
+                        onClick={e => e.stopPropagation()}
+                    >
+                        {/* Modal body */}
+                        <div style={{ padding: "24px" }}>
+                            {/* Icon + heading row */}
+                            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: "16px", marginBottom: "24px" }}>
+                                <div style={{
+                                    width: "56px", height: "56px",
+                                    borderRadius: "14px",
+                                    background: "#eff6ff",
+                                    display: "flex", alignItems: "center", justifyContent: "center",
+                                    flexShrink: 0,
+                                }}>
+                                    <AlertCircle size={28} color="#359AFF" />
+                                </div>
+                                <div>
+                                    <h3 style={{
+                                        margin: "0 0 8px",
+                                        fontSize: "20px",
+                                        fontWeight: "700",
+                                        color: "#0f172a",
+                                    }}>
+                                        Delete Document?
+                                    </h3>
+                                    <p style={{
+                                        margin: 0,
+                                        fontSize: "14px",
+                                        color: "#64748b",
+                                        lineHeight: "1.5"
+                                    }}>
+                                        Are you sure you want to delete <span style={{ fontWeight: 600, color: "#1e293b" }}>&quot;{deleteDocModal.doc?.title || deleteDocModal.doc?.file_name}&quot;</span>? This action cannot be undone.
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Action buttons */}
+                            <div style={{
+                                display: "flex",
+                                gap: "12px",
+                            }}>
+                                <button
+                                    onClick={() => setDeleteDocModal({ open: false, doc: null })}
+                                    style={{
+                                        flex: 1,
+                                        padding: "12px 0",
+                                        borderRadius: "10px",
+                                        border: "1px solid #e2e8f0",
+                                        background: "#fff",
+                                        fontSize: "14px",
+                                        fontWeight: "600",
+                                        color: "#475569",
+                                        cursor: "pointer",
+                                        transition: "all 0.2s ease",
+                                    }}
+                                    onMouseEnter={e => {
+                                        e.currentTarget.style.background = "#f8fafc";
+                                    }}
+                                    onMouseLeave={e => {
+                                        e.currentTarget.style.background = "#fff";
+                                    }}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={confirmDeleteDocument}
+                                    style={{
+                                        flex: 1,
+                                        padding: "12px 0",
+                                        borderRadius: "10px",
+                                        border: "none",
+                                        background: "#359AFF",
+                                        fontSize: "14px",
+                                        fontWeight: "600",
+                                        color: "#fff",
+                                        cursor: "pointer",
+                                        transition: "all 0.2s ease",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        gap: "8px",
+                                    }}
+                                    onMouseEnter={e => {
+                                        e.currentTarget.style.opacity = "0.9";
+                                    }}
+                                    onMouseLeave={e => {
+                                        e.currentTarget.style.opacity = "1";
+                                    }}
+                                >
+                                    Confirm Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>,
+                document.body
+            )}
+
             <style>{`
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-      `}</style>
+                @keyframes spin {
+                    from { transform: rotate(0deg); }
+                    to   { transform: rotate(360deg); }
+                }
+                @keyframes overlayIn {
+                    from { opacity: 0; }
+                    to   { opacity: 1; }
+                }
+                @keyframes modalIn {
+                    from { opacity: 0; transform: scale(0.92) translateY(12px); }
+                    to   { opacity: 1; transform: scale(1) translateY(0); }
+                }
+            `}</style>
         </div>
     );
 }

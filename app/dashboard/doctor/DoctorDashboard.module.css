@@ -148,7 +148,7 @@
   border-bottom: 1px solid #eef2f7;
   position: sticky;
   top: 0;
-  z-index: 100;
+  z-index: 1000;
   height: 72px;
   margin: 0;
   flex-shrink: 0;
@@ -898,13 +898,14 @@
 
   .topbar {
     padding: 16px 20px;
-    position: relative;
+    position: sticky;
+    top: 0;
     border-bottom: none;
     background: transparent;
     display: flex;
     justify-content: flex-end;
     margin-bottom: 0;
-    z-index: 10;
+    z-index: 1000;
     width: 100%;
     box-sizing: border-box;
 

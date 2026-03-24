@@ -32,6 +32,8 @@
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s ease;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .uploadBtn:hover {
@@ -128,7 +130,6 @@
     color: #f59e0b;
 }
 
-/* Upload Zone */
 .uploadZone {
     background: #ffffff;
     border: 2px dashed #cbd5e1;
@@ -243,6 +244,8 @@
     color: #64748b;
     cursor: pointer;
     transition: all 0.2s ease;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .backBtn:hover {
@@ -277,37 +280,6 @@
     color: #94a3b8;
 }
 
-/* Mobile Responsive */
-@media (max-width: 768px) {
-    .pageHeader {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 16px;
-    }
-
-    .uploadBtn {
-        width: 100%;
-        justify-content: center;
-    }
-
-    .documentsGrid {
-        grid-template-columns: 1fr;
-    }
-
-    .splitView {
-        grid-template-columns: 1fr;
-        height: auto;
-    }
-
-    .viewerPanel {
-        min-height: 400px;
-    }
-
-    .chatPanel {
-        min-height: 300px;
-    }
-}
-
 /* Split View Container */
 .splitViewContainer {
     padding: 0 24px;
@@ -319,8 +291,8 @@
 .viewerControls {
     display: flex;
     align-items: center;
-    gap: 20px;
-    padding: 16px 20px;
+    gap: 12px;
+    padding: 12px 16px;
     background: #ffffff;
     border: 1px solid #eef2f7;
     border-radius: 12px;
@@ -332,14 +304,19 @@
     font-weight: 600;
     color: #0f172a;
     margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
 }
 
 .viewToggle {
     display: flex;
-    gap: 8px;
+    gap: 4px;
     background: #f8fafc;
     padding: 4px;
     border-radius: 8px;
+    flex-shrink: 0;
 }
 
 .toggleBtn {
@@ -355,6 +332,7 @@
     color: #64748b;
     cursor: pointer;
     transition: all 0.2s ease;
+    white-space: nowrap;
 }
 
 .toggleBtn:hover {
@@ -376,4 +354,204 @@
     border: 1px solid #eef2f7;
     border-radius: 12px;
     overflow: hidden;
+}
+
+/* =============================================
+   MOBILE RESPONSIVE — max-width: 768px
+   ============================================= */
+@media (max-width: 768px) {
+
+    .pageHeader {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 0 16px;
+        margin-bottom: 16px;
+    }
+
+    .pageTitle {
+        font-size: 20px;
+    }
+
+    .pageSubtitle {
+        font-size: 13px;
+    }
+
+    .pageHeader>div:last-child {
+        width: 100%;
+        display: flex;
+        gap: 8px;
+        align-items: center;
+    }
+
+    .pageHeader>div:last-child>select {
+        flex: 1;
+        min-width: 0;
+        font-size: 13px;
+        padding: 8px 10px;
+    }
+
+    .uploadBtn {
+        padding: 10px 14px;
+        font-size: 13px;
+        gap: 6px;
+    }
+
+    .libraryView {
+        padding: 0 16px;
+        gap: 16px;
+    }
+
+    .documentsGrid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .documentCard {
+        padding: 14px;
+        gap: 12px;
+    }
+
+    .docIcon {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+    }
+
+    .docName {
+        font-size: 14px;
+    }
+
+    .uploadZone {
+        padding: 32px 20px;
+    }
+
+    .uploadZone h3 {
+        font-size: 16px;
+    }
+
+    .uploadZone p {
+        font-size: 13px;
+    }
+
+    .uploadZone svg {
+        width: 36px;
+        height: 36px;
+    }
+
+    .splitViewContainer {
+        padding: 0 12px;
+        gap: 12px;
+    }
+
+    .viewerControls {
+        flex-wrap: wrap;
+        gap: 10px;
+        padding: 10px 12px;
+    }
+
+    .backBtn {
+        padding: 7px 12px;
+        font-size: 12px;
+    }
+
+    .documentTitle {
+        font-size: 14px;
+        white-space: normal;
+        word-break: break-word;
+    }
+
+    .viewToggle {
+        width: 100%;
+        justify-content: stretch;
+    }
+
+    .toggleBtn {
+        flex: 1;
+        justify-content: center;
+        padding: 8px 10px;
+        font-size: 12px;
+        gap: 5px;
+    }
+
+    .toggleBtn svg {
+        width: 14px;
+        height: 14px;
+    }
+
+    .splitView {
+        grid-template-columns: 1fr;
+        gap: 12px;
+        min-height: unset;
+        padding: 0;
+    }
+
+    .viewerPanel {
+        min-height: 420px;
+        height: 50vh;
+    }
+
+    /* Chat / Timeline panel */
+    .sidePanel {
+        min-height: 400px;
+        height: 50vh;
+    }
+
+    .chatPanel {
+        min-height: 280px;
+        padding: 14px;
+    }
+}
+
+/* Extra small screens (< 400px) */
+@media (max-width: 400px) {
+    .pageHeader {
+        padding: 0 12px;
+    }
+
+    .libraryView {
+        padding: 0 12px;
+    }
+
+    .documentCard {
+        padding: 12px;
+        gap: 10px;
+    }
+
+    .docIcon {
+        width: 38px;
+        height: 38px;
+    }
+
+    .docIcon svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    .docName {
+        font-size: 13px;
+    }
+
+    .statusBadge {
+        padding: 4px 8px;
+        font-size: 10px;
+    }
+
+    .uploadBtn {
+        padding: 9px 12px;
+        font-size: 12px;
+    }
+
+    .toggleBtn {
+        font-size: 11px;
+        padding: 7px 8px;
+    }
+
+    .viewerPanel {
+        height: 45vh;
+    }
+
+    .sidePanel {
+        height: 45vh;
+    }
 }

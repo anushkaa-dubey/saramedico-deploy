@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import Topbar from "../components/Topbar";
 import PDFViewer from "./components/PDFViewer";
 import AIChat from "./components/AIChat";
@@ -9,6 +10,7 @@ import styles from "./ChartReview.module.css";
 import { motion } from "framer-motion";
 import { fetchPatients, fetchDoctorProfile, fetchPatientDocuments, uploadPatientDocument, fetchDocumentDetails } from "@/services/doctor";
 import { API_BASE_URL, getAuthHeaders } from "@/services/apiConfig";
+import { Trash2, AlertCircle } from "lucide-react";
 
 
 export default function ChartReviewPage() {
@@ -24,6 +26,9 @@ export default function ChartReviewPage() {
     const [loading, setLoading] = useState(true);
     const [deleting, setDeleting] = useState(null);
     const [uploading, setUploading] = useState(false);
+
+    // Delete confirmation modal state
+    const [deleteModal, setDeleteModal] = useState({ open: false, doc: null });
 
     useEffect(() => {
         loadData();
@@ -91,9 +96,15 @@ export default function ChartReviewPage() {
 
     const [uploadStatus, setUploadStatus] = useState({ msg: "", type: "" });
 
-    const handleDeleteDocument = async (docObj, e) => {
+    const openDeleteModal = (docObj, e) => {
         e.stopPropagation();
-        if (!confirm("Are you sure you want to delete this document? This cannot be undone.")) return;
+        setDeleteModal({ open: true, doc: docObj });
+    };
+
+    const handleDeleteDocument = async () => {
+        const docObj = deleteModal.doc;
+        if (!docObj) return;
+        setDeleteModal({ open: false, doc: null });
 
         setDeleting(docObj.id);
         try {
@@ -114,7 +125,6 @@ export default function ChartReviewPage() {
             }
         } catch (err) {
             console.error("Delete error:", err);
-            alert("Failed to delete document. Please try again.");
         } finally {
             setDeleting(null);
         }
@@ -293,35 +303,34 @@ export default function ChartReviewPage() {
                                 </span>
                                 {/* Delete Button */}
                                 <button
-                                    onClick={(e) => handleDeleteDocument(doc, e)}
+                                    onClick={(e) => openDeleteModal(doc, e)}
                                     disabled={deleting === doc.id}
                                     title="Delete document"
                                     style={{
                                         position: "absolute",
-                                        top: "8px",
-                                        right: "8px",
-                                        background: deleting === doc.id ? "#ccc" : "#fee2e2",
-                                        border: "none",
-                                        borderRadius: "6px",
-                                        padding: "4px 8px",
+                                        top: "10px",
+                                        right: "10px",
+                                        background: deleting === doc.id ? "#f1f5f9" : "#fff",
+                                        border: "1.5px solid #DFF2FF",
+                                        borderRadius: "8px",
+                                        padding: "4px 10px",
                                         cursor: deleting === doc.id ? "not-allowed" : "pointer",
-                                        color: "#dc2626",
+                                        color: "#359AFF",
                                         fontSize: "12px",
-                                        fontWeight: "600",
+                                        fontWeight: "700",
                                         display: "flex",
                                         alignItems: "center",
                                         gap: "4px",
                                         opacity: deleting === doc.id ? 0.5 : 1,
-                                        zIndex: 2
+                                        zIndex: 2,
+                                        transition: "all 0.2s ease"
                                     }}
+                                    onMouseEnter={e => { if (deleting !== doc.id) { e.currentTarget.style.background = '#f0f9ff'; e.currentTarget.style.borderColor = '#359AFF'; } }}
+                                    onMouseLeave={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#DFF2FF'; }}
                                 >
                                     {deleting === doc.id ? "..." : (
                                         <>
-                                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                                                <polyline points="3 6 5 6 21 6" />
-                                                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
-                                                <path d="M10 11v6M14 11v6" />
-                                            </svg>
+                                            <Trash2 size={13} strokeWidth={2.5} />
                                             Delete
                                         </>
                                     )}
@@ -418,6 +427,140 @@ export default function ChartReviewPage() {
                     </div>
                 </div>
             )}
+
+            {/* Delete Confirmation Modal */}
+            {deleteModal.open && typeof document !== "undefined" && createPortal(
+                <div style={{
+                    position: "fixed",
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    zIndex: 999999,
+                    background: "rgba(15, 23, 42, 0.4)",
+                    backdropFilter: "blur(6px)",
+                    WebkitBackdropFilter: "blur(6px)",
+                    display: "flex",
+                    alignItems: "flex-start",
+                    justifyContent: "center",
+                    padding: "6% 16px",
+                    animation: "fadeInOverlay 0.2s ease"
+                }}
+                    onClick={() => setDeleteModal({ open: false, doc: null })}
+                >
+                    <div style={{
+                        background: "#ffffff",
+                        borderRadius: "16px",
+                        width: "100%",
+                        maxWidth: "400px",
+                        boxShadow: "0 20px 40px rgba(0,0,0,0.1)",
+                        animation: "slideUpModal 0.25s cubic-bezier(0, 0.5, 0.5, 1)",
+                        overflow: "hidden",
+                        border: "1px solid #eef2f7"
+                    }}
+                        onClick={e => e.stopPropagation()}
+                    >
+                        {/* Modal body */}
+                        <div style={{ padding: "24px" }}>
+                            {/* Icon + heading row */}
+                            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: "16px", marginBottom: "24px" }}>
+                                <div style={{
+                                    width: "56px", height: "56px",
+                                    borderRadius: "14px",
+                                    background: "#eff6ff",
+                                    display: "flex", alignItems: "center", justifyContent: "center",
+                                    flexShrink: 0,
+                                }}>
+                                    <AlertCircle size={28} color="#359AFF" />
+                                </div>
+                                <div>
+                                    <h3 style={{
+                                        margin: "0 0 8px",
+                                        fontSize: "20px",
+                                        fontWeight: "700",
+                                        color: "#0f172a",
+                                    }}>
+                                        Delete Document?
+                                    </h3>
+                                    <p style={{
+                                        margin: 0,
+                                        fontSize: "14px",
+                                        color: "#64748b",
+                                        lineHeight: "1.5"
+                                    }}>
+                                        Are you sure you want to delete <span style={{ fontWeight: 600, color: "#1e293b" }}>&quot;{deleteModal.doc?.title || deleteModal.doc?.file_name}&quot;</span>? This action cannot be undone.
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Action buttons */}
+                            <div style={{
+                                display: "flex",
+                                gap: "12px",
+                            }}>
+                                <button
+                                    onClick={() => setDeleteModal({ open: false, doc: null })}
+                                    style={{
+                                        flex: 1,
+                                        padding: "12px 0",
+                                        borderRadius: "10px",
+                                        border: "1px solid #e2e8f0",
+                                        background: "#fff",
+                                        fontSize: "14px",
+                                        fontWeight: "600",
+                                        color: "#475569",
+                                        cursor: "pointer",
+                                        transition: "all 0.2s ease",
+                                    }}
+                                    onMouseEnter={e => {
+                                        e.currentTarget.style.background = "#f8fafc";
+                                    }}
+                                    onMouseLeave={e => {
+                                        e.currentTarget.style.background = "#fff";
+                                    }}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleDeleteDocument}
+                                    style={{
+                                        flex: 1,
+                                        padding: "12px 0",
+                                        borderRadius: "10px",
+                                        border: "none",
+                                        background: "#359AFF",
+                                        fontSize: "14px",
+                                        fontWeight: "600",
+                                        color: "#fff",
+                                        cursor: "pointer",
+                                        transition: "all 0.2s ease",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        gap: "8px",
+                                    }}
+                                    onMouseEnter={e => {
+                                        e.currentTarget.style.opacity = "0.9";
+                                    }}
+                                    onMouseLeave={e => {
+                                        e.currentTarget.style.opacity = "1";
+                                    }}
+                                >
+                                    Confirm Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>,
+                document.body
+            )}
+            <style>{`
+                @keyframes fadeInOverlay { from { opacity: 0; } to { opacity: 1; } }
+                @keyframes slideUpModal { from { opacity: 0; transform: translateY(20px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+                @media (max-width: 480px) {
+                    .deleteModalCard { padding: 20px 16px 18px !important; }
+                }
+            `}</style>
         </motion.div>
     );
 }

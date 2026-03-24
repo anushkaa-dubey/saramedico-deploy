@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useRef, Suspense } from "react";
+import { createPortal } from "react-dom";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Topbar from "../components/Topbar";
@@ -8,7 +9,7 @@ import PatientAIChat from "./components/PatientAIChat";
 import PatientVitals from "./components/PatientVitals";
 import styles from "./Patients.module.css";
 import { motion } from "framer-motion";
-import { Users, Calendar, ChevronRight, MoreVertical, Trash2, Search } from "lucide-react";
+import { Users, Calendar, ChevronRight, MoreVertical, Trash2, Search, AlertCircle } from "lucide-react";
 import { fetchAppointments, fetchPatients, fetchDoctorProfile, fetchPatientForDoctor } from "@/services/doctor";
 import { checkPermissions, requestAccess, revokeDoctorAccess } from "@/services/permissions";
 import OnboardPatientModal from "./components/OnboardPatientModal";
@@ -30,6 +31,9 @@ function PatientsContent() {
     const [permissionDenied, setPermissionDenied] = useState(false);
     const [accessStatus, setAccessStatus] = useState(null); // 'checking' | 'granted' | 'denied' | null
     const menuRef = useRef(null);
+
+    // Delete modals
+    const [deleteVisitModal, setDeleteVisitModal] = useState({ open: false, visitId: null });
 
     const calcAge = (dob) => {
         if (!dob) return null;
@@ -206,8 +210,10 @@ function PatientsContent() {
         return () => clearInterval(interval);
     }, []);
 
-    const handleDeleteConsultation = async (visitId) => {
-        if (!confirm("Are you sure you want to delete this consultation record? This cannot be undone.")) return;
+    const handleDeleteConsultation = async () => {
+        const visitId = deleteVisitModal.visitId;
+        if (!visitId) return;
+        setDeleteVisitModal({ open: false, visitId: null });
         setDeletingVisitId(visitId);
         try {
             const { deleteConsultation } = await import("@/services/consultation");
@@ -568,16 +574,22 @@ function PatientsContent() {
                                                             );
                                                         })()}
                                                         <button
-                                                            onClick={() => handleDeleteConsultation(visit.id)}
+                                                            onClick={(e) => { e.stopPropagation(); setDeleteVisitModal({ open: true, visitId: visit.id }); }}
                                                             disabled={deletingVisitId === visit.id}
-                                                            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '40px', borderRadius: '8px', cursor: deletingVisitId === visit.id ? 'not-allowed' : 'pointer', background: '#fff', border: '1px solid #fee2e2', color: '#ef4444', opacity: deletingVisitId === visit.id ? 0.5 : 1, transition: 'all 0.2s' }}
-                                                            onMouseEnter={e => { if (deletingVisitId !== visit.id) e.currentTarget.style.background = '#fef2f2'; }}
-                                                            onMouseLeave={e => e.currentTarget.style.background = '#fff'}
+                                                            style={{
+                                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                                width: '36px', height: '36px', borderRadius: '8px',
+                                                                cursor: deletingVisitId === visit.id ? 'not-allowed' : 'pointer',
+                                                                background: '#fff', border: '1.5px solid #DFF2FF', color: '#359AFF',
+                                                                opacity: deletingVisitId === visit.id ? 0.5 : 1, transition: 'all 0.2s'
+                                                            }}
+                                                            onMouseEnter={e => { if (deletingVisitId !== visit.id) { e.currentTarget.style.background = '#f0f9ff'; e.currentTarget.style.borderColor = '#359AFF'; } }}
+                                                            onMouseLeave={e => { e.currentTarget.style.background = '#fff'; e.currentTarget.style.borderColor = '#DFF2FF'; }}
                                                             title="Delete Consultation"
                                                         >
                                                             {deletingVisitId === visit.id
                                                                 ? <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ animation: "spin 0.8s linear infinite" }}><path d="M21 12a9 9 0 1 1-6.219-8.56" /></svg>
-                                                                : <Trash2 size={18} />}
+                                                                : <Trash2 size={16} strokeWidth={2.5} />}
                                                         </button>
                                                     </div>
                                                 </div>
@@ -604,7 +616,134 @@ function PatientsContent() {
                     {actionToast.msg}
                 </div>
             )}
-            <style>{`@keyframes spin { to { transform: rotate(360deg); } } @keyframes slideInToast { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } } .patients-topbar-wrap [class*="topbarSearchWrap"] { display: none !important; } ::-webkit-scrollbar { display: none; } * { scrollbar-width: none; }`}</style>
+
+            {/* Delete Visit Confirmation Modal */}
+            {deleteVisitModal.open && typeof document !== "undefined" && createPortal(
+                <div style={{
+                    position: "fixed",
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    zIndex: 999999,
+                    background: "rgba(15, 23, 42, 0.4)",
+                    backdropFilter: "blur(6px)",
+                    WebkitBackdropFilter: "blur(6px)",
+                    display: "flex",
+                    alignItems: "flex-start",
+                    justifyContent: "center",
+                    padding: "6% 16px",
+                    animation: "fadeInOverlay 0.2s ease"
+                }}
+                    onClick={() => setDeleteVisitModal({ open: false, visitId: null })}
+                >
+                    <div style={{
+                        background: "#ffffff",
+                        borderRadius: "16px",
+                        width: "100%",
+                        maxWidth: "400px",
+                        boxShadow: "0 20px 40px rgba(0,0,0,0.1)",
+                        animation: "slideUpModal 0.25s cubic-bezier(0, 0.5, 0.5, 1)",
+                        overflow: "hidden",
+                        border: "1px solid #eef2f7"
+                    }}
+                        onClick={e => e.stopPropagation()}
+                    >
+                        {/* Modal body */}
+                        <div style={{ padding: "24px" }}>
+                            {/* Icon + heading row */}
+                            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: "16px", marginBottom: "24px" }}>
+                                <div style={{
+                                    width: "56px", height: "56px",
+                                    borderRadius: "14px",
+                                    background: "#eff6ff",
+                                    display: "flex", alignItems: "center", justifyContent: "center",
+                                    flexShrink: 0,
+                                }}>
+                                    <AlertCircle size={28} color="#359AFF" />
+                                </div>
+                                <div>
+                                    <h3 style={{
+                                        margin: "0 0 8px",
+                                        fontSize: "20px",
+                                        fontWeight: "700",
+                                        color: "#0f172a",
+                                    }}>
+                                        Remove visit record?
+                                    </h3>
+                                    <p style={{
+                                        margin: 0,
+                                        fontSize: "14px",
+                                        color: "#64748b",
+                                        lineHeight: "1.5"
+                                    }}>
+                                        This will permanently remove the <span style={{ fontWeight: 600, color: "#1e293b" }}>consultation record</span> along with its SOAP note and session data.
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Action buttons */}
+                            <div style={{
+                                display: "flex",
+                                gap: "12px",
+                            }}>
+                                <button
+                                    onClick={() => setDeleteVisitModal({ open: false, visitId: null })}
+                                    style={{
+                                        flex: 1,
+                                        padding: "12px 0",
+                                        borderRadius: "10px",
+                                        border: "1px solid #e2e8f0",
+                                        background: "#fff",
+                                        fontSize: "14px",
+                                        fontWeight: "600",
+                                        color: "#475569",
+                                        cursor: "pointer",
+                                        transition: "all 0.2s ease",
+                                    }}
+                                    onMouseEnter={e => {
+                                        e.currentTarget.style.background = "#f8fafc";
+                                    }}
+                                    onMouseLeave={e => {
+                                        e.currentTarget.style.background = "#fff";
+                                    }}
+                                >
+                                    Keep it
+                                </button>
+                                <button
+                                    onClick={handleDeleteConsultation}
+                                    style={{
+                                        flex: 1,
+                                        padding: "12px 0",
+                                        borderRadius: "10px",
+                                        border: "none",
+                                        background: "#359AFF",
+                                        fontSize: "14px",
+                                        fontWeight: "600",
+                                        color: "#fff",
+                                        cursor: "pointer",
+                                        transition: "all 0.2s ease",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        gap: "8px",
+                                    }}
+                                    onMouseEnter={e => {
+                                        e.currentTarget.style.opacity = "0.9";
+                                    }}
+                                    onMouseLeave={e => {
+                                        e.currentTarget.style.opacity = "1";
+                                    }}
+                                >
+                                    Confirm Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>,
+                document.body
+            )}
+            <style>{`@keyframes spin { to { transform: rotate(360deg); } } @keyframes slideInToast { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } } @keyframes fadeInOverlay { from { opacity: 0; } to { opacity: 1; } } @keyframes slideUpModal { from { opacity: 0; transform: translateY(20px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } } .patients-topbar-wrap [class*="topbarSearchWrap"] { display: none !important; } ::-webkit-scrollbar { display: none; } * { scrollbar-width: none; }`}</style>
         </>
     );
 }
