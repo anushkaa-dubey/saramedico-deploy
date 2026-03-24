@@ -211,8 +211,8 @@
     display: grid;
     grid-template-columns: 1.5fr 1fr;
     gap: 16px;
-    min-height: calc(100vh - 200px);
-    height: auto;
+    height: calc(100vh - 210px);
+    overflow: hidden;
     padding: 0 24px;
 }
 
@@ -223,6 +223,7 @@
     overflow: hidden;
     display: flex;
     flex-direction: column;
+    height: 100%;
 }
 
 .viewerHeader {
@@ -354,6 +355,9 @@
     border: 1px solid #eef2f7;
     border-radius: 12px;
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
 }
 
 /* =============================================
@@ -482,19 +486,20 @@
     .splitView {
         grid-template-columns: 1fr;
         gap: 12px;
+        height: auto;
         min-height: unset;
         padding: 0;
     }
 
     .viewerPanel {
-        min-height: 420px;
-        height: 50vh;
+        min-height: 500px;
+        height: 70vh;
     }
 
     /* Chat / Timeline panel */
     .sidePanel {
-        min-height: 400px;
-        height: 50vh;
+        min-height: 600px;
+        height: 80vh;
     }
 
     .chatPanel {
@@ -548,10 +553,12 @@
     }
 
     .viewerPanel {
-        height: 45vh;
+        height: 70vh;
+        min-height: 400px;
     }
 
     .sidePanel {
-        height: 45vh;
+        height: 80vh;
+        min-height: 500px;
     }
 }
