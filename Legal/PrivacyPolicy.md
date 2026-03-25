@@ -31,6 +31,7 @@ Customers are responsible for determining whether their intended use of the Serv
 7. Recording and Consent
 If the Services are used to record patient or staff conversations, the customer is solely responsible for ensuring that all legally required notices, acknowledgments, and consents are obtained before recording begins.
 SaraMedico may provide user-interface indicators or workflow controls related to recording status, but the customer remains responsible for configuring and using those controls in compliance with applicable federal and state law.
+SaraMedico may record audio during consultations when enabled by the user or healthcare provider. These recordings may be used for transcription, documentation, and clinical workflow support. Users are responsible for obtaining any required patient consent before recording.
 8. Disclosure of Information
 ·         Service providers and subprocessors that support hosting, storage, communications, billing, analytics, customer support, AI processing, OCR, transcription, security monitoring, or other business operations, subject to contractual confidentiality and security restrictions.
 ·         Affiliates or successor entities in connection with a merger, acquisition, financing, reorganization, bankruptcy, or sale of all or part of our business, subject to standard confidentiality protections.

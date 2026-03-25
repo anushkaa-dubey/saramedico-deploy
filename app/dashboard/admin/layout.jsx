@@ -4,13 +4,14 @@ import { useRouter } from "next/navigation";
 import styles from "./AdminDashboard.module.css";
 import AdminSidebar from "./components/Sidebar";
 import AdminTopbar from "./components/Topbar";
+import { getAccessToken, getUser } from "@/services/tokenService";
 
 export default function AdminLayout({ children }) {
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        const token = localStorage.getItem("authToken");
+        const token = getAccessToken();
         if (!token) {
             router.replace("/auth/login");
             return;
@@ -18,10 +19,9 @@ export default function AdminLayout({ children }) {
 
         let role = "";
         try {
-            const cached = localStorage.getItem("user");
+            const cached = getUser();
             if (cached) {
-                const user = JSON.parse(cached);
-                const rawRole = user?.role || "";
+                const rawRole = cached?.role || "";
                 role = String(rawRole).split(".").pop().trim().toLowerCase();
             }
         } catch (_) { }

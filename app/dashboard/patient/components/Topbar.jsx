@@ -7,6 +7,8 @@ import { fetchProfile } from "@/services/patient";
 import AccessRequestsPanel from "./AccessRequestsPanel";
 import { useRouter } from "next/navigation";
 import NotificationBell from "../../components/NotificationBell";
+import { setUser as setStoredUser, getUser as getStoredUser } from "@/services/tokenService";
+import { logoutUser } from "@/services/auth";
 export default function Topbar() {
   const router = useRouter();
   const [user, setUser] = useState(null);
@@ -19,12 +21,12 @@ export default function Topbar() {
       try {
         const data = await fetchProfile();
         setUser(data);
-        if (data) localStorage.setItem("user", JSON.stringify(data));
+        if (data) setStoredUser(data);
       } catch (err) {
-        // Fallback to cached localStorage
-        const stored = localStorage.getItem("user");
+        // Fallback to cached tokenService
+        const stored = getStoredUser();
         if (stored) {
-          try { setUser(JSON.parse(stored)); } catch (_) { }
+          setUser(stored);
         }
       } finally {
         setLoading(false);
@@ -51,12 +53,9 @@ export default function Topbar() {
     };
   }, []);
 
-  const handleLogout = () => {
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("refreshToken");
-    localStorage.removeItem("doctorUser");
-    localStorage.removeItem("user");
-    router.push("/auth/login/patient");
+  const handleLogout = async () => {
+    await logoutUser();
+    router.push("/auth/login");
   };
 
   const displayName = user?.full_name

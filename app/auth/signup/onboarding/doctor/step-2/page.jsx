@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import styles from "./Step2.module.css";
 import logo from "@/public/logo2.svg";
 import { onboardDoctor } from "@/services/auth";
+import { setAccessToken, setRefreshToken, setUser as setStoredUser, getUser as getStoredUser } from "@/services/tokenService";
 
 export default function DoctorOnboardingStep2() {
   const router = useRouter();
@@ -23,7 +24,7 @@ export default function DoctorOnboardingStep2() {
   useEffect(() => {
     // Detect if user signed up via Google (no signup_data in session)
     const signupData = JSON.parse(sessionStorage.getItem("signup_data") || "{}");
-    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    const user = getStoredUser() || {};
     if (!signupData.password && user) {
       setIsGoogleAuth(true);
     }
@@ -67,13 +68,13 @@ export default function DoctorOnboardingStep2() {
       const data = await onboardDoctor(onboardingPayload);
       
       const token = data.access_token || data.token;
-      if (token) localStorage.setItem("authToken", token);
-      if (data.refresh_token) localStorage.setItem("refreshToken", data.refresh_token);
+      if (token) setAccessToken(token);
+      if (data.refresh_token) setRefreshToken(data.refresh_token);
 
       const user = data?.user || data;
       // Mark onboarding as complete in local user object
       user.onboarding_complete = true;
-      localStorage.setItem("user", JSON.stringify(user));
+      setStoredUser(user);
 
       // Clean up session data
       sessionStorage.removeItem("signup_data");

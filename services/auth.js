@@ -1,4 +1,12 @@
 import { API_BASE_URL, handleResponse } from "./apiConfig";
+import {
+    getAccessToken,
+    setAccessToken,
+    getRefreshToken,
+    setRefreshToken,
+    setUser,
+    clearTokens,
+} from "./tokenService";
 
 /**
  * unified Signup for Doctor / Hospital
@@ -20,8 +28,7 @@ export const signupUser = async (payload) => {
  * POST /api/v1/auth/onboarding/doctor
  */
 export const onboardDoctor = async (payload) => {
-    // Need to get the onboarding token from localStorage
-    const token = localStorage.getItem("authToken");
+    const token = getAccessToken();
     const response = await fetch(`${API_BASE_URL}/auth/onboarding/doctor`, {
         method: "POST",
         headers: {
@@ -38,8 +45,7 @@ export const onboardDoctor = async (payload) => {
  * POST /api/v1/auth/onboarding/hospital
  */
 export const onboardHospital = async (payload) => {
-    // Need to get the onboarding token from localStorage
-    const token = localStorage.getItem("authToken");
+    const token = getAccessToken();
     const response = await fetch(`${API_BASE_URL}/auth/onboarding/hospital`, {
         method: "POST",
         headers: {
@@ -82,31 +88,31 @@ export const loginUser = async (payload) => {
 
     const data = await handleResponse(response);
 
-    // Store token safely
+    // Store token safely via tokenService (sessionStorage)
     if (data.access_token || data.token) {
-        localStorage.setItem("authToken", data.access_token || data.token);
+        setAccessToken(data.access_token || data.token);
     }
 
-    // Store refresh token if available
     if (data.refresh_token) {
-        localStorage.setItem("refreshToken", data.refresh_token);
+        setRefreshToken(data.refresh_token);
     }
 
     // Store user object — needed by dashboard layout guards
     const user = data?.user || data;
     if (user && (user.role || user.email)) {
-        localStorage.setItem("user", JSON.stringify(user));
+        setUser(user);
     }
 
     return data;
 };
 
 /**
- * Logout user
+ * Logout user — calls backend to revoke refresh token, then clears all local session data.
+ * This is the SINGLE SOURCE OF TRUTH for logout. All logout triggers must call this.
  */
 export const logoutUser = async () => {
     try {
-        const refreshToken = localStorage.getItem("refreshToken");
+        const refreshToken = getRefreshToken();
         if (refreshToken) {
             // Send request to backend to invalidate token
             await fetch(`${API_BASE_URL}/auth/logout`, {
@@ -120,10 +126,8 @@ export const logoutUser = async () => {
     } catch (err) {
         console.error("Logout API failed:", err);
     } finally {
-        // Clear local session state entirely
-        localStorage.removeItem("authToken");
-        localStorage.removeItem("refreshToken");
-        localStorage.removeItem("user");
+        // Always clear local session — even if the API call fails
+        clearTokens();
     }
 };
 
@@ -131,7 +135,7 @@ export const logoutUser = async () => {
  * Get current user (session restore)
  */
 export const getCurrentUser = async () => {
-    const token = localStorage.getItem("authToken");
+    const token = getAccessToken();
 
     if (!token) return null;
 
@@ -144,7 +148,7 @@ export const getCurrentUser = async () => {
 
         if (!response.ok) {
             if (response.status === 401) {
-                localStorage.removeItem("authToken");
+                clearTokens();
             }
             return null;
         }
@@ -169,6 +173,7 @@ export const forgotPassword = async (payload) => {
 
     return handleResponse(response);
 };
+
 export const googleLogin = (role) => {
     const backendOrigin =
         process.env.NEXT_PUBLIC_API_URL
@@ -192,15 +197,15 @@ export const googleLogin = (role) => {
 export const handleGoogleCallback = (data) => {
     const token = data.access_token || data.token;
     if (token) {
-        localStorage.setItem("authToken", token);
+        setAccessToken(token);
     }
     if (data.refresh_token) {
-        localStorage.setItem("refreshToken", data.refresh_token);
+        setRefreshToken(data.refresh_token);
     }
 
     const user = data?.user || data;
     if (user && (user.role || user.email)) {
-        localStorage.setItem("user", JSON.stringify(user));
+        setUser(user);
     }
 
     const rawRole = user?.role || "";
@@ -229,7 +234,7 @@ export const uploadAvatar = async (file) => {
     const formData = new FormData();
     formData.append("file", file);
 
-    const token = localStorage.getItem("authToken");
+    const token = getAccessToken();
     const response = await fetch(`${API_BASE_URL}/users/me/avatar`, {
         method: "POST",
         headers: {
@@ -244,9 +249,10 @@ export const uploadAvatar = async (file) => {
 /**
  * Permanently delete the current user's account and all associated data.
  * Clears local storage after the API responds successfully.
+ * Backend also revokes all refresh tokens internally.
  */
 export const deleteMyAccount = async () => {
-    const token = localStorage.getItem("authToken");
+    const token = getAccessToken();
     const response = await fetch(`${API_BASE_URL}/auth/me`, {
         method: "DELETE",
         headers: {
@@ -256,8 +262,6 @@ export const deleteMyAccount = async () => {
     });
     const data = await handleResponse(response);
     // Clear all local session data regardless of backend response
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("refreshToken");
-    localStorage.removeItem("user");
+    clearTokens();
     return data;
 };

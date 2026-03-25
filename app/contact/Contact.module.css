@@ -320,6 +320,48 @@
   box-shadow: none;
 }
 
+/* Request Data Deletion Section */
+.dataDeletionSection {
+  margin-top: 40px;
+  padding-top: 32px;
+  border-top: 1px solid var(--border);
+  text-align: center;
+}
+
+.dataDeletionTitle {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--foreground);
+  margin: 0 0 12px;
+}
+
+.dataDeletionText {
+  font-size: 14px;
+  color: var(--muted-foreground);
+  margin: 0 0 20px;
+  line-height: 1.6;
+}
+
+.dataDeletionLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-radius: 10px;
+  background: rgba(0, 129, 254, 0.08);
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.2s;
+  border: 1px solid rgba(0, 129, 254, 0.15);
+}
+
+.dataDeletionLink:hover {
+  background: rgba(0, 129, 254, 0.12);
+  transform: translateY(-2px);
+}
+
 /* Success Message */
 .successMessage {
   text-align: center;

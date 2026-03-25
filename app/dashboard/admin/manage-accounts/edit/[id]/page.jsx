@@ -11,6 +11,7 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { fetchProfile } from "@/services/doctor";
 import { API_BASE_URL, getAuthHeaders } from "@/services/apiConfig";
+import { getUser as getStoredUser } from "@/services/tokenService";
 
 export default function EditUserPermissionsPage() {
     const params = useParams();
@@ -25,8 +26,8 @@ export default function EditUserPermissionsPage() {
         fetchProfile()
             .then(p => setAdminUser(p))
             .catch(() => {
-                const s = localStorage.getItem("user");
-                if (s) try { setAdminUser(JSON.parse(s)); } catch (_) { }
+                const s = getStoredUser();
+                if (s) setAdminUser(s);
             });
 
         // Fetch the specific account to edit

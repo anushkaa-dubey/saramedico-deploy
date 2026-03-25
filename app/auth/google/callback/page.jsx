@@ -23,6 +23,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
+import { setAccessToken, setRefreshToken, setUser as setStoredUser } from "@/services/tokenService";
 
 function GoogleCallbackContent() {
     const router = useRouter();
@@ -50,10 +51,10 @@ function GoogleCallbackContent() {
                 return;
             }
 
-            // Store auth data in localStorage (same pattern as regular login)
-            localStorage.setItem("authToken", accessToken);
+            // Store auth data via tokenService (same pattern as regular login)
+            setAccessToken(accessToken);
             if (refreshToken) {
-                localStorage.setItem("refreshToken", refreshToken);
+                setRefreshToken(refreshToken);
             }
 
             let user = null;
@@ -66,7 +67,7 @@ function GoogleCallbackContent() {
             }
 
             if (user) {
-                localStorage.setItem("user", JSON.stringify(user));
+                setStoredUser(user);
             }
 
             // Resolve role from stored user or the role hint saved before OAuth

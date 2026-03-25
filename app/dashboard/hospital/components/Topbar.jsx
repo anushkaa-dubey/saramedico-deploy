@@ -2,7 +2,7 @@
 import styles from "../HospitalDashboard.module.css";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { API_BASE_URL, getAuthHeaders } from "@/services/apiConfig";
+import { getUser as getStoredUser } from "@/services/tokenService";
 
 export default function Topbar({ title }) {
     const [user, setUser] = useState(null);
@@ -12,12 +12,11 @@ export default function Topbar({ title }) {
     useEffect(() => {
         const loadFromStorage = () => {
             try {
-                const cached = localStorage.getItem("user");
+                const cached = getStoredUser();
                 if (cached) {
-                    const parsed = JSON.parse(cached);
                     setUser({
-                        full_name: parsed?.full_name || parsed?.name || "Hospital Admin",
-                        avatar_url: parsed?.avatar_url || null,
+                        full_name: cached?.full_name || cached?.name || "Hospital Admin",
+                        avatar_url: cached?.avatar_url || null,
                     });
                 }
             } catch (_) { }

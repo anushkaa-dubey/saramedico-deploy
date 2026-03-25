@@ -148,6 +148,7 @@ export default function ContactPage() {
                       <option value="enterprise">Enterprise Solutions</option>
                       <option value="partnership">Partnership</option>
                       <option value="baa">BAA Request</option>
+                      <option value="deletion">Request Data Deletion</option>
                       <option value="other">Other</option>
                     </select>
                   </div>
@@ -185,6 +186,23 @@ export default function ContactPage() {
                   )}
                 </button>
               </form>
+
+              <div className={styles.dataDeletionSection}>
+                <h3 className={styles.dataDeletionTitle}>Request Data Deletion</h3>
+                <p className={styles.dataDeletionText}>
+                  As a healthcare platform handling sensitive data, we take your privacy seriously. You can request the deletion of your personal data at any time.
+                </p>
+                <a 
+                  href="mailto:privacy@saramedico.com?subject=Request Data Deletion" 
+                  className={styles.dataDeletionLink}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                    <polyline points="22,6 12,13 2,6"></polyline>
+                  </svg>
+                  Email Privacy Team
+                </a>
+              </div>
             </>
           ) : (
             <motion.div

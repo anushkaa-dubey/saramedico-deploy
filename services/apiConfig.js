@@ -80,10 +80,9 @@ export const handleResponse = async (response) => {
  * Common Authorization headers helper
  */
 export const getAuthHeaders = (isMultipart = false) => {
-    const token =
-        typeof window !== "undefined"
-            ? localStorage.getItem("authToken")
-            : null;
+    // Lazy-import to avoid circular deps (apiConfig is imported by many modules)
+    const { getAccessToken } = require("./tokenService");
+    const token = getAccessToken();
 
     const headers = {
         Authorization: token ? `Bearer ${token}` : ""

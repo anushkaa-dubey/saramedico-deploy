@@ -13,6 +13,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { fetchProfile, fetchAppointments, fetchDoctors } from "@/services/patient";
 import { fetchConsultations } from "@/services/consultation";
+import { setUser as setStoredUser, getUser as getStoredUser } from "@/services/tokenService";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -79,7 +80,7 @@ export default function PatientDashboard() {
         }
 
         setUser(profile);
-        localStorage.setItem("user", JSON.stringify(profile));
+        setStoredUser(profile);
 
         // Fetch everything in parallel
         const [cons, appts, docsList] = await Promise.all([
@@ -125,10 +126,10 @@ export default function PatientDashboard() {
         }));
 
       } catch (err) {
-        const stored = localStorage.getItem("user");
+        const stored = getStoredUser();
         if (stored) {
           try {
-            const parsed = JSON.parse(stored);
+            const parsed = stored;
 
             if (parsed.role !== "patient") {
               const path = roleToDashboard(parsed.role);

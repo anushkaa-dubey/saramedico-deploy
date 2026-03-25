@@ -5,6 +5,7 @@ import notification from "@/public/icons/notification.svg";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { fetchProfile } from "@/services/doctor";
+import { getUser as getStoredUser } from "@/services/tokenService";
 
 export default function BillingSettings() {
     const [user, setUser] = useState(null);
@@ -16,8 +17,8 @@ export default function BillingSettings() {
                 const profile = await fetchProfile();
                 setUser(profile);
             } catch (err) {
-                const stored = localStorage.getItem("user");
-                if (stored) { try { setUser(JSON.parse(stored)); } catch (_) { } }
+                const stored = getStoredUser();
+                if (stored) { setUser(stored); }
             } finally {
                 setLoading(false);
             }

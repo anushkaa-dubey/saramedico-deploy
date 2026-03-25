@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 // import { loginUser, getCurrentUser } from "@/services/auth";
 import { loginUser, googleLogin, appleLogin } from "@/services/auth";
+import { clearTokens, setAccessToken, setRefreshToken, setUser as setStoredUser } from "@/services/tokenService";
 import { Eye, EyeOff } from "lucide-react";
 
 export default function LoginForm() {
@@ -30,9 +31,7 @@ export default function LoginForm() {
 
     try {
       // Clear any stale auth data first to prevent stale-cache issues
-      localStorage.removeItem("authToken");
-      localStorage.removeItem("refreshToken");
-      localStorage.removeItem("user");
+      clearTokens();
 
       const data = await loginUser({ email, password });
       console.log("[Login] Raw API response:", data);
@@ -40,11 +39,11 @@ export default function LoginForm() {
       const token = data.access_token || data.token;
 
       if (token) {
-        localStorage.setItem("authToken", token);
+        setAccessToken(token);
       }
 
       if (data.refresh_token) {
-        localStorage.setItem("refreshToken", data.refresh_token);
+        setRefreshToken(data.refresh_token);
       }
 
       // Support both nested `data.user` and flat response shapes
@@ -55,7 +54,7 @@ export default function LoginForm() {
         throw new Error("Login succeeded but user data is missing. Please try again.");
       }
 
-      localStorage.setItem("user", JSON.stringify(user));
+      setStoredUser(user);
 
       // Normalize role — handles "doctor", "UserRole.doctor", "DOCTOR", etc.
       const rawRole = user.role || "";
@@ -63,7 +62,7 @@ export default function LoginForm() {
       console.log("[Login] Resolved role:", userRole);
 
       // Use window.location.href for hard redirects — this guarantees
-      // localStorage is fully committed before the dashboard layout mounts
+      // tokenService is fully committed before the dashboard layout mounts
       // and runs its own auth/role check.
       if (userRole === "doctor") {
         if (user.onboarding_complete === false) {

@@ -10,8 +10,8 @@ import {
   uploadHospitalAvatar
 } from "@/services/hospital";
 import { fetchProfile } from "@/services/doctor";
-import { logoutUser } from "@/services/auth";
-import { deleteMyAccount } from "@/services/auth";
+import { logoutUser, deleteMyAccount } from "@/services/auth";
+import { getUser as getStoredUser, setUser as setStoredUser } from "@/services/tokenService";
 import { useRouter } from "next/navigation";
 import {
   Building2,
@@ -76,10 +76,9 @@ export default function SettingsPage() {
         avatar_url: profile.avatar_url || org.logo_url || null,
       });
 
-      // Update localStorage for Topbar/Sidebar sync
-      const cached = localStorage.getItem("user");
-      let userData = {};
-      try { userData = cached ? JSON.parse(cached) : {}; } catch(_) {}
+      // Update tokenService for Topbar/Sidebar sync
+      const cached = getStoredUser();
+      let userData = cached || {};
       
       const newUserData = {
         ...userData,
@@ -88,7 +87,7 @@ export default function SettingsPage() {
         organization_name: org.name || userData.organization_name
       };
       
-      localStorage.setItem("user", JSON.stringify(newUserData));
+      setStoredUser(newUserData);
       window.dispatchEvent(new Event("profile-updated"));
 
     } catch (err) {

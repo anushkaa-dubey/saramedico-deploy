@@ -4,6 +4,8 @@ import styles from "../DoctorDashboard.module.css";
 import { useRouter } from "next/navigation";
 import { fetchDoctorProfile, fetchPatients } from "@/services/doctor";
 import NotificationBell from "../../components/NotificationBell";
+import { setUser as setStoredUser, getUser as getStoredUser } from "@/services/tokenService";
+import { logoutUser } from "@/services/auth";
 
 export default function Topbar() {
   const router = useRouter();
@@ -21,7 +23,7 @@ export default function Topbar() {
       try {
         const data = await fetchDoctorProfile();
         setUser(data);
-        if (data) localStorage.setItem("doctorUser", JSON.stringify(data));
+        if (data) setStoredUser(data);
         try {
           const ptList = await fetchPatients();
           setPatients(ptList || []);
@@ -29,9 +31,9 @@ export default function Topbar() {
           console.error("Failed to fetch patients for search", err);
         }
       } catch (err) {
-        const stored = localStorage.getItem("doctorUser");
+        const stored = getStoredUser();
         if (stored) {
-          try { setUser(JSON.parse(stored)); } catch (_) { }
+          setUser(stored);
         }
       } finally {
         setLoading(false);
@@ -58,12 +60,9 @@ export default function Topbar() {
     };
   }, []);
 
-  const handleLogout = () => {
-    localStorage.removeItem("authToken");
-    localStorage.removeItem("refreshToken");
-    localStorage.removeItem("doctorUser");
-    localStorage.removeItem("user");
-    router.push("/auth/login/doctor");
+  const handleLogout = async () => {
+    await logoutUser();
+    router.push("/auth/login");
   };
 
   const handleSearch = (e) => {

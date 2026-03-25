@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import styles from "./DoctorDashboard.module.css";
 import Sidebar from "./components/Sidebar";
+import { getAccessToken, getUser } from "@/services/tokenService";
 
 export default function DoctorLayout({ children }) {
     const pathname = usePathname();
@@ -10,8 +11,8 @@ export default function DoctorLayout({ children }) {
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        // Check auth synchronously from localStorage — no network call
-        const token = localStorage.getItem("authToken");
+        // Check auth synchronously via tokenService — no network call
+        const token = getAccessToken();
         if (!token) {
             router.replace("/auth/login");
             return;
@@ -19,10 +20,9 @@ export default function DoctorLayout({ children }) {
 
         let role = "";
         try {
-            const cached = localStorage.getItem("user");
+            const cached = getUser();
             if (cached) {
-                const user = JSON.parse(cached);
-                const rawRole = user?.role || "";
+                const rawRole = cached?.role || "";
                 role = String(rawRole).split(".").pop().trim().toLowerCase();
             }
         } catch (_) { }

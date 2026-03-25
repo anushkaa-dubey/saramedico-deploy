@@ -4,7 +4,8 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import styles from "../HospitalDashboard.module.css";
 import logo from "@/public/logo2.svg";
-import { API_BASE_URL, getAuthHeaders } from "@/services/apiConfig";
+import { logoutUser } from "@/services/auth";
+import { getUser as getStoredUser } from "@/services/tokenService";
 import {
     LayoutDashboard, Calendar, Users, Menu, LogOut,
     Building2, Stethoscope, Settings
@@ -24,24 +25,10 @@ export default function Sidebar() {
     const handleLogout = async () => {
         setLoggingOut(true);
         try {
-            const refreshToken =
-                localStorage.getItem("refreshToken") ||
-                localStorage.getItem("refresh_token") ||
-                "";
-
-            await fetch(`${API_BASE_URL}/auth/logout`, {
-                method: "POST",
-                headers: getAuthHeaders(),
-                body: JSON.stringify({ refresh_token: refreshToken }),
-            });
+            await logoutUser();
         } catch (err) {
             console.error("Logout error:", err);
         } finally {
-            // Always clear and redirect even if API fails
-            localStorage.removeItem("authToken");
-            localStorage.removeItem("refreshToken");
-            localStorage.removeItem("refresh_token");
-            localStorage.removeItem("user");
             router.replace("/auth/login");
         }
     };
@@ -61,8 +48,8 @@ export default function Sidebar() {
     useEffect(() => {
         const load = () => {
             try {
-                const cached = localStorage.getItem("user");
-                if (cached) setUser(JSON.parse(cached));
+                const cached = getStoredUser();
+                if (cached) setUser(cached);
             } catch (_) {}
         };
         load();

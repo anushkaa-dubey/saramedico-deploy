@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import { API_BASE_URL, getAuthHeaders } from "@/services/apiConfig";
 import { useRouter } from "next/navigation";
+import { getAccessToken } from "@/services/tokenService";
 import { Bell, ShieldCheck, Check, X } from "lucide-react";
 
 /**
@@ -59,7 +60,7 @@ export default function NotificationBell() {
     useEffect(() => {
         fetchNotifications();
 
-        const token = localStorage.getItem("authToken");
+        const token = getAccessToken();
         let retryCount = 0;
         const MAX_RETRIES = 5;
         let retryTimeout = null;

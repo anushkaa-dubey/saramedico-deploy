@@ -6,6 +6,7 @@ import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
 import logo from "@/public/logo2.svg";
 import { onboardHospital } from "@/services/auth";
+import { setAccessToken, setRefreshToken, setUser as setStoredUser } from "@/services/tokenService";
 
 export default function HospitalOnboarding() {
   const router = useRouter();
@@ -56,13 +57,13 @@ export default function HospitalOnboarding() {
       const data = await onboardHospital(payload);
       
       const token = data.access_token || data.token;
-      if (token) localStorage.setItem("authToken", token);
-      if (data.refresh_token) localStorage.setItem("refreshToken", data.refresh_token);
+      if (token) setAccessToken(token);
+      if (data.refresh_token) setRefreshToken(data.refresh_token);
 
       const user = data?.user || data;
       // Mark onboarding as complete in local user object
       user.onboarding_complete = true;
-      localStorage.setItem("user", JSON.stringify(user));
+      setStoredUser(user);
 
       // Clean up session data
       sessionStorage.removeItem("signup_data");

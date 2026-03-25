@@ -262,7 +262,7 @@ export default function ProfileSettings() {
                                 style={{ marginTop: "20px", paddingTop: "20px", borderTop: "1px dashed #fca5a5" }}
                             >
                                 <p style={{ color: "#7f1d1d", fontSize: "13px", fontWeight: "600", marginBottom: "12px" }}>
-                                    ⚠️ This will permanently delete your account and all data. Type <strong>DELETE</strong> to confirm.
+                                    ⚠️ This action is irreversible. All your data will be permanently deleted. Type <strong>DELETE</strong> to confirm.
                                 </p>
                                 <div style={{ display: "flex", gap: "12px", alignItems: "center", flexWrap: "wrap" }}>
                                     <input

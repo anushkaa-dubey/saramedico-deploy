@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { signupUser, googleLogin, appleLogin } from "@/services/auth";
+import { setAccessToken } from "@/services/tokenService";
 import { Eye, EyeOff } from "lucide-react";
 import styles from "./SignupForm.module.css";
 
@@ -75,7 +76,7 @@ export default function SignupForm() {
       
       const token = data.access_token || data.token;
       if (token) {
-        localStorage.setItem("authToken", token); // AuthToken captures Onboarding Scope token safely
+        setAccessToken(token); // Onboarding Scope token safely stored via tokenService
       }
 
       // 2. Safely capture the password dynamically into SessionStorage so they don't have to rewrite it for Onboarding Endpoints!
