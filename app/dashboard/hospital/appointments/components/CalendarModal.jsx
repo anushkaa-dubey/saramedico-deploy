@@ -1,11 +1,13 @@
 "use client";
 import { useState } from "react";
 import { createCalendarEvent } from "@/services/calendar";
+import Alert from "@/app/dashboard/components/Alert";
 
 export default function CalendarModal({ isOpen, onClose, selectedDate, onSave }) {
     const [title, setTitle] = useState("");
     const [time, setTime] = useState("10:00");
     const [loading, setLoading] = useState(false);
+    const [alertConfig, setAlertConfig] = useState({ open: false, title: "", message: "", type: "info" });
 
     if (!isOpen) return null;
 
@@ -21,12 +23,15 @@ export default function CalendarModal({ isOpen, onClose, selectedDate, onSave })
 
             const [hours, mins] = time.split(':');
             
-            // Format explicitly as UTC to ensure the exact selected date and time map into the database without local offsets pushing it over boundary lines
-            const formattedStartTime = `${dateStr}T${hours}:${mins}:00.000Z`;
+            // Correctly construct a local Date object first, then use .toISOString()
+            // This ensures the browser's local timezone offset is factored in correctly
+            const startLocal = new Date(selectedDate);
+            startLocal.setHours(parseInt(hours, 10), parseInt(mins, 10), 0, 0);
+            const formattedStartTime = startLocal.toISOString();
             
-            const startHourInt = parseInt(hours, 10);
-            const endHourStr = String(startHourInt + 1).padStart(2, '0');
-            const formattedEndTime = `${dateStr}T${endHourStr}:${mins}:00.000Z`;
+            const endLocal = new Date(startLocal);
+            endLocal.setHours(startLocal.getHours() + 1);
+            const formattedEndTime = endLocal.toISOString();
 
             await createCalendarEvent({
                 title,
@@ -37,7 +42,7 @@ export default function CalendarModal({ isOpen, onClose, selectedDate, onSave })
             setTitle("");
         } catch (err) {
             console.error("Failed to save calendar item:", err);
-            alert("Failed to save. Please try again.");
+            setAlertConfig({ open: true, title: "Save Failed", message: "We couldn't save this event. Please try again later.", type: "error" });
         } finally {
             setLoading(false);
         }
@@ -122,6 +127,14 @@ export default function CalendarModal({ isOpen, onClose, selectedDate, onSave })
                     </div>
                 </form>
             </div>
+            
+            <Alert 
+                isOpen={alertConfig.open} 
+                onClose={() => setAlertConfig({ ...alertConfig, open: false })}
+                title={alertConfig.title}
+                message={alertConfig.message}
+                type={alertConfig.type}
+            />
         </div>
     );
 }

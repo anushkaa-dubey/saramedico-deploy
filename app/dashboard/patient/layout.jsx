@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import styles from "./PatientDashboard.module.css";
 import Sidebar from "./components/Sidebar";
 import { getAccessToken, getUser } from "@/services/tokenService";
+import MeetingReminder from "../components/MeetingReminder";
 
 export default function PatientLayout({ children }) {
     const router = useRouter();
@@ -58,6 +59,7 @@ export default function PatientLayout({ children }) {
             <main className={styles.main}>
                 {children}
             </main>
+            <MeetingReminder />
         </div>
     );
 }

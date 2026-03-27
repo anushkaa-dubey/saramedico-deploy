@@ -23,7 +23,11 @@ const getApiBaseUrl = () => {
     const envUrl = process.env.NEXT_PUBLIC_API_URL;
 
     if (envUrl) {
-        const url = envUrl.trim();
+        let url = envUrl.trim();
+        // Remove trailing slash if present
+        if (url.endsWith('/')) {
+            url = url.slice(0, -1);
+        }
         // Ensure it ends with /api/v1
         return url.endsWith('/api/v1') ? url : url + '/api/v1';
     }
@@ -33,6 +37,34 @@ const getApiBaseUrl = () => {
 };
 
 export const API_BASE_URL = getApiBaseUrl();
+
+/**
+ * Gets the backend origin (e.g., http://localhost:8000) for OAuth and absolute URL constructs.
+ */
+export const getBackendOrigin = () => {
+    return process.env.NEXT_PUBLIC_API_URL
+        ? new URL(process.env.NEXT_PUBLIC_API_URL).origin
+        : "http://localhost:8000";
+};
+
+/**
+ * Normalises media URLs (e.g. from MinIO) to use the appropriate backend host and port.
+ */
+export const normalizeMediaUrl = (url) => {
+    if (!url) return url;
+    
+    const backendHost = process.env.NEXT_PUBLIC_API_URL
+        ? new URL(process.env.NEXT_PUBLIC_API_URL).hostname
+        : "localhost";
+        
+    let fixedUrl = url;
+    if (fixedUrl.includes('minio:9000') || fixedUrl.includes(':9000')) {
+        fixedUrl = fixedUrl
+            .replace(/^https?:\/\/minio:9000\//, `http://${backendHost}:9010/`)
+            .replace(/^https?:\/\/[^/]+:9000\//, `http://${backendHost}:9010/`);
+    }
+    return fixedUrl;
+};
 
 /**
  * Helper to handle fetch responses and extract meaningful errors

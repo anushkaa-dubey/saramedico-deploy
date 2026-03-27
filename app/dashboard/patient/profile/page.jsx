@@ -7,7 +7,7 @@ import { motion } from "framer-motion";
 import { fetchProfile } from "@/services/patient";
 import PhoneInput from "react-phone-input-2";
 import "react-phone-input-2/lib/style.css";
-import { API_BASE_URL, getAuthHeaders, handleResponse } from "@/services/apiConfig";
+import { API_BASE_URL, getAuthHeaders, handleResponse, normalizeMediaUrl } from "@/services/apiConfig";
 import { deleteMyAccount } from "@/services/auth";
 import { useRouter } from "next/navigation";
 import {
@@ -72,16 +72,7 @@ export default function ProfilePage() {
         setLoading(true);
         try {
             const data = await fetchProfile();
-            const BACKEND_HOST = process.env.NEXT_PUBLIC_API_URL
-                ? new URL(process.env.NEXT_PUBLIC_API_URL).hostname
-                : "localhost";
-
-            let avatarUrl = data.avatar_url || data.avatar || "";
-            if (avatarUrl && (avatarUrl.includes("minio:9000") || avatarUrl.includes(":9000"))) {
-                avatarUrl = avatarUrl
-                    .replace(/^https?:\/\/minio:9000\//, `http://${BACKEND_HOST}:9010/`)
-                    .replace(/^https?:\/\/[^/]+:9000\//, `http://${BACKEND_HOST}:9010/`);
-            }
+            let avatarUrl = normalizeMediaUrl(data.avatar_url || data.avatar || "");
 
             setProfileData({
                 firstName: data.first_name || data.full_name?.split(" ")[0] || data.fullName?.split(" ")[0] || "",
@@ -131,17 +122,9 @@ export default function ProfilePage() {
             if (!avatarRes.ok) throw new Error("Avatar upload failed");
 
             const avatarData = await handleResponse(avatarRes);
-            const BACKEND_HOST = process.env.NEXT_PUBLIC_API_URL
-                ? new URL(process.env.NEXT_PUBLIC_API_URL).hostname
-                : "localhost";
-
-            let newAvatar =
-                avatarData?.preview_url || avatarData?.avatar_url || avatarData?.url || profileData.avatar;
-            if (newAvatar && (newAvatar.includes("minio:9000") || newAvatar.includes(":9000"))) {
-                newAvatar = newAvatar
-                    .replace(/^https?:\/\/minio:9000\//, `http://${BACKEND_HOST}:9010/`)
-                    .replace(/^https?:\/\/[^/]+:9000\//, `http://${BACKEND_HOST}:9010/`);
-            }
+            let newAvatar = normalizeMediaUrl(
+                avatarData?.preview_url || avatarData?.avatar_url || avatarData?.url || profileData.avatar
+            );
 
             setProfileData((prev) => ({ ...prev, avatar: newAvatar }));
             setAvatarFile(null);

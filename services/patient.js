@@ -1,4 +1,4 @@
-import { API_BASE_URL, getAuthHeaders, handleResponse } from "./apiConfig";
+import { API_BASE_URL, getAuthHeaders, handleResponse, normalizeMediaUrl } from "./apiConfig";
 
 /**
  * =========================
@@ -145,19 +145,11 @@ export const fetchMedicalRecords = async () => {
     // Fix backend internal minio/docker URLs AND normalise camelCase -> snake_case
     // The /documents schema uses camelCase (downloadUrl, fileName, uploadedAt, fileType)
     // while the patient records UI expects snake_case (presigned_url, file_name, uploaded_at)
-    const BACKEND_HOST = process.env.NEXT_PUBLIC_API_URL
-        ? new URL(process.env.NEXT_PUBLIC_API_URL).hostname
-        : 'localhost';
-
     return rawDocs.map(doc => {
         // Normalise – carry camelCase through AND add snake_case aliases
         const url = doc.downloadUrl || doc.presigned_url || doc.url || doc.download_url;
-        let fixedUrl = url;
-        if (url && (url.includes('minio:9000') || url.includes(':9000'))) {
-            fixedUrl = url
-                .replace(/^https?:\/\/minio:9000\//, `http://${BACKEND_HOST}:9010/`)
-                .replace(/^https?:\/\/[^/]+:9000\//, `http://${BACKEND_HOST}:9010/`);
-        }
+        const fixedUrl = normalizeMediaUrl(url);
+
         return {
             ...doc,
             // snake_case aliases so all UI components work regardless of which endpoint they came from

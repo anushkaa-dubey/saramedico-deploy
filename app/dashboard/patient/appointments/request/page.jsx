@@ -6,10 +6,12 @@ import styles from "../../PatientDashboard.module.css";
 import { motion } from "framer-motion";
 import { useEffect } from "react";
 import { bookAppointment, fetchDoctors } from "@/services/patient";
+import Alert from "@/app/dashboard/components/Alert";
 
 export default function RequestAppointment() {
     const router = useRouter();
     const [doctors, setDoctors] = useState([]);
+    const [alertConfig, setAlertConfig] = useState({ open: false, title: "", message: "", type: "info" });
     const [formData, setFormData] = useState({
         doctor_id: "",
         requested_date: "",
@@ -50,7 +52,7 @@ export default function RequestAppointment() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!formData.doctor_id) {
-            alert("Please select a doctor");
+            setAlertConfig({ open: true, title: "Doctor Selection", message: "Please select a doctor before booking.", type: "warning" });
             return;
         }
         setSubmitting(true);
@@ -63,8 +65,13 @@ export default function RequestAppointment() {
             };
 
             await bookAppointment(payload);
-            alert("Appointment requested successfully!");
-            router.push("/dashboard/patient/appointments");
+            setAlertConfig({ 
+                open: true, 
+                title: "Booking Successful", 
+                message: "Your appointment request has been sent! You will be notified once it's approved.", 
+                type: "success",
+                onConfirm: () => router.push("/dashboard/patient/appointments")
+            });
         } catch (error) {
             console.error("Failed to request appointment:", error);
             setError(error.message || "Failed to book appointment. Please try again.");
@@ -163,6 +170,15 @@ export default function RequestAppointment() {
                     </button>
                 </form>
             </div>
+            
+            <Alert 
+                isOpen={alertConfig.open} 
+                onClose={() => setAlertConfig({ ...alertConfig, open: false })}
+                title={alertConfig.title}
+                message={alertConfig.message}
+                type={alertConfig.type}
+                onConfirm={alertConfig.onConfirm}
+            />
         </motion.div>
     );
 }

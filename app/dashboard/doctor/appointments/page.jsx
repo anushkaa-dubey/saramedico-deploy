@@ -1,22 +1,26 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Topbar from "../components/Topbar";
 import styles from "../DoctorDashboard.module.css";
 import { motion } from "framer-motion";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { fetchAppointments, approveAppointment, updateAppointmentStatus, fetchPatients } from "@/services/doctor";
 
-export default function DoctorAppointments() {
+function AppointmentsContent() {
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const statusFilter = searchParams.get('status');
+    const filterParam = searchParams.get('filter');
+    const priorityFilter = searchParams.get('priority');
+
     const [appointments, setAppointments] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+    const [patientsMap, setPatientsMap] = useState({});
 
     useEffect(() => {
         loadAppointments();
-    }, []);
-
-    const [patientsMap, setPatientsMap] = useState({});
+    }, [statusFilter, filterParam]);
 
     const loadAppointments = async () => {
         setLoading(true);
@@ -27,7 +31,6 @@ export default function DoctorAppointments() {
                 fetchPatients()
             ]);
 
-            // Create a lookup map for patients
             const pMap = {};
             if (Array.isArray(patientsData)) {
                 patientsData.forEach(p => {
@@ -35,7 +38,29 @@ export default function DoctorAppointments() {
                 });
             }
             setPatientsMap(pMap);
-            setAppointments(appointmentsData);
+            
+            let filtered = appointmentsData || [];
+            
+            if (statusFilter) {
+                filtered = filtered.filter(a => (a.status || '').toLowerCase() === statusFilter.toLowerCase());
+            }
+
+            if (priorityFilter) {
+                filtered = filtered.filter(a => (a.priority || '').toLowerCase() === priorityFilter.toLowerCase());
+            }
+            
+            if (filterParam === 'today') {
+                const today = new Date().toISOString().split('T')[0];
+                filtered = filtered.filter(a => {
+                    const dateStr = a.requested_date || a.scheduled_at || a.date;
+                    if (!dateStr) return false;
+                    const dateObj = new Date(dateStr);
+                    if (isNaN(dateObj.getTime())) return false;
+                    return dateObj.toISOString().split('T')[0] === today;
+                });
+            }
+            
+            setAppointments(filtered);
         } catch (error) {
             console.error("Failed to load data:", error);
             setError("Failed to load appointments. Please ensure you are logged in.");
@@ -49,9 +74,7 @@ export default function DoctorAppointments() {
 
         try {
             if (status === 'accepted') {
-                // Use requested_date as appointment_time
                 const appointmentTime = appointment.requested_date || new Date().toISOString();
-
                 const updated = await approveAppointment(id, {
                     appointment_time: appointmentTime
                 });
@@ -88,7 +111,11 @@ export default function DoctorAppointments() {
             <section className={styles.header}>
                 <div>
                     <h2 className={styles.greeting}>Appointment Requests</h2>
-                    <p className={styles.sub}>Manage your consultation requests</p>
+                    <p className={styles.sub}>
+                        {statusFilter ? `Showing ${statusFilter} requests` : 
+                         filterParam === 'today' ? "Showing today's requests" : 
+                         "Manage your consultation requests"}
+                    </p>
                 </div>
             </section>
 
@@ -98,7 +125,16 @@ export default function DoctorAppointments() {
                 {loading ? (
                     <div style={{ padding: "40px", textAlign: "center" }}>Loading requests...</div>
                 ) : appointments.length === 0 ? (
-                    <div style={{ padding: "40px", textAlign: "center" }}>No appointment requests found.</div>
+                    <div style={{ padding: "40px", textAlign: "center", color: "#64748b" }}>
+                        <h4>No Results Found</h4>
+                        <p>No appointment requests match your current filters.</p>
+                        <button 
+                            onClick={() => router.push('/dashboard/doctor/appointments')}
+                            style={{ marginTop: '16px', padding: '8px 16px', background: '#e2e8f0', border: 'none', borderRadius: '6px', cursor: 'pointer' }}
+                        >
+                            Clear Filters
+                        </button>
+                    </div>
                 ) : (
                     <div style={{ overflowX: "auto" }}>
                         <table className={styles.table}>
@@ -138,45 +174,56 @@ export default function DoctorAppointments() {
                                                 >
                                                     {apt.status.toUpperCase()}
                                                 </span>
+                                                {apt.created_by === 'doctor' && (
+                                                    <span style={{ fontSize: '11px', color: '#6366f1', background: '#eef2ff', padding: '2px 8px', borderRadius: '12px', width: 'fit-content', fontWeight: 600 }}>
+                                                        You Scheduled
+                                                    </span>
+                                                )}
                                             </div>
                                         </td>
                                         <td>
                                             {apt.status === 'pending' ? (
-                                                <div style={{ display: "flex", gap: "8px" }}>
-                                                    <button
-                                                        onClick={() => handleStatusChange(apt, 'accepted')}
-                                                        style={{ 
-                                                            background: "#22c55e", 
-                                                            color: "white", 
-                                                            border: "none", 
-                                                            padding: "6px 14px", 
-                                                            borderRadius: "8px", 
-                                                            cursor: "pointer",
-                                                            fontWeight: "600",
-                                                            fontSize: "12px",
-                                                            transition: "background 0.2s"
-                                                        }}
-                                                    >
-                                                        Accept
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleStatusChange(apt, 'declined')}
-                                                        style={{ 
-                                                            background: "#ef4444", 
-                                                            color: "white", 
-                                                            border: "none", 
-                                                            padding: "6px 14px", 
-                                                            borderRadius: "8px", 
-                                                            cursor: "pointer",
-                                                            fontWeight: "600",
-                                                            fontSize: "12px",
-                                                            transition: "background 0.2s"
-                                                        }}
-                                                    >
-                                                        Deny
-                                                    </button>
-                                                </div>
-                                            ) : apt.status === 'accepted' && 
+                                                apt.created_by === 'doctor' ? (
+                                                    <span style={{ fontSize: '12px', color: '#6366f1', background: '#eef2ff', padding: '6px 14px', borderRadius: '12px', fontWeight: 600, display: 'inline-block' }}>
+                                                        Patient Approval Pending
+                                                    </span>
+                                                ) : (
+                                                    <div style={{ display: "flex", gap: "8px" }}>
+                                                        <button
+                                                            onClick={() => handleStatusChange(apt, 'accepted')}
+                                                            style={{ 
+                                                                background: "#22c55e", 
+                                                                color: "white", 
+                                                                border: "none", 
+                                                                padding: "6px 14px", 
+                                                                borderRadius: "8px", 
+                                                                cursor: "pointer",
+                                                                fontWeight: "600",
+                                                                fontSize: "12px",
+                                                                transition: "background 0.2s"
+                                                            }}
+                                                        >
+                                                            Accept
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleStatusChange(apt, 'declined')}
+                                                            style={{ 
+                                                                background: "#ef4444", 
+                                                                color: "white", 
+                                                                border: "none", 
+                                                                padding: "6px 14px", 
+                                                                borderRadius: "8px", 
+                                                                cursor: "pointer",
+                                                                fontWeight: "600",
+                                                                fontSize: "12px",
+                                                                transition: "background 0.2s"
+                                                            }}
+                                                        >
+                                                            Deny
+                                                        </button>
+                                                    </div>
+                                                )
+                                            ) : (apt.status === 'accepted' || apt.status === 'scheduled') && 
                                                 !(apt.completion_time || apt.completionTime) && 
                                                 (apt.visit_state || apt.visitState) !== 'completed' ? (
                                                 <button
@@ -197,7 +244,7 @@ export default function DoctorAppointments() {
                                                 </button>
                                             ) : (
                                                 <span style={{ fontSize: "12px", color: "#64748b", fontWeight: "500" }}>
-                                                    No Actions
+                                                    {apt.status === 'completed' ? 'Completed' : 'No Actions'}
                                                 </span>
                                             )}
                                         </td>
@@ -209,5 +256,13 @@ export default function DoctorAppointments() {
                 )}
             </div>
         </motion.div>
+    );
+}
+
+export default function DoctorAppointments() {
+    return (
+        <Suspense fallback={<div style={{ padding: "40px", textAlign: "center" }}>Loading...</div>}>
+            <AppointmentsContent />
+        </Suspense>
     );
 }

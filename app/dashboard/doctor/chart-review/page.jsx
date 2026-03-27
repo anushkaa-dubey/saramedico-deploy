@@ -188,12 +188,10 @@ export default function ChartReviewPage() {
 
     const handleCitationClick = (page) => {
         setCurrentPage(page);
-        console.log(`Jumping to page ${page}`);
     };
 
     const handleEventClick = (page) => {
         setCurrentPage(page);
-        console.log(`Jumping to page ${page} from timeline`);
     };
 
     const handleSelectDocument = async (doc) => {

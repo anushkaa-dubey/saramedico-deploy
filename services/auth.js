@@ -1,4 +1,4 @@
-import { API_BASE_URL, handleResponse } from "./apiConfig";
+import { API_BASE_URL, handleResponse, getBackendOrigin } from "./apiConfig";
 import {
     getAccessToken,
     setAccessToken,
@@ -175,10 +175,7 @@ export const forgotPassword = async (payload) => {
 };
 
 export const googleLogin = (role) => {
-    const backendOrigin =
-        process.env.NEXT_PUBLIC_API_URL
-            ? new URL(process.env.NEXT_PUBLIC_API_URL).origin
-            : "http://localhost:8000";
+    const backendOrigin = getBackendOrigin();
 
     let googleLoginUrl = `${backendOrigin}/api/v1/auth/google/login`;
     if (role) googleLoginUrl += `?role=${role}`;
@@ -215,10 +212,7 @@ export const handleGoogleCallback = (data) => {
 };
 
 export const appleLogin = (role) => {
-    const backendOrigin =
-        process.env.NEXT_PUBLIC_API_URL
-            ? new URL(process.env.NEXT_PUBLIC_API_URL).origin
-            : "http://localhost:8000";
+    const backendOrigin = getBackendOrigin();
 
     let appleLoginUrl = `${backendOrigin}/api/v1/auth/apple/login`;
     if (role) appleLoginUrl += `?role=${role}`;

@@ -23,6 +23,7 @@ import { ClipboardList, AlertTriangle, CheckCircle, Timer, ChevronLeft, ChevronR
 
 import { fetchCalendarMonth, fetchCalendarDay, deleteCalendarEvent, createCalendarEvent } from "@/services/calendar";
 import StartSessionModal from "./components/StartSessionModal";
+import Alert from "@/app/dashboard/components/Alert";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -71,6 +72,7 @@ export default function DoctorDashboard() {
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
   const [newEvent, setNewEvent] = useState({ title: "", type: "event", time: "10:00" });
   const [showConsentModal, setShowConsentModal] = useState(false);
+  const [alertConfig, setAlertConfig] = useState({ open: false, title: "", message: "", type: "info", showCancel: false, onConfirm: null });
   const [metrics, setMetrics] = useState({
     pending_review: 0,
     high_urgency: 0,
@@ -179,16 +181,24 @@ export default function DoctorDashboard() {
   }, [currentDate]);
 
   const handleDeleteEvent = async (eventId) => {
-    if (!confirm("Are you sure you want to delete this event?")) return;
-    try {
-      await deleteCalendarEvent(eventId);
-      refreshMonthData();
-      if (selectedDayEvents) {
-        setSelectedDayEvents(selectedDayEvents.filter(e => e.id !== eventId));
+    setAlertConfig({
+      open: true,
+      title: "Delete Event",
+      message: "Are you sure you want to delete this event? This action cannot be undone.",
+      type: "warning",
+      showCancel: true,
+      onConfirm: async () => {
+        try {
+          await deleteCalendarEvent(eventId);
+          refreshMonthData();
+          if (selectedDayEvents) {
+            setSelectedDayEvents(selectedDayEvents.filter(e => e.id !== eventId));
+          }
+        } catch (err) {
+          console.error("Failed to delete event:", err);
+        }
       }
-    } catch (err) {
-      console.error("Failed to delete event:", err);
-    }
+    });
   };
 
   useEffect(() => {
@@ -210,7 +220,7 @@ export default function DoctorDashboard() {
   const currentYear = currentDate.getFullYear();
   const daysInMonthCount = new Date(currentYear, currentDate.getMonth() + 1, 0).getDate();
   const daysInMonth = Array.from({ length: daysInMonthCount }, (_, i) => i + 1);
-  const todayDate = new Date().getDate();
+  const todayDate = isMounted ? new Date().getDate() : null;
   const isTodayMonth = currentDate.getMonth() === new Date().getMonth() && currentDate.getFullYear() === new Date().getFullYear();
 
 
@@ -237,15 +247,20 @@ export default function DoctorDashboard() {
     if (!newEvent.title.trim()) return;
     try {
       const dateStr = getLocalDateString(selectedDate);
-      // Use event time if provided, otherwise use default times (9 AM to 10 AM)
-      const startTime = newEvent.time || "09:00";
-      const endTime = `${parseInt(startTime.split(':')[0]) + 1}:${startTime.split(':')[1]}:00Z`;
+      const [hours, mins] = startTime.split(':');
+      const startLocal = new Date(selectedDate);
+      startLocal.setHours(parseInt(hours, 10), parseInt(mins, 10), 0, 0);
+      const formattedStartTime = startLocal.toISOString();
       
+      const endLocal = new Date(startLocal);
+      endLocal.setHours(startLocal.getHours() + 1);
+      const formattedEndTime = endLocal.toISOString();
+
       await createCalendarEvent({
         title: newEvent.title,
         event_type: newEvent.type,
-        start_time: `${dateStr}T${startTime}:00Z`,
-        end_time: `${dateStr}T${endTime}`
+        start_time: formattedStartTime,
+        end_time: formattedEndTime
       });
       setIsEventModalOpen(false);
       setNewEvent({ title: "", type: "event", time: "10:00" });
@@ -348,8 +363,12 @@ export default function DoctorDashboard() {
             className={styles.summaryCards}
             variants={itemVariants}
             style={{ marginBottom: '24px' }}
-          >            <div className={styles.summaryCard}>
-              <div className={`${styles.summaryIcon}`} style={{ background: '#eff6ff', color: '#3b82f6' }}>
+          >
+            <div
+              className={styles.summaryCard}
+              onClick={() => router.push("/dashboard/doctor/appointments?status=pending")}
+              style={{ cursor: "pointer" }}
+            >              <div className={`${styles.summaryIcon}`} style={{ background: '#eff6ff', color: '#3b82f6' }}>
                 <ClipboardList size={22} />
               </div>
               <div className={styles.summaryInfo}>
@@ -359,8 +378,13 @@ export default function DoctorDashboard() {
               </div>
             </div>
 
-            <div className={styles.summaryCard}>
-              <div className={`${styles.summaryIcon}`} style={{ background: '#fef2f2', color: '#ef4444' }}>
+            <div
+              className={styles.summaryCard}
+              onClick={() => {
+                const section = document.getElementById("tasks-section");
+                section?.scrollIntoView({ behavior: "smooth" });
+              }} style={{ cursor: "pointer" }}
+            >              <div className={`${styles.summaryIcon}`} style={{ background: '#fef2f2', color: '#ef4444' }}>
                 <AlertTriangle size={22} />
               </div>
               <div className={styles.summaryInfo}>
@@ -370,8 +394,10 @@ export default function DoctorDashboard() {
               </div>
             </div>
 
-            <div className={styles.summaryCard}>
-              <div className={`${styles.summaryIcon}`} style={{ background: '#f0fdf4', color: '#16a34a' }}>
+            <div
+              className={styles.summaryCard}
+              onClick={() => router.push("/dashboard/doctor/appointments?status=completed")} style={{ cursor: "pointer" }}
+            >                <div className={`${styles.summaryIcon}`} style={{ background: '#f0fdf4', color: '#16a34a' }}>
                 <CheckCircle size={22} />
               </div>
               <div className={styles.summaryInfo}>
@@ -381,7 +407,9 @@ export default function DoctorDashboard() {
               </div>
             </div>
 
-            <div className={styles.summaryCard}>
+            <div
+              className={styles.summaryCard}
+              onClick={() => router.push("/dashboard/doctor/appointments?filter=today")} style={{ cursor: "pointer" }}          >
               <div className={`${styles.summaryIcon}`} style={{ background: '#fff7ed', color: '#f97316' }}>
                 <Timer size={22} />
               </div>
@@ -466,8 +494,9 @@ export default function DoctorDashboard() {
                 </div>
               </motion.div>
 
-              <motion.div variants={itemVariants} style={{ width: '100%' }}>
-                <TasksSection 
+              <motion.div variants={itemVariants} style={{ width: '100%' }} id="tasks-section"
+              >
+                <TasksSection
                   onRefresh={() => {
                     refreshMonthData();
                     loadDashboardData();
@@ -503,7 +532,7 @@ export default function DoctorDashboard() {
                     const isSelected = selectedDate && selectedDate.getDate() === day && selectedDate.getMonth() === currentDate.getMonth();
                     const dayInfo = monthData?.days?.find(d => d.day === day);
                     const eventCount = dayInfo?.event_count || 0;
-                    
+
                     // Count tasks for this day from the tasks state
                     const taskCount = (tasks || []).filter(task => {
                       if (!task.due_date) return false;
@@ -627,6 +656,16 @@ export default function DoctorDashboard() {
               </div>
             </div>
           )}
+          
+          <Alert 
+            isOpen={alertConfig.open} 
+            onClose={() => setAlertConfig({ ...alertConfig, open: false })}
+            title={alertConfig.title}
+            message={alertConfig.message}
+            type={alertConfig.type}
+            showCancel={alertConfig.showCancel}
+            onConfirm={alertConfig.onConfirm}
+          />
         </>
       )}
     </motion.div>

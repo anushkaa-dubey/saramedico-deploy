@@ -6,7 +6,7 @@ import styles from "../DoctorDashboard.module.css";
 import logo from "@/public/logo.png";
 import SignoutModal from "../../../auth/components/SignoutModal";
 import { logoutUser } from "@/services/auth";
-import { LayoutDashboard, Activity, FileText, Users, Settings, Plus, LogOut, Menu, X } from "lucide-react";
+import { LayoutDashboard, Activity, FileText, Users, Settings, Plus, LogOut, Menu, X, CalendarPlus } from "lucide-react";
 
 
 export default function Sidebar() {
@@ -73,6 +73,14 @@ export default function Sidebar() {
             >
               <Activity size={18} />
               Live Consult
+            </Link>
+            <Link
+              href="/dashboard/doctor/create-appointment"
+              className={`${styles.navItem} ${isActive("/dashboard/doctor/create-appointment") ? styles.active : ""}`}
+              onClick={() => setIsOpen(false)}
+            >
+              <CalendarPlus size={18} />
+              Schedule
             </Link>
             <Link
               href="/dashboard/doctor/chart-review"

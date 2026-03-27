@@ -4,6 +4,7 @@ import { useRouter, usePathname } from "next/navigation";
 import styles from "./DoctorDashboard.module.css";
 import Sidebar from "./components/Sidebar";
 import { getAccessToken, getUser } from "@/services/tokenService";
+import MeetingReminder from "../components/MeetingReminder";
 
 export default function DoctorLayout({ children }) {
     const pathname = usePathname();
@@ -59,6 +60,7 @@ export default function DoctorLayout({ children }) {
             <main className={styles.main}>
                 {children}
             </main>
+            <MeetingReminder />
         </div>
     );
 }

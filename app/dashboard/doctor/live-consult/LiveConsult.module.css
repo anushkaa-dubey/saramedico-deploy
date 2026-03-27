@@ -10,7 +10,6 @@
     overflow: hidden;
 }
 
-/* Topbar wrapper — always full width, avatar pinned to right */
 .topbarWrap {
     flex-shrink: 0;
     min-width: 0;
@@ -63,7 +62,7 @@
     margin: 0;
 }
 
-/* Step Bar */
+/* ── Step Bar ─────────────────────────────────────── */
 .stepBar {
     display: flex;
     align-items: center;
@@ -130,7 +129,7 @@
     flex-shrink: 0;
 }
 
-/* Grid */
+/* ── Grid ─────────────────────────────────────────── */
 .grid {
     display: grid;
     grid-template-columns: 1.5fr 1fr;
@@ -144,7 +143,7 @@
     gap: 24px;
 }
 
-/* Card */
+/* ── Card ─────────────────────────────────────────── */
 .card {
     background: #ffffff;
     border: 1px solid #eef2f7;
@@ -168,6 +167,7 @@
 .cardContent {
     flex: 1;
     margin-bottom: 20px;
+    min-width: 0;
 }
 
 .label {
@@ -180,10 +180,11 @@
     display: block;
 }
 
-/* Search Box */
+/* ── Search Box ───────────────────────────────────── */
 .searchBox {
     position: relative;
     margin-bottom: 20px;
+    width: 100%;
 }
 
 .searchIcon {
@@ -191,10 +192,10 @@
     left: 13px;
     top: 50%;
     transform: translateY(-50%);
+    display: block;
+    line-height: 1;
     color: #94a3b8;
     pointer-events: none;
-    display: flex;
-    align-items: center;
 }
 
 .searchInput {
@@ -209,6 +210,7 @@
     transition: all 0.2s ease;
     box-sizing: border-box;
     color: #0f172a;
+    display: block;
 }
 
 .searchInput:focus {
@@ -231,6 +233,7 @@
     padding: 2px;
     border-radius: 4px;
     transition: color 0.2s;
+    line-height: 1;
 }
 
 .clearBtn:hover {
@@ -284,6 +287,7 @@
     text-align: center;
 }
 
+/* ── Row / Field ──────────────────────────────────── */
 .row {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -293,6 +297,7 @@
 .field {
     display: flex;
     flex-direction: column;
+    min-width: 0;
 }
 
 .fakeInput {
@@ -307,7 +312,7 @@
     background: #f8fafc;
 }
 
-/* Session Type Select */
+/* ── Session Type Select ──────────────────────────── */
 .selectWrapper {
     position: relative;
 }
@@ -332,8 +337,6 @@
     border-color: #3b82f6;
     background: #fff;
 }
-
-/* removed disabled state — button always clickable */
 
 .chevron {
     color: #94a3b8;
@@ -383,10 +386,11 @@
     font-weight: 600;
 }
 
-/* Table */
+/* ── Table ────────────────────────────────────────── */
 .tableWrapper {
     overflow-x: auto;
     width: 100%;
+    -webkit-overflow-scrolling: touch;
 }
 
 .table {
@@ -451,6 +455,14 @@
     font-size: 12px;
     font-weight: 800;
     flex-shrink: 0;
+}
+
+/* Wraps name + buttons in patient cell */
+.patientNameWrap {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
 }
 
 .patientName {
@@ -527,7 +539,11 @@
     font-size: 11px;
 }
 
-/* Audio Config */
+.colHideMobile {}
+
+.colMeetingMobile {}
+
+/* ── Audio Config ─────────────────────────────────── */
 .inputBox {
     height: 52px;
     border: 1px solid #e2e8f0;
@@ -608,7 +624,7 @@
     background: #3b82f6;
 }
 
-/* Patient summary strip */
+/* ── Patient Summary Strip ────────────────────────── */
 .patientSummary {
     display: flex;
     align-items: center;
@@ -646,7 +662,7 @@
     margin-top: 2px;
 }
 
-/* Buttons */
+/* ── Buttons ──────────────────────────────────────── */
 .startSessionBtn {
     width: 100%;
     height: 48px;
@@ -734,14 +750,19 @@
     line-height: 1.6;
 }
 
-/* Responsive */
+/* ════════════════════════════════════════════════════
+   RESPONSIVE
+════════════════════════════════════════════════════ */
+
 @media (max-width: 1024px) {
     .grid {
         grid-template-columns: 1fr;
     }
 }
 
+/* ── 768px ────────────────────────────────────────── */
 @media (max-width: 768px) {
+
     .pageWrapper> :first-child {
         max-width: 100% !important;
         padding-left: 16px !important;
@@ -753,7 +774,7 @@
     }
 
     .inner {
-        padding: 16px 16px 24px 20px;
+        padding: 16px 16px 24px 16px;
     }
 
     .pageTitle {
@@ -769,16 +790,20 @@
         gap: 16px;
     }
 
+    /* Regular cards */
     .card {
-        padding: 18px 16px;
+        padding: 16px 14px;
         border-radius: 14px;
+        overflow: visible;
     }
 
-    .row {
-        grid-template-columns: 1fr;
-        gap: 12px;
+    .cardContent {
+        overflow: visible;
+        width: 100%;
+        min-width: 0;
     }
 
+    /* Step bar */
     .stepBar {
         gap: 0;
     }
@@ -791,30 +816,183 @@
         width: 24px;
     }
 
+    /* Row fields stack */
+    .row {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    /* ── Search ─────────────────────────────────── */
+    .searchBox {
+        position: relative;
+        display: block;
+        width: 100%;
+        margin-bottom: 16px;
+    }
+
+    .searchIcon {
+        position: absolute;
+        left: 13px;
+        top: 50%;
+        transform: translateY(-50%);
+        display: block;
+        line-height: 1;
+        color: #94a3b8;
+        pointer-events: none;
+    }
+
+    .searchInput {
+        display: block;
+        width: 100%;
+        height: 44px;
+        padding: 0 44px 0 40px;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        font-size: 16px;
+        background: #f8fafc;
+        color: #0f172a;
+        outline: none;
+        box-sizing: border-box;
+        -webkit-appearance: none;
+        appearance: none;
+    }
+
+    .card:has(.tableWrapper) {
+        padding-left: 0;
+        padding-right: 0;
+        overflow: hidden;
+    }
+
+    .card:has(.tableWrapper) .cardTitle {
+        padding-left: 14px;
+        padding-right: 14px;
+    }
+
+    .tableWrapper {
+        overflow-x: visible;
+        width: 100%;
+        padding: 0 14px;
+        box-sizing: border-box;
+    }
+
     .table {
-        min-width: 420px;
+        min-width: unset;
+        width: 100%;
         font-size: 12px;
+        table-layout: fixed;
+    }
+
+    .colHideMobile,
+    .colMeetingMobile {
+        display: none;
+    }
+
+    .table th:nth-child(1),
+    .table td:nth-child(1) {
+        width: 55%;
+    }
+
+    .table th:nth-child(2),
+    .table td:nth-child(2) {
+        width: 45%;
+    }
+
+    .table td,
+    .table th {
+        padding-top: 10px;
+        padding-bottom: 10px;
+        padding-left: 0;
+        padding-right: 6px;
+    }
+
+    .avatar {
+        width: 28px;
+        height: 28px;
+        font-size: 11px;
     }
 
     .patientName {
-        max-width: 90px;
+        max-width: 100%;
+        font-size: 12px;
     }
 
+    .patientNameWrap {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        min-width: 0;
+    }
+
+    .sessionBtns {
+        flex-direction: row;
+        gap: 3px;
+    }
+
+    .joinBtn,
+    .endBtn {
+        font-size: 9px;
+        padding: 2px 6px;
+        border-radius: 4px;
+        gap: 2px;
+    }
+
+    .activityBadge {
+        font-size: 10px;
+        padding: 2px 6px;
+        white-space: normal;
+        word-break: break-word;
+    }
+
+    /* ── Audio / wave ──────────────────────────── */
+    .waveBox {
+        height: 56px;
+        gap: 2px;
+        padding: 0 10px;
+    }
+
+    .waveBar {
+        width: 2px;
+    }
+
+    .inputBox {
+        height: 48px;
+        padding: 0 12px;
+        gap: 10px;
+    }
+
+    /* ── Action buttons ────────────────────────── */
     .startSessionBtn,
     .joinMeetBtn {
-        height: 52px;
-        font-size: 15px;
+        height: 48px;
+        font-size: 14px;
     }
 
-    .waveBox {
-        height: 60px;
+    /* ── Misc ──────────────────────────────────── */
+    .tipBox {
+        font-size: 11px;
+        padding: 12px 14px;
+    }
+
+    .notifyBanner {
+        font-size: 11px;
+        padding: 7px 10px;
+    }
+
+    .patientSummary {
+        padding: 10px 12px;
+        gap: 10px;
+    }
+
+    .summaryName {
+        font-size: 13px;
     }
 }
 
+/* ── 480px ────────────────────────────────────────── */
 @media (max-width: 480px) {
+
     .inner {
-        padding: 14px 12px 20px 18px;
-        /* extra left breathing room on small phones */
+        padding: 14px 12px 20px 12px;
     }
 
     .stepLabel {
@@ -826,6 +1004,29 @@
     }
 
     .card {
-        padding: 16px 14px;
+        padding: 16px 12px;
+    }
+
+    .card:has(.tableWrapper) {
+        padding-left: 0;
+        padding-right: 0;
+    }
+
+    .card:has(.tableWrapper) .cardTitle {
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+
+    .tableWrapper {
+        padding: 0 12px;
+    }
+
+    .table {
+        min-width: unset;
+        width: 100%;
+    }
+
+    .searchInput {
+        font-size: 16px;
     }
 }

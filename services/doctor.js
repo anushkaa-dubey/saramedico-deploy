@@ -639,6 +639,19 @@ export const createConsultation = async (payload) => {
     return handleResponse(response);
 };
 
+/**
+ * Doctor creating an appointment
+ * Endpoint: POST /api/v1/appointments/doctor-create
+ */
+export const bookAppointmentByDoctor = async (payload) => {
+    const response = await fetch(`${API_BASE_URL}/appointments/doctor-create`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(payload)
+    });
+    return handleResponse(response);
+};
+
 export const fetchConsultations = async () => {
     const response = await fetch(`${API_BASE_URL}/consultations`, {
         headers: getAuthHeaders(),

@@ -8,12 +8,15 @@ import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { fetchAppointments, fetchDoctors, fetchMyConsultations } from "@/services/patient";
+import { API_BASE_URL, getAuthHeaders } from "@/services/apiConfig";
 import {
     CalendarDays,
     FileText,
     Video,
     Plus,
     Stethoscope,
+    CheckCircle,
+    XCircle
 } from "lucide-react";
 
 export default function AppointmentsPage() {
@@ -98,6 +101,24 @@ export default function AppointmentsPage() {
             window.open(link, "_blank");
         } else {
             router.push(`/dashboard/patient/video-call${apt.is_consultation ? `?consultationId=${apt.id}` : ''}`);
+        }
+    };
+
+    const handleStatusUpdate = async (apt, newStatus) => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/appointments/${apt.id}/status`, {
+                method: 'PUT',
+                headers: getAuthHeaders(),
+                body: JSON.stringify({ status: newStatus })
+            });
+            if (!response.ok) {
+                const err = await response.json().catch(() => ({}));
+                throw new Error(err?.detail || "Failed to update status");
+            }
+            loadAppointments();
+        } catch (err) {
+            console.error("Failed to update status", err);
+            alert(err.message || "Failed to update status");
         }
     };
     // ─────────────────────────────────────────────────────────────────────────
@@ -187,6 +208,24 @@ export default function AppointmentsPage() {
                                                                 Join Meeting
                                                             </button>
                                                         )}
+                                                        {apt.status === "pending" && apt.created_by === "doctor" && (
+                                                            <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+                                                                <button
+                                                                    className={aptStyles.joinBtn}
+                                                                    style={{ background: '#22c55e' }}
+                                                                    onClick={() => handleStatusUpdate(apt, 'accepted')}
+                                                                >
+                                                                    <CheckCircle size={12} /> Accept
+                                                                </button>
+                                                                <button
+                                                                    className={aptStyles.joinBtn}
+                                                                    style={{ background: '#ef4444' }}
+                                                                    onClick={() => handleStatusUpdate(apt, 'rejected')}
+                                                                >
+                                                                    <XCircle size={12} /> Decline
+                                                                </button>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </td>
                                                 <td>
@@ -244,6 +283,25 @@ export default function AppointmentsPage() {
                                                 <Video size={14} />
                                                 Join Meeting
                                             </button>
+                                        )}
+
+                                        {apt.status === "pending" && apt.created_by === "doctor" && (
+                                            <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
+                                                <button
+                                                    className={aptStyles.mobileJoinBtn}
+                                                    style={{ background: '#22c55e', flex: 1 }}
+                                                    onClick={() => handleStatusUpdate(apt, 'accepted')}
+                                                >
+                                                    <CheckCircle size={14} /> Accept
+                                                </button>
+                                                <button
+                                                    className={aptStyles.mobileJoinBtn}
+                                                    style={{ background: '#ef4444', flex: 1 }}
+                                                    onClick={() => handleStatusUpdate(apt, 'rejected')}
+                                                >
+                                                    <XCircle size={14} /> Decline
+                                                </button>
+                                            </div>
                                         )}
                                     </div>
                                 ))}

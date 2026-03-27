@@ -73,14 +73,14 @@ export default function AIChat({ onCitationClick, patientId, doctorId, documentI
                 // For now, let's just use the current document's ID in the title or a generic one
                 // To be more precise, we could pass the doc object, but let's just create a new one
                 // if the most recent one isn't document-specific.
-                
-                const docSession = fetchedSessions?.find(s => s.title?.includes("Analysis:") && s.title?.includes(documentId.substring(0,8)));
-                
+
+                const docSession = fetchedSessions?.find(s => s.title?.includes("Analysis:") && s.title?.includes(documentId.substring(0, 8)));
+
                 if (docSession) {
                     setSessionId(docSession.session_id);
                     loadHistory(docSession.session_id);
                 } else {
-                    const newSession = await createAIChatSession(patientId, `Analysis: ${documentId.substring(0,8)}`);
+                    const newSession = await createAIChatSession(patientId, `Analysis: ${documentId.substring(0, 8)}`);
                     setSessionId(newSession.session_id);
                     setMessages([{
                         id: 'init',
@@ -326,7 +326,7 @@ export default function AIChat({ onCitationClick, patientId, doctorId, documentI
                 </div>
                 <div>
                     <h3 className={styles.headerTitle}>AI Assistant</h3>
-                    <p className={styles.headerSubtitle}>Powered by Claude 3.5 Sonnet</p>
+                    <p className={styles.headerSubtitle}>Powered by Claude 4.6 Sonnet</p>
                 </div>
                 {/* Chat History Icon */}
                 <button
