@@ -60,6 +60,9 @@ export default function NotificationBell() {
     useEffect(() => {
         fetchNotifications();
 
+        // 30s Polling fallback (Auto-refresh)
+        const pollInterval = setInterval(fetchNotifications, 30000);
+
         const token = getAccessToken();
         let retryCount = 0;
         const MAX_RETRIES = 5;
@@ -81,9 +84,6 @@ export default function NotificationBell() {
             }
 
             // WebSocket MUST connect directly to the backend (port 8000), not through Next.js proxy
-            // Next.js rewrites do not support WebSocket proxying.
-            // 1. Try NEXT_PUBLIC_API_URL (e.g. http://107.20.98.130:8000/api/v1) → convert to ws://
-            // 2. Fallback: same hostname as the page but port 8000
             let wsUrl;
             const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
             if (apiUrl && apiUrl.startsWith("http")) {
@@ -101,8 +101,14 @@ export default function NotificationBell() {
                     const message = JSON.parse(event.data);
                     if (message.type === "notification") {
                         const notif = message.data;
-                        setNotifications((prev) => [notif, ...prev]);
-                        setUnreadCount((prev) => prev + 1);
+                        
+                        // Only add if not already in list (avoid duplicates if polling and WS both fire)
+                        setNotifications((prev) => {
+                            if (prev.some(n => n.id === notif.id)) return prev;
+                            const newList = [notif, ...prev];
+                            setUnreadCount(newList.filter(n => !n.is_read).length);
+                            return newList;
+                        });
                         showToast(notif);
                     }
                 } catch (e) {
@@ -136,6 +142,7 @@ export default function NotificationBell() {
         document.addEventListener("mousedown", handleClickOutside);
 
         return () => {
+            clearInterval(pollInterval);
             clearTimeout(retryTimeout);
             if (wsRef.current) {
                 wsRef.current.onclose = null; // Prevent reconnect on intentional unmount

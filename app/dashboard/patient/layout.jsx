@@ -59,7 +59,7 @@ export default function PatientLayout({ children }) {
             <main className={styles.main}>
                 {children}
             </main>
-            <MeetingReminder />
+            <MeetingReminder role="patient" />
         </div>
     );
 }

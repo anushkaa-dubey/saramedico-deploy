@@ -7,7 +7,7 @@ import aptStyles from "./Appointments.module.css";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { fetchAppointments, fetchDoctors, fetchMyConsultations } from "@/services/patient";
+import { fetchAppointments, fetchDoctors, fetchMyConsultations, updateAppointmentStatus } from "@/services/patient";
 import { API_BASE_URL, getAuthHeaders } from "@/services/apiConfig";
 import {
     CalendarDays,
@@ -18,6 +18,7 @@ import {
     CheckCircle,
     XCircle
 } from "lucide-react";
+import Alert from "@/app/dashboard/components/Alert";
 
 export default function AppointmentsPage() {
     const router = useRouter();
@@ -25,6 +26,7 @@ export default function AppointmentsPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [doctorsMap, setDoctorsMap] = useState({});
+    const [declineState, setDeclineState] = useState({ open: false, apt: null, note: "" });
 
     useEffect(() => {
         loadAppointments();
@@ -105,20 +107,29 @@ export default function AppointmentsPage() {
     };
 
     const handleStatusUpdate = async (apt, newStatus) => {
+        if (newStatus === "rejected" || newStatus === "declined") {
+            setDeclineState({ open: true, apt, note: "" });
+            return;
+        }
+
         try {
-            const response = await fetch(`${API_BASE_URL}/appointments/${apt.id}/status`, {
-                method: 'PUT',
-                headers: getAuthHeaders(),
-                body: JSON.stringify({ status: newStatus })
-            });
-            if (!response.ok) {
-                const err = await response.json().catch(() => ({}));
-                throw new Error(err?.detail || "Failed to update status");
-            }
+            await updateAppointmentStatus(apt.id, newStatus);
             loadAppointments();
         } catch (err) {
             console.error("Failed to update status", err);
             alert(err.message || "Failed to update status");
+        }
+    };
+
+    const submitDecline = async () => {
+        const { apt, note } = declineState;
+        try {
+            await updateAppointmentStatus(apt.id, 'rejected', note);
+            setDeclineState({ open: false, apt: null, note: "" });
+            loadAppointments();
+        } catch (err) {
+            console.error("Failed to decline", err);
+            alert(err.message || "Failed to decline");
         }
     };
     // ─────────────────────────────────────────────────────────────────────────
@@ -310,6 +321,34 @@ export default function AppointmentsPage() {
                     )}
                 </div>
             </section>
+
+            <Alert
+                isOpen={declineState.open}
+                onClose={() => setDeclineState({ open: false, apt: null, note: "" })}
+                title="Decline Appointment"
+                message="Are you sure you want to decline this appointment? You can leave a message below."
+                type="warning"
+                showCancel={true}
+                confirmText="Send & Decline"
+                onConfirm={submitDecline}
+            >
+                <textarea
+                    placeholder="Enter reason for declining..."
+                    value={declineState.note}
+                    onChange={(e) => setDeclineState({ ...declineState, note: e.target.value })}
+                    style={{
+                        width: "100%",
+                        height: "100px",
+                        padding: "12px",
+                        borderRadius: "8px",
+                        border: "1px solid #e2e8f0",
+                        fontSize: "14px",
+                        marginTop: "12px",
+                        outline: "none",
+                        fontFamily: "inherit"
+                    }}
+                />
+            </Alert>
         </motion.div>
     );
 }

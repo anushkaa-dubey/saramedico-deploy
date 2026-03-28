@@ -5,7 +5,7 @@ import { fetchCalendarEvents } from "@/services/calendar";
 import Alert from "./Alert";
 import { Video } from "lucide-react";
 
-export default function MeetingReminder() {
+export default function MeetingReminder({ role = "patient" }) {
     const [upcomingMeeting, setUpcomingMeeting] = useState(null);
     const [showAlert, setShowAlert] = useState(false);
     const shownReminders = useRef(new Set()); // Track IDs to avoid duplicate alerts in the same session
@@ -64,12 +64,20 @@ export default function MeetingReminder() {
 
     if (!upcomingMeeting) return null;
 
+    const getAlertMessage = () => {
+        if (role === 'doctor') {
+            return `Upcoming patient consultation "${upcomingMeeting.title}" starts in ${upcomingMeeting.minutesLeft || '10'} minutes!`;
+        }
+        // Patient role
+        return `Your doctor invite "${upcomingMeeting.title}" is scheduled in next ${upcomingMeeting.minutesLeft || '10'} minutes!`;
+    };
+
     return (
         <Alert
             isOpen={showAlert}
             onClose={() => setShowAlert(false)}
             title="Meeting Reminder"
-            message={`Your meeting "${upcomingMeeting.title}" starts in ${upcomingMeeting.minutesLeft || '10'} minutes!`}
+            message={getAlertMessage()}
             type="info"
             confirmText="Join Now"
             onConfirm={handleJoin}

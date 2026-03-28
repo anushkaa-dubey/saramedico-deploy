@@ -3,9 +3,13 @@ import { API_BASE_URL, getAuthHeaders, handleResponse } from "./apiConfig";
 /**
  * GET /api/v1/calendar/month/{year}/{month}
  */
-export const fetchCalendarMonth = async (year, month) => {
+export const fetchCalendarMonth = async (year, month, doctorId = null) => {
+    const params = new URLSearchParams();
+    if (doctorId) params.append("doctor_id", doctorId);
+    const query = params.toString() ? `?${params.toString()}` : "";
+
     const response = await fetch(
-        `${API_BASE_URL}/calendar/month/${year}/${month}`,
+        `${API_BASE_URL}/calendar/month/${year}/${month}${query}`,
         {
             method: "GET",
             headers: getAuthHeaders(),
@@ -18,9 +22,13 @@ export const fetchCalendarMonth = async (year, month) => {
 /**
  * GET /api/v1/calendar/day/{date}
  */
-export const fetchCalendarDay = async (date) => {
+export const fetchCalendarDay = async (date, doctorId = null) => {
+    const params = new URLSearchParams();
+    if (doctorId) params.append("doctor_id", doctorId);
+    const query = params.toString() ? `?${params.toString()}` : "";
+
     const response = await fetch(
-        `${API_BASE_URL}/calendar/day/${date}`,
+        `${API_BASE_URL}/calendar/day/${date}${query}`,
         {
             method: "GET",
             headers: getAuthHeaders(),

@@ -348,6 +348,19 @@ export const updateAppointmentStatus = async (appointmentId, status, notes = "")
 };
 
 /**
+ * Create a new appointment as a doctor (invite a patient)
+ * Endpoint: POST /api/v1/appointments/doctor-create
+ */
+export const createDoctorAppointment = async (apptData) => {
+    const response = await fetch(`${API_BASE_URL}/appointments/doctor-create`, {
+        method: "POST",
+        headers: getAuthHeaders(),
+        body: JSON.stringify(apptData),
+    });
+    return handleResponse(response);
+};
+
+/**
  * Onboard/Invite a new patient (Doctor creating patient)
  */
 export const onboardPatient = async (patientData) => {

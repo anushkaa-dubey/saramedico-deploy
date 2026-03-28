@@ -5,7 +5,7 @@ import appt from "./Appointments.module.css";
 import dashStyles from "../HospitalDashboard.module.css";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
-import { fetchHospitalAppointments, fetchHospitalStats, fetchOrganizationMembers } from "@/services/hospital";
+import { fetchHospitalAppointments, fetchHospitalStats, fetchOrganizationMembers, fetchOrganizationDepartments, manageHospitalAppointment } from "@/services/hospital";
 import { fetchCalendarMonth, fetchCalendarDay, deleteCalendarEvent } from "@/services/calendar";
 import CalendarModal from "./components/CalendarModal";
 import {
@@ -35,7 +35,9 @@ export default function AppointmentsPage() {
     const [monthData, setMonthData] = useState({});
     const [stats, setStats] = useState({ notesPendingSignature: 0, transcriptionQueueStatus: 0, totalToday: 0 });
     const [doctors, setDoctors] = useState([]);
+    const [departments, setDepartments] = useState([]);
     const [doctorFilter, setDoctorFilter] = useState("All");
+    const [deptFilter, setDeptFilter] = useState("All");
     const [statusFilter, setStatusFilter] = useState('All');
     const [calendarMode, setCalendarMode] = useState('month');
     const [selectedDate, setSelectedDate] = useState(new Date());
@@ -45,16 +47,17 @@ export default function AppointmentsPage() {
     // ── API (unchanged) ──────────────────────────────────────────────────────
     const loadMonthData = async (date = selectedDate) => {
         try {
-            const data = await fetchCalendarMonth(date.getFullYear(), date.getMonth() + 1);
+            const docId = doctorFilter !== "All" ? doctorFilter : null;
+            const data = await fetchCalendarMonth(date.getFullYear(), date.getMonth() + 1, docId);
             setMonthData(data || {});
         } catch (err) { console.error(err); }
     };
 
     const loadDayData = async (date = selectedDate) => {
         try {
-            // Use local date parts to avoid timezone shift from toISOString() in UTC
             const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-            const data = await fetchCalendarDay(dateStr);
+            const docId = doctorFilter !== "All" ? doctorFilter : null;
+            const data = await fetchCalendarDay(dateStr, docId);
             const events = data?.events || [];
             
             // De-duplicate appointments for org view (where doctor & patient both in same org)
@@ -78,15 +81,22 @@ export default function AppointmentsPage() {
             if (doctorFilter !== "All") filters.doctor_id = doctorFilter;
             if (statusFilter !== "All") filters.visit_type = statusFilter;
 
-            const [statData, apptData, teamData] = await Promise.all([
+            const [statData, apptData, teamData, deptData] = await Promise.all([
                 fetchHospitalStats(),
                 fetchHospitalAppointments(filters),
                 fetchOrganizationMembers(),
+                fetchOrganizationDepartments()
             ]);
 
-            setStats(statData || { totalToday: 0, transcriptionQueueStatus: 0, notesPendingSignature: 0 });
+            setStats({
+                ...(statData?.metrics || {}),
+                totalToday: statData?.metrics?.todayAppointments || 0,
+                transcriptionQueueStatus: statData?.metrics?.transcriptionsInQueue || 0,
+                notesPendingSignature: statData?.metrics?.pendingNotes || 0
+            });
             setAppointments(apptData || []);
             setDoctors(teamData || []);
+            setDepartments(deptData || []);
             await Promise.all([loadMonthData(), loadDayData()]);
         } catch (err) { console.error(err); }
         finally { setLoading(false); }
@@ -196,9 +206,16 @@ export default function AppointmentsPage() {
                                         {selectedDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
                                     </h2>
                                     <div className={appt.listFilters}>
+                                        <select value={deptFilter} onChange={e => setDeptFilter(e.target.value)} className={appt.filterSelect}>
+                                            <option value="All">All Departments</option>
+                                            {departments.map(d => <option key={d} value={d}>{d}</option>)}
+                                        </select>
                                         <select value={doctorFilter} onChange={e => setDoctorFilter(e.target.value)} className={appt.filterSelect}>
                                             <option value="All">All Practitioners</option>
-                                            {doctors.map(d => <option key={d.id} value={d.id}>{d.name || d.full_name || "Doctor"}</option>)}
+                                            {doctors
+                                                .filter(d => deptFilter === "All" || d.department === deptFilter)
+                                                .map(d => <option key={d.id} value={d.id}>{d.name || d.full_name || "Doctor"}</option>)
+                                            }
                                         </select>
                                         <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className={appt.filterSelect}>
                                             <option value="All">All Modes</option>
@@ -249,6 +266,26 @@ export default function AppointmentsPage() {
                                                         </div>
                                                     </div>
                                                     {badge}
+                                                    {a.status === 'pending_hospital_approval' && (
+                                                        <div style={{ display: 'flex', gap: '8px', marginLeft: 'auto' }}>
+                                                            <button 
+                                                                onClick={(e) => { e.stopPropagation(); manageHospitalAppointment(a.id, 'approve').then(() => loadInitialData()); }}
+                                                                style={{ padding: '6px 12px', background: '#10b981', color: 'white', border: 'none', borderRadius: '6px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer' }}
+                                                            >
+                                                                Approve
+                                                            </button>
+                                                            <button 
+                                                                onClick={(e) => { 
+                                                                    e.stopPropagation(); 
+                                                                    const d = prompt("Enter new date/time (YYYY-MM-DD HH:MM):");
+                                                                    if (d) manageHospitalAppointment(a.id, 'reschedule', { new_date: new Date(d).toISOString() }).then(() => loadInitialData());
+                                                                }}
+                                                                style={{ padding: '6px 12px', background: '#3b82f6', color: 'white', border: 'none', borderRadius: '6px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer' }}
+                                                            >
+                                                                Reschedule
+                                                            </button>
+                                                        </div>
+                                                    )}
                                                 </div>
 
                                                 {/* Mobile card */}
@@ -281,6 +318,19 @@ export default function AppointmentsPage() {
                                         <span className={appt.calNavLabel}>{navLabel()}</span>
                                         <button className={appt.calNavBtn} onClick={() => navigate(1)}><ChevronRight size={15} /></button>
                                         <button className={appt.calTodayBtn} onClick={() => setSelectedDate(new Date())}>Today</button>
+                                    </div>
+                                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                                        <select value={deptFilter} onChange={e => setDeptFilter(e.target.value)} className={appt.filterSelect} style={{ fontSize: '12px' }}>
+                                            <option value="All">All Departments</option>
+                                            {departments.map(d => <option key={d} value={d}>{d}</option>)}
+                                        </select>
+                                        <select value={doctorFilter} onChange={e => setDoctorFilter(e.target.value)} className={appt.filterSelect} style={{ fontSize: '12px' }}>
+                                            <option value="All">All Practitioners</option>
+                                            {doctors
+                                                .filter(d => deptFilter === "All" || d.department === deptFilter)
+                                                .map(d => <option key={d.id} value={d.id}>{d.name || d.full_name || "Doctor"}</option>)
+                                            }
+                                        </select>
                                     </div>
                                     <div className={appt.calModeToggle}>
                                         {['month', 'week', 'day'].map(m => (

@@ -563,3 +563,43 @@ export const fetchAppointmentsOverview = async () => {
         };
     }
 };
+
+/**
+ * Fetch all appointments for the hospital (all doctors).
+ * Endpoint: GET /api/v1/hospital/appointments
+ */
+export const getHospitalAppointments = async (status = null) => {
+    try {
+        const query = status ? `?status=${status}` : "";
+        const response = await fetch(`${API_BASE_URL}/hospital/appointments${query}`, {
+            headers: getAuthHeaders(),
+        });
+        const data = await handleResponse(response);
+        return Array.isArray(data) ? data : [];
+    } catch (err) {
+        console.error("getHospitalAppointments error:", err);
+        return [];
+    }
+};
+
+/**
+ * Manage an appointment (Accept, Reschedule, Cancel).
+ * Endpoint: POST /api/v1/hospital/appointments/{appointment_id}/manage
+ */
+export const manageHospitalAppointment = async (appointmentId, action, data = {}) => {
+    try {
+        const params = new URLSearchParams({ action });
+        if (data.scheduled_at) params.append("scheduled_at", data.scheduled_at);
+        if (data.new_date) params.append("new_date", data.new_date);
+        if (data.notes) params.append("notes", data.notes);
+
+        const response = await fetch(`${API_BASE_URL}/hospital/appointments/${appointmentId}/manage?${params.toString()}`, {
+            method: "POST",
+            headers: getAuthHeaders(),
+        });
+        return await handleResponse(response);
+    } catch (err) {
+        console.error("manageHospitalAppointment error:", err);
+        throw err;
+    }
+};

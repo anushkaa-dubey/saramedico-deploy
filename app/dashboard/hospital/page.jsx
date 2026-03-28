@@ -5,10 +5,10 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { fetchHospitalDashboardOverview, fetchHospitalDirectory, fetchOrganizationMembers } from "@/services/hospital";
+import { fetchHospitalDashboardOverview, fetchHospitalDirectory, fetchOrganizationMembers, getHospitalAppointments } from "@/services/hospital";
 import { fetchProfile } from "@/services/doctor";
 import { API_BASE_URL, getAuthHeaders, handleResponse } from "@/services/apiConfig";
-import { Users, Building2, Stethoscope, Calendar, BarChart2, UserPlus } from "lucide-react";
+import { Users, Building2, Stethoscope, Calendar, BarChart2, UserPlus, FileCheck } from "lucide-react";
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 async function fetchDailyAgenda() {
@@ -47,7 +47,7 @@ export default function HospitalDashboard() {
     const router = useRouter();
     const [doctorProfile, setDoctorProfile] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [stats, setStats] = useState({ doctors: 0, patients: 0, staff: 0, appointments: 0, departments: 0 });
+    const [stats, setStats] = useState({ doctors: 0, patients: 0, staff: 0, appointments: 0, departments: 0, pendingRequests: 0 });
     const [recentActivity, setRecentActivity] = useState([]);
     const [dailyAgenda, setDailyAgenda] = useState([]);
     const [isMobile, setIsMobile] = useState(false);
@@ -63,12 +63,13 @@ export default function HospitalDashboard() {
         const loadData = async () => {
             setLoading(true);
             try {
-                const [profileData, dashboardOverview, directoryData, membersData, agendaData] = await Promise.all([
+                const [profileData, dashboardOverview, directoryData, membersData, agendaData, pendingData] = await Promise.all([
                     fetchProfile().catch(() => null),
                     fetchHospitalDashboardOverview().catch(() => ({ metrics: { totalDoctors: 0, todayAppointments: 0 }, recentActivities: [] })),
                     fetchHospitalDirectory().catch(() => ({ doctors: [], patients: [] })),
                     fetchOrganizationMembers().catch(() => []),
                     fetchDailyAgenda(),
+                    getHospitalAppointments("pending").catch(() => []),
                 ]);
 
                 if (!profileData) { router.replace("/auth/login"); return; }
@@ -95,6 +96,7 @@ export default function HospitalDashboard() {
                     staff: staffCount,
                     departments: uniqueDepts.length,
                     appointments: appsToday,
+                    pendingRequests: Array.isArray(pendingData) ? pendingData.length : 0,
                 });
 
                 setDailyAgenda(Array.isArray(agendaData) ? agendaData.slice(0, 6) : []);
@@ -121,6 +123,7 @@ export default function HospitalDashboard() {
         { label: "PATIENTS", value: stats.patients, icon: <Users size={18} />, color: "#10b981", bg: "#f0fdf4", href: "/dashboard/hospital/patients" },
         { label: "STAFF MEMBERS", value: stats.staff, icon: <Building2 size={18} />, color: "#f59e0b", bg: "#fffbeb", href: "/dashboard/hospital/staff-management" },
         { label: "APPOINTMENTS TODAY", value: stats.appointments, icon: <Calendar size={18} />, color: "#3b82f6", bg: "#eff6ff", href: "/dashboard/hospital/appointments" },
+        { label: "PENDING REQUESTS", value: stats.pendingRequests, icon: <FileCheck size={18} />, color: "#f59e0b", bg: "#fffbeb", href: "/dashboard/hospital/approval-queue" },
         { label: "DEPARTMENTS", value: stats.departments, icon: <BarChart2 size={18} />, color: "#ec4899", bg: "#fdf2f8", href: "/dashboard/hospital/departments" },
     ];
 

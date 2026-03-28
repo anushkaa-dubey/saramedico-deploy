@@ -16,7 +16,7 @@ import micWhiteIcon from "@/public/icons/mic_white.svg";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
-import { fetchAppointments, createConsultation, fetchProfile, fetchTasks, fetchPatients } from "@/services/doctor";
+import { fetchAppointments, createConsultation, fetchProfile, fetchTasks, fetchPatients, createDoctorAppointment } from "@/services/doctor";
 import { fetchQueueMetrics } from "@/services/consultation";
 import Link from "next/link";
 import { ClipboardList, AlertTriangle, CheckCircle, Timer, ChevronLeft, ChevronRight, X, Plus } from "lucide-react";
@@ -70,7 +70,7 @@ export default function DoctorDashboard() {
   const [selectedDate, setSelectedDate] = useState(null);
   const [isMounted, setIsMounted] = useState(false);
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
-  const [newEvent, setNewEvent] = useState({ title: "", type: "event", time: "10:00" });
+  const [newEvent, setNewEvent] = useState({ title: "", type: "event", time: "10:00", patientId: "", reason: "" });
   const [showConsentModal, setShowConsentModal] = useState(false);
   const [alertConfig, setAlertConfig] = useState({ open: false, title: "", message: "", type: "info", showCancel: false, onConfirm: null });
   const [metrics, setMetrics] = useState({
@@ -244,30 +244,46 @@ export default function DoctorDashboard() {
   };
 
   const handleCreateEvent = async () => {
-    if (!newEvent.title.trim()) return;
+    if (!newEvent.title.trim() && newEvent.type !== 'appointment') return;
     try {
       const dateStr = getLocalDateString(selectedDate);
-      const [hours, mins] = startTime.split(':');
+      const timeInUse = newEvent.time || "10:00";
+      const [hours, mins] = timeInUse.split(':');
       const startLocal = new Date(selectedDate);
       startLocal.setHours(parseInt(hours, 10), parseInt(mins, 10), 0, 0);
       const formattedStartTime = startLocal.toISOString();
-      
-      const endLocal = new Date(startLocal);
-      endLocal.setHours(startLocal.getHours() + 1);
-      const formattedEndTime = endLocal.toISOString();
 
-      await createCalendarEvent({
-        title: newEvent.title,
-        event_type: newEvent.type,
-        start_time: formattedStartTime,
-        end_time: formattedEndTime
-      });
+      if (newEvent.type === 'appointment') {
+        if (!newEvent.patientId) {
+          alert("Please select a patient");
+          return;
+        }
+        await createDoctorAppointment({
+          patient_id: newEvent.patientId,
+          requested_date: formattedStartTime,
+          reason: newEvent.reason || "Scheduled by provider"
+        });
+      } else {
+        const endLocal = new Date(startLocal);
+        endLocal.setHours(startLocal.getHours() + 1);
+        const formattedEndTime = endLocal.toISOString();
+
+        await createCalendarEvent({
+          title: newEvent.title,
+          event_type: newEvent.type,
+          start_time: formattedStartTime,
+          end_time: formattedEndTime
+        });
+      }
+
       setIsEventModalOpen(false);
-      setNewEvent({ title: "", type: "event", time: "10:00" });
+      setNewEvent({ title: "", type: "event", time: "10:00", patientId: "", reason: "" });
       refreshMonthData();
+      loadDashboardData();
       handleDayClick(selectedDate.getDate());
     } catch (err) {
-      console.error("Failed to create event:", err);
+      console.error("Failed to create:", err);
+      alert(err.message || "Operation failed");
     }
   };
 
@@ -380,10 +396,8 @@ export default function DoctorDashboard() {
 
             <div
               className={styles.summaryCard}
-              onClick={() => {
-                const section = document.getElementById("tasks-section");
-                section?.scrollIntoView({ behavior: "smooth" });
-              }} style={{ cursor: "pointer" }}
+              onClick={() => router.push("/dashboard/doctor/appointments?priority=high")} 
+              style={{ cursor: "pointer" }}
             >              <div className={`${styles.summaryIcon}`} style={{ background: '#fef2f2', color: '#ef4444' }}>
                 <AlertTriangle size={22} />
               </div>
@@ -512,9 +526,12 @@ export default function DoctorDashboard() {
               <motion.div variants={itemVariants} className={styles.card} style={{ marginBottom: '16px' }}>
                 <div className={styles.cardHeader}>
                   <h3 className={styles.cardTitle}>{currentMonthName} {currentYear}</h3>
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    <button onClick={() => changeMonth(-1)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#1e293b', fontWeight: 'bold', display: 'flex', alignItems: 'center' }}><ChevronLeft size={18} /></button>
-                    <button onClick={() => changeMonth(1)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#1e293b', fontWeight: 'bold', display: 'flex', alignItems: 'center' }}><ChevronRight size={18} /></button>
+                  <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                    <Link href="/dashboard/doctor/appointments" style={{ fontSize: '12px', color: '#3b82f6', fontWeight: 'bold', textDecoration: 'none' }}>View All</Link>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button onClick={() => changeMonth(-1)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#1e293b', fontWeight: 'bold', display: 'flex', alignItems: 'center' }}><ChevronLeft size={18} /></button>
+                      <button onClick={() => changeMonth(1)} style={{ border: 'none', background: 'none', cursor: 'pointer', color: '#1e293b', fontWeight: 'bold', display: 'flex', alignItems: 'center' }}><ChevronRight size={18} /></button>
+                    </div>
                   </div>
                 </div>
 
@@ -627,16 +644,6 @@ export default function DoctorDashboard() {
                 </div>
                 <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
                   <div>
-                    <label style={{ fontSize: '13px', color: '#64748b', display: 'block', marginBottom: '5px' }}>Title</label>
-                    <input
-                      type="text"
-                      value={newEvent.title}
-                      onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
-                      placeholder="Event title"
-                      style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0' }}
-                    />
-                  </div>
-                  <div>
                     <label style={{ fontSize: '13px', color: '#64748b', display: 'block', marginBottom: '5px' }}>Type</label>
                     <select
                       value={newEvent.type}
@@ -646,7 +653,56 @@ export default function DoctorDashboard() {
                       <option value="event">Event</option>
                       <option value="task">Task</option>
                       <option value="reminder">Reminder</option>
+                      <option value="appointment">Patient Appointment</option>
                     </select>
+                  </div>
+
+                  {newEvent.type === 'appointment' ? (
+                    <>
+                      <div>
+                        <label style={{ fontSize: '13px', color: '#64748b', display: 'block', marginBottom: '5px' }}>Select Patient</label>
+                        <select
+                          value={newEvent.patientId}
+                          onChange={(e) => setNewEvent({ ...newEvent, patientId: e.target.value })}
+                          style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0' }}
+                        >
+                          <option value="">-- Choose Patient --</option>
+                          {Object.values(patientsMap || {}).map(p => (
+                            <option key={p.id} value={p.user_id || p.id}>{p.full_name || p.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label style={{ fontSize: '13px', color: '#64748b', display: 'block', marginBottom: '5px' }}>Reason</label>
+                        <textarea
+                          value={newEvent.reason}
+                          onChange={(e) => setNewEvent({ ...newEvent, reason: e.target.value })}
+                          placeholder="Routine checkup, etc."
+                          style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0', minHeight: '80px' }}
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    <div>
+                      <label style={{ fontSize: '13px', color: '#64748b', display: 'block', marginBottom: '5px' }}>Title</label>
+                      <input
+                        type="text"
+                        value={newEvent.title}
+                        onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
+                        placeholder="Event title"
+                        style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0' }}
+                      />
+                    </div>
+                  )}
+
+                  <div>
+                    <label style={{ fontSize: '13px', color: '#64748b', display: 'block', marginBottom: '5px' }}>Time</label>
+                    <input
+                      type="time"
+                      value={newEvent.time}
+                      onChange={(e) => setNewEvent({ ...newEvent, time: e.target.value })}
+                      style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0' }}
+                    />
                   </div>
                 </div>
                 <div className={styles.modalActions} style={{ padding: '20px', borderTop: '1px solid #e2e8f0' }}>

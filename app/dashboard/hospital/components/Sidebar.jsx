@@ -8,7 +8,7 @@ import { logoutUser } from "@/services/auth";
 import { getUser as getStoredUser } from "@/services/tokenService";
 import {
     LayoutDashboard, Calendar, Users, Menu, LogOut,
-    Building2, Stethoscope, Settings
+    Building2, Stethoscope, Settings, Clock
 } from "lucide-react";
 
 export default function Sidebar() {
@@ -35,6 +35,7 @@ export default function Sidebar() {
 
     const navItems = [
         { label: "Dashboard", path: "/dashboard/hospital", icon: <LayoutDashboard size={18} /> },
+        { label: "Approval Queue", path: "/dashboard/hospital/approval-queue", icon: <Clock size={18} /> },
         { label: "Appointments", path: "/dashboard/hospital/appointments", icon: <Calendar size={18} /> },
         { label: "Patients", path: "/dashboard/hospital/patients", icon: <Users size={18} /> },
         { label: "Doctors", path: "/dashboard/hospital/doctors", icon: <Stethoscope size={18} /> },

@@ -11,6 +11,7 @@ export default function Alert({
     title, 
     message, 
     type = "info", // info, success, warning, error
+    children,
     confirmText = "OK",
     onConfirm,
     showCancel = false,
@@ -106,6 +107,8 @@ export default function Alert({
                                     {message}
                                 </p>
                             </div>
+
+                        {children && <div style={{ marginBottom: "20px" }}>{children}</div>}
                         </div>
 
                         <div style={{

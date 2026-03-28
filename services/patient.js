@@ -103,13 +103,16 @@ export const bookAppointment = async ({
  * Update appointment status (cancel etc.)
  *  Endpoint: PATCH /api/v1/appointments/{id}/status
  */
-export const updateAppointmentStatus = async (appointmentId, status) => {
+export const updateAppointmentStatus = async (appointmentId, status, reschedule_note = null) => {
+    const payload = { status };
+    if (reschedule_note) payload.reschedule_note = reschedule_note;
+
     const response = await fetch(
         `${API_BASE_URL}/appointments/${appointmentId}/status`,
         {
             method: "PATCH",
             headers: getAuthHeaders(),
-            body: JSON.stringify({ status }),
+            body: JSON.stringify(payload),
         }
     );
     return handleResponse(response);

@@ -3,6 +3,7 @@ import styles from "../HospitalDashboard.module.css";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { getUser as getStoredUser } from "@/services/tokenService";
+import NotificationBell from "../../components/NotificationBell";
 
 export default function Topbar({ title }) {
     const [user, setUser] = useState(null);
@@ -46,6 +47,7 @@ export default function Topbar({ title }) {
                 justifyContent: "flex-end",
                 gap: "12px",
             }}>
+                <NotificationBell />
                 <div style={{ display: "flex", alignItems: "center", gap: "10px", flexShrink: 0 }}>
                     <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: "2px" }}>
                         <span style={{ fontSize: "14px", fontWeight: "700", color: "#0f172a", lineHeight: 1, whiteSpace: "nowrap" }}>
