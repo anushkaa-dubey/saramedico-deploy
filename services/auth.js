@@ -174,6 +174,22 @@ export const forgotPassword = async (payload) => {
     return handleResponse(response);
 };
 
+/**
+ * Reset password with token
+ * POST /api/v1/auth/reset-password
+ */
+export const resetPassword = async (payload) => {
+    const response = await fetch(`${API_BASE_URL}/auth/reset-password`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+    });
+
+    return handleResponse(response);
+};
+
 export const googleLogin = (role) => {
     const backendOrigin = getBackendOrigin();
 

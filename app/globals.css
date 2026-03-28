@@ -330,6 +330,114 @@ input:focus {
   }
 }
 
+/* ── Reset Password Page ── */
+.reset-pw-container {
+  min-height: 100vh;
+  background: linear-gradient(160deg, #f1f5f9, #e0e7ff);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.reset-pw-card {
+  width: 100%;
+  max-width: 440px;
+  background: #fff;
+  border-radius: 16px;
+  padding: 48px 36px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+  text-align: center;
+  animation: fadeInUp 0.5s ease;
+}
+
+.reset-pw-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+  transition: background 0.4s ease;
+}
+
+.reset-pw-title {
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0 0 8px;
+  color: #1e293b;
+}
+
+.reset-pw-message {
+  font-size: 14px;
+  color: #64748b;
+  margin: 0 0 28px;
+  line-height: 1.5;
+}
+
+.reset-pw-action-btn {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  border: none;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s ease, transform 0.15s ease;
+}
+
+.reset-pw-action-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+/* Password toggle eye button */
+.pw-toggle-btn {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Password strength meter */
+.pw-strength-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: -8px;
+  margin-bottom: 16px;
+}
+
+.pw-strength-bar-track {
+  flex: 1;
+  height: 4px;
+  background: #e5e7eb;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.pw-strength-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.3s ease, background 0.3s ease;
+}
+
+.pw-strength-label {
+  font-size: 12px;
+  font-weight: 600;
+  min-width: 58px;
+  text-align: right;
+}
+
 /* RESPONSIVE MEDIA QUERIES */
 
 /* Tablet and smaller (< 1024px) */
