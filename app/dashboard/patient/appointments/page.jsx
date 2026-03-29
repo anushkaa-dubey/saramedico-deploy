@@ -122,10 +122,16 @@ export default function AppointmentsPage() {
     };
 
     const submitDecline = async () => {
-        const { apt, note } = declineState;
+        // Capture values immediately into local variables before any state changes
+        const capturedNote = declineState.note;
+        const capturedApt = declineState.apt;
+        if (!capturedApt) return;
+
+        // Close modal first to prevent double-submit
+        setDeclineState({ open: false, apt: null, note: "" });
+
         try {
-            await updateAppointmentStatus(apt.id, 'rejected', note);
-            setDeclineState({ open: false, apt: null, note: "" });
+            await updateAppointmentStatus(capturedApt.id, 'rejected', capturedNote);
             loadAppointments();
         } catch (err) {
             console.error("Failed to decline", err);

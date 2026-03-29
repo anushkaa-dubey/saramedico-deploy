@@ -43,7 +43,7 @@ export default function NotificationBell() {
 
     const fetchNotifications = async () => {
         try {
-            const res = await fetch(`${API_BASE_URL}/notifications?limit=20`, {
+            const res = await fetch(`${API_BASE_URL}/notifications?limit=20&is_read=false`, {
                 headers: getAuthHeaders(),
             });
             if (res.ok) {
@@ -310,8 +310,9 @@ export default function NotificationBell() {
         }
     };
 
-    // Render a single notification row, with special treatment for access_requested
+    // Render a single notification row
     const renderNotification = (notif) => {
+        if (notif.is_read) return null;
         const isAccessRequest = notif.type === "access_requested";
         const isProcessing = processingId === notif.id;
 
@@ -346,8 +347,8 @@ export default function NotificationBell() {
                             {new Date(notif.created_at).toLocaleString()}
                         </div>
 
-                        {/* Approve / Deny buttons — only for access_requested notifications shown to patients */}
-                        {isAccessRequest && (
+                        {/* Approve / Deny buttons — only for UNREAD access_requested notifications shown to patients */}
+                        {isAccessRequest && !notif.is_read && (
                             <div style={{ display: "flex", gap: "8px", marginTop: "10px" }}>
                                 <button
                                     onClick={(e) => { e.stopPropagation(); handleApprove(notif); }}

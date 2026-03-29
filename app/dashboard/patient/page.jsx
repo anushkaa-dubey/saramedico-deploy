@@ -199,7 +199,7 @@ export default function PatientDashboard() {
           {/* Mobile Title */}
           <div className={styles.mobileOnly} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
             <span style={{ fontWeight: "700", fontSize: "16px", color: "#1e293b" }}>Up Next</span>
-            <Link href="/dashboard/patient/appointments" style={{ color: "#2563eb", fontSize: "13px", fontWeight: "600", textDecoration: "none" }}>View Calendar</Link>
+            <Link href="/dashboard/patient/appointments" style={{ color: "#2563eb", fontSize: "13px", fontWeight: "600", textDecoration: "none" }}>View Appointments</Link>
           </div>
 
           <motion.div variants={itemVariants}>

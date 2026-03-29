@@ -396,7 +396,10 @@ export default function DoctorDashboard() {
 
             <div
               className={styles.summaryCard}
-              onClick={() => router.push("/dashboard/doctor/appointments?priority=high")} 
+              onClick={() => {
+                const el = document.getElementById('tasks-section');
+                if (el) el.scrollIntoView({ behavior: 'smooth' });
+              }}
               style={{ cursor: "pointer" }}
             >              <div className={`${styles.summaryIcon}`} style={{ background: '#fef2f2', color: '#ef4444' }}>
                 <AlertTriangle size={22} />

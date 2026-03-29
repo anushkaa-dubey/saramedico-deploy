@@ -27,7 +27,7 @@ export default function UpNextCard({ consultations = [], appointments = [] }) {
 
   const upcomingAppts = (Array.isArray(appointments) ? appointments : [])
     .filter(a => {
-      const isUpcoming = (a.status === "scheduled" || a.status === "accepted" || a.status === "pending");
+      const isUpcoming = (a.status === "scheduled" || a.status === "accepted" || a.status === "approved");
       return isUpcoming && a.requested_date && new Date(a.requested_date) >= now;
     })
     .map(a => ({

@@ -40,8 +40,12 @@ export default function Alert({
     };
 
     const handleConfirm = () => {
-        if (onConfirm) onConfirm();
-        onClose();
+        if (onConfirm) {
+            onConfirm();
+        } else {
+            // Only auto-close if there's no custom onConfirm handler
+            onClose();
+        }
     };
 
     return createPortal(
