@@ -180,7 +180,7 @@ export default function DoctorDashboard() {
     refreshMonthData();
   }, [currentDate]);
 
-  const handleDeleteEvent = async (eventId) => {
+  const handleDeleteEvent = async (ev) => {
     setAlertConfig({
       open: true,
       title: "Delete Event",
@@ -189,13 +189,25 @@ export default function DoctorDashboard() {
       showCancel: true,
       onConfirm: async () => {
         try {
-          await deleteCalendarEvent(eventId);
+          if (ev.event_type === "task") {
+            const { deleteTask } = await import('@/services/doctor');
+            await deleteTask(ev.task_id || ev.id);
+          } else if (ev.event_type === "appointment") {
+            const { updateAppointmentStatus } = await import('@/services/doctor');
+            await updateAppointmentStatus(ev.appointment_id || ev.id, "cancelled");
+          } else {
+            await deleteCalendarEvent(ev.id);
+          }
           refreshMonthData();
           if (selectedDayEvents) {
-            setSelectedDayEvents(selectedDayEvents.filter(e => e.id !== eventId));
+            setSelectedDayEvents(selectedDayEvents.filter(e => e.id !== ev.id));
           }
+          loadDashboardData();
         } catch (err) {
           console.error("Failed to delete event:", err);
+          alert((err && err.message) ? err.message : "Failed to delete event");
+        } finally {
+          setAlertConfig(prev => ({ ...prev, open: false }));
         }
       }
     });
@@ -619,7 +631,7 @@ export default function DoctorDashboard() {
                             </div>
                           </div>
                           <button
-                            onClick={() => handleDeleteEvent(ev.id)}
+                            onClick={() => handleDeleteEvent(ev)}
                             style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
                           >
                             <X size={16} />

@@ -92,19 +92,27 @@ export default function TasksSection(props) {
     }
   };
 
+  const [taskToDelete, setTaskToDelete] = useState(null);
+
   /**
    * Delete a task
    */
-  const handleDeleteTask = async (id) => {
-    if (!confirm("Are you sure you want to delete this task?")) return;
+  const handleDeleteTask = (id) => {
+    setTaskToDelete(id);
+  };
+
+  const confirmDeleteTask = async () => {
+    if (!taskToDelete) return;
 
     try {
-      await deleteTaskAPI(id);
-      setTasks(prev => prev.filter(t => t.id !== id));
+      await deleteTaskAPI(taskToDelete);
+      setTasks(prev => prev.filter(t => t.id !== taskToDelete));
       if (typeof props.onRefresh === 'function') props.onRefresh();
     } catch (error) {
       console.error("Failed to delete task:", error);
       alert("Failed to delete task");
+    } finally {
+      setTaskToDelete(null);
     }
   };
 
@@ -259,6 +267,65 @@ export default function TasksSection(props) {
               }}
             >
               Save
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Inline Modal for Task Deletion */}
+      {taskToDelete && (
+        <div style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: "rgba(255,255,255,0.95)",
+          backdropFilter: "blur(5px)",
+          display: "flex",
+          flexDirection: "column",
+          padding: "20px",
+          gap: "12px",
+          borderRadius: "12px",
+          zIndex: 10,
+          justifyContent: "center",
+          alignItems: "center",
+          textAlign: "center"
+        }}>
+          <h4 style={{ margin: 0, color: "#1e293b" }}>Delete Task</h4>
+          <p style={{ margin: "0 0 16px 0", fontSize: "14px", color: "#64748b" }}>
+            Are you sure you want to delete this task?
+          </p>
+          <div style={{ display: "flex", gap: "10px", width: "100%" }}>
+            <button
+              onClick={() => setTaskToDelete(null)}
+              style={{
+                flex: 1,
+                padding: "8px",
+                background: "#f1f5f9",
+                color: "#64748b",
+                border: "none",
+                borderRadius: "6px",
+                cursor: "pointer",
+                fontWeight: "600"
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={confirmDeleteTask}
+              style={{
+                flex: 1,
+                padding: "8px",
+                background: "#ef4444",
+                color: "white",
+                border: "none",
+                borderRadius: "6px",
+                cursor: "pointer",
+                fontWeight: "600"
+              }}
+            >
+              Delete
             </button>
           </div>
         </div>
