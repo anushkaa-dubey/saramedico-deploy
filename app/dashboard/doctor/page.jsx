@@ -16,6 +16,7 @@ import micWhiteIcon from "@/public/icons/mic_white.svg";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { fetchAppointments, createConsultation, fetchProfile, fetchTasks, fetchPatients, createDoctorAppointment } from "@/services/doctor";
 import { fetchQueueMetrics } from "@/services/consultation";
 import Link from "next/link";
@@ -226,6 +227,8 @@ export default function DoctorDashboard() {
     if (isMounted) fetchToday();
   }, [isMounted]);
 
+
+
   if (!isMounted || !currentDate) return null;
 
   const currentMonthName = currentDate.toLocaleString('default', { month: 'long' });
@@ -304,9 +307,8 @@ export default function DoctorDashboard() {
   };
 
   const handleStartSession = () => {
-    setShowConsentModal(true);
+    router.push("/dashboard/doctor/live-consult");
   };
-
   const visitStates = {
     "Scheduled": "#64748b",
     "Checked-In": "#3b82f6",
@@ -627,7 +629,7 @@ export default function DoctorDashboard() {
                           <div>
                             <div style={{ fontWeight: '700', fontSize: '14px', color: '#0f172a' }}>{ev.title}</div>
                             <div style={{ fontSize: '11px', color: '#64748b', marginTop: '2px' }}>
-                              {ev.start_time ? new Date(ev.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "All-day"}
+                              {ev.start_time ? new Date(ev.start_time).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }) : "All-day"}
                             </div>
                           </div>
                           <button
@@ -650,9 +652,9 @@ export default function DoctorDashboard() {
           </section>
 
           {/* Add Event Modal */}
-          {isEventModalOpen && (
-            <div className={styles.modalOverlay}>
-              <div className={styles.modalContent} style={{ maxWidth: '400px' }}>
+          {isEventModalOpen && createPortal(
+            <div className={styles.modalOverlay} onClick={() => setIsEventModalOpen(false)}>
+              <div className={styles.modalContent} style={{ maxWidth: '400px' }} onClick={(e) => e.stopPropagation()}>
                 <div className={styles.modalHeader}>
                   <h3 className={styles.modalTitle}>Add Calendar Event</h3>
                   <p className={styles.modalSub}>{selectedDate?.toDateString()}</p>
@@ -712,12 +714,30 @@ export default function DoctorDashboard() {
 
                   <div>
                     <label style={{ fontSize: '13px', color: '#64748b', display: 'block', marginBottom: '5px' }}>Time</label>
-                    <input
-                      type="time"
-                      value={newEvent.time}
-                      onChange={(e) => setNewEvent({ ...newEvent, time: e.target.value })}
-                      style={{ width: '100%', padding: '10px', borderRadius: '8px', border: '1px solid #e2e8f0' }}
-                    />
+                    <div style={{ display: "flex", alignItems: "center", borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden', background: '#fff' }}>
+                      <input
+                        type="time"
+                        value={newEvent.time}
+                        onChange={(e) => setNewEvent({ ...newEvent, time: e.target.value })}
+                        style={{ flex: 1, padding: '10px', border: 'none', outline: 'none', background: 'transparent' }}
+                      />
+                      <div style={{ width: '1px', height: '24px', background: '#e2e8f0' }}></div>
+                      <select
+                        value={parseInt((newEvent.time || "10:00").split(':')[0], 10) >= 12 ? 'PM' : 'AM'}
+                        onChange={(e) => {
+                          const isNowPM = e.target.value === 'PM';
+                          const [h, m] = (newEvent.time || "10:00").split(':');
+                          let hr24 = parseInt(h, 10);
+                          let hr12 = hr24 % 12 || 12;
+                          let newHr24 = isNowPM ? (hr12 === 12 ? 12 : hr12 + 12) : (hr12 === 12 ? 0 : hr12);
+                          setNewEvent({ ...newEvent, time: `${newHr24.toString().padStart(2, '0')}:${m}` });
+                        }}
+                        style={{ padding: '10px', border: 'none', outline: 'none', background: '#f8fafc', appearance: 'auto', textAlign: 'center', cursor: 'pointer', fontWeight: '500', color: '#0f172a' }}
+                      >
+                        <option value="AM">AM</option>
+                        <option value="PM">PM</option>
+                      </select>
+                    </div>
                   </div>
                 </div>
                 <div className={styles.modalActions} style={{ padding: '20px', borderTop: '1px solid #e2e8f0' }}>
@@ -726,10 +746,10 @@ export default function DoctorDashboard() {
                 </div>
               </div>
             </div>
-          )}
-          
-          <Alert 
-            isOpen={alertConfig.open} 
+            , document.body)}
+
+          <Alert
+            isOpen={alertConfig.open}
             onClose={() => setAlertConfig({ ...alertConfig, open: false })}
             title={alertConfig.title}
             message={alertConfig.message}
