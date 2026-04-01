@@ -459,7 +459,7 @@ export default function DoctorDashboard() {
               <motion.div className={styles.card} variants={itemVariants}>
                 <div className={styles.cardHeader}>
                   <h3 className={styles.cardTitle}>Recent Activity</h3>
-                  <Link href="/dashboard/doctor/patients" className={styles.link}>View All</Link>
+                  <Link href="/dashboard/doctor/appointments" className={styles.link}>View All</Link>
                 </div>
                 <div className={styles.tableWrapper}>
                   <table className={styles.table}>

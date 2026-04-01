@@ -7,6 +7,7 @@ import { Search, Mic, MicOff, Video, X, Clock, User, Activity, ChevronDown, Chec
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { fetchRecentPatients, fetchPatients, fetchDoctorProfile, createConsultation, fetchConsultations, completeConsultation, fetchAppointments, updateAppointmentStatus } from "@/services/doctor";
+import Alert from "@/app/dashboard/components/Alert";
 
 const SESSION_TYPES = [
     { value: "general", label: "General Checkup" },
@@ -29,6 +30,11 @@ export default function LiveConsultPage() {
     const [isRecording, setIsRecording] = useState(false);
     const [isCreatingSession, setIsCreatingSession] = useState(false);
     const [activeConsultation, setActiveConsultation] = useState(null);
+
+    // Alert UI state
+    const [alertState, setAlertState] = useState({ open: false, title: "", message: "", type: "info" });
+    const showAlert = (title, message, type = "info") => setAlertState({ open: true, title, message, type });
+    const closeAlert = () => setAlertState(s => ({ ...s, open: false }));
 
     const audioContextRef = useRef(null);
     const analyserRef = useRef(null);
@@ -253,7 +259,7 @@ export default function LiveConsultPage() {
             } else {
                 await completeConsultation(sessionId);
             }
-            alert("Session ended successfully.");
+            showAlert("Session Ended", "The consultation session has been ended successfully.", "success");
             const doctorId = doctorProfile?.doctor_profile?.id || doctorProfile?.id;
             const [recentData, activeData, aptRes] = await Promise.all([
                 doctorId ? fetchRecentPatients(doctorId).catch(() => []) : Promise.resolve([]),
@@ -266,7 +272,7 @@ export default function LiveConsultPage() {
             if (activeConsultation?.id === sessionId) setActiveConsultation(null);
         } catch (err) {
             console.error("Failed to end session", err);
-            alert("Failed to end session. Please try again.");
+            showAlert("Error", "Failed to end session. Please try again.", "error");
         }
     };
 
@@ -275,7 +281,7 @@ export default function LiveConsultPage() {
 
     const onStartSession = async () => {
         if (!selectedPatient || selectedPatient.id === "N/A") {
-            alert("Please search and select a patient record first.");
+            showAlert("No Patient Selected", "Please search and select a patient record before starting a session.", "warning");
             return;
         }
         setIsCreatingSession(true);
@@ -292,19 +298,20 @@ export default function LiveConsultPage() {
                 setActiveConsultation(resp);
                 // Patient notification is triggered server-side on consultation creation
             } else if (resp?.detail) {
-                alert(`Error: ${resp.detail}`);
+                showAlert("Session Error", `Error: ${resp.detail}`, "error");
             } else {
                 throw new Error("Invalid session creation response");
             }
         } catch (err) {
             console.error("Consultation start failed", err);
-            alert("Failed to start session. Check your connection or patient permissions.");
+            showAlert("Failed to Start Session", "Check your connection or patient permissions and try again.", "error");
         } finally {
             setIsCreatingSession(false);
         }
     };
 
     return (
+        <>
         <motion.div
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
@@ -605,5 +612,16 @@ export default function LiveConsultPage() {
                 </section>
             </div>{/* end .inner */}
         </motion.div>
+
+        <Alert
+            isOpen={alertState.open}
+            onClose={closeAlert}
+            title={alertState.title}
+            message={alertState.message}
+            type={alertState.type}
+            confirmText="OK"
+            onConfirm={closeAlert}
+        />
+        </>
     );
 }

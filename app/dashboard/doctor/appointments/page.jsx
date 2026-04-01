@@ -243,9 +243,31 @@ function AppointmentsContent() {
                                                     Start Meeting
                                                 </button>
                                             ) : (
-                                                <span style={{ fontSize: "12px", color: "#64748b", fontWeight: "500" }}>
-                                                    {apt.status === 'completed' ? 'Completed' : 'No Actions'}
-                                                </span>
+                                                apt.status === 'rejected' || apt.status === 'declined' ? (
+                                                    <div style={{ maxWidth: "200px" }}>
+                                                        {(apt.reschedule_note || apt.patient_note || apt.notes) ? (
+                                                            <span style={{
+                                                                fontSize: "12px",
+                                                                color: "#64748b",
+                                                                background: "#fef2f2",
+                                                                border: "1px solid #fee2e2",
+                                                                borderRadius: "8px",
+                                                                padding: "5px 10px",
+                                                                lineHeight: "1.5",
+                                                                display: "block",
+                                                                fontStyle: "italic"
+                                                            }}>
+                                                                💬 {apt.reschedule_note || apt.patient_note || apt.notes}
+                                                            </span>
+                                                        ) : (
+                                                            <span style={{ fontSize: "12px", color: "#94a3b8" }}>No reason provided</span>
+                                                        )}
+                                                    </div>
+                                                ) : (
+                                                    <span style={{ fontSize: "12px", color: "#64748b", fontWeight: "500" }}>
+                                                        {apt.status === 'completed' ? 'Completed' : 'No Actions'}
+                                                    </span>
+                                                )
                                             )}
                                         </td>
                                     </tr>

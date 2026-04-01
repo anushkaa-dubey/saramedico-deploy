@@ -10,10 +10,12 @@ export default function UpNextCard({ consultations = [], appointments = [] }) {
 
   // visitState is the UI state — "scheduled" means upcoming
   // Also check status field as fallback
+  // Exclude completed/cancelled/declined consultations
   const upcomingCons = (Array.isArray(consultations) ? consultations : [])
     .filter(c => {
-      const isUpcoming = (c.visitState === "scheduled" || c.status === "scheduled" || c.status === "accepted");
-      return isUpcoming && c.scheduledAt && new Date(c.scheduledAt) >= now;
+      const isActive = (c.visitState === "scheduled" || c.status === "scheduled" || c.status === "accepted");
+      const isCompleted = (c.status === "completed" || c.status === "cancelled" || c.status === "declined" || c.status === "rejected");
+      return isActive && !isCompleted && c.scheduledAt && new Date(c.scheduledAt) >= now;
     })
     .map(c => ({
       id: c.id,
@@ -25,10 +27,12 @@ export default function UpNextCard({ consultations = [], appointments = [] }) {
       type: "Consultation"
     }));
 
+  // Exclude completed/cancelled/declined appointments
   const upcomingAppts = (Array.isArray(appointments) ? appointments : [])
     .filter(a => {
-      const isUpcoming = (a.status === "scheduled" || a.status === "accepted" || a.status === "approved");
-      return isUpcoming && a.requested_date && new Date(a.requested_date) >= now;
+      const isActive = (a.status === "scheduled" || a.status === "accepted" || a.status === "approved");
+      const isCompleted = (a.status === "completed" || a.status === "cancelled" || a.status === "declined" || a.status === "rejected");
+      return isActive && !isCompleted && a.requested_date && new Date(a.requested_date) >= now;
     })
     .map(a => ({
       id: a.id,

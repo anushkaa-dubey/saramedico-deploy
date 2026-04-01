@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import styles from "../DoctorDashboard.module.css";
 import { X } from "lucide-react";
+import Alert from "@/app/dashboard/components/Alert";
 // TODO: Uncomment when connecting backend
 import { fetchTasks as fetchTasksAPI, addTask as addTaskAPI, updateTask as updateTaskAPI, deleteTask as deleteTaskAPI } from "@/services/doctor";
 
@@ -26,6 +27,15 @@ export default function TasksSection(props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [selectedDate, setSelectedDate] = useState(props.selectedDate || new Date());
+
+  // Alert UI state
+  const [alertState, setAlertState] = useState({ open: false, title: "", message: "", type: "info" });
+  const showAlert = (title, message, type = "info") => setAlertState({ open: true, title, message, type });
+  const closeAlert = () => setAlertState(s => ({ ...s, open: false }));
+
+  // Delete confirmation state
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [taskToDelete, setTaskToDelete] = useState(null);
 
   // Load tasks on component mount
   useEffect(() => {
@@ -63,7 +73,7 @@ export default function TasksSection(props) {
       if (typeof props.onRefresh === 'function') props.onRefresh();
     } catch (error) {
       console.error("Failed to add task:", error);
-      alert("Failed to add task");
+      showAlert("Error", "Failed to add task. Please try again.", "error");
     }
   };
 
@@ -92,27 +102,27 @@ export default function TasksSection(props) {
     }
   };
 
-  const [taskToDelete, setTaskToDelete] = useState(null);
-
-  /**
-   * Delete a task
-   */
   const handleDeleteTask = (id) => {
     setTaskToDelete(id);
+    setDeleteConfirmOpen(true);
   };
 
   const confirmDeleteTask = async () => {
     if (!taskToDelete) return;
-
+    const idToDelete = taskToDelete;
+    // Close the confirm immediately
+    setDeleteConfirmOpen(false);
+    setTaskToDelete(null);
+    // Optimistic removal
+    setTasks(prev => prev.filter(t => t.id !== idToDelete));
     try {
-      await deleteTaskAPI(taskToDelete);
-      setTasks(prev => prev.filter(t => t.id !== taskToDelete));
+      await deleteTaskAPI(idToDelete);
       if (typeof props.onRefresh === 'function') props.onRefresh();
     } catch (error) {
       console.error("Failed to delete task:", error);
-      alert("Failed to delete task");
-    } finally {
-      setTaskToDelete(null);
+      // Reload tasks to restore correct state on failure
+      loadTasks();
+      showAlert("Error", "Failed to delete task. Please try again.", "error");
     }
   };
 
@@ -272,64 +282,29 @@ export default function TasksSection(props) {
         </div>
       )}
 
-      {/* Inline Modal for Task Deletion */}
-      {taskToDelete && (
-        <div style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          background: "rgba(255,255,255,0.95)",
-          backdropFilter: "blur(5px)",
-          display: "flex",
-          flexDirection: "column",
-          padding: "20px",
-          gap: "12px",
-          borderRadius: "12px",
-          zIndex: 10,
-          justifyContent: "center",
-          alignItems: "center",
-          textAlign: "center"
-        }}>
-          <h4 style={{ margin: 0, color: "#1e293b" }}>Delete Task</h4>
-          <p style={{ margin: "0 0 16px 0", fontSize: "14px", color: "#64748b" }}>
-            Are you sure you want to delete this task?
-          </p>
-          <div style={{ display: "flex", gap: "10px", width: "100%" }}>
-            <button
-              onClick={() => setTaskToDelete(null)}
-              style={{
-                flex: 1,
-                padding: "8px",
-                background: "#f1f5f9",
-                color: "#64748b",
-                border: "none",
-                borderRadius: "6px",
-                cursor: "pointer",
-                fontWeight: "600"
-              }}
-            >
-              Cancel
-            </button>
-            <button
-              onClick={confirmDeleteTask}
-              style={{
-                flex: 1,
-                padding: "8px",
-                background: "#ef4444",
-                color: "white",
-                border: "none",
-                borderRadius: "6px",
-                cursor: "pointer",
-                fontWeight: "600"
-              }}
-            >
-              Delete
-            </button>
-          </div>
-        </div>
-      )}
+      {/* Alert for errors */}
+      <Alert
+        isOpen={alertState.open}
+        onClose={closeAlert}
+        title={alertState.title}
+        message={alertState.message}
+        type={alertState.type}
+        confirmText="OK"
+        onConfirm={closeAlert}
+      />
+
+      {/* Delete confirmation Alert */}
+      <Alert
+        isOpen={deleteConfirmOpen}
+        onClose={() => { setDeleteConfirmOpen(false); setTaskToDelete(null); }}
+        title="Delete Task"
+        message="Are you sure you want to delete this task? This action cannot be undone."
+        type="error"
+        showCancel={true}
+        cancelText="Cancel"
+        confirmText="Delete"
+        onConfirm={confirmDeleteTask}
+      />
     </div>
   );
 }

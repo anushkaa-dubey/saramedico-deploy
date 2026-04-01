@@ -800,7 +800,7 @@ export default function Home() {
             <h3 className={styles.planName}>Standard</h3>
             <p className={styles.planDescription}>Essential tools for solo practitioners.</p>
             <div className={styles.planPrice}>$0<span>/mo</span></div>
-            <Link href="/roles" className={styles.planBtnSecondary} style={{ marginBottom: '32px' }}>Start Free</Link>
+            <Link href="/contact" className={styles.planBtnSecondary} style={{ marginBottom: '32px' }}>Start Free</Link>
             <h4 style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', marginBottom: '16px', letterSpacing: '0.05em', color: '#64748b' }}>Features</h4>
             <ul className={styles.planFeatures}>
               <motion.li initial={{ opacity: 0, x: -10 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: 0.1 }} className={styles.planFeature}><CheckIcon /> Solo notes & dictation (inside editor)</motion.li>
@@ -819,7 +819,7 @@ export default function Home() {
             <h3 className={styles.planName}>Premium</h3>
             <p className={styles.planDescription}>Advanced AI for growth clinics.</p>
             <div className={styles.planPrice}>${isYearly ? "39" : "49"}<span>/mo</span></div>
-            <Link href="/roles" className={styles.planBtnPrimary} style={{ marginBottom: '32px' }}>Start 14-Day Free Trial</Link>
+            <Link href="/contact" className={styles.planBtnPrimary} style={{ marginBottom: '32px' }}>Start 14-Day Free Trial</Link>
             <h4 style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', marginBottom: '16px', letterSpacing: '0.05em', color: '#64748b' }}>Everything in Standard, Plus</h4>
             <ul className={styles.planFeatures}>
               <motion.li initial={{ opacity: 0, x: -10 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: 0.1 }} className={styles.planFeature}><CheckIcon /> Unlimited Audio Recording</motion.li>
@@ -839,7 +839,7 @@ export default function Home() {
             <h3 className={styles.planName}>Clinic Team</h3>
             <p className={styles.planDescription}>Collaboration for medical teams (Min. 5 seats).</p>
             <div className={styles.planPrice}>$129<span>/seat/mo</span></div>
-            <Link href="/roles" className={styles.planBtnSecondary} style={{ marginBottom: '32px' }}>Contact Sales</Link>
+            <Link href="/contact" className={styles.planBtnSecondary} style={{ marginBottom: '32px' }}>Contact Sales</Link>
             <h4 style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', marginBottom: '16px', letterSpacing: '0.05em', color: '#64748b' }}>Everything in Premium, Plus</h4>
             <ul className={styles.planFeatures}>
               <motion.li initial={{ opacity: 0, x: -10 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: 0.1 }} className={styles.planFeature}><CheckIcon /> Centralized Billing</motion.li>
