@@ -127,29 +127,26 @@ export default function DoctorDashboard() {
         return d === today;
       });
 
-      // Count today's meetings from consultations
-      const todayMeetings = (consultations || []).filter(c => {
-        const consultationDate = new Date(c.scheduledAt).toISOString().split('T')[0];
-        return consultationDate === today;
-      }).length;
-
       const urgentTasks = (tasks || []).filter(t => t.status !== "completed" && (t.priority === "high" || t.priority === "urgent")).length;
 
-      // Count completed consultations (meetings)
-      const completedMeetings = (consultations || []).filter(c => c.status === "completed").length;
+      // Count from appointments only — same source the filtered view uses
+      const pendingRequests = (appts || []).filter(a => a.status === 'pending').length;
+
+      // "Completed" card links to ?status=completed on the appointments page → count completed appointments
+      const completedVisits = (appts || []).filter(a => a.status === 'completed').length;
+
+      // "Today's Total" card links to ?filter=today on the appointments page → count today's appointments
+      const todayTotal = todayAppts.length;
 
       setAppointments(appts || []);
       setTasks(tasks || []);
       setDoctorProfile(profile);
 
-      const pendingRequests = (appts || []).filter(a => a.status === 'pending').length;
-      const completedVisits = (appts || []).filter(a => a.status === 'completed').length;
-
       setMetrics({
-        pending_review: pendingRequests, // Total appointment requests pending from patients
+        pending_review: pendingRequests,
         high_urgency: urgentTasks,
-        cleared_today: completedMeetings, // Total successfully completed consultations/meetings
-        today_meetings: todayMeetings, // Total meetings scheduled for today from consultations
+        cleared_today: completedVisits,   // now matches: appointments where status=completed
+        today_meetings: todayTotal,        // now matches: appointments scheduled today
         total_patients: patients.length,
         total_records: consultations.length
       });
