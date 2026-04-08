@@ -323,9 +323,12 @@ export default function DoctorsPage() {
                         <Search
                             size={15}
                             style={{
-                                position: "absolute", left: "12px",
-                                color: "#94a3b8", pointerEvents: "none",
-                                flexShrink: 0,
+                                position: "absolute",
+                                left: "12px",
+                                top: "50%",
+                                transform: "translateY(-50%)",
+                                color: "#94a3b8",
+                                pointerEvents: "none",
                             }}
                         />
                         <input

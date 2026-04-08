@@ -13,7 +13,7 @@ export default function SignupForm() {
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState("");
   const [isClient, setIsClient] = useState(false);
-  
+
   // Unified simple state
   const [role, setRole] = useState("doctor");
   const [formData, setFormData] = useState({
@@ -42,11 +42,11 @@ export default function SignupForm() {
   const validate = () => {
     const newErrors = {};
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    
+
     if (!formData.name.trim()) newErrors.name = "Full name is required";
     if (!formData.email) newErrors.email = "Email is required";
     else if (!emailRegex.test(formData.email)) newErrors.email = "Invalid email format";
-    
+
     if (!formData.password) newErrors.password = "Password is required";
     else if (!hasMinLength || !hasUppercase || !hasNumber || !hasSpecial) {
       newErrors.password = "Password does not meet all requirements";
@@ -59,9 +59,9 @@ export default function SignupForm() {
   const handleSignup = async (e) => {
     e.preventDefault();
     setApiError("");
-    
+
     if (!validate()) return;
-    
+
     setLoading(true);
     try {
       const payload = {
@@ -73,7 +73,7 @@ export default function SignupForm() {
 
       // 1. Initial backend account creation logic returning Onboarding token
       const data = await signupUser(payload);
-      
+
       const token = data.access_token || data.token;
       if (token) {
         setAccessToken(token); // Onboarding Scope token safely stored via tokenService
@@ -81,14 +81,14 @@ export default function SignupForm() {
 
       // 2. Safely capture the password dynamically into SessionStorage so they don't have to rewrite it for Onboarding Endpoints!
       sessionStorage.setItem("signup_data", JSON.stringify(payload));
-      
+
       // 3. Organically transition to Onboarding
       if (role === "doctor") {
         router.push("/auth/signup/onboarding/doctor/step-1");
       } else if (role === "hospital") {
         router.push("/auth/signup/onboarding/hospital");
       }
-      
+
     } catch (err) {
       console.error("Signup failed:", err);
       setApiError(err.message || "Failed to create account. Please try again.");
@@ -141,42 +141,42 @@ export default function SignupForm() {
       <p className="subtext">Set up your profile credentials.</p>
 
       <form onSubmit={handleSignup}>
-      
-        <div style={{display: 'flex', gap: '15px', marginBottom: '20px', marginTop: '10px'}}>
-            <button 
-                type="button" 
-                onClick={() => setRole("doctor")}
-                style={{
-                    flex: 1,
-                    padding: '12px',
-                    borderRadius: '8px',
-                    border: role === "doctor" ? '2px solid #4361ee' : '1px solid #e5e7eb',
-                    backgroundColor: role === "doctor" ? '#eff6ff' : '#fff',
-                    color: role === "doctor" ? '#1e40af' : '#4b5563',
-                    fontWeight: role === "doctor" ? '600' : '500',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s'
-                }}
-            >
-                ⚕️ Doctor
-            </button>
-            <button 
-                type="button" 
-                onClick={() => setRole("hospital")}
-                style={{
-                    flex: 1,
-                    padding: '12px',
-                    borderRadius: '8px',
-                    border: role === "hospital" ? '2px solid #4361ee' : '1px solid #e5e7eb',
-                    backgroundColor: role === "hospital" ? '#eff6ff' : '#fff',
-                    color: role === "hospital" ? '#1e40af' : '#4b5563',
-                    fontWeight: role === "hospital" ? '600' : '500',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s'
-                }}
-            >
-                🏥 Hospital
-            </button>
+
+        <div style={{ display: 'flex', gap: '15px', marginBottom: '20px', marginTop: '10px' }}>
+          <button
+            type="button"
+            onClick={() => setRole("doctor")}
+            style={{
+              flex: 1,
+              padding: '12px',
+              borderRadius: '8px',
+              border: role === "doctor" ? '2px solid #4361ee' : '1px solid #e5e7eb',
+              backgroundColor: role === "doctor" ? '#eff6ff' : '#fff',
+              color: role === "doctor" ? '#1e40af' : '#4b5563',
+              fontWeight: role === "doctor" ? '600' : '500',
+              cursor: 'pointer',
+              transition: 'all 0.2s'
+            }}
+          >
+            ⚕️ Doctor
+          </button>
+          <button
+            type="button"
+            onClick={() => setRole("hospital")}
+            style={{
+              flex: 1,
+              padding: '12px',
+              borderRadius: '8px',
+              border: role === "hospital" ? '2px solid #4361ee' : '1px solid #e5e7eb',
+              backgroundColor: role === "hospital" ? '#eff6ff' : '#fff',
+              color: role === "hospital" ? '#1e40af' : '#4b5563',
+              fontWeight: role === "hospital" ? '600' : '500',
+              cursor: 'pointer',
+              transition: 'all 0.2s'
+            }}
+          >
+            🏥 Hospital
+          </button>
         </div>
 
         <label htmlFor="name" style={{ fontSize: "16px", fontWeight: "600", color: "#374151" }}>Full Name</label>
@@ -217,7 +217,7 @@ export default function SignupForm() {
             style={{
               position: "absolute",
               right: "10px",
-              top: "50%",
+              top: "40%",
               transform: "translateY(-50%)",
               background: "none",
               border: "none",
@@ -236,7 +236,7 @@ export default function SignupForm() {
 
         {apiError && <p style={{ color: "#ef4444", fontSize: "14px", fontWeight: "600", marginTop: "12px" }}>{apiError}</p>}
 
-        <button className="primary-btn" disabled={loading} style={{marginTop: "20px"}}>
+        <button className="primary-btn" disabled={loading} style={{ marginTop: "20px" }}>
           {loading ? "Creating Account..." : "Confirm Credentials"}
         </button>
 
@@ -256,9 +256,9 @@ export default function SignupForm() {
           <img src="/icons/google.svg" alt="Google" />
           Continue with Google
         </button>
-        
+
         <div className="bottom-text">
-            Already have an account? <Link href="/auth/login">Login</Link>
+          Already have an account? <Link href="/auth/login">Login</Link>
         </div>
 
       </form>

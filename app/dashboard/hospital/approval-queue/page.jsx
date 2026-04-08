@@ -8,11 +8,11 @@ import Alert from "../../components/Alert";
 
 export default function ApprovalQueuePage() {
     const [queue, setQueue] = useState([]);
-    const [stats, setStats] = useState({ 
-        notesPendingSignature: 0, 
-        transcriptionQueueStatus: 0, 
-        clearedToday: 0, 
-        avgWaitTime: "0m" 
+    const [stats, setStats] = useState({
+        notesPendingSignature: 0,
+        transcriptionQueueStatus: 0,
+        clearedToday: 0,
+        avgWaitTime: "0m"
     });
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState("");
@@ -95,12 +95,12 @@ export default function ApprovalQueuePage() {
                     {[
                         { label: "Pending Requests", value: stats.notesPendingSignature, color: "#f59e0b", icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>, link: "/dashboard/hospital/approval-queue" },
                         { label: "Cleared Today", value: stats.clearedToday, color: "#10b981", icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="20 6 9 17 4 12"></polyline></svg>, link: "/dashboard/hospital/appointments" },
-                        { label: "Avg Wait Time", value: stats.avgWaitTime || "0m", color: "#3b82f6", icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> , link: "/dashboard/hospital/approval-queue" }
+                        { label: "Avg Wait Time", value: stats.avgWaitTime || "0m", color: "#3b82f6", icon: <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>, link: "/dashboard/hospital/approval-queue" }
                     ].map((s, i) => (
-                        <div key={i} 
+                        <div key={i}
                             onClick={() => s.link && (window.location.href = s.link)}
-                            style={{ 
-                                background: '#ffffff', padding: '20px', borderRadius: '16px', border: '1px solid #f1f5f9', 
+                            style={{
+                                background: '#ffffff', padding: '20px', borderRadius: '16px', border: '1px solid #f1f5f9',
                                 display: 'flex', alignItems: 'center', gap: '16px', cursor: s.link ? 'pointer' : 'default',
                                 transition: 'transform 0.2s',
                             }}
@@ -120,7 +120,7 @@ export default function ApprovalQueuePage() {
                     <div style={{ padding: '24px', borderBottom: '1px solid #f1f5f9' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
                             <div style={{ flex: 1, position: 'relative' }}>
-                                <svg style={{ position: 'absolute', left: '12px', top: '48%', transform: 'translateY(-50%)', color: '#94a3b8' }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                                <svg style={{ position: 'absolute', left: '12px', top: '40%', transform: 'translateY(-50%)', color: '#94a3b8' }} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                                 <input
                                     placeholder="Search Patient ID or Reason"
                                     value={search}
@@ -164,19 +164,19 @@ export default function ApprovalQueuePage() {
                                             </td>
                                             <td style={{ textAlign: 'right', paddingRight: '24px', whiteSpace: 'nowrap' }}>
                                                 <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-                                                    <button 
+                                                    <button
                                                         onClick={() => handleAction(row.id, 'approve')}
                                                         style={{ padding: '6px 14px', borderRadius: '8px', fontSize: '12px', background: '#10b981', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}
                                                     >
                                                         Approve
                                                     </button>
-                                                    <button 
+                                                    <button
                                                         onClick={() => handleAction(row.id, 'reschedule')}
                                                         style={{ padding: '6px 14px', borderRadius: '8px', fontSize: '12px', background: '#3b82f6', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}
                                                     >
                                                         Reschedule
                                                     </button>
-                                                    <button 
+                                                    <button
                                                         onClick={() => handleAction(row.id, 'decline')}
                                                         style={{ padding: '6px 14px', borderRadius: '8px', fontSize: '12px', background: '#ef4444', color: 'white', border: 'none', cursor: 'pointer', fontWeight: 'bold' }}
                                                     >
@@ -192,8 +192,8 @@ export default function ApprovalQueuePage() {
                     </div>
                 </div>
             </div>
-            <Alert 
-                isOpen={alertConfig.open} 
+            <Alert
+                isOpen={alertConfig.open}
                 onClose={() => setAlertConfig({ ...alertConfig, open: false })}
                 title={alertConfig.title}
                 message={alertConfig.message}
@@ -208,31 +208,31 @@ export default function ApprovalQueuePage() {
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                             <div>
                                 <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748b', marginBottom: '8px' }}>NEW DATE</label>
-                                <input 
-                                    type="date" 
+                                <input
+                                    type="date"
                                     value={rescheduleData.date}
                                     onChange={(e) => setRescheduleData({ ...rescheduleData, date: e.target.value })}
-                                    style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0' }} 
+                                    style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0' }}
                                 />
                             </div>
                             <div>
                                 <label style={{ display: 'block', fontSize: '12px', fontWeight: '700', color: '#64748b', marginBottom: '8px' }}>NEW TIME</label>
-                                <input 
-                                    type="time" 
+                                <input
+                                    type="time"
                                     value={rescheduleData.time}
                                     onChange={(e) => setRescheduleData({ ...rescheduleData, time: e.target.value })}
-                                    style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0' }} 
+                                    style={{ width: '100%', padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0' }}
                                 />
                             </div>
                         </div>
                         <div style={{ display: 'flex', gap: '12px', marginTop: '32px' }}>
-                            <button 
+                            <button
                                 onClick={() => setRescheduleData({ ...rescheduleData, open: false })}
                                 style={{ flex: 1, padding: '12px', borderRadius: '12px', border: '1px solid #e2e8f0', background: 'white', fontWeight: '700', cursor: 'pointer' }}
                             >
                                 Cancel
                             </button>
-                            <button 
+                            <button
                                 onClick={async () => {
                                     if (!rescheduleData.date || !rescheduleData.time) return;
                                     try {
